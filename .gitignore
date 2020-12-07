@@ -1,0 +1,8 @@
+**/*pyc
+**/__pycache__
+*/*/__pycache__
+*/*/*/__pycache__
+*/*/*/scripts
+paddlecloud*
+internal*
+*/internal*

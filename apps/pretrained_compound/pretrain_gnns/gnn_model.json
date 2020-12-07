@@ -1,0 +1,13 @@
+{
+    "residual": false,
+    "dropout_rate": 0.5,
+    "gnn_type": "gin",
+    "graph_norm": false,
+
+    "embed_dim": 300,
+    "layer_num": 5,
+    "hidden_size": 256,
+    "JK": "last",
+
+    "pool_type": "average"
+}
