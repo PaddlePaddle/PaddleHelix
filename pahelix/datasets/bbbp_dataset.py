@@ -1,3 +1,5 @@
+#!/usr/bin/python
+#-*-coding:utf-8-*-
 #   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +15,14 @@
 # limitations under the License.
 
 """
-Tox21 dataset
+Processing of Blood-Brain Barrier Penetration dataset
+
+The Blood-brain barrier penetration (BBBP) dataset is extracted from a study on the modeling and 
+prediction of the barrier permeability. As a membrane separating circulating blood and brain extracellular fluid, the blood-brain barrier blocks most drugs, hormones and neurotransmitters. Thus penetration of the barrier forms a long-standing issue in development of drugs targeting central nervous system.
+This dataset includes binary labels for over 2000 compounds on their permeability properties.
+
+You can download the dataset from
+http://moleculenet.ai/datasets-1 and load it into pahelix reader creators
 """
 
 import os
@@ -28,12 +37,37 @@ __all__ = ['get_default_bbbp_task_names', 'load_bbbp_dataset']
 
 
 def get_default_bbbp_task_names():
-    """tbd"""
+    """get that default bbbp task names and return the binary labels"""
     return ['p_np']
 
 
 def load_bbbp_dataset(data_path, task_names=None, featurizer=None):
-    """tbd"""
+    """load bbbp dataset ,process the classification labels and the input information.
+
+    The data file contains a csv table, in which columns below are used:
+
+    :Num:number
+    :name:Name of the compound
+    :smiles:SMILES representation of the molecular structure
+    :p_np:Binary labels for penetration/non-penetration
+    :Valid ratio: 1.0
+    :Task evaluated: 1/1
+
+    Args:
+        data_path(str): the path to the cached npz path.
+        task_names: get the default lipophilicity task names.
+        featurizer: the featurizer to use for processing the data.  
+    
+    Returns:
+        dataset(InMemoryDataset): the data_list(list of dict of numpy ndarray).
+        
+    References:
+    [1] Martins, Ines Filipa, et al. “A Bayesian approach to in silico blood-brain barrier penetration modeling.” Journal of chemical information and modeling 52.6 (2012): 1686-1697.
+    
+    """
+
+    
+
     if task_names is None:
         task_names = get_default_bbbp_task_names()
 

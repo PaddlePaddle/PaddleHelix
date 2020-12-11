@@ -25,16 +25,35 @@ __all__ = ['Featurizer']
 
 
 class Featurizer(object):
-    """docstring for Featurizer"""
+    """
+    This is an abstract class for feature extraction. It has two steps:
+    firstly :attr:`gen_features` is used to convert `raw_data` to `data`,
+    secondly :attr:`collate_fn` is used to aggregate a list of `data` into
+    a batch data.
+    """
     def __init__(self):
         super(Featurizer, self).__init__()
     
     def gen_features(self, raw_data):
         """
-        return None if failed.
+        Extract features from `raw_data` into `data`. Return None if failed.
+        
+        Args:
+            raw_data: can be any type.
+
+        Returns:
+            data: can be any type.
         """
         raise NotImplementedError()
 
     def collate_fn(self, batch_data_list):
-        """tbd"""
+        """
+        Aggregate `batch_data_list` into a batch data.
+
+        Args:
+            batch_data_list(list): a list of `data` from :attr:`gen_features`.
+
+        Returns:
+            batch_data(dict): a dict of numpy ndarray.
+        """
         raise NotImplementedError()

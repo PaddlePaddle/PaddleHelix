@@ -1,3 +1,5 @@
+#!/usr/bin/python
+#-*-coding:utf-8-*-
 #   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +15,13 @@
 # limitations under the License.
 
 """
-Tox21 dataset
+Processing of esol dataset.
+
+ESOL (delaney) is a standard regression data set,which is also called delaney dataset. In the dataset, you can find  the structure and water solubility data of 1128 compounds.  It's a good choice to validate machine learning models and to estimate solubility directly based on molecular structure which was encoded in SMILES string.
+
+You can download the dataset from
+http://moleculenet.ai/datasets-1 and load it into pahelix reader creators.
+
 """
 
 import os
@@ -28,12 +36,31 @@ __all__ = ['get_default_esol_task_names', 'load_esol_dataset']
 
 
 def get_default_esol_task_names():
-    """tbd"""
+    """get that default esol task names and return measured values"""
     return ['measured log solubility in mols per litre']
 
 
 def load_esol_dataset(data_path, task_names=None, featurizer=None):
-    """tbd"""
+    """load esol dataset ,process the classification labels and the input information.
+
+    The data file contains a csv table, in which columns below are used:
+
+    :smiles:SMILES representation of the molecular structure
+    :Compound ID:Name of the compound
+    :measured log solubility in mols per litre - Log-scale water solubility of the compound, used as label
+   
+   Args:
+        data_path(str): the path to the cached npz path.
+        task_names: get the default lipophilicity task names.
+        featurizer: the featurizer to use for processing the data.  
+    
+    Returns:
+        dataset(InMemoryDataset): the data_list(list of dict of numpy ndarray).
+    
+    References:
+    [1] Delaney, John S. "ESOL: estimating aqueous solubility directly from molecular structure." Journal of chemical information and computer sciences 44.3 (2004): 1000-1005.
+
+    """
     if task_names is None:
         task_names = get_default_esol_task_names()
 

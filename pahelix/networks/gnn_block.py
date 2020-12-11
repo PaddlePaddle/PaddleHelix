@@ -14,6 +14,7 @@
 
 """
 blocks for Graph Neural Network (GNN)
+Adapted from https://github.com/snap-stanford/pretrain-gnns/blob/master/chem/model.py
 """
 
 import os
@@ -35,37 +36,35 @@ from pgl.layers.conv import gcn, gat
 from pgl.utils import paddle_helper
 
 
-def copy_send(src_feat, dst_feat, edge_feat):
-    """tbd"""
-    return src_feat["h"]
-
-
 def mean_recv(feat):
-    """tbd"""
+    """average pooling"""
     return layers.sequence_pool(feat, pool_type="average")
 
 
 def sum_recv(feat):
-    """tbd"""
+    """sum pooling"""
     return layers.sequence_pool(feat, pool_type="sum")
 
 
 def max_recv(feat):
-    """tbd"""
+    """max pooling"""
     return layers.sequence_pool(feat, pool_type="max")
 
 
-def unsqueeze(tensor):
-    """tbd"""
-    tensor = layers.unsqueeze(tensor, axes=-1)
-    tensor.stop_gradient=True
-    return tensor
-
-
 def gcn_layer(gw, feature, edge_features, act, name):
-    """tbd"""
+    """
+    Implementation of graph convolutional neural networks (GCN)
+    
+    Args:
+        gw(GraphWrapper): pgl graph wrapper object.
+        feature(tensor): node features with shape (num_nodes, feature_size).
+        edge_features(tensor): edges features with shape (num_edges, feature_size).
+        hidden_size(int): the hidden size for gcn.
+        act(int): the activation for the output.
+        name(int): the prefix of layer param names.
+    """
     def send_func(src_feat, dst_feat, edge_feat):
-        """tbd"""
+        """send function"""
         return src_feat["h"] + edge_feat["h"]
 
     size = feature.shape[-1]
@@ -100,17 +99,30 @@ def gat_layer(
         feat_drop=0.1,
         attn_drop=0.1,
         is_test=False):
-    """tbd"""
-
+    """
+    Implementation of graph attention networks (GAT)
+    
+    Args:
+        gw(GraphWrapper): pgl graph wrapper object.
+        feature(tensor): node features with shape (num_nodes, feature_size).
+        edge_features(tensor): edges features with shape (num_edges, feature_size).
+        hidden_size(int): the hidden size for gcn.
+        act(str): the activation for the output.
+        name(str): the prefix of layer param names.
+        num_heads(int): the head number in gat.
+        feat_drop: dropout rate for the :attr:`feature`.
+        attn_drop: dropout rate for the attention.
+        is_test: whether in test phrase.
+    """
     def send_attention(src_feat, dst_feat, edge_feat):
-        """tbd"""
+        """send function"""
         output = src_feat["left_a"] + dst_feat["right_a"]
         output = layers.leaky_relu(
                 output, alpha=0.2)  # (num_edges, num_heads)
         return {"alpha": output, "h": src_feat["h"] + edge_feat["h"]}
 
     def reduce_attention(msg):
-        """tbd"""
+        """reduce function"""
         alpha = msg["alpha"]  # lod-tensor (batch_size, seq_len, num_heads)
         h = msg["h"]
         alpha = paddle_helper.sequence_softmax(alpha)
@@ -168,9 +180,17 @@ def gat_layer(
 
 
 def gin_layer(gw, node_features, edge_features, name):
-    """tbd"""
+    """
+    Implementation of Graph Isomorphism Network (GIN) layer.
+    
+    Args:
+        gw(GraphWrapper): pgl graph wrapper object.
+        node_features(tensor): node features with shape (num_nodes, feature_size).
+        edge_features(tensor): edges features with shape (num_edges, feature_size).
+        name(str): the prefix of layer param names.
+    """
     def send_func(src_feat, dst_feat, edge_feat):
-        """Send"""
+        """send function"""
         return src_feat["h"] + edge_feat["h"]
 
     msg = gw.send(send_func,

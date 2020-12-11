@@ -1,0 +1,20 @@
+{
+    "compound": {
+        "gnn_type": "gin",
+        "dropout_rate": 0.2,
+
+        "embed_dim": 32,
+        "layer_num": 5,
+        "hidden_size": 32,
+        "output_dim": 128
+    },
+
+    "protein": {
+        "max_protein_len": -1,
+        "embed_dim": 128,
+        "num_filters": 32,
+        "output_dim": 128
+    },
+
+    "dropout_rate": 0.2
+}

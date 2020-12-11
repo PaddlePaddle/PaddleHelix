@@ -1,0 +1,25 @@
+{
+    "compound": {
+        "residual": false,
+        "dropout_rate": 0.5,
+        "gnn_type": "gin",
+        "graph_norm": false,
+
+        "embed_dim": 300,
+        "embedding_trainable": false,
+        "layer_num": 5,
+        "hidden_size": 256,
+        "JK": "last",
+
+        "pool_type": "average"
+    },
+
+    "protein": {
+        "max_protein_len": 1000,
+        "embed_dim": 128,
+        "output_dim": 128,
+        "num_filters": 32
+    },
+
+    "dropout_rate": 0.2
+}

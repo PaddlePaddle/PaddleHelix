@@ -16,5 +16,5 @@
 Initialize featurizers.
 """
 
-from pahelix.featurizer.featurizer import *
-from pahelix.featurizer.pretrain_gnn_featurizer import *
+from pahelix.featurizers.featurizer import *
+from pahelix.featurizers.pretrain_gnn_featurizer import *

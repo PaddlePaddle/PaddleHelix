@@ -1,3 +1,5 @@
+#!/usr/bin/python
+#-*-coding:utf-8-*-
 #   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +15,13 @@
 # limitations under the License.
 
 """
-Tox21 dataset
+Processing of lipohilicity dataset.
+
+Lipophilicity is a dataset curated from ChEMBL database containing experimental results on octanol/water distribution coefficient (logD at pH=7.4).As the Lipophilicity plays an important role in membrane permeability and solubility. Related work deserves more attention.
+
+You can download the dataset from
+http://moleculenet.ai/datasets-1 and load it into pahelix reader creators.
+
 """
 
 import os
@@ -28,12 +36,30 @@ __all__ = ['get_default_lipophilicity_task_names', 'load_lipophilicity_dataset']
 
 
 def get_default_lipophilicity_task_names():
-    """tbd"""
+    """Get that default lipophilicity task names and return measured expt"""
     return ['exp']
 
 
 def load_lipophilicity_dataset(data_path, task_names=None, featurizer=None):
-    """tbd"""
+    """Load lipophilicity dataset,process the input information and the featurizer.
+    
+    The data file contains a csv table, in which columns below are used:
+
+    :smiles:  SMILES representation of the molecular structure
+    :exp: Measured octanol/water distribution coefficient (logD) of the compound, used as label
+    
+    Args:
+        data_path(str): the path to the cached npz path.
+        task_names:get the default lipophilicity task names.
+        featurizer: the featurizer to use for processing the data.  
+        
+    Returns:
+        dataset(InMemoryDataset): the data_list(list of dict of numpy ndarray).
+
+    References:
+    [1]Hersey, A. ChEMBL Deposited Data Set - AZ dataset; 2015. https://doi.org/10.6019/chembl3301361
+
+    """
     if task_names is None:
         task_names = get_default_lipophilicity_task_names()
 

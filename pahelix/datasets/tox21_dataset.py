@@ -1,3 +1,5 @@
+#!/usr/bin/python
+#-*-coding:utf-8-*-
 #   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +15,13 @@
 # limitations under the License.
 
 """
-Tox21 dataset
+Processing of tox21 dataset.
+
+The “Toxicology in the 21st Century” (Tox21) initiative created a public database measuring toxicity of compounds, which has been used in the 2014 Tox21 Data Challenge. This dataset contains qualitative toxicity measurements for 8k compounds on 12 different targets, including nuclear receptors and stress response pathways.
+
+You can download the dataset from
+http://moleculenet.ai/datasets-1 and load it into pahelix reader creators.
+
 """
 
 import os
@@ -28,13 +36,36 @@ __all__ = ['get_default_tox21_task_names', 'load_tox21_dataset']
 
 
 def get_default_tox21_task_names():
-    """tbd"""
+    """Get that default tox21 task names and return the bioassays results"""
     return ['NR-AR', 'NR-AR-LBD', 'NR-AhR', 'NR-Aromatase', 'NR-ER', 'NR-ER-LBD',
            'NR-PPAR-gamma', 'SR-ARE', 'SR-ATAD5', 'SR-HSE', 'SR-MMP', 'SR-p53']
 
 
 def load_tox21_dataset(data_path, task_names=None, featurizer=None):
-    """tbd"""
+    """Load tox21 dataset,process the input information and the featurizer.
+
+    The data file contains a csv table, in which columns below are used:
+
+    :smiles:  SMILES representation of the molecular structure.
+    :NR-XXX: Nuclear receptor signaling bioassays results.
+    :SR-XXX: Stress response bioassays results
+    :Valid ratio: we get two ratio: 0.751、0.760
+    :Task evaluated: 12/12
+
+    Args:
+        data_path(str): the path to the cached npz path.
+        task_names: get the default lipophilicity task names.
+        featurizer: the featurizer to use for processing the data. 
+        
+
+    Returns:
+        dataset(InMemoryDataset): the data_list(list of dict of numpy ndarray).
+
+    References:
+    [1]Tox21 Challenge. https://tripod.nih.gov/tox21/challenge/
+    [2]please refer to the links at https://tripod.nih.gov/tox21/challenge/data.jsp for details.
+
+    """
     if task_names is None:
         task_names = get_default_tox21_task_names()
 

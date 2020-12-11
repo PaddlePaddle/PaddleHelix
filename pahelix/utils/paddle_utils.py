@@ -25,7 +25,9 @@ from paddle.fluid.incubate.fleet.base import role_maker
 
 
 def get_distributed_optimizer(optimizer):
-    """tbd"""
+    """
+    Get the default collective distributed optimizer under fleet.
+    """
     dist_strategy = DistributedStrategy()
     role = role_maker.PaddleCloudRoleMaker(is_collective=True)
     fleet.init(role)
@@ -34,19 +36,26 @@ def get_distributed_optimizer(optimizer):
 
 
 def load_partial_params(exe, init_model, main_program):
-    """tbd"""
+    """
+    Load partial params by checking whether it's in the :attr:`init_model` folder.
+
+    Args:
+        exe: Paddle executor.
+        init_model(str): the model folder to load from.
+        main_program: Paddle program.
+    """
     assert exists(init_model), "[%s] cann't be found." % init_model
 
     def existed_params(var):
         """tbd"""
         if not isinstance(var, fluid.framework.Parameter):
-            print("%s not existed" % var.name)
+            # print("%s not existed" % var.name)
             return False
         if exists(os.path.join(init_model, var.name)):
-            print("load %s successful" % var.name)
+            # print("load %s successful" % var.name)
             return True
         else:
-            print("%s not existed" % var.name)
+            # print("%s not existed" % var.name)
             return False
 
     fluid.io.load_vars(

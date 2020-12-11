@@ -17,6 +17,7 @@ Initialize datasets.
 """
 
 from pahelix.datasets.inmemory_dataset import *
+from pahelix.datasets.stream_dataset import *
 from pahelix.datasets.zinc_dataset import *
 from pahelix.datasets.chembl_filtered_dataset import *
 from pahelix.datasets.bace_dataset import *
@@ -30,3 +31,5 @@ from pahelix.datasets.muv_dataset import *
 from pahelix.datasets.sider_dataset import *
 from pahelix.datasets.tox21_dataset import *
 from pahelix.datasets.toxcast_dataset import *
+from pahelix.datasets.mutag_dataset import *
+from pahelix.datasets.ptc_mr_dataset import *

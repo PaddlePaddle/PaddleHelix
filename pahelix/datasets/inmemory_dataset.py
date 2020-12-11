@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Compound datasets from pretrain-gnn.
+In-memory dataset.
 """
 
 import os

@@ -1,3 +1,5 @@
+#!/usr/bin/python                                                                                                                                  
+#-*-coding:utf-8-*- 
 #   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-finetune
+Finetune:to do some downstream task
 """
 
 import os
@@ -34,7 +36,13 @@ from utils import get_dataset, create_splitter, get_downstream_task_names, calc_
 
 
 def train(args, exe, train_prog, model, train_dataset, featurizer):
-    """tbd"""
+    """
+    Define the train function 
+    Args:
+        args,exe,train_prog,model,train_dataset,featurizer;
+    Returns:
+        the average of the list loss
+    """
     data_gen = train_dataset.iter_batch(
             batch_size=args.batch_size, 
             num_workers=args.num_workers, 
@@ -48,7 +56,13 @@ def train(args, exe, train_prog, model, train_dataset, featurizer):
 
 
 def evaluate(args, exe, test_prog, model, test_dataset, featurizer):
-    """tbd"""
+    """
+    Define the evaluate function
+
+    In the dataset, a proportion of labels are blank. So we use a `valid` tensor 
+    to help eliminate these blank labels in both training and evaluation phase.
+
+    """
     data_gen = test_dataset.iter_batch(
             batch_size=args.batch_size, 
             num_workers=args.num_workers, 
@@ -69,8 +83,22 @@ def evaluate(args, exe, test_prog, model, test_dataset, featurizer):
 
 
 def main(args):
-    """tbd"""
+    """
+    Call the configuration function of the model, build the model and load data, then start training.
+
+    model_config:
+        a json file  with the hyperparameters,such as dropout rate ,learning rate,num tasks and so on;
+
+    num_tasks:
+        it means the number of task that each dataset contains, it's related to the dataset;
+    
+    DownstreamModel:
+        It means the PretrainGNNModel for different strategies and it is an supervised GNN model which predicts the tasks.
+
+    """
     model_config = json.load(open(args.model_config, 'r'))
+    if not args.dropout_rate is None:
+        model_config['dropout_rate'] = args.dropout_rate
     task_names = get_downstream_task_names(args.dataset_name, args.data_path)
     model_config['num_tasks'] = len(task_names)
 
@@ -88,7 +116,9 @@ def main(args):
         with fluid.unique_name.guard():
             model = DownstreamModel(model_config)
             model.forward(is_test=True)
-
+    """
+    Use CUDAPlace for GPU training, or use CPUPlace for CPU training.
+    """
     place = fluid.CUDAPlace(0) if args.use_cuda else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(startup_prog)
@@ -97,6 +127,20 @@ def main(args):
         load_partial_params(exe, args.init_model, train_prog)
 
     ### load data
+    """
+    featurizer:
+        Gen features according to the raw data and return the graph data.
+        Collate features about the graph data and return the feed dictionary.
+    
+    splitter:
+        split type of the dataset:random,scaffold,random with scaffold. Here is randomsplit.
+        `ScaffoldSplitter` will firstly order the compounds according to Bemis-Murcko scaffold, 
+        then take the first `frac_train` proportion as the train set, the next `frac_valid` proportion as the valid set 
+        and the rest as the test set. `ScaffoldSplitter` can better evaluate the generalization ability of the model on 
+        out-of-distribution samples. Note that other splitters like `RandomSplitter`, `RandomScaffoldSplitter` 
+        and `IndexSplitter` is also available."
+    
+    """
     featurizer = DownstreamFeaturizer(model.graph_wrapper)
     dataset = get_dataset(
             args.dataset_name, args.data_path, task_names, featurizer)
@@ -107,6 +151,13 @@ def main(args):
             len(train_dataset), len(valid_dataset), len(test_dataset)))
 
     ### start train
+    """
+    Load the train function and calculate the train loss in each epoch.
+    Here we set the epoch is in range of max epoch,you can change it if you want. 
+
+    Then we will calculate the train loss ,valid auc,test auc and print them.
+    Finally we save it to the model according to the dataset.
+    """
     list_val_auc, list_test_auc = [], []
     for epoch_id in range(args.max_epoch):
         train_loss = train(args, exe, train_prog, model, train_dataset, featurizer)

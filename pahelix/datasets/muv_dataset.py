@@ -1,3 +1,5 @@
+#!/usr/bin/python
+#-*-coding:utf-8-*-
 #   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +15,14 @@
 # limitations under the License.
 
 """
-Tox21 dataset
+Processing of muv dataset.
+
+The Maximum Unbiased Validation (MUV) group is a benchmark dataset selected from PubChem BioAssay by applying a refined nearest neighbor analysis. The MUV dataset contains 17 challenging tasks for around 90,000 compounds and is specifically designed for validation of virtual screening techniques.
+
+
+You can download the dataset from
+http://moleculenet.ai/datasets-1 and load it into pahelix reader creators.
+
 """
 
 import os
@@ -28,14 +37,36 @@ __all__ = ['get_default_muv_task_names', 'load_muv_dataset']
 
 
 def get_default_muv_task_names():
-    """tbd"""
+    """Get that default hiv task names and return the measured results for bioassays"""
+
     return ['MUV-466', 'MUV-548', 'MUV-600', 'MUV-644', 'MUV-652', 'MUV-689',
            'MUV-692', 'MUV-712', 'MUV-713', 'MUV-733', 'MUV-737', 'MUV-810',
            'MUV-832', 'MUV-846', 'MUV-852', 'MUV-858', 'MUV-859']
 
 
 def load_muv_dataset(data_path, task_names=None, featurizer=None):
-    """tbd"""
+    """Load muv dataset,process the input information and the featurizer.
+
+    The data file contains a csv table, in which columns below are used:
+
+    :smiles:  SMILES representation of the molecular structure.
+    :mol_id:  PubChem CID of the compound.
+    :MUV-XXX: Measured results (Active/Inactive) for bioassays.
+    :Valid ratio: we get two ratio: 0.155、0.160
+    :Task evaluated: we get two values: 15/17、16/17
+
+    Args:
+        data_path(str): the path to the cached npz path.
+        task_names:get the default lipophilicity task names.
+        featurizer: the featurizer to use for processing the data.       
+
+    Returns:
+        dataset(InMemoryDataset): the data_list(list of dict of numpy ndarray).
+
+    References:
+    [1]Rohrer, Sebastian G., and Knut Baumann. “Maximum unbiased validation (MUV) data sets for virtual screening based on PubChem bioactivity data.” Journal of chemical information and modeling 49.2 (2009): 169-184.
+
+    """
     if task_names is None:
         task_names = get_default_muv_task_names()
 

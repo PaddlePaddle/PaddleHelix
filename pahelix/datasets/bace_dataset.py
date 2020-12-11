@@ -1,3 +1,5 @@
+#!/usr/bin/python
+#-*-coding:utf-8-*-
 #   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +15,16 @@
 # limitations under the License.
 
 """
-Tox21 dataset
+Processing of bace dataset.
+
+It contains quantitative IC50 and qualitative (binary label) binding results for 
+a set of inhibitors of human beta-secretase 1 (BACE=1).
+The data are experimental values collected from the scientific literature which 
+contains 152 compounds and their 2D structures and properties。
+
+
+You can download the dataset from
+http://moleculenet.ai/datasets-1 and load it into pahelix reader creators
 """
 
 import os
@@ -28,12 +39,36 @@ __all__ = ['get_default_bace_task_names', 'load_bace_dataset']
 
 
 def get_default_bace_task_names():
-    """tbd"""
+    """get that default bace task names and return class"""
     return ['Class']
 
 
 def load_bace_dataset(data_path, task_names=None, featurizer=None):
-    """tbd"""
+    """load bace dataset ,process the classification labels and the input information.
+
+    The data file contains a csv table, in which columns below are used:
+
+    :mol: The smile representation of the molecular structure;
+    :pIC50: The negative log of the IC50 binding affinity;
+    :class: The binary labels for inhibitor.
+    :Valid ratio: 1.0.
+    :Task evaluated: 1/1 .
+
+   
+    Args:
+        data_path(str): the path to the cached npz path.
+        task_names: get the default lipophilicity task names.
+        featurizer: the featurizer to use for processing the data.  
+    
+    Returns:
+        dataset(InMemoryDataset):the data_list(list of dict of numpy ndarray). 
+    
+
+    References:
+    [1]Subramanian, Govindan, et al. “Computational modeling of β-secretase 1 (BACE-1) inhibitors using ligand based approaches.” Journal of chemical information and modeling 56.10 (2016): 1936-1949.
+
+    """
+
     if task_names is None:
         task_names = get_default_bace_task_names()
 

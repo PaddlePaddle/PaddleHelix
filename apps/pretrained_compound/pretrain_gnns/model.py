@@ -1,3 +1,5 @@
+#!/usr/bin/python                                                                                                
+#-*-coding:utf-8-*- 
 #   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,15 +27,42 @@ from pahelix.model_zoo import PretrainGNNModel
 
 
 class DownstreamModel(object):
-    """docstring for PreGNNContextpredModel"""
+    """
+    Docstring for DownstreamModel,
+
+    it is an supervised GNN model which predicts the tasks shown in num_tasks,pool_type and so on.
+
+    """
     def __init__(self, model_config):
         self.num_tasks = model_config['num_tasks']
-        self.pool_type = model_config['pool_type']
+        self.pool_type = model_config.get('pool_type', 'average')
 
         self.gnn_model = PretrainGNNModel(model_config, name='gnn')
 
     def forward(self, is_test=False):
-        """tbd"""
+        """
+        Define the forward function,set the parameter layer options.
+
+        Graph wrapper creates a graph data holders that attributes and features 
+        in the graph are :code:`fluid.layers.data`.And we provide interface :
+        code:`to_feed` to help converting :code:`Graph`data into :code:`feed_dict`.
+
+        Args:
+            name: The graph data prefix,here is graph
+
+            node_feat: A list of tuples that decribe the details of node
+                    feature tenosr. Each tuple must be (name, shape, dtype)
+                    and the first dimension of the shape must be set unknown
+                    (-1 or None) or we can easily use :code:`Graph.node_feat_info()`
+                    to get the node_feat settings.
+
+            edge_feat: A list of tuples that decribe the details of edge
+                    feature tenosr. Each tuple mush be (name, shape, dtype)
+                    and the first dimension of the shape must be set unknown
+                    (-1 or None) or we can easily use :code:`Graph.edge_feat_info()`
+                    to get the edge_feat settings.
+     
+        """
         graph_wrapper = GraphWrapper(name="graph",
                 node_feat=[
                     ('atom_type', [None, 1], "int64"), 

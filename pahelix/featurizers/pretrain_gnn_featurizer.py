@@ -13,7 +13,8 @@
 # limitations under the License.
 
 """
-Compound datasets from pretrain-gnn.
+Featurizers from pretrain-gnn.
+Adapted from https://github.com/snap-stanford/pretrain-gnns/tree/master/chem/utils.py
 """
 
 import numpy as np
@@ -21,7 +22,7 @@ import networkx as nx
 import pgl
 from rdkit.Chem import AllChem
 
-from pahelix.featurizer.featurizer import Featurizer
+from pahelix.featurizers.featurizer import Featurizer
 from pahelix.utils.compound_tools import mol_to_graph_data
 
 __all__ = [
@@ -32,7 +33,7 @@ __all__ = [
 
 
 class PreGNNAttrMaskFeaturizer(Featurizer):
-    """docstring for PreGNNAttrMaskFeaturizer"""
+    """Featurizer for attribute mask model of pretrain gnns"""
     def __init__(self, graph_wrapper, atom_type_num=None, mask_ratio=None):
         super(PreGNNAttrMaskFeaturizer, self).__init__()
         self.graph_wrapper = graph_wrapper
@@ -40,7 +41,11 @@ class PreGNNAttrMaskFeaturizer(Featurizer):
         self.mask_ratio = mask_ratio
     
     def gen_features(self, raw_data):
-        """tbd"""
+        """Convert smiles to graph data.
+
+        Returns:
+            data(dict): a dict of numpy ndarray consists of graph features.
+        """
         smiles = raw_data['smiles']
         mol = AllChem.MolFromSmiles(smiles)
         if mol is None:
@@ -50,7 +55,7 @@ class PreGNNAttrMaskFeaturizer(Featurizer):
         return data
 
     def collate_fn(self, batch_data_list):
-        """tbd"""
+        """Aggregate a list of graph data into a batch data"""
         g_list = []
         for data in batch_data_list:
             g = pgl.graph.Graph(num_nodes = len(data['atom_type']),
@@ -82,13 +87,17 @@ class PreGNNAttrMaskFeaturizer(Featurizer):
 
 
 class PreGNNSupervisedFeaturizer(Featurizer):
-    """docstring for PreGNNSupervisedFeaturizer"""
+    """Featurizer for supervised model of pretrain gnns"""
     def __init__(self, graph_wrapper):
         super(PreGNNSupervisedFeaturizer, self).__init__()
         self.graph_wrapper = graph_wrapper
     
     def gen_features(self, raw_data):
-        """tbd"""
+        """Convert smiles to graph data.
+
+        Returns:
+            data(dict): a dict of numpy ndarray consists of graph features.
+        """
         smiles, label = raw_data['smiles'], raw_data['label']
         mol = AllChem.MolFromSmiles(smiles)
         if mol is None:
@@ -99,7 +108,7 @@ class PreGNNSupervisedFeaturizer(Featurizer):
         return data
 
     def collate_fn(self, batch_data_list):
-        """tbd"""
+        """Aggregate a list of graph data into a batch data"""
         g_list = []
         label_list = []
         for data in batch_data_list:
@@ -130,8 +139,13 @@ class PreGNNSupervisedFeaturizer(Featurizer):
 def reset_idxes(G):
     """
     Resets node indices such that they are numbered from 0 to num_nodes - 1
-    :param G:
-    :return: copy of G with relabelled node indices, mapping
+
+    Args: 
+        G: network x object.
+
+    Returns: 
+        new_G: copy of G with relabelled node indices.
+        mapping: 
     """
     mapping = {}
     for new_idx, old_idx in enumerate(G.nodes()):
@@ -142,12 +156,15 @@ def reset_idxes(G):
 
 def graph_data_obj_to_nx_simple(data):
     """
-    Converts graph Data object required by the pytorch geometric package to
-    network x data object. NB: Uses simplified atom and bond features,
-    and represent as indices. NB: possible issues with recapitulating relative
-    stereochemistry since the edges in the nx object are unordered.
-    :param data: pytorch geometric Data object
-    :return: network x object
+    Converts graph data object into a network x data object. NB: Uses simplified 
+    atom and bond features, and represent as indices. NB: possible issues with 
+    recapitulating relative stereochemistry since the edges in the nx object are 
+    unordered.
+
+    Args:
+        data(dict): a dict of numpy ndarray consists of graph features.
+    Returns: 
+        G: a network x object
     """
     G = nx.Graph()
 
@@ -178,13 +195,15 @@ def graph_data_obj_to_nx_simple(data):
 
 def nx_to_graph_data_obj_simple(G):
     """
-    Converts nx graph to pytorch geometric Data object. Assume node indices
-    are numbered from 0 to num_nodes - 1. NB: Uses simplified atom and bond
-    features, and represent as indices. NB: possible issues with
-    recapitulating relative stereochemistry since the edges in the nx
-    object are unordered.
-    :param G: nx graph obj
-    :return: pytorch geometric Data object
+    Converts nx graph to graph data. Assume node indices are numbered from 
+    0 to num_nodes - 1. NB: Uses simplified atom and bond features, and 
+    represent as indices. NB: possible issues with recapitulating relative 
+    stereochemistry since the edges in the nx object are unordered.
+
+    Args: 
+        G: nx graph object
+    Returns: 
+        data(dict): a dict of numpy ndarray consists of graph features.
     """
     # atoms
     atom_types = []
@@ -230,7 +249,13 @@ def nx_to_graph_data_obj_simple(G):
 
 
 def transform_contextpred(data, k, l1, l2):
-    """tbd"""
+    """
+    Randomly selects a node from the data object, and adds attributes
+    that contain the substructure that corresponds to k hop neighbours
+    rooted at the node, and the context substructures that corresponds to
+    the subgraph that is between l1 and l2 hops away from the
+    root node.
+    """
     assist_data = {}
 
     num_atoms = data['atom_type'].shape[0]
@@ -284,7 +309,7 @@ def transform_contextpred(data, k, l1, l2):
 
 
 class PreGNNContextPredFeaturizer(Featurizer):
-    """docstring for PreGNNContextPredFeaturizer"""
+    """Featurizer for context pred model of pretrain gnns"""
     def __init__(self, substruct_graph_wrapper, context_graph_wrapper, k, l1, l2):
         super(PreGNNContextPredFeaturizer, self).__init__()
         self.substruct_graph_wrapper = substruct_graph_wrapper
@@ -294,29 +319,31 @@ class PreGNNContextPredFeaturizer(Featurizer):
         self.l2 = l2
     
     def gen_features(self, raw_data):
-        """tbd"""
+        """Convert smiles to graph data.
+
+        Returns:
+            data(dict): a dict of numpy ndarray consists of graph features.
+        """
         smiles = raw_data['smiles']
         mol = AllChem.MolFromSmiles(smiles)
         if mol is None:
             return None
         data = mol_to_graph_data(mol)
-        new_data = {}
-        transformed = transform_contextpred(data, self.k, self.l1, self.l2)
-        if transformed is None:
-            return None
-        new_data['transformed'] = transformed
-        new_data['smiles'] = smiles
-        return new_data
+        data['smiles'] = smiles
+        return data
 
     def collate_fn(self, batch_data_list):
-        """tbd"""
+        """Aggregate a list of graph data into a batch data"""
         list_substruct_g = []
         list_context_g = []
         list_substruct_center_idx = []
         list_context_overlap_idx = []
         cum_substruct, cum_context = 0, 0
         for data in batch_data_list:
-            substruct_data, context_data, assist_data = data['transformed']
+            transformed = transform_contextpred(data, self.k, self.l1, self.l2)
+            if transformed is None:
+                continue
+            substruct_data, context_data, assist_data = transformed
             substruct_g = pgl.graph.Graph(num_nodes = len(substruct_data['atom_type']),
                     edges = substruct_data['edges'],
                     node_feat = {

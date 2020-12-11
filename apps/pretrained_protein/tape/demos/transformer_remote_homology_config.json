@@ -1,0 +1,15 @@
+{
+    "model_name": "remote_homology",
+    "task": "classification",
+    "class_num": 1195,
+    "label_name": "labels",
+
+    "model_type": "transformer",
+    "hidden_size": 512,
+    "layer_num": 12,
+    "head_num": 8,
+
+    "comment": "The following hyper-parameters are optional.",
+    "dropout": 0.1,
+    "weight_decay": 0.01
+}

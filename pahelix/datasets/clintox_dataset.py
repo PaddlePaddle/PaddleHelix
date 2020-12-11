@@ -1,3 +1,5 @@
+#!/usr/bin/python
+#-*-coding:utf-8-*-
 #   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +15,13 @@
 # limitations under the License.
 
 """
-Tox21 dataset
+Processing of clintox dataset
+
+The ClinTox dataset compares drugs approved by the FDA and drugs that have failed clinical trials for toxicity reasons. The dataset includes two classification tasks for 1491 drug compounds with known chemical structures: (1) clinical trial toxicity (or absence of toxicity) and (2) FDA approval status. List of FDA-approved drugs are compiled from the SWEETLEAD database, and list of drugs that failed clinical trials for toxicity reasons are compiled from the Aggregate Analysis of ClinicalTrials.gov(AACT) database.
+
+You can download the dataset from
+http://moleculenet.ai/datasets-1 and load it into pahelix reader creators
+
 """
 
 import os
@@ -28,12 +36,36 @@ __all__ = ['get_default_clintox_task_names', 'load_clintox_dataset']
 
 
 def get_default_clintox_task_names():
-    """tbd"""
+    """get that default clintox task names and return class"""
     return ['FDA_APPROVED', 'CT_TOX']
 
 
 def load_clintox_dataset(data_path, task_names=None, featurizer=None):
-    """tbd"""
+    """load Clintox dataset ,process the classification labels and the input information.
+
+    The data file contains a csv table, in which columns below are used:
+
+    :smiles: SMILES representation of the molecular structure
+    :FDA_APPROVED:FDA approval status
+    :CT_TOX: Clinical trial results
+    :Valid ratio: 1.0
+    :Task evaluated: 2/2
+
+    Args:
+        data_path(str): the path to the cached npz path.
+        task_names: get the default lipophilicity task names.
+        featurizer: the featurizer to use for processing the data.  
+    
+    Returns:
+        dataset(InMemoryDataset): the data_list(list of dict of numpy ndarray).
+    
+    References:
+    [1] Gayvert, Kaitlyn M., Neel S. Madhukar, and Olivier Elemento. “A data-driven approach to predicting successes and failures of clinical trials.” Cell chemical biology 23.10 (2016): 1294-1301.
+    [2] Artemov, Artem V., et al. “Integrated deep learned transcriptomic and structure-based predictor of clinical trials outcomes.” bioRxiv (2016): 095653.
+    [3] Novick, Paul A., et al. “SWEETLEAD: an in silico database of approved drugs, regulated chemicals, and herbal isolates for computer-aided drug discovery.” PloS one 8.11 (2013): e79568.
+    [4] Aggregate Analysis of ClincalTrials.gov (AACT) Database. https://www.ctti-clinicaltrials.org/aact-database
+    
+    """
     if task_names is None:
         task_names = get_default_clintox_task_names()
 

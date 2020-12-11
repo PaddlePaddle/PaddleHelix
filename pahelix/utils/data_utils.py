@@ -13,13 +13,23 @@
 # limitations under the License.
 
 """
-Tools for compound features.
+Tools for data.
 """
 
 import numpy as np
+import os
+import random
+
 
 def save_data_list_to_npz(data_list, npz_file):
-    """tbd"""
+    """
+    Save a list of data to the npz file. Each data is a dict 
+    of numpy ndarray.
+
+    Args:   
+        data_list(list): a list of data.
+        npz_file(str): the npz file location.
+    """
     keys = data_list[0].keys()
     merged_data = {}
     for key in keys:
@@ -31,9 +41,17 @@ def save_data_list_to_npz(data_list, npz_file):
 
 
 def load_npz_to_data_list(npz_file):
-    """tbd"""
-    def split_data(values, seq_lens):
-        """tbd"""
+    """
+    Reload the data list save by :function:`save_data_list_to_npz`.
+
+    Args:
+        npz_file(str): the npz file location.
+
+    Returns:
+        data_list(list): a list of data where each data is a dict of numpy 
+            ndarray.
+    """
+    def _split_data(values, seq_lens):
         res = []
         s = 0
         for l in seq_lens:
@@ -45,7 +63,7 @@ def load_npz_to_data_list(npz_file):
     names = [name for name in merged_data.keys() if not name.endswith('.seq_len')]
     data_dict = {}
     for name in names:
-        data_dict[name] = split_data(merged_data[name], merged_data[name + '.seq_len'])
+        data_dict[name] = _split_data(merged_data[name], merged_data[name + '.seq_len'])
 
     data_list = []
     n = len(data_dict[names[0]])
@@ -53,3 +71,17 @@ def load_npz_to_data_list(npz_file):
         data = {name:data_dict[name][i] for name in names}
         data_list.append(data)
     return data_list
+
+
+def get_part_files(data_path, trainer_id, trainer_num):
+    """
+    Split the files in data_path so that each trainer can train from different examples.
+    """
+    filenames = os.listdir(data_path)
+    random.shuffle(filenames)
+    part_filenames = []
+    for (i, filename) in enumerate(filenames):
+        if i % trainer_num == trainer_id:
+            part_filenames.append(data_path + '/' + filename)
+    return part_filenames
+

@@ -1,3 +1,5 @@
+#!/usr/bin/python                                                                                                                                                                                             
+#-*-coding:utf-8-*-  
 #   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,18 +27,31 @@ import paddle
 import paddle.fluid as fluid
 from paddle.fluid.incubate.fleet.collective import fleet
 
+
+"""
+Enable static graph mode.
+
+"""
 paddle.enable_static()
 
 from pahelix.model_zoo import PreGNNSupervisedModel
 from pahelix.datasets import load_chembl_filtered_dataset, get_chembl_filtered_task_num
-from pahelix.featurizer import PreGNNSupervisedFeaturizer
+from pahelix.featurizers import PreGNNSupervisedFeaturizer
 from pahelix.utils.paddle_utils import load_partial_params, get_distributed_optimizer
 from pahelix.utils.splitters import RandomSplitter
 from pahelix.utils.compound_tools import CompoundConstants
 
 
 def train(args, exe, train_prog, model, train_dataset, featurizer):
-    """tbd"""
+    """
+    Define the training function according to the given settings, calculate the training loss.
+
+    Args:
+        args,exe,train_prog,model,train_dataset,featurizer;
+    Returns:
+        the average of the list loss
+    
+    """
     data_gen = train_dataset.iter_batch(
             batch_size=args.batch_size, 
             num_workers=args.num_workers, 
@@ -51,7 +66,13 @@ def train(args, exe, train_prog, model, train_dataset, featurizer):
 
 
 def evaluate(args, exe, test_prog, model, test_dataset, featurizer):
-    """tbd"""
+    """
+    Define the evaluate function
+
+    In the dataset, a proportion of labels are blank. So we use a `valid` tensor 
+    to help eliminate these blank labels in both training and evaluation phase.
+
+    """
     data_gen = test_dataset.iter_batch(
             batch_size=args.batch_size, 
             num_workers=args.num_workers, 
@@ -66,8 +87,21 @@ def evaluate(args, exe, test_prog, model, test_dataset, featurizer):
 
 
 def main(args):
-    """tbd"""
+    """
+    Call the configuration function of the model, build the model and load data, then start training.
+
+    model_config:
+        a json file  with the  model configurations,such as dropout rate ,learning rate,num tasks and so on;
+    task_num:
+        It means the number of chembl filtered task;
+    
+    PreGNNSupervisedModel:
+        It means the PretrainGNNModel for supervised strategy.
+        Graph-level multi-task supervised pre-training to jointly predict a diverse set of supervised labels of individual graphs.
+    """
     model_config = json.load(open(args.model_config, 'r'))
+    if not args.dropout_rate is None:
+        model_config['dropout_rate'] = args.dropout_rate
     task_num = get_chembl_filtered_task_num()
     model_config['task_num'] = task_num
     
@@ -88,6 +122,11 @@ def main(args):
             model = PreGNNSupervisedModel(model_config)
             model.forward(is_test=True)
 
+    """
+    Use CUDAPlace for GPU training, or use CPUPlace for CPU training.
+
+    """
+
     place = fluid.CUDAPlace(int(os.environ.get('FLAGS_selected_gpus', 0))) \
             if args.use_cuda else fluid.CPUPlace()
     exe = fluid.Executor(place)
@@ -97,6 +136,20 @@ def main(args):
         load_partial_params(exe, args.init_model, train_prog)
 
     ### load data
+
+    """
+    PreGNNSupervisedFeaturizer:
+        It is used along with `PreGNNSupervised`. It inherits from the super class `Featurizer` which is used for feature extractions. The `Featurizer` has two functions: `gen_features` for converting from a single raw smiles to a single graph data, `collate_fn` for aggregating a sublist of graph data into a big batch.
+        
+    splitter:
+        split type of the dataset:random,scaffold,random with scaffold. Here is randomsplit.
+        `ScaffoldSplitter` will firstly order the compounds according to Bemis-Murcko scaffold, 
+        then take the first `frac_train` proportion as the train set, the next `frac_valid` proportion as the valid set 
+        and the rest as the test set. `ScaffoldSplitter` can better evaluate the generalization ability of the model on 
+        out-of-distribution samples. Note that other splitters like `RandomSplitter`, `RandomScaffoldSplitter` 
+        and `IndexSplitter` is also available."
+    
+    """
     featurizer = PreGNNSupervisedFeaturizer(model.graph_wrapper)
     dataset = load_chembl_filtered_dataset(args.data_path, featurizer=featurizer)
 
@@ -104,11 +157,19 @@ def main(args):
     train_dataset, _, test_dataset = splitter.split(
             dataset, frac_train=0.9, frac_valid=0, frac_test=0.1)
     if args.distributed:
-        indices = list(range(fleet.worker_num(), len(train_dataset), fleet.worker_index()))
+        indices = list(range(fleet.worker_index(), len(train_dataset), fleet.worker_num()))
         train_dataset = train_dataset[indices]
     print("Train/Test num: %s/%s" % (len(train_dataset), len(test_dataset)))
 
     ### start train
+    """
+    Load the train function and calculate the train loss and test loss in each epoch.
+    Here we set the epoch is in range of max epoch,you can change it if you want. 
+
+    Then we will calculate the train loss ,test loss and print them.
+    Finally we save the best epoch to the model according to the dataset.
+
+    """
     list_test_loss = []
     for epoch_id in range(args.max_epoch):
         train_loss = train(args, exe, train_prog, model, train_dataset, featurizer)

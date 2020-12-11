@@ -1,3 +1,5 @@
+#!/usr/bin/python
+#-*-coding:utf-8-*-
 #   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +15,10 @@
 # limitations under the License.
 
 """
-chembl filtered dataset
+Processing of chembl filtered dataset.
+
+The ChEMBL dataset containing 456K molecules with 1310 kinds of diverse and extensive biochemical assays. The database is unique because of its focus on all aspects of drug discovery and its size, containing information on more than 1.8 million compounds and over 15 million records of their effects on biological systems.
+
 """
 
 import os
@@ -46,12 +51,29 @@ __all__ = ['get_chembl_filtered_task_num', 'load_chembl_filtered_dataset']
 
 
 def get_chembl_filtered_task_num():
-    """tbd"""
+    """get that default bace task names and return class"""
     return 1310
 
 
 def load_chembl_filtered_dataset(data_path, featurizer=None):
-    """tbd"""
+    """load chembl_filtered dataset ,process the classification labels and the input information.
+
+    The data file contains a csv table, in which columns below are used:
+
+    :It contains the ID, SMILES/CTAB, InChI and InChIKey compound information.
+    :smiles:SMILES representation of the molecular structure
+
+    Args:
+        data_path(str): the path to the cached npz path.
+        featurizer: the featurizer to use for processing the data.  
+    
+    Returns:
+        dataset(InMemoryDataset): the data_list(list of dict of numpy ndarray).
+
+    References:
+    -- Gaulton, A; et al. (2011). “ChEMBL: a large-scale bioactivity database for drug discovery”. Nucleic Acids Research. 40 (Database issue): D1100-7.
+    
+    """
     downstream_datasets = [
         load_bace_dataset(join(dirname(dirname(data_path)), 'bace/raw')),
         load_bbbp_dataset(join(dirname(dirname(data_path)), 'bbbp/raw')),
@@ -70,19 +92,6 @@ def load_chembl_filtered_dataset(data_path, featurizer=None):
     for c_dataset in downstream_datasets:
         train_dataset, valid_dataset, test_dataset = splitter.split(
                 c_dataset, frac_train=0.8, frac_valid=0.1, frac_test=0.1)
-        
-        # downstream_dataset = MoleculeDataset(self.root, dataset_name=dataset_name)
-        # downstream_smiles = pd.read_csv(os.path.join(d_path,
-        #                                              'processed', 'smiles.csv'),
-        #                                 header=None)[0].tolist()
-        # downstream_data_list = downstream_dataset.get_data_list()
-        # downstream_smiles = downstream_dataset.get_smiles_list()
-        # assert len(downstream_data_list) == len(downstream_smiles)
-        # _, _, _, (train_smiles, valid_smiles, test_smiles) = scaffold_split(
-        #         downstream_data_list, downstream_smiles, task_idx=None, null_value=0,
-        #         frac_train=0.8, frac_valid=0.1, frac_test=0.1,
-        #         return_smiles=True)
-
         ### remove both test and validation molecules
         # remove_smiles = test_smiles + valid_smiles
         remove_smiles = [d['smiles'] for d in valid_dataset] + [d['smiles'] for d in test_dataset]
@@ -128,6 +137,7 @@ def load_chembl_filtered_dataset(data_path, featurizer=None):
 def _load_chembl_filtered_dataset(root_path):
     """
     Data from 'Large-scale comparison of machine learning methods for drug target prediction on ChEMBL'
+
     :param root_path: path to the folder containing the reduced chembl dataset
     :return: list of smiles, preprocessed rdkit mol obj list, list of np.array
     containing indices for each of the 3 folds, np.array containing the labels

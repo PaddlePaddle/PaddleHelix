@@ -1,3 +1,5 @@
+#!/usr/bin/python                                                                                                                                                                                             
+#-*-coding:utf-8-*- 
 #   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +21,7 @@ import numpy as np
 import pgl
 from rdkit.Chem import AllChem
 
-from pahelix.featurizer.featurizer import Featurizer
+from pahelix.featurizers.featurizer import Featurizer
 from pahelix.utils.compound_tools import mol_to_graph_data
 
 
@@ -30,7 +32,17 @@ class DownstreamFeaturizer(Featurizer):
         self.graph_wrapper = graph_wrapper
     
     def gen_features(self, raw_data):
-        """tbd"""
+        """
+        Gen features according to raw data and return a single graph data.
+
+        Args:
+            raw_data: It contains smiles and label,we convert smiles 
+            to mol by rdkit,then convert mol to graph data.
+        
+        Returns:
+            data: It contains reshape label and smiles.
+
+        """
         smiles, label = raw_data['smiles'], raw_data['label']
         mol = AllChem.MolFromSmiles(smiles)
         if mol is None:
@@ -41,7 +53,19 @@ class DownstreamFeaturizer(Featurizer):
         return data
 
     def collate_fn(self, batch_data_list):
-        """tbd"""
+        """
+        Collate features about a sublist of graph data and return a big batch feed dictionary.
+
+        Args:
+            batch_data_list : the graph data in gen_features.for data in batch_data_list,
+            create node features and edge features according to pgl graph,and then 
+            use graph wrapper to feed join graph, then the label can be arrayed to batch label.
+        
+        Returns:
+            feed_dict: a dictionary contains finetune label and valid,which are 
+            collected from batch_label and batch_valid.
+            
+        """
         g_list = []
         label_list = []
         for data in batch_data_list:

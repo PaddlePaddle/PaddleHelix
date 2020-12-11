@@ -1,3 +1,5 @@
+#!/usr/bin/python
+#-*-coding:utf-8-*-
 #   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +15,13 @@
 # limitations under the License.
 
 """
-Tox21 dataset
+Processing of hiv dataset.
+
+The HIV dataset was introduced by the Drug Therapeutics Program (DTP) AIDS Antiviral Screen, which tested the ability to inhibit HIV replication for over 40,000 compounds. Screening results were evaluated and placed into three categories: confirmed inactive (CI),confirmed active (CA) and confirmed moderately active (CM). We further combine the latter two labels, making it a classification task between inactive (CI) and active (CA and CM).
+
+You can download the dataset from
+http://moleculenet.ai/datasets-1 and load it into pahelix reader creators
+
 """
 
 import os
@@ -28,12 +36,34 @@ __all__ = ['get_default_hiv_task_names', 'load_hiv_dataset']
 
 
 def get_default_hiv_task_names():
-    """tbd"""
+    """Get that default hiv task names and return class label"""
     return ['HIV_active']
 
 
 def load_hiv_dataset(data_path, task_names=None, featurizer=None):
-    """tbd"""
+    """Load hiv dataset,process the input information and the featurizer.
+    
+   The data file contains a csv table, in which columns below are used:
+
+    :smiles:  SMILES representation of the molecular structure
+    :activity: Three-class labels for screening results: CI/CM/CA
+    :HIV_active: Binary labels for screening results: 1 (CA/CM) and 0 (CI)
+    :Valid ratio:1.0
+    :Task evaluated:1/1
+
+    Args:
+        data_path(str): the path to the cached npz path.
+        task_names:get the default lipophilicity task names.
+        featurizer: the featurizer to use for processing the data.    
+   
+    Returns:
+        dataset(InMemoryDataset): the data_list(list of dict of numpy ndarray).
+
+
+    References:
+    [1] AIDS Antiviral Screen Data. https://wiki.nci.nih.gov/display/NCIDTPdata/AIDS+Antiviral+Screen+Data
+
+    """
     if task_names is None:
         task_names = get_default_hiv_task_names()
 

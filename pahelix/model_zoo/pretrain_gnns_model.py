@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-pretrain gnns
+This is an implementation of pretrain gnns:
+https://arxiv.org/abs/1905.12265
 """
 
 import paddle
@@ -26,7 +27,14 @@ from pahelix.utils.compound_tools import CompoundConstants
 
 
 class PretrainGNNModel(object):
-    """tbd"""
+    """
+    The basic GNN Model used in pretrain gnns.
+    
+
+    Args:
+        model_config(dict): a dict of model configurations.
+        name(str): the prefix of model params.
+    """
     def __init__(self, model_config={}, name=''):
         self.name = name
 
@@ -48,6 +56,7 @@ class PretrainGNNModel(object):
                 'bond_type_num', len(CompoundConstants.bond_type_list) + 1)
         self.bond_direction_num = model_config.get(
                 'bond_direction_num', len(CompoundConstants.bond_dir_list) + 1)
+        self.embedding_trainable = model_config.get('embedding_trainable', True)
 
     def _mol_encoder(self, graph_wrapper, name=""):
         embed_init = fluid.initializer.XavierInitializer(uniform=True)
@@ -56,12 +65,16 @@ class PretrainGNNModel(object):
                 input=graph_wrapper.node_feat['atom_type'],
                 size=[self.atom_type_num, self.embed_dim],
                 param_attr=fluid.ParamAttr(
-                    name="%s_embed_atom_type" % name, initializer=embed_init))
+                    name="%s_embed_atom_type" % name,
+                    initializer=embed_init,
+                    trainable=self.embedding_trainable))
         chirality_tag_embed = layers.embedding(
                 input=graph_wrapper.node_feat['chirality_tag'],
                 size=[self.chirality_tag_num, self.embed_dim],
                 param_attr=fluid.ParamAttr(
-                    name="%s_embed_chirality_tag" % name, initializer=embed_init))
+                    name="%s_embed_chirality_tag" % name,
+                    initializer=embed_init,
+                    trainable=self.embedding_trainable))
         node_features = atom_type_embed + chirality_tag_embed
         return node_features
 
@@ -72,17 +85,23 @@ class PretrainGNNModel(object):
                 input=graph_wrapper.edge_feat['bond_type'],
                 size=[self.bond_type_num, self.embed_dim],
                 param_attr=fluid.ParamAttr(
-                    name="%s_embed_bond_type" % name, initializer=embed_init))
+                    name="%s_embed_bond_type" % name,
+                    initializer=embed_init,
+                    trainable=self.embedding_trainable))
         bond_direction_embed = layers.embedding(
                 input=graph_wrapper.edge_feat['bond_direction'],
                 size=[self.bond_direction_num, self.embed_dim],
                 param_attr=fluid.ParamAttr(
-                    name="%s_embed_bond_direction" % name, initializer=embed_init))
+                    name="%s_embed_bond_direction" % name,
+                    initializer=embed_init,
+                    trainable=self.embedding_trainable))
         bond_features = bond_type_embed + bond_direction_embed
         return bond_features
 
     def forward(self, graph_wrapper, is_test=False):
-        """tbd"""
+        """
+        Build the network.
+        """
         node_features = self._mol_encoder(graph_wrapper, name=self.name)
 
         features_list = [node_features]
@@ -165,12 +184,22 @@ class PretrainGNNModel(object):
 
 
 class PreGNNAttrmaskModel(object):
-    """docstring for PreGNNAttrmaskModel"""
+    """
+    This is a pretraning model used by pretrain gnns for unsupervised training. 
+    It randomly mask the atom_type of some nodes and use the masked atom_type 
+    as the predicting target. 
+
+    Returns:
+        self.graph_wrapper: pgl graph_wrapper object for the input compound graph.
+        self.loss: the loss variance of the model.
+    """
     def __init__(self, model_config):
         self.gnn_model = PretrainGNNModel(model_config, name='gnn')
 
     def forward(self, is_test=False):
-        """tbd"""
+        """
+        Build the network.
+        """
         graph_wrapper = GraphWrapper(name="graph",
                 node_feat=[
                     ('atom_type', [None, 1], "int64"), 
@@ -197,16 +226,29 @@ class PreGNNAttrmaskModel(object):
 
 
 class PreGNNContextpredModel(object):
-    """docstring for PreGNNContextpredModel"""
+    """
+    This is a pretraning model used by pretrain gnns for unsupervised training. For 
+    a given node, it builds the substructure that corresponds to k hop neighbours 
+    rooted at the node, and the context substructures that corresponds to the subgraph 
+    that is between l1 and l2 hops away from the node. Then the feature space of 
+    the subtructure and the context substructures are required to be close.
+
+    Returns:
+        self.substruct_graph_wrapper: pgl graph_wrapper object for the input substruct graph.
+        self.context_graph_wrapper: pgl graph_wrapper object for the input context graph.
+        self.loss: the loss variance of the model.
+    """
     def __init__(self, model_config):
         self.context_pooling = model_config['context_pooling']
 
-        #set up models, one for pre-training and one for context embeddings
+        # set up models, one for pre-training and one for context embeddings
         self.substruct_model = PretrainGNNModel(model_config, name='gnn')
         self.context_model = PretrainGNNModel(model_config, name='context_gnn')
 
     def forward(self, is_test=False):
-        """tbd"""
+        """
+        Build the network.
+        """
         substruct_graph_wrapper = GraphWrapper(name="graph",
                 node_feat=[
                     ('atom_type', [None, 1], "int64"), 
@@ -252,7 +294,13 @@ class PreGNNContextpredModel(object):
 
 
 class PreGNNSupervisedModel(object):
-    """docstring for PreGNNContextpredModel"""
+    """
+    This is a pretraning model used by pretrain gnns for supervised training.
+
+    Returns:
+        self.graph_wrapper: pgl graph_wrapper object for the input compound graph.
+        self.loss: the loss variance of the model.
+    """
     def __init__(self, model_config):
         self.task_num = model_config['task_num']
         self.pool_type = model_config['pool_type']
@@ -260,7 +308,9 @@ class PreGNNSupervisedModel(object):
         self.gnn_model = PretrainGNNModel(model_config, name='gnn')
 
     def forward(self, is_test=False):
-        """tbd"""
+        """
+        Build the network.
+        """
         graph_wrapper = GraphWrapper(name="graph",
                 node_feat=[
                     ('atom_type', [None, 1], "int64"), 
