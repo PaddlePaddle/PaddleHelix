@@ -1,7 +1,7 @@
 English | [简体中文](README_cn.md)
 
 <p align="center">
-<img src="./docs/img/paddlehelix_logo.png" align="middle"
+<img src="./.github/img/paddlehelix_logo.png" align="middle"
 </p>
 ------
 
@@ -11,14 +11,14 @@ PaddleHelix is a machine-learning-based bio-computing framework, features **repr
 > * Precision medicine
 
 <p align="left">
-<img src="./docs/img/paddlehelix_features.jpg" align="middle"
+<img src="./.github/img/paddlehelix_features.jpg" align="middle"
 </p>
 
 ## Installation
 
 ## Documentation
 ### Tutorials
-* We provide abundant [Tutorials](./docs/tutorials) to navigate the directory and start quickly.
+* We provide abundant [Tutorials](./tutorials) to navigate the directory and start quickly.
 * PaddleHelix is based on [PaddlePaddle](https://github.com/paddlepaddle/paddle), a high-performance Parallelized Deep Learning Platform.
 
 ### Features
