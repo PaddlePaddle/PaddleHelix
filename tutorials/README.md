@@ -16,3 +16,11 @@ To use [LinearFold](https://www.researchgate.net/publication/344954534_LinearFol
 ph.toolkit.linear_fold('ACAAGTCCCCAAAGGG...')
 ```
 
+...To be continued
+
+# Advanced Tutorials
+* [Predicting Drug-Target Interaction](drug_target_interaction_tutorial.ipynb)
+* [Compound Representation Learning and Drug Profiling](compound_property_prediction_tutorial.ipynb)
+* [Protein Representation Learning and Protein Property Prediction](protein_pretrain_and_property_prediction_tutorial.ipynb)
+
+
