@@ -3,6 +3,7 @@ English | [简体中文](README_cn.md)
 <p align="center">
 <img src="./.github/img/paddlehelix_logo.png" align="middle"
 </p>
+
 ------
 
 PaddleHelix is a machine-learning-based bio-computing framework, features **representation learning** and **multi-task learning**, aiming at facilitating the development of the following areas:
