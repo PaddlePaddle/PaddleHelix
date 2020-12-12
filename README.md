@@ -11,7 +11,7 @@ PaddleHelix is a machine-learning-based bio-computing framework, features **repr
 > * Precision medicine
 
 <p align="left">
- <img src="./docs/img/paddlehelix_features.pdf" align="middle"
+ <img src="./docs/img/paddlehelix_features.jpg" align="middle"
 </p>
 
 ## Installation
