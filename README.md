@@ -1,7 +1,7 @@
 English | [简体中文](README_ch.md)
 
 <p align="center">
- <img src="./docs/imgs/paddlehelix_logo.png" align="middle"
+ <img src="./docs/img/paddlehelix_logo.png" align="middle"
 </p>
 ------
 
@@ -11,7 +11,7 @@ PaddleHelix is a machine-learning-based bio-computing framework, features **repr
 > * Precision medicine
 
 <p align="left">
- <img src="./docs/imgs/paddlehelix_features.pdf" align="middle"
+ <img src="./docs/img/paddlehelix_features.pdf" align="middle"
 </p>
 
 ## Installation
