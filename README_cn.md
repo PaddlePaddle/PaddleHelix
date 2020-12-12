@@ -1,4 +1,4 @@
-[English](README.md) | 简体中文
+[English](./) | 简体中文
 
 <p align="center">
  <img src="./docs/imgs/paddlehelix_logo.png" align="middle"
