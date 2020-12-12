@@ -18,7 +18,7 @@ PaddleHelix is a machine-learning-based bio-computing framework, features **repr
 
 ## Documentation
 ### Tutorials
-* We provide abundant [Tutorials](./tutorials) to navigate the directory and start quickly.
+* We provide abundant [tutorials](./tutorials) to navigate the directory and start quickly.
 * PaddleHelix is based on [PaddlePaddle](https://github.com/paddlepaddle/paddle), a high-performance Parallelized Deep Learning Platform.
 
 ### Features
