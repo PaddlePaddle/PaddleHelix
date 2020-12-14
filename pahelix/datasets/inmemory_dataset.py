@@ -58,9 +58,9 @@ class InMemoryDataset(object):
 
     def _load_npz_data(self, data_path):
         data_list = []
-        files = [file for file in os.listdir(data_path) if file.endswith('.npz')]
-        for file in files:
-            data_list += load_npz_to_data_list(join(data_path, file))
+        files = [f for f in os.listdir(data_path) if f.endswith('.npz')]
+        for f in files:
+            data_list += load_npz_to_data_list(join(data_path, f))
         return data_list
 
     def _save_npz_data(self, data_list, data_path, max_num_per_file=10000):
@@ -68,9 +68,9 @@ class InMemoryDataset(object):
             os.makedirs(data_path)
         n = len(data_list)
         for i in range(int((n - 1) / max_num_per_file) + 1):
-            file = 'part-%05d.npz' % i
+            filename = 'part-%05d.npz' % i
             sub_data_list = self.data_list[i * max_num_per_file: (i + 1) * max_num_per_file]
-            save_data_list_to_npz(join(data_path, file), sub_data_list)
+            save_data_list_to_npz(join(data_path, filename), sub_data_list)
 
     def save_data(self, data_path):
         """

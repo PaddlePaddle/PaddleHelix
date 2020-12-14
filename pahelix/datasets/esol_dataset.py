@@ -65,8 +65,8 @@ def load_esol_dataset(data_path, task_names=None, featurizer=None):
         task_names = get_default_esol_task_names()
 
     # NB: some examples have multiple species
-    file = os.listdir(data_path)[0]
-    input_df = pd.read_csv(join(data_path, file), sep=',')
+    csv_file = os.listdir(data_path)[0]
+    input_df = pd.read_csv(join(data_path, csv_file), sep=',')
     smiles_list = input_df['smiles']
     labels = input_df[task_names]
 

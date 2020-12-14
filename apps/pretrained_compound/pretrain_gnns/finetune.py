@@ -26,6 +26,7 @@ import numpy as np
 import paddle
 import paddle.fluid as fluid
 
+# Enable static graph mode.
 paddle.enable_static()
 
 from pahelix.utils.paddle_utils import load_partial_params
@@ -109,16 +110,15 @@ def main(args):
     with fluid.program_guard(train_prog, startup_prog):
         with fluid.unique_name.guard():
             model = DownstreamModel(model_config)
-            model.forward()
+            model.train()
             opt = fluid.optimizer.Adam(learning_rate=args.lr)
             opt.minimize(model.loss)
     with fluid.program_guard(test_prog, fluid.Program()):
         with fluid.unique_name.guard():
             model = DownstreamModel(model_config)
-            model.forward(is_test=True)
-    """
-    Use CUDAPlace for GPU training, or use CPUPlace for CPU training.
-    """
+            model.train(is_test=True)
+
+    # Use CUDAPlace for GPU training, or use CPUPlace for CPU training.
     place = fluid.CUDAPlace(0) if args.use_cuda else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(startup_prog)
@@ -127,20 +127,17 @@ def main(args):
         load_partial_params(exe, args.init_model, train_prog)
 
     ### load data
-    """
-    featurizer:
-        Gen features according to the raw data and return the graph data.
-        Collate features about the graph data and return the feed dictionary.
+    # featurizer:
+    #     Gen features according to the raw data and return the graph data.
+    #     Collate features about the graph data and return the feed dictionary.
+    # splitter:
+    #     split type of the dataset:random,scaffold,random with scaffold. Here is randomsplit.
+    #     `ScaffoldSplitter` will firstly order the compounds according to Bemis-Murcko scaffold, 
+    #     then take the first `frac_train` proportion as the train set, the next `frac_valid` proportion as the valid set 
+    #     and the rest as the test set. `ScaffoldSplitter` can better evaluate the generalization ability of the model on 
+    #     out-of-distribution samples. Note that other splitters like `RandomSplitter`, `RandomScaffoldSplitter` 
+    #     and `IndexSplitter` is also available."
     
-    splitter:
-        split type of the dataset:random,scaffold,random with scaffold. Here is randomsplit.
-        `ScaffoldSplitter` will firstly order the compounds according to Bemis-Murcko scaffold, 
-        then take the first `frac_train` proportion as the train set, the next `frac_valid` proportion as the valid set 
-        and the rest as the test set. `ScaffoldSplitter` can better evaluate the generalization ability of the model on 
-        out-of-distribution samples. Note that other splitters like `RandomSplitter`, `RandomScaffoldSplitter` 
-        and `IndexSplitter` is also available."
-    
-    """
     featurizer = DownstreamFeaturizer(model.graph_wrapper)
     dataset = get_dataset(
             args.dataset_name, args.data_path, task_names, featurizer)
@@ -151,13 +148,11 @@ def main(args):
             len(train_dataset), len(valid_dataset), len(test_dataset)))
 
     ### start train
-    """
-    Load the train function and calculate the train loss in each epoch.
-    Here we set the epoch is in range of max epoch,you can change it if you want. 
+    # Load the train function and calculate the train loss in each epoch.
+    # Here we set the epoch is in range of max epoch,you can change it if you want. 
 
-    Then we will calculate the train loss ,valid auc,test auc and print them.
-    Finally we save it to the model according to the dataset.
-    """
+    # Then we will calculate the train loss ,valid auc,test auc and print them.
+    # Finally we save it to the model according to the dataset.
     list_val_auc, list_test_auc = [], []
     for epoch_id in range(args.max_epoch):
         train_loss = train(args, exe, train_prog, model, train_dataset, featurizer)
