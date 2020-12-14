@@ -8,6 +8,6 @@ add_subdirectory(third-party/pybind11)
 set(third_party_deps)
 list(APPEND third_party_deps pybind11)
 
-add_subdirectory(pahelix/c/linear_x)
+add_subdirectory(c/pahelix/toolkit/linear_rna)
 
 
