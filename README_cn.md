@@ -5,6 +5,9 @@
 </p>
 
 ------
+[![Version](https://img.shields.io/github/release/PaddlePaddle/PaddleHelix.svg)](https://github.com/PaddlePaddle/PaddleHelix/releases)
+![python version](https://img.shields.io/badge/python-3.6+-orange.svg)
+![support os](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
 
 PaddleHelix(螺旋桨)是一个基于机器学习的生物计算工具集,致力于加速下面领域的进展
 > * 疫苗设计
