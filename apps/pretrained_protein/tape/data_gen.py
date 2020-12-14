@@ -22,11 +22,12 @@ from pahelix.utils.data_utils import get_part_files
 from pahelix.utils.language_model_tools import apply_bert_mask
 from pahelix.utils.protein_tools import ProteinTokenizer
 
-def pretrain_sample_reader(filenames):
+def pretrain_sample_reader(filenames, batch_size):
     """
     DataLoader for pretraining models.
     """
     def __reader__():
+        examples = []
         for filename in filenames:
             data = np.load(filename)
             masked_token_ids, labels = apply_bert_mask(data['token_ids'], ProteinTokenizer)
@@ -37,16 +38,22 @@ def pretrain_sample_reader(filenames):
                 tokens = masked_token_ids[offset:offset + lengths[i]].reshape(lengths[i], 1)
                 pos = np.arange(lengths[i]).reshape(lengths[i], 1)
                 label = labels[offset:offset + lengths[i]].reshape(lengths[i], 1)
-                yield (tokens, pos, label)
+                examples.append((tokens, pos, label))
+                if len(examples) == batch_size:
+                    yield examples
+                    examples.clear()
                 offset += lengths[i]
+        if len(examples) > 0:
+            yield examples
     return __reader__
 
 
-def sequence_sample_reader(filenames, label_name):
+def sequence_sample_reader(filenames, batch_size, label_name):
     """
     DataLoader for sequence classification tasks.
     """
     def __reader__():
+        examples = []
         for filename in filenames:
             data = np.load(filename)
             token_ids = data['token_ids']
@@ -58,16 +65,22 @@ def sequence_sample_reader(filenames, label_name):
                 tokens = token_ids[offset:offset + lengths[i]].reshape(lengths[i], 1)
                 pos = np.arange(lengths[i]).reshape(lengths[i], 1)
                 label = labels[offset:offset + lengths[i]].reshape(lengths[i], 1)
-                yield (tokens, pos, label)
+                examples.append((tokens, pos, label))
+                if len(examples) == batch_size:
+                    yield examples
+                    examples.clear()
                 offset += lengths[i]
+        if len(examples) > 0:
+            yield examples
     return __reader__
 
 
-def normal_sample_reader(filenames, label_name):
+def normal_sample_reader(filenames, batch_size, label_name):
     """
     DataLoader for classification and regression tasks.
     """
     def __reader__():
+        examples = []
         for filename in filenames:
             data = np.load(filename)
             token_ids = data['token_ids']
@@ -79,25 +92,30 @@ def normal_sample_reader(filenames, label_name):
                 tokens = token_ids[offset:offset + lengths[i]].reshape(lengths[i], 1)
                 pos = np.arange(lengths[i]).reshape(lengths[i], 1)
                 label = labels[i:i + 1].reshape(1, 1)
-                yield (tokens, pos, label)
+                examples.append((tokens, pos, label))
+                if len(examples) == batch_size:
+                    yield examples
+                    examples.clear()
                 offset += lengths[i]
+        if len(examples) > 0:
+            yield examples
     return __reader__
 
 
-def get_sample_generator(filenames, model_config):
+def get_sample_generator(filenames, batch_size, model_config):
     """
     Set data loader generator according to different tasks.
     """
     task = model_config['task']
 
     if task == 'pretrain':
-        return pretrain_sample_reader(filenames)
+        return pretrain_sample_reader(filenames, batch_size)
     elif task == 'seq_classification':
         label_name = model_config.get('label_name', 'labels')
-        return sequence_sample_reader(filenames, label_name)
+        return sequence_sample_reader(filenames, batch_size, label_name)
     elif task in ['classification', 'regression']:
         label_name = model_config.get('label_name', 'labels')
-        return normal_sample_reader(filenames, label_name)
+        return normal_sample_reader(filenames, batch_size, label_name)
     else:
         raise RuntimeError('Task %s is unsupport.' % task)
         return None
@@ -114,10 +132,9 @@ def setup_data_loader(model, model_config, data_path, trainer_id, trainer_num, p
             iterable=True)
 
     filenames = get_part_files(data_path, trainer_id, trainer_num)
-    data_loader.set_sample_generator(
-            get_sample_generator(filenames, model_config),
-            places=places,
-            batch_size=batch_size)
+    data_loader.set_sample_list_generator(
+            get_sample_generator(filenames, batch_size, model_config),
+            places=places)
     return data_loader
 
 
