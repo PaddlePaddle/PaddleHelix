@@ -12,7 +12,7 @@ PaddleHelix(螺旋桨)是一个基于机器学习的生物计算工具集, 他�
 > * 精准医疗
 
 <p align="left">
- <img src="./.github/paddlehelix_features.pdf" align="middle"
+ <img src="./.github/paddlehelix_features.jpg" align="middle"
 </p>
 
 ## 安装
