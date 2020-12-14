@@ -29,8 +29,6 @@ from os.path import join, exists
 import pandas as pd
 import numpy as np
 
-from rdkit.Chem import AllChem
-
 from pahelix.datasets.inmemory_dataset import InMemoryDataset
 
 
@@ -40,8 +38,8 @@ __all__ = ['get_default_toxcast_task_names', 'load_toxcast_dataset']
 def get_default_toxcast_task_names(data_path):
     """Get that default toxcast task names and return the list of the input information"""
 
-    file = os.listdir(data_path)[0]
-    input_df = pd.read_csv(join(data_path, file), sep=',')
+    csv_file = os.listdir(data_path)[0]
+    input_df = pd.read_csv(join(data_path, csv_file), sep=',')
     return list(input_df.columns)[1:]
 
 

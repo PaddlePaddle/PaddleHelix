@@ -61,6 +61,9 @@ class DownstreamModel(object):
                     and the first dimension of the shape must be set unknown
                     (-1 or None) or we can easily use :code:`Graph.edge_feat_info()`
                     to get the edge_feat settings.
+
+        Returns:
+            logits: the model prediction.
      
         """
         graph_wrapper = GraphWrapper(name="graph",
@@ -70,13 +73,19 @@ class DownstreamModel(object):
                 edge_feat=[
                     ('bond_type', [None, 1], "int64"),
                     ('bond_direction', [None, 1], "int64")])
-        finetune_label = layers.data(name="finetune_label", shape=[None, self.num_tasks], dtype="float32")
-        valid = layers.data("valid", shape=[None, self.num_tasks], dtype="float32")
-
         node_repr = self.gnn_model.forward(graph_wrapper, is_test=is_test)
         graph_repr = pgl.layers.graph_pooling(graph_wrapper, node_repr, self.pool_type)
         logits = layers.fc(graph_repr, size=self.num_tasks, name="finetune_fc")
+        return graph_wrapper, logits
 
+    def train(self, is_test=False):
+        """
+        Used for train/test with labels and train loss.
+        """
+        graph_wrapper, logits = self.forward(is_test=is_test)
+
+        finetune_label = layers.data(name="finetune_label", shape=[None, self.num_tasks], dtype="float32")
+        valid = layers.data("valid", shape=[None, self.num_tasks], dtype="float32")
         loss = layers.sigmoid_cross_entropy_with_logits(x=logits, label=finetune_label)
         loss = layers.reduce_sum(loss * valid) / layers.reduce_sum(valid)
         pred = layers.sigmoid(logits)
@@ -86,4 +95,12 @@ class DownstreamModel(object):
         self.pred = pred
         self.finetune_label = finetune_label
 
+    def inference(self):
+        """
+        Used for inference with labels.
+        """
+        graph_wrapper, logits = self.forward(is_test=True)
+        pred = layers.sigmoid(logits)
+        self.graph_wrapper = graph_wrapper
+        self.pred = pred
 

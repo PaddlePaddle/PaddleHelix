@@ -241,7 +241,7 @@ def check_smiles_validity(smiles):
             return True
         else:
             return False
-    except:
+    except Exception as e:
         return False
 
 

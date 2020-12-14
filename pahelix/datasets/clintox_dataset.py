@@ -69,8 +69,8 @@ def load_clintox_dataset(data_path, task_names=None, featurizer=None):
     if task_names is None:
         task_names = get_default_clintox_task_names()
 
-    file = os.listdir(data_path)[0]
-    input_df = pd.read_csv(join(data_path, file), sep=',')
+    csv_file = os.listdir(data_path)[0]
+    input_df = pd.read_csv(join(data_path, csv_file), sep=',')
     smiles_list = input_df['smiles']
     from rdkit.Chem import AllChem
     rdkit_mol_objs_list = [AllChem.MolFromSmiles(s) for s in smiles_list]

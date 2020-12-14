@@ -34,7 +34,7 @@ from pahelix.datasets.stream_dataset import StreamDataset
 __all__ = ['load_zinc_dataset', 'load_stream_zinc_dataset']
 
 
-def load_zinc_dataset(data_path, featurizer=None):
+def load_zinc_dataset(data_path, featurizer=None, return_smiles=False, indices=None):
     """Load zinc dataset,process the input information and the featurizer.
 
     The data file contains a csv table, in which columns below are used:
@@ -54,6 +54,11 @@ def load_zinc_dataset(data_path, featurizer=None):
 
     """
     smiles_list = _load_zinc_dataset(data_path)
+    if return_smiles:
+        return smiles_list
+    
+    if not indices is None:
+        smiles_list = [smiles_list[i] for i in indices]
     
     data_list = []
     for i in range(len(smiles_list)):
@@ -103,8 +108,8 @@ def _load_zinc_dataset(data_path):
     Returns:
         smile_list: the smile list of the input.
     """
-    file = os.listdir(data_path)[0]
+    csv_file = os.listdir(data_path)[0]
     input_df = pd.read_csv(
-            join(data_path, file), sep=',', compression='gzip', dtype='str')
+            join(data_path, csv_file), sep=',', compression='gzip', dtype='str')
     smiles_list = list(input_df['smiles'])
     return smiles_list
