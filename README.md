@@ -28,7 +28,7 @@ PaddleHelix is a machine-learning-based bio-computing framework aiming at facili
 <img src="./.github/LinearRNA.jpg" align="middle"
 </p>
 
-* Large-scale Representation Learning and Transfer Learning enhanced bio-computing: Self-supervised learning for molecule representations offers prospects of a breakthrough in tasks with limited annotation, including drug profiling, drug-target interaction, protein-protein interaction, RNA-RNA interaction, protein folding, RNA folding, and molecule design. PaddleHelix implements a variety of representation learning algorithms and state-of-the-art large-scale pre-trained models to help developers to start from "the shoulders of giants" quickly.
+* Large-scale Representation Learning and Transfer Learning: Self-supervised learning for molecule representations offers prospects of a breakthrough in tasks with limited annotation, including drug profiling, drug-target interaction, protein-protein interaction, RNA-RNA interaction, protein folding, RNA folding, and molecule design. PaddleHelix implements a variety of representation learning algorithms and state-of-the-art large-scale pre-trained models to help developers to start from "the shoulders of giants" quickly.
 <p align="center">
 <img src="./.github/paddlehelix_features.jpg" align="middle"
 </p>
