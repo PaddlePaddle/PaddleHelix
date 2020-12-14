@@ -15,6 +15,15 @@ PaddleHelix(螺旋桨)是一个基于机器学习的生物计算工具集,致力
 > * 精准医疗
 
 ## 安装
+* 在安装paddlehelix之前,首先需要使用conda安装依赖rdkit:
+```bash
+conda install -c conda-forge rdkit
+```
+* 安装完rdkit之后便可以使用pip命令来安装paddlehelix了:
+```bash
+pip install paddlehelix
+```
+
 
 ## 文档
 ### 教学
