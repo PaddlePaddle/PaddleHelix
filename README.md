@@ -16,7 +16,14 @@ PaddleHelix is a machine-learning-based bio-computing framework aiming at facili
 
 
 ## Installation
-
+* Before installing the paddlhelix package, you should install the rdkit package using conda command:
+```bash
+conda install -c conda-forge rdkit
+```
+* Then you can install the paddlehelix package using the pip command:
+```bash
+pip install paddlehelix
+```
 ## Documentation
 ### Tutorials
 * We provide abundant [tutorials](./tutorials) to navigate the directory and start quickly.
