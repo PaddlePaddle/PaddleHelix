@@ -1,7 +1,7 @@
 English | [简体中文](README_cn.md)
 
 <p align="center">
-<img src="./.github/img/paddlehelix_logo.png" align="middle"
+<img src="./.github/paddlehelix_logo.png" align="middle"
 </p>
 
 ------
