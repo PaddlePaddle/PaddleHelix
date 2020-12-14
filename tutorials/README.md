@@ -5,20 +5,11 @@ Machine learning (ML), especially deep learning (DL) is playing an increasingly 
 **PaddleHelix** is a high-performance machine-learning-based bio-computing framework. It features large scale representation learning and easy-to-use APIs, providing pharmaceutical and biological researchers and engineers convenient access to the most up-to-date and state-of-the-art AI tools.
 
 # Navigating PaddleHelix
+<p align="center">
+<img src="./.github/PaddleHelix_Structure.jpg" align="middle"
+</p>
 
-# QuickStart
-To start using PaddleHelix simply do:
-```python
-import pahelix as ph
-```
-To use [LinearFold](https://www.researchgate.net/publication/344954534_LinearFold_Linear-Time_Prediction_of_RNA_Secondary_Structures) algorithm to fold an RNA sequence, use the nucleotide sequence as the input and run:
-```python
-ph.toolkit.linear_fold('ACAAGTCCCCAAAGGG...')
-```
-
-...To be continued
-
-# Advanced Tutorials
+# Tutorials
 * [Predicting Drug-Target Interaction](drug_target_interaction_tutorial.ipynb)
 * [Compound Representation Learning and Drug Profiling](compound_property_prediction_tutorial.ipynb)
 * [Protein Representation Learning and Protein Property Prediction](protein_pretrain_and_property_prediction_tutorial.ipynb)
