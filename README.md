@@ -5,6 +5,9 @@ English | [简体中文](README_cn.md)
 </p>
 
 ------
+[![Version](https://img.shields.io/github/release/PaddlePaddle/PaddleHelix.svg)](https://github.com/PaddlePaddle/PaddleHelix/releases)
+![python version](https://img.shields.io/badge/python-3.6+-orange.svg)
+![support os](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
 
 PaddleHelix is a machine-learning-based bio-computing framework aiming at facilitating the development of the following areas:
 > * Vaccine design
