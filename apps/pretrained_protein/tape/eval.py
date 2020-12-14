@@ -42,7 +42,7 @@ def main(args):
 
     task = model_config['task']
 
-    model = TAPEModel(model_config=model_config, task)
+    model = TAPEModel(model_config=model_config, task=task)
 
     test_program = fluid.Program()
     test_startup = fluid.Program()
