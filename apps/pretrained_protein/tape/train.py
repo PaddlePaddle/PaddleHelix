@@ -29,6 +29,8 @@ from tape_model import TAPEModel
 from utils import *
 
 def main(args):
+    paddle.enable_static()
+
     model_config = json.load(open(args.model_config, 'r'))
 
     exe_params = default_exe_params(args.is_distributed, args.use_cuda, args.thread_num)
@@ -40,7 +42,7 @@ def main(args):
 
     task = model_config['task']
 
-    model = TAPEModel(model_config=model_config)
+    model = TAPEModel(model_config=model_config, task=task)
 
     train_program = fluid.Program()
     train_startup = fluid.Program()
