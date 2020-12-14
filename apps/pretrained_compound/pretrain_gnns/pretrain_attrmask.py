@@ -28,9 +28,7 @@ import paddle
 import paddle.fluid as fluid
 from paddle.fluid.incubate.fleet.collective import fleet
 
-"""
-Enable static graph mode.
-"""
+# Enable static graph mode.
 paddle.enable_static()
 
 from pahelix.model_zoo import PreGNNAttrmaskModel
@@ -121,10 +119,7 @@ def main(args):
             model = PreGNNAttrmaskModel(model_config)
             model.forward(is_test=True)
 
-    """
-    Use CUDAPlace for GPU training, or use CPUPlace for CPU training.
-    """
-   
+    # Use CUDAPlace for GPU training, or use CPUPlace for CPU training.
     place = fluid.CUDAPlace(int(os.environ.get('FLAGS_selected_gpus', 0))) \
             if args.use_cuda else fluid.CPUPlace()
     exe = fluid.Executor(place)
@@ -134,19 +129,16 @@ def main(args):
         load_partial_params(exe, args.init_model, train_prog)
 
     ### load data
-    """
-    PreGNNAttrMaskFeaturizer:
-        It is used along with `PreGNNAttrmaskModel`. It inherits from the super class `Featurizer` which is used for feature extractions. The `Featurizer` has two functions: `gen_features` for converting from a single raw smiles to a single graph data, `collate_fn` for aggregating a sublist of graph data into a big batch.
+    # PreGNNAttrMaskFeaturizer:
+    #     It is used along with `PreGNNAttrmaskModel`. It inherits from the super class `Featurizer` which is used for feature extractions. The `Featurizer` has two functions: `gen_features` for converting from a single raw smiles to a single graph data, `collate_fn` for aggregating a sublist of graph data into a big batch.
     
-    splitter:
-        split type of the dataset:random,scaffold,random with scaffold. Here is randomsplit.
-        `ScaffoldSplitter` will firstly order the compounds according to Bemis-Murcko scaffold, 
-        then take the first `frac_train` proportion as the train set, the next `frac_valid` proportion as the valid set 
-        and the rest as the test set. `ScaffoldSplitter` can better evaluate the generalization ability of the model on 
-        out-of-distribution samples. Note that other splitters like `RandomSplitter`, `RandomScaffoldSplitter` 
-        and `IndexSplitter` is also available."
-    
-    """
+    # splitter:
+    #     split type of the dataset:random,scaffold,random with scaffold. Here is randomsplit.
+    #     `ScaffoldSplitter` will firstly order the compounds according to Bemis-Murcko scaffold, 
+    #     then take the first `frac_train` proportion as the train set, the next `frac_valid` proportion as the valid set 
+    #     and the rest as the test set. `ScaffoldSplitter` can better evaluate the generalization ability of the model on 
+    #     out-of-distribution samples. Note that other splitters like `RandomSplitter`, `RandomScaffoldSplitter` 
+    #     and `IndexSplitter` is also available."
     featurizer = PreGNNAttrMaskFeaturizer(
             model.graph_wrapper, 
             atom_type_num=len(CompoundConstants.atom_num_list),
@@ -162,15 +154,10 @@ def main(args):
     print("Train/Test num: %s/%s" % (len(train_dataset), len(test_dataset)))
 
     ### start train
-
-    """
-    Load the train function and calculate the train loss in each epoch.
-    Here we set the epoch is in range of max epoch,you can change it if you want. 
-
-    Then we will calculate the train loss ,test loss and print them.
-    Finally we save the best epoch to the model according to the dataset.
-    """
-
+    # Load the train function and calculate the train loss in each epoch.
+    # Here we set the epoch is in range of max epoch,you can change it if you want. 
+    # Then we will calculate the train loss ,test loss and print them.
+    # Finally we save the best epoch to the model according to the dataset.
     list_test_loss = []
     for epoch_id in range(args.max_epoch):
         train_loss = train(args, exe, train_prog, model, train_dataset, featurizer)
@@ -182,7 +169,7 @@ def main(args):
             print("epoch:%d test/loss:%s" % (epoch_id, test_loss))
 
     if not args.distributed or fleet.worker_index() == 0:
-        best_epoch_id = np.argmax(list_test_loss)
+        best_epoch_id = np.argmin(list_test_loss)
         fluid.io.load_params(exe, '%s/epoch%d' % (args.model_dir, best_epoch_id), train_prog)
         fluid.io.save_params(exe, '%s/epoch_best' % (args.model_dir), train_prog)
         return list_test_loss[best_epoch_id]
