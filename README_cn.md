@@ -1,7 +1,7 @@
 [English](README.md) | 简体中文
 
 <p align="center">
-<img src="./.github/imgs/paddlehelix_logo.png" align="middle"
+<img src="./.github/paddlehelix_logo.png" align="middle"
 </p>
 
 ------
@@ -12,7 +12,7 @@ PaddleHelix(螺旋桨)是一个基于机器学习的生物计算工具集, 他�
 > * 精准医疗
 
 <p align="left">
- <img src="./.github/imgs/paddlehelix_features.pdf" align="middle"
+ <img src="./.github/paddlehelix_features.pdf" align="middle"
 </p>
 
 ## 安装
