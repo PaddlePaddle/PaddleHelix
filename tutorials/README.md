@@ -6,7 +6,7 @@ Machine learning (ML), especially deep learning (DL) is playing an increasingly 
 
 # Navigating PaddleHelix
 <p align="center">
-<img src=".github/PaddleHelix_Structure.jpg" align="middle"
+<img src="../.github/PaddleHelix_Structure.jpg" align="middle"
 </p>
 
 # Tutorials
