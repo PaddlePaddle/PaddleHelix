@@ -1,7 +1,0 @@
-========
-Usage
-========
-
-To use this template, simply import it::
-
-	import paddlehelix

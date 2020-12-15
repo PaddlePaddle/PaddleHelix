@@ -1,24 +1,21 @@
 .. PaddleHelix documentation master file, created by
    sphinx-quickstart on Mon Dec 14 18:39:38 2020.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
 
-Welcome to PaddleHelix's documentation!
-=======================================
-
-Contents:
+.. include:: ./readme.rst
 
 .. toctree::
+   :caption: Overview
    :maxdepth: 2
-   :glob:
 
-   *
+   installation
+   tutorials
 
+.. toctree::
+    :caption: Examples
+    :maxdepth: 2
 
+.. toctree::
+    :maxdepth: 3
+    :numbered:
+    :caption: Documentation
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
