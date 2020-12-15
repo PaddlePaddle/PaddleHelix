@@ -37,7 +37,7 @@ class DownstreamModel(object):
         self.num_tasks = model_config['num_tasks']
         self.pool_type = model_config.get('pool_type', 'average')
 
-        self.gnn_model = PretrainGNNModel(model_config, name='gnn')
+        self.gnn_model = PretrainGNNModel(model_config, name='compound')
 
     def forward(self, is_test=False):
         """
