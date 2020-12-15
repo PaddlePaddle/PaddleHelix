@@ -41,9 +41,11 @@ Python 3.5, 3.6, 3.7
 
 ### 安装命令
 
-因为paddlehelix安装包的依赖有最新版的paddlepaddle(2.0.0rc0或以上),以及无法直接使用`pip`命令直接安装的包, 因此我们建议创建一个新的conda环境来运行代码,具体命令如下:
+因为paddlehelix安装包的依赖有最新版的paddlepaddle(2.0.0rc0或以上),以及无法直接使用`pip`命令直接安装的rdkit, 因此我们建议创建一个新的conda环境来运行代码,具体命令如下:
 
-* 如果你之前从来没有使用过conda,可以参考这个网页来安装conda: https://docs.conda.io/projects/conda/en/latest/user-guide/install/
+* 如果你之前从来没有使用过conda,可以参考这个网页来安装conda:
+
+   https://docs.conda.io/projects/conda/en/latest/user-guide/install/
 
 * 在安装完conda之后, 可以开始创建一个新的conda环境:
 

@@ -38,10 +38,12 @@ Python 3.5, 3.6, 3.7
 | rdkit        | - |
 |sklearn|-|
 
-### Insturction
-Since our package requires a paddlepaddle version of 2.0.0rc0 or above and the rdkit dependency cannot install directly installed using `pip` command, we suggest you use `conda` to create a new environment for our project. Detailed instructions are shown below:
+### Instruction
+Since our package requires a paddlepaddle version of 2.0.0rc0 or above and the rdkit dependency cannot be installed directly installed using `pip` command, we suggest you use `conda` to create a new environment for our project. Detailed instructions are shown below:
 
-* If you haven't used conda before, you can check this website to install it:https://docs.conda.io/projects/conda/en/latest/user-guide/install/
+* If you haven't used conda before, you can check this website to install it:
+
+  https://docs.conda.io/projects/conda/en/latest/user-guide/install/
 
 * After installing conda, you can create a new conda envoronment:
 
