@@ -1,24 +1,17 @@
-# disable sklearn warnings
-def warn(*args, **kwargs):
-    pass
-import warnings
-warnings.warn = warn
-
+"""
+Adapted from https://github.com/fanyun-sun/InfoGraph/blob/master/unsupervised/evaluate_embedding.py
+"""
+import os
 import pickle
+import warnings
+import numpy as np
+import pandas as pd
 from sklearn import preprocessing
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC, LinearSVC
+from sklearn.metrics import accuracy_score
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.manifold import TSNE
-from sklearn.metrics import accuracy_score
-from sklearn.model_selection import GridSearchCV, KFold, StratifiedKFold
-from sklearn.model_selection import cross_val_score
-from sklearn.neural_network import MLPClassifier
-from sklearn.svm import SVC, LinearSVC
-import matplotlib.pyplot as plt
-import numpy as np
-import os
-import pandas as pd
+from sklearn.model_selection import GridSearchCV, StratifiedKFold
 
 
 def logistic_classify(x, y, search):
@@ -95,23 +88,32 @@ def eval_on_classifiers(embeddings, labels, search=True):
     x, y = np.array(embeddings), np.array(labels)
     # print(x.shape, y.shape)
 
-    logreg_accuracies = [logistic_classify(x, y, search) for _ in range(1)]
-    # print(logreg_accuracies)
-    print('LogReg', np.mean(logreg_accuracies))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        logreg_accuracies = [logistic_classify(x, y, search) for _ in range(1)]
+        # print(logreg_accuracies)
+        print('LogReg', np.mean(logreg_accuracies))
 
-    svc_accuracies = [svc_classify(x, y, search) for _ in range(1)]
-    # print(svc_accuracies)
-    print('svc', np.mean(svc_accuracies))
+        svc_accuracies = [svc_classify(x, y, search) for _ in range(1)]
+        # print(svc_accuracies)
+        print('svc', np.mean(svc_accuracies))
 
-    linearsvc_accuracies = [linearsvc_classify(x, y, search) for _ in range(1)]
-    # print(linearsvc_accuracies)
-    print('LinearSvc', np.mean(linearsvc_accuracies))
+        linearsvc_accuracies = [linearsvc_classify(x, y, search) for _ in range(1)]
+        # print(linearsvc_accuracies)
+        print('LinearSvc', np.mean(linearsvc_accuracies))
 
-    randomforest_accuracies = [randomforest_classify(x, y, search) for _ in range(1)]
-    # print(randomforest_accuracies)
-    print('randomforest', np.mean(randomforest_accuracies))
+        randomforest_accuracies = [randomforest_classify(x, y, search) for _ in range(1)]
+        # print(randomforest_accuracies)
+        print('randomforest', np.mean(randomforest_accuracies))
 
-    return np.mean(logreg_accuracies), np.mean(svc_accuracies), np.mean(linearsvc_accuracies), np.mean(randomforest_accuracies)
+        metrics = {
+            'logreg_acc': np.mean(logreg_accuracies),
+            'svc_acc': np.mean(svc_accuracies),
+            'linearsvc_acc': np.mean(linearsvc_accuracies),
+            'randomforest_acc': np.mean(randomforest_accuracies)
+        }
+
+        return metrics
 
 if __name__ == '__main__':
     with open('emb_dir/epoch_10.pkl', 'rb') as f:

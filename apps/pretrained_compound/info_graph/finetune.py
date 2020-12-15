@@ -230,6 +230,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print(args)
 
+    # pylint: disable=E1123
     os.makedirs(args.log_dir, exist_ok=True)
     logging.basicConfig(
         format='%(asctime)s [%(filename)s:%(lineno)d] %(message)s',
