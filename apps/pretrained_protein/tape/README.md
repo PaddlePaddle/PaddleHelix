@@ -360,18 +360,18 @@ Following shows the demo of model_config.
 ```
 
 ## Data
-**TO DO：Provide data's address**
+The datasets can be downloaded from the following urls:
+pfam: [raw](https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fdatasets%2Fprotein_datasets%2Fpfam.npz.tgz), [npz](https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fdatasets%2Fprotein_datasets%2Fpfam.npz.tgz)
+secondary structure: [all](https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fdatasets%2Fprotein_datasets%2Fsecondary_structure.tgz)
+remote homology: [all](https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fdatasets%2Fprotein_datasets%2Fremote_homology.tgz)
+fluorescence: [all](https://baidu-nlp.bj.bcebos.com/PaddleHelix/datasets/protein_datasets/fluorescence.tgz)
+stability: [all](https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fdatasets%2Fprotein_datasets%2Fstability.tgz)
 
 ## Pre-trained Models
-**TO DO：Provide pre-trained models' address**
-
-## Q&A
-- Q1: What to to when memory is out of limit?
-    - Use smaller batch size。
-    - Use smaller *linear_bound* and *square bound* when calling function *set_loader_generator* in *train.py* and *eval.py*.
-- Q2: How to fine-tune new supervised tasks？
-    - Develop new task's input format in file *loader_generator.py*.
-    - Develop new tasks' network in *protein_sequence_model.py*.
+The pre-trained models can be downloaded from the following urls:
+Transformer: [model](https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fpretrained_models%2Fprotein%2Ftape_transformer.tgz)
+LSTM: [model](https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fpretrained_models%2Fprotein%2Ftape_lstm.tgz)
+ResNet: [model](https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fpretrained_models%2Fprotein%2Ftape_resnet.tgz)
 
 ## Reference
 ### Paper-related
