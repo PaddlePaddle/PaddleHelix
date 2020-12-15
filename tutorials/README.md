@@ -14,4 +14,4 @@ Machine learning (ML), especially deep learning (DL), is playing an increasingly
 * [Predicting Drug-Target Interaction](drug_target_interaction_tutorial.ipynb)
 * [Compound Representation Learning and Property Prediction](compound_property_prediction_tutorial.ipynb)
 * [Protein Representation Learning and Property Prediction](protein_pretrain_and_property_prediction_tutorial.ipynb)
-* [Predicting RNA secondary structured](linearrna_tutorial.ipynb)
+* [Predicting RNA Secondary Structured](linearrna_tutorial.ipynb)
