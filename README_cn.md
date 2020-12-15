@@ -22,7 +22,7 @@ Windows,Linux 以及OSX
 
 ### Python 版本
 
-Python 3.5, 3.6, 3.7
+Python 3.6, 3.7
 
 ### 包依赖
 
