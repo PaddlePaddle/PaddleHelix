@@ -22,7 +22,7 @@ Windows, Linux and OSX
 
 ### Python version
 
-Python 3.5, 3.6, 3.7
+Python 3.6, 3.7
 
 ### Dependencies
 
