@@ -262,15 +262,6 @@ python train.py \
 ### Complete Example
 We provide multiple training and evaluation examples in the folder *demos*. Here is a pretraining example of the Transformer.
 ```bash
-python train.py \
-        ... \
-        --init_model ./init_model # 初始化模型目录。如果不设定该参数，则模型冷启动训练。 \
-        ... 
-```
-
-### 完整样例
-我们在demos文件夹内提供多个训练和评估样例。以下是transformer预训练的样例。
-```bash
 #!/bin/bash
 
 source ~/.bashrc
