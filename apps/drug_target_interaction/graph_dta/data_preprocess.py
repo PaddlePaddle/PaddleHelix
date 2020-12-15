@@ -125,4 +125,4 @@ if __name__ == '__main__':
     parser.add_argument('--dataset_root', type=str, default=None, required=True)
     parser.add_argument('--npz_files', type=int, default=1)  # set it > 1 for multi trainers
     args = parser.parse_args()
-    main(args)
+    main()
