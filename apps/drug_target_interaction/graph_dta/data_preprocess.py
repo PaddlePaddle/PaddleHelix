@@ -34,7 +34,8 @@ from pahelix.utils.protein_tools import ProteinTokenizer
 from utils import save_data_list_to_npz
 
 
-def main(args):
+def main():
+    """Entry for data preprocessing."""
     tokenizer = ProteinTokenizer()
     for dataset in ['davis', 'kiba']:
         data_dir = os.path.join(args.dataset_root, dataset)
@@ -53,6 +54,8 @@ def main(args):
         proteins = json.load(
             open(os.path.join(data_dir, 'proteins.txt')),
             object_pairs_hook=OrderedDict)
+        # Use encoding 'latin1' to load py2 pkl from py3
+        # pylint: disable=E1123
         affinity = pickle.load(
             open(os.path.join(data_dir, 'Y'), 'rb'), encoding='latin1')
 
@@ -71,11 +74,13 @@ def main(args):
 
         affinity = np.asarray(affinity)
 
+        # pylint: disable=E1123
         os.makedirs(os.path.join(data_dir, 'processed'), exist_ok=True)
         for split in ['train', 'test']:
             print('processing {} set of {}'.format(split, dataset))
 
             split_dir = os.path.join(data_dir, 'processed', split)
+            # pylint: disable=E1123
             os.makedirs(split_dir, exist_ok=True)
 
             fold = train_fold if split == 'train' else test_fold

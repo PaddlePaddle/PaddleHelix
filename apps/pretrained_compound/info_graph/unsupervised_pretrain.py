@@ -160,20 +160,20 @@ def parallel_eval(data_queue, pkl_lst):
     for pkl in pkl_lst:
         with open(pkl, 'rb') as f:
             data = pickle.load(f)
-        logreg_acc, svc_acc, linearsvc_acc, randomforest_acc = \
-            eval_on_classifiers(data['emb'], data['y'], search=True)
+        metrics = eval_on_classifiers(data['emb'], data['y'], search=True)
         logging.info('{}: logreg ({:.4f}), svc ({:.4f}), '
                      'linearsvc ({:.4f}), randomforest ({:.4f})'.format(
-                         os.path.basename(pkl), logreg_acc,
-                         svc_acc, linearsvc_acc, randomforest_acc))
+                         os.path.basename(pkl), metrics['logreg_acc'],
+                         metrics['svc_acc'], metrics['linearsvc_acc'],
+                         metrics['randomforest_acc']))
         sys.stdout.flush()
 
         res = {
             'pkl': os.path.basename(pkl),
-            'logreg': logreg_acc,
-            'svc': svc_acc,
-            'linearsvc': linearsvc_acc,
-            'randomforest': randomforest_acc,
+            'logreg': metrics['logreg_acc'],
+            'svc': metrics['svc_acc'],
+            'linearsvc': metrics['linearsvc_acc'],
+            'randomforest': metrics['randomforest_acc'],
         }
         data_queue.put(res)
 
@@ -249,6 +249,7 @@ def main(args):
     sys.stdout.flush()
 
     if args.emb_dir is not None:
+        # pylint: disable=E1123
         os.makedirs(args.emb_dir, exist_ok=True)
 
     train_prog = F.Program()
