@@ -51,11 +51,20 @@ def load_esol_dataset(data_path, task_names=None, featurizer=None):
    
    Args:
         data_path(str): the path to the cached npz path.
-        task_names: get the default lipophilicity task names.
-        featurizer: the featurizer to use for processing the data.  
+        task_names(list): a list of header names to specify the columns to fetch from 
+            the csv file.
+        featurizer(pahelix.featurizers.Featurizer): the featurizer to use for 
+            processing the data. If not none, The ``Featurizer.gen_features`` will be 
+            applied to the raw data.
     
     Returns:
-        dataset(InMemoryDataset): the data_list(list of dict of numpy ndarray).
+        an InMemoryDataset instance.
+    
+    Example:
+        .. code-block:: python
+
+            dataset = load_esol_dataset('./esol/raw')
+            print(len(dataset))
     
     References:
     [1] Delaney, John S. "ESOL: estimating aqueous solubility directly from molecular structure." Journal of chemical information and computer sciences 44.3 (2004): 1000-1005.

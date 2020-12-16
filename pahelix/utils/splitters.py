@@ -40,7 +40,7 @@ def generate_scaffold(smiles, include_chirality=False):
         include_chirality:
     
     Return: 
-        scaffold: the scaffold of the given smiles.
+        the scaffold of the given smiles.
     """
     scaffold = MurckoScaffold.MurckoScaffoldSmiles(
         smiles=smiles, includeChirality=include_chirality)
@@ -141,7 +141,9 @@ class ScaffoldSplitter(Splitter):
             frac_test=None):
         """
         Args:
-            dataset(InMemoryDataset): the dataset to split.
+            dataset(InMemoryDataset): the dataset to split. Make sure each element in
+                the dataset has key "smiles" which will be used to calculate the 
+                scaffold.
             frac_train(float): the fraction of data to be used for the train split.
             frac_valid(float): the fraction of data to be used for the valid split.
             frac_test(float): the fraction of data to be used for the test split.
@@ -219,7 +221,9 @@ class RandomScaffoldSplitter(Splitter):
             seed=None):
         """
         Args:
-            dataset(InMemoryDataset): the dataset to split.
+            dataset(InMemoryDataset): the dataset to split. Make sure each element in
+                the dataset has key "smiles" which will be used to calculate the 
+                scaffold.
             frac_train(float): the fraction of data to be used for the train split.
             frac_valid(float): the fraction of data to be used for the valid split.
             frac_test(float): the fraction of data to be used for the test split.
