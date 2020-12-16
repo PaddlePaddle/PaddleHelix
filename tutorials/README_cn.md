@@ -13,14 +13,14 @@
 </p>
 
 # 教程
-* [药物-靶点相互作用预测](drug_target_interaction_tutorial.ipynb)
-* [化合物表示学习和性质预测](compound_property_prediction_tutorial.ipynb)
-* [蛋白质表示学习和性质预测](protein_pretrain_and_property_prediction_tutorial.ipynb)
-* [RNA二级结构预测](linearrna_tutorial.ipynb)
+* [药物-靶点相互作用预测](drug_target_interaction_tutorial_cn.ipynb)
+* [化合物表示学习和性质预测](compound_property_prediction_tutorial_cn.ipynb)
+* [蛋白质表示学习和性质预测](protein_pretrain_and_property_prediction_tutorial_cn.ipynb)
+* [RNA二级结构预测](linearrna_tutorial_cn.ipynb)
 
 # 在本地运行
 
-我们的教程以 Jypyter Notebook 的形式编写，可以方便的在你的本地计算机上运行。如果你没有安装过 Jupyter，请看[这里](https://jupyter.org/install)。
+我们的教程以 Jupyter Notebook 的形式编写，可以方便的在你的本地计算机上运行。如果你没有安装过 Jupyter，请看[这里](https://jupyter.org/install)。另外也请安装好 PaddleHelix（[教程](../README_cn.md)）。
 
 安装好 Jupyter 之后，请按照以下的步骤来运行：
 

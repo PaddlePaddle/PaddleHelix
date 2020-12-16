@@ -16,11 +16,11 @@ Machine learning (ML), especially deep learning (DL), is playing an increasingly
 * [Predicting Drug-Target Interaction](drug_target_interaction_tutorial.ipynb)
 * [Compound Representation Learning and Property Prediction](compound_property_prediction_tutorial.ipynb)
 * [Protein Representation Learning and Property Prediction](protein_pretrain_and_property_prediction_tutorial.ipynb)
-* [Predicting RNA Secondary Structured](linearrna_tutorial.ipynb)
+* [Predicting RNA Secondary Structure](linearrna_tutorial.ipynb)
 
 # Run tutorials locally
 
-The tutorials are written as Jupyter Notebooks and designed to be smoothly run on you own machine. If you don't have Jupyter installed, please refer to [here](https://jupyter.org/install).
+The tutorials are written as Jupyter Notebooks and designed to be smoothly run on you own machine. If you don't have Jupyter installed, please refer to [here](https://jupyter.org/install). And please also install PaddleHelix before proceeding ([instructions](../README.md)).
 
 After the installation of Jypyter, please go through the following steps:
 
