@@ -65,7 +65,7 @@ linear_fold_v(rna_sequence, beam_size = 100, use_constraints = False, constraint
 - beam_size: int (optional), 控制beam pruning size的参数，默认值为100。该参数越大，则预测速度越慢，而与精确搜索相比近似效果越好;
 - use_constraints: bool (optional), 在预测二级结构时增加约束条件, 默认值时False。为True时, constraint参数需要提供约束序列;
 - constraint: string (optional), 二级结构预测约束条件, 默认为空。当提供约束序列时, use_constraints参数需要设置为True。该约束须与输入的RNA序列长度相同，每个点位可以指定“? . ( )”四种符号中的一种，其中“?”表示该点位无限制，“.”表示该点位必须是unpaired，“(”与“)”表示该点位必须是paired。注意“(”与“)”必须数量相等，即相互匹配。具体操作请参考运行实例。
-- no_sharp_turn: bool (optional), 允许在预测的hairpin结构中出现sharp turn, 默认为False。
+- no_sharp_turn: bool (optional), 不允许在预测的hairpin结构中出现sharp turn, 默认为True。
 ### 返回值
 - tuple(string, double): 返回一个二元组, 第一个位置是结构序列, 第二个位置是结构的folding free energy
 ### 运行示例
@@ -140,8 +140,8 @@ linear_partition_v(rna_sequence, beam_size = 100, bp_cutoff = 0.0, no_sharpe_tur
 ### 参数说明
 - rna_sequence: string, 需要计算配分函数和碱基对概率的RNA sequence
 - beam_size: int (optional), 控制beam pruning size的参数，默认值为100。该参数越大，则预测速度越慢，而与精确搜索相比近似效果越好;
-- pf_cutoff: double (optinal), 只输出概率大于等于pf_cutoff的碱基对及其概率, 0 <= pf_cutoff <= 1, 默认为0.0; 
-- no_sharp_turn: bool (optional), 允许在预测的hairpin结构中出现sharp turn, 默认为False。
+- bp_cutoff: double (optinal), 只输出概率大于等于bp_cutoff的碱基对及其概率, 0 <= pf_cutoff <= 1, 默认为0.0; 
+- no_sharp_turn: bool (optional), 不允许在预测的hairpin结构中出现sharp turn, 默认为True。
 ### 返回值
 - tuple(string, list): 返回一个二元组, 第一个位置是配分函数值, 第二个位置是存有碱基对及其概率的列表
 ### 运行示例
