@@ -91,6 +91,7 @@ conda deactivate
 * Easy-to-use APIs: PaddleHelix provide frequently used structures and pre-trained models. You can easily use those components to build up your models and systems.
 
 ## Examples
-* [Representation Learning - Compound Molecules](./apps/pretrained_compound)
+* [Representation Learning - Compounds](./apps/pretrained_compound)
 * [Representation Learning - Proteins](./apps/pretrained_protein)
 * [Drug-Target Interaction](./apps/drug_target_interaction)
+* [LinearRNA](./c/pahelix/toolkit/linear_rna)
