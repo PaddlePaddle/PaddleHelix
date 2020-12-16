@@ -97,6 +97,7 @@ conda deactivate
 * 简单易用API接口: 螺旋桨提供了生物计算中常用的模型结构和预训练模型，用户可以用非常简单的接口调起这些模型，快速组建自己的网络和系统。
 
 ## 使用示例
-* [表示学习 - 分子预训练](./apps/pretrained_compound)
+* [表示学习 - 化合物](./apps/pretrained_compound)
 * [表示学习 - 蛋白质](./apps/pretrained_protein)
 * [药物-分子作用预测](./apps/drug_target_interaction)
+* [LinearRNA](./c/pahelix/toolkit/linear_rna)
