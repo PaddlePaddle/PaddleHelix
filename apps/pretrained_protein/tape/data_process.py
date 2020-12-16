@@ -22,8 +22,7 @@ import sys
 from pahelix.utils.protein_tools import ProteinTokenizer
 
 class Pfam(object):
-    """
-    Class for pfam dataset.
+    """Class for pfam dataset.
     For more details, please check paper "Evaluating Protein Transfer Learning with TAPE".
     """
     def __init__(self):
@@ -31,31 +30,27 @@ class Pfam(object):
         self.clear()
 
     def gen_sequence_data(self, data):
-        """
-        Genearte sequence data.
+        """Genearte sequence data.
         """
         amino_acids = data['amino_acids']
         token_ids = self.tokenizer.gen_token_ids(amino_acids)
         return token_ids
 
     def append(self, data):
-        """
-        Append data.
+        """Append data.
         """
         token_ids = self.gen_sequence_data(data)
         self.token_ids.extend(token_ids)
         self.lengths.append(len(token_ids))
 
     def clear(self):
-        """
-        Clear data.
+        """Clear data.
         """
         self.token_ids = []
         self.lengths = []
 
     def save_npz(self, filename):
-        """
-        Save data to npz format file.
+        """Save data to npz format file.
         """
         np.savez('%s' % filename, 
                 token_ids=np.array(self.token_ids, dtype='int8'),
@@ -63,8 +58,7 @@ class Pfam(object):
 
 
 class SecondaryStructure(object):
-    """
-    Class for second structure dataset.
+    """Class for second structure dataset.
     For more details, please check paper "Evaluating Protein Transfer Learning with TAPE".
     """
     def __init__(self):
@@ -72,8 +66,7 @@ class SecondaryStructure(object):
         self.clear()
 
     def gen_sequence_data(self, data):
-        """
-        Genearte sequence data.
+        """Genearte sequence data.
         """
         amino_acids = data['amino_acids']
         token_ids = self.tokenizer.gen_token_ids(amino_acids)
@@ -82,8 +75,7 @@ class SecondaryStructure(object):
         return token_ids, labels3, labels8
 
     def append(self, data):
-        """
-        Append data.
+        """Append data.
         """
         token_ids, labels3, labels8 = self.gen_sequence_data(data)
         self.token_ids.extend(token_ids)
@@ -92,8 +84,7 @@ class SecondaryStructure(object):
         self.lengths.append(len(token_ids))
 
     def clear(self):
-        """
-        Clear data.
+        """Clear data.
         """
         self.token_ids = []
         self.labels3 = []
@@ -101,8 +92,7 @@ class SecondaryStructure(object):
         self.lengths = []
 
     def save_npz(self, filename):
-        """
-        Save data to npz format file.
+        """Save data to npz format file.
         """
         np.savez('%s' % filename, 
                 token_ids=np.array(self.token_ids, dtype='int8'),
@@ -112,8 +102,7 @@ class SecondaryStructure(object):
         
 
 class RemoteHomology(object):
-    """
-    Class for remote homology dataset.
+    """Class for remote homology dataset.
     For more details, please check paper "Evaluating Protein Transfer Learning with TAPE".
     """
     def __init__(self):
@@ -121,8 +110,7 @@ class RemoteHomology(object):
         self.clear()
 
     def gen_sequence_data(self, data):
-        """
-        Genearte sequence data.
+        """Genearte sequence data.
         """
         amino_acids = data['amino_acids']
         token_ids = self.tokenizer.gen_token_ids(amino_acids)
@@ -130,8 +118,7 @@ class RemoteHomology(object):
         return token_ids, label
 
     def append(self, data):
-        """
-        Append data.
+        """Append data.
         """
         token_ids, labels = self.gen_sequence_data(data)
         self.token_ids.extend(token_ids)
@@ -139,16 +126,14 @@ class RemoteHomology(object):
         self.lengths.append(len(token_ids))
 
     def clear(self):
-        """
-        Clear data.
+        """Clear data.
         """
         self.token_ids = []
         self.labels = []
         self.lengths = []
 
     def save_npz(self, filename):
-        """
-        Save data to npz format file.
+        """Save data to npz format file.
         """
         np.savez('%s' % filename, 
                 token_ids=np.array(self.token_ids, dtype='int8'),
@@ -157,8 +142,7 @@ class RemoteHomology(object):
 
 
 class Fluorescence(object):
-    """
-    Class for fluorescene dataset.
+    """Class for fluorescene dataset.
     For more details, please check paper "Evaluating Protein Transfer Learning with TAPE".
     """
     def __init__(self):
@@ -166,8 +150,7 @@ class Fluorescence(object):
         self.clear()
 
     def gen_sequence_data(self, data):
-        """
-        Genearte sequence data.
+        """Genearte sequence data.
         """
         amino_acids = data['amino_acids']
         label = data['log_fluorescence']
@@ -175,8 +158,7 @@ class Fluorescence(object):
         return token_ids, label
 
     def append(self, data):
-        """
-        Append data.
+        """Append data.
         """
         token_ids, labels = self.gen_sequence_data(data)
         self.token_ids.extend(token_ids)
@@ -184,16 +166,14 @@ class Fluorescence(object):
         self.lengths.append(len(token_ids))
 
     def clear(self):
-        """
-        Clear data.
+        """Clear data.
         """
         self.token_ids = []
         self.labels = []
         self.lengths = []
 
     def save_npz(self, filename):
-        """
-        Save data to npz format file.
+        """Save data to npz format file.
         """
         np.savez('%s' % filename, 
                 token_ids=np.array(self.token_ids, dtype='int8'),
@@ -202,8 +182,7 @@ class Fluorescence(object):
 
 
 class Stability(object):
-    """
-    Class for stability dataset.
+    """Class for stability dataset.
     For more details, please check paper "Evaluating Protein Transfer Learning with TAPE".
     """
     def __init__(self):
@@ -211,8 +190,7 @@ class Stability(object):
         self.clear()
 
     def gen_sequence_data(self, data):
-        """
-        Genearte sequence data.
+        """Genearte sequence data.
         """
         amino_acids = data['amino_acids']
         label = data['stability_score']
@@ -220,8 +198,7 @@ class Stability(object):
         return token_ids, label
 
     def append(self, data):
-        """
-        Append data.
+        """Append data.
         """
         token_ids, labels = self.gen_sequence_data(data)
         self.token_ids.extend(token_ids)
@@ -229,16 +206,14 @@ class Stability(object):
         self.lengths.append(len(token_ids))
 
     def clear(self):
-        """
-        Clear data.
+        """Clear data.
         """
         self.token_ids = []
         self.labels = []
         self.lengths = []
 
     def save_npz(self, filename):
-        """
-        Save data to npz format file.
+        """Save data to npz format file.
         """
         np.savez('%s' % filename, 
                 token_ids=np.array(self.token_ids, dtype='int8'),

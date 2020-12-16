@@ -57,7 +57,7 @@ def main(args):
             optimizer.minimize(model.loss)
 
             train_data_loader = setup_data_loader(
-                    model,
+                    model.input_list,
                     model_config,
                     args.train_data,
                     trainer_id,

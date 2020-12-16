@@ -9,7 +9,8 @@
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#
+
+import sphinx_rtd_theme
 import os
 import sys
 import re
@@ -23,8 +24,15 @@ author = u'2020, Baidu Inc.'
 copyright = author
 language = 'en'
 
+# Import mock dependencies packages
+autodoc_mock_imports = ['paddle', 'pgl']
+
 
 # -- General configuration ---------------------------------------------------
+
+# Napoleon settings
+napoleon_google_docstring = True
+napoleon_numpy_docstring = True
 
 # The master toctree document.
 master_doc = 'index'
@@ -51,7 +59,15 @@ release = '1.0.0'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'recommonmark', 'sphinx.ext.intersphinx', 'sphinx.ext.mathjax', 'sphinx.ext.viewcode']
+extensions = [
+       'sphinx.ext.autodoc', 
+       'sphinx.ext.napoleon', 
+       'recommonmark', 
+       'sphinx.ext.todo', 
+       'sphinx.ext.intersphinx', 
+       'sphinx.ext.mathjax', 
+       'sphinx.ext.viewcode',
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -60,6 +76,17 @@ templates_path = ['_templates']
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+
+
+# do not skip documentation of the __init__ function of a class
+def skip(app, what, name, obj, would_skip, options):
+    if name == "__init__":
+        return False
+    return would_skip
+
+
+def setup(app):
+    app.connect("autodoc-skip-member", skip)
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -73,6 +100,7 @@ html_theme_options = {
     'navigation_depth': 5,
 }
 html_context = {}
+html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
