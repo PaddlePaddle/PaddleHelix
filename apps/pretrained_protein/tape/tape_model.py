@@ -25,7 +25,13 @@ from pahelix.utils.protein_tools import ProteinTokenizer
 
 class TAPEModel:
     """
-    TAPEModel
+    | TAPEModel, implementation of the methods in paper ``Evaluating Protein Transfer Learning with TAPE``.
+
+    Public Functions:
+        - ``forward``: forward.
+        - ``cal_loss``: calculate the loss of the network.
+        - ``get_fetch_list``: get the fetch_list for results.
+
     """
     def __init__(self, model_config={}, name=''):
         self.model_type = model_config['model_type']
@@ -163,8 +169,11 @@ class TAPEModel:
         self.loss = fluid.layers.mean(loss)
 
     def forward(self, is_test):
-        """
-        Forward.
+        """Forward.
+
+        Args:
+            is_test(bool): whether is test mode.
+
         """
         protein_token = fluid.layers.data(name='protein_token', shape=[None, 1], dtype='int64', lod_level=1)
         protein_pos = fluid.layers.data(name='protein_pos', shape=[None, 1], dtype='int64', lod_level=1)
@@ -183,13 +192,12 @@ class TAPEModel:
         elif self.task == 'regression':
             self._regression_task(hidden, pooled_hidden, checkpoints)
         else:
-            raise RuntimeError('Task %s is unsupported.' % self.task)
+            raise ValueError('Task %s is unsupported.' % self.task)
 
         self.checkpoints = checkpoints
 
     def cal_loss(self):
-        """
-        Calculate the loss according to the task.
+        """Calculate the loss according to the task.
         """
         if self.task == 'pretrain':
             self._pretrain_task_loss()
@@ -200,11 +208,16 @@ class TAPEModel:
         elif self.task == 'regression':
             self._regression_task_loss()
         else:
-            raise RuntimeError('Task %s is unsupported.' % self.task)
+            raise ValueError('Task %s is unsupported.' % self.task)
 
     def get_fetch_list(self, is_inference=False):
-        """
-        Get the fetch list according the task.
+        """Get the fetch list according the task.
+
+        Args:
+            is_inference(bool): whether is inference mode.
+        
+        Returns:
+            fetch_ist: fetch_list.
         """
         if is_inference:
             if self.task == 'pretrain':
