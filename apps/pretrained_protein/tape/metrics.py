@@ -20,23 +20,20 @@ import numpy as np
 import scipy.stats
 
 class PretrainMetric(object):
-    """
-    Pretrain Metric.
+    """Pretrain Metric.
     """
     def __init__(self):
         self.clear()
 
     def clear(self):
-        """
-        Clear the metric.
+        """Clear the metric.
         """
         self.example_n = 0
         self.accuracy = 0.0
         self.perplexity = 0.0
 
     def update(self, pred, label, cross_entropy):
-        """
-        Update results.
+        """Update results.
         """
         valid_example = np.where(label != -1, 1, 0)
         example_n = np.sum(valid_example)
@@ -49,8 +46,7 @@ class PretrainMetric(object):
         self.perplexity += np.sum(cross_entropy)
 
     def show(self):
-        """
-        Show the metric.
+        """Show the metric.
         """
         print('\tExample: %d' % self.example_n)
         print('\tAccuracy: %.6f' % (self.accuracy / self.example_n))
@@ -65,15 +61,13 @@ class ClassificationMetric(object):
         self.clear()
 
     def clear(self):
-        """
-        Clear the metric.
+        """Clear the metric.
         """
         self.example_n = 0
         self.accuracy = 0.0
 
     def update(self, pred, label):
-        """
-        Update results.
+        """Update results.
         """
         self.example_n += np.sum(np.where(label != -1, 1, 0))
         label = label.reshape(label.size)
@@ -82,23 +76,20 @@ class ClassificationMetric(object):
         self.accuracy += np.sum(acc)
 
     def show(self):
-        """
-        Show the metric.
+        """Show the metric.
         """
         print('\tExample: %d' % self.example_n)
         print('\tAccuracy: %.6f' % (self.accuracy / self.example_n))
 
 
 class RegressionMetric(object):
-    """
-    Regression Metric.
+    """Regression Metric.
     """
     def __init__(self):
         self.clear()
 
     def clear(self):
-        """
-        Clear the metric.
+        """Clear the metric.
         """
         self.example_n = 0
         self.square_error = 0.0
@@ -106,8 +97,7 @@ class RegressionMetric(object):
         self.labels = []
 
     def update(self, pred, label):
-        """
-        Update results.
+        """Update results.
         """
         pred = pred.reshape(pred.size)
         label = label.reshape(label.size)
@@ -117,8 +107,7 @@ class RegressionMetric(object):
         self.labels.append(label)
 
     def show(self):
-        """
-        Show the metric.
+        """Show the metric.
         """
         print('\tExample: %d' % self.example_n)
         print('\tMSE: %.6f' % (self.square_error / self.example_n))

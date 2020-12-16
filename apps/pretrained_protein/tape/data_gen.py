@@ -23,8 +23,14 @@ from pahelix.utils.language_model_tools import apply_bert_mask
 from pahelix.utils.protein_tools import ProteinTokenizer
 
 def pretrain_sample_reader(filenames, batch_size):
-    """
-    DataLoader for pretraining models.
+    """DataLoader for pretraining tasks.
+
+    Args:
+        filenames(list): filenames of the input data.
+        batch_size(int): size of the each batch.
+
+    Returns:
+        reader(func): data reader.
     """
     def __reader__():
         examples = []
@@ -49,8 +55,15 @@ def pretrain_sample_reader(filenames, batch_size):
 
 
 def sequence_sample_reader(filenames, batch_size, label_name):
-    """
-    DataLoader for sequence classification tasks.
+    """DataLoader for sequence classification/regression tasks.
+
+    Args:
+        filenames(list): filenames of the input data.
+        batch_size(int): size of the each batch.
+        label_name(str): label name.
+
+    Returns:
+        reader(func): data reader.
     """
     def __reader__():
         examples = []
@@ -76,8 +89,15 @@ def sequence_sample_reader(filenames, batch_size, label_name):
 
 
 def normal_sample_reader(filenames, batch_size, label_name):
-    """
-    DataLoader for classification and regression tasks.
+    """DataLoader for classification/regression tasks.
+
+    Args:
+        filenames(list): filenames of the input data.
+        batch_size(int): size of the each batch.
+        label_name(str): label name.
+
+    Returns:
+        reader(func): data reader.
     """
     def __reader__():
         examples = []
@@ -103,8 +123,18 @@ def normal_sample_reader(filenames, batch_size, label_name):
 
 
 def get_sample_generator(filenames, batch_size, model_config):
-    """
-    Set data loader generator according to different tasks.
+    """Set data loader generator according to different tasks.
+
+    Args:
+        filenames(list): filenames of the input data.
+        batch_size(int): size of the each batch.
+        model_config(dict): the dictionary containing model configuration.
+    
+    Raises:
+        NameError: if key ``task`` in ``model_config`` is invalid.
+
+    Returns:
+        reader(func): data reader.
     """
     task = model_config['task']
 
@@ -117,16 +147,29 @@ def get_sample_generator(filenames, batch_size, model_config):
         label_name = model_config.get('label_name', 'labels')
         return normal_sample_reader(filenames, batch_size, label_name)
     else:
-        raise RuntimeError('Task %s is unsupport.' % task)
-        return None
+        raise NameError('Task %s is unsupport.' % task)
 
 
-def setup_data_loader(model, model_config, data_path, trainer_id, trainer_num, places, batch_size):
-    """
-    Setup the data_loader.
+def setup_data_loader(input_list, model_config, data_path, trainer_id, trainer_num, places, batch_size):
+    """Setup the data_loader.
+
+    Args:
+        input_list(list): the feed_list of the model.
+        model_config(dict): the dictionary containing model configuration.
+        data_path(str): the directory containing data files.
+        trainer_id(int): the id of current trainer.
+        trainer_num(int): the number of trainers.
+        places: the place to store the loaded data.
+        batch_size(int) batch size.
+    
+    Raises:
+        NameError: if key ``task`` in ``model_config`` is invalid.
+
+    Returns:
+        data_loader(fluid.io.DataLoader): data reader.
     """
     data_loader = fluid.io.DataLoader.from_generator(
-            feed_list=model.input_list,
+            feed_list=input_list,
             capacity=256,
             use_double_buffer=True,
             iterable=True)
@@ -139,8 +182,15 @@ def setup_data_loader(model, model_config, data_path, trainer_id, trainer_num, p
 
 
 def gen_batch_data(examples, tokenizer, place):
-    """
-    Generate batch for prediction.
+    """Generate batch for prediction.
+
+    Args:
+        examples(list): the list of examples containing amino acid sequences.
+        tokenizer(pahelix.utils.ProteinTools.ProteinTokenizer): tokenizer to generate the token ids.
+        place: the place to store the loaded data.
+
+    Returns:
+        batch_data: the orgainized data.
     """
     token_ids = []
     pos = []
