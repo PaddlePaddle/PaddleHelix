@@ -1,0 +1,273 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pahelix.utils.paddle_utils &mdash; PaddleHelix 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home" alt="Documentation Home"> PaddleHelix
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_doc/utils.html">1. pahelix.utils</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">PaddleHelix</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>pahelix.utils.paddle_utils</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pahelix.utils.paddle_utils</h1><div class="highlight"><pre>
+<span></span><span class="c1">#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">paddle utils.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">exists</span>
+
+<span class="kn">from</span> <span class="nn">paddle</span> <span class="kn">import</span> <span class="n">fluid</span>
+<span class="kn">from</span> <span class="nn">paddle.fluid.incubate.fleet.collective</span> <span class="kn">import</span> <span class="n">fleet</span><span class="p">,</span> <span class="n">DistributedStrategy</span>
+<span class="kn">from</span> <span class="nn">paddle.fluid.incubate.fleet.base</span> <span class="kn">import</span> <span class="n">role_maker</span>
+
+
+<div class="viewcode-block" id="get_distributed_optimizer"><a class="viewcode-back" href="../../../api_doc/utils.html#pahelix.utils.paddle_utils.get_distributed_optimizer">[docs]</a><span class="k">def</span> <span class="nf">get_distributed_optimizer</span><span class="p">(</span><span class="n">optimizer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the default collective distributed optimizer under fleet.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dist_strategy</span> <span class="o">=</span> <span class="n">DistributedStrategy</span><span class="p">()</span>
+    <span class="n">role</span> <span class="o">=</span> <span class="n">role_maker</span><span class="o">.</span><span class="n">PaddleCloudRoleMaker</span><span class="p">(</span><span class="n">is_collective</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">fleet</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">role</span><span class="p">)</span>
+    <span class="n">optimizer</span> <span class="o">=</span> <span class="n">fleet</span><span class="o">.</span><span class="n">distributed_optimizer</span><span class="p">(</span><span class="n">optimizer</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="n">dist_strategy</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">optimizer</span></div>
+
+
+<div class="viewcode-block" id="load_partial_params"><a class="viewcode-back" href="../../../api_doc/utils.html#pahelix.utils.paddle_utils.load_partial_params">[docs]</a><span class="k">def</span> <span class="nf">load_partial_params</span><span class="p">(</span><span class="n">exe</span><span class="p">,</span> <span class="n">init_model</span><span class="p">,</span> <span class="n">main_program</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Load partial params by checking whether it&#39;s in the :attr:`init_model` folder.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        exe: Paddle executor.</span>
+<span class="sd">        init_model(str): the model folder to load from.</span>
+<span class="sd">        main_program: Paddle program.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">exists</span><span class="p">(</span><span class="n">init_model</span><span class="p">),</span> <span class="s2">&quot;[</span><span class="si">%s</span><span class="s2">] cann&#39;t be found.&quot;</span> <span class="o">%</span> <span class="n">init_model</span>
+
+    <span class="k">def</span> <span class="nf">existed_params</span><span class="p">(</span><span class="n">var</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;tbd&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">fluid</span><span class="o">.</span><span class="n">framework</span><span class="o">.</span><span class="n">Parameter</span><span class="p">):</span>
+            <span class="c1"># print(&quot;%s not existed&quot; % var.name)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">init_model</span><span class="p">,</span> <span class="n">var</span><span class="o">.</span><span class="n">name</span><span class="p">)):</span>
+            <span class="c1"># print(&quot;load %s successful&quot; % var.name)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># print(&quot;%s not existed&quot; % var.name)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="n">fluid</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">load_vars</span><span class="p">(</span>
+            <span class="n">exe</span><span class="p">,</span>
+            <span class="n">init_model</span><span class="p">,</span>
+            <span class="n">main_program</span><span class="o">=</span><span class="n">main_program</span><span class="p">,</span>
+            <span class="n">predicate</span><span class="o">=</span><span class="n">existed_params</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Load parameters from </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">init_model</span><span class="p">))</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Baidu Inc.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

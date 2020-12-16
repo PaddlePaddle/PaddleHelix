@@ -19,3 +19,5 @@
     :numbered:
     :caption: Documentation
 
+    api_doc/utils
+
