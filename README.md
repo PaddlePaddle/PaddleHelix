@@ -14,6 +14,19 @@ PaddleHelix is a machine-learning-based bio-computing framework aiming at facili
 > * Drug discovery
 > * Precision medicine
 
+## Features
+* Highly Efficent: We provide LinearRNA - highly efficient toolkit for mRNA vaccine development. LinearFold & LinearParitition achieves O(n) complexity in RNA-folding prediction, which is hundreds of times faster than traditional folding techniques.
+<p align="center">
+<img src="./.github/LinearRNA.jpg" align="middle"
+</p>
+
+* Large-scale Representation Learning and Transfer Learning: Self-supervised learning for molecule representations offers prospects of a breakthrough in tasks with limited annotation, including drug profiling, drug-target interaction, protein-protein interaction, RNA-RNA interaction, protein folding, RNA folding, and molecule design. PaddleHelix implements a variety of representation learning algorithms and state-of-the-art large-scale pre-trained models to help developers to start from "the shoulders of giants" quickly.
+<p align="center">
+<img src="./.github/paddlehelix_features.jpg" align="middle"
+</p>
+
+* Easy-to-use APIs: PaddleHelix provide frequently used structures and pre-trained models. You can easily use those components to build up your models and systems.
+
 ## Installation
 
 ### OS support
@@ -74,24 +87,13 @@ conda deactivate
 ## Documentation
 
 ### Tutorials
-* We provide abundant [tutorials](./tutorials) to navigate the directory and start quickly.
+* We provide abundant [tutorials](./tutorials) to help you navigate the directory and start quickly.
 * PaddleHelix is based on [PaddlePaddle](https://github.com/paddlepaddle/paddle), a high-performance Parallelized Deep Learning Platform.
 
-### Features
-* Highly Efficent: We provide LinearRNA - highly efficient toolkit for mRNA vaccine development. LinearFold & LinearParitition achieves O(n) complexity in RNA-folding prediction, which is hundreds of times faster than traditional folding techniques.
-<p align="center">
-<img src="./.github/LinearRNA.jpg" align="middle"
-</p>
-
-* Large-scale Representation Learning and Transfer Learning: Self-supervised learning for molecule representations offers prospects of a breakthrough in tasks with limited annotation, including drug profiling, drug-target interaction, protein-protein interaction, RNA-RNA interaction, protein folding, RNA folding, and molecule design. PaddleHelix implements a variety of representation learning algorithms and state-of-the-art large-scale pre-trained models to help developers to start from "the shoulders of giants" quickly.
-<p align="center">
-<img src="./.github/paddlehelix_features.jpg" align="middle"
-</p>
-
-* Easy-to-use APIs: PaddleHelix provide frequently used structures and pre-trained models. You can easily use those components to build up your models and systems.
-
-## Examples
+### Examples
 * [Representation Learning - Compounds](./apps/pretrained_compound)
 * [Representation Learning - Proteins](./apps/pretrained_protein)
 * [Drug-Target Interaction](./apps/drug_target_interaction)
 * [LinearRNA](./c/pahelix/toolkit/linear_rna)
+
+### [The API reference](https://readthedocs.org/projects/paddlehelix/)
