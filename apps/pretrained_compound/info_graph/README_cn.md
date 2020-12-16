@@ -1,6 +1,6 @@
 # InfoGraph
 
-[中文版本](./README.ch.md) [English Version](./README.en.md)
+[中文版本](./README.cn.md) [English Version](./README.md)
 
 * [背景介绍](#背景介绍)
 * [使用说明](#使用说明)

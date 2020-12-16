@@ -1,6 +1,6 @@
 # GraphDTA
 
-[中文版本](./README_ch.md) [English Version](./README.md)
+[中文版本](./README_cn.md) [English Version](./README.md)
 
 * [背景介绍](#背景介绍)
 * [使用说明](#使用说明)
