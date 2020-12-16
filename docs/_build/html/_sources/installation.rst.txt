@@ -2,6 +2,8 @@
 Installation
 ============
 
+.. contents:: Table of Contents
+
 OS support
 ----------
 

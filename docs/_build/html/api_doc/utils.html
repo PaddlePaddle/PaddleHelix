@@ -1,0 +1,603 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>1. pahelix.utils &mdash; PaddleHelix 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Tutorials" href="../tutorials.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> PaddleHelix
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">1. pahelix.utils</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-pahelix.utils.compound_tools">1.1. pahelix.utils.compound_tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-pahelix.utils.data_utils">1.2. pahelix.utils.data_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-pahelix.utils.language_model_tools">1.3. pahelix.utils.language_model_tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-pahelix.utils.paddle_utils">1.4. pahelix.utils.paddle_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-pahelix.utils.protein_tools">1.5. pahelix.utils.protein_tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-pahelix.utils.splitters">1.6. pahelix.utils.splitters</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">PaddleHelix</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><span class="section-number">1. </span>pahelix.utils</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/api_doc/utils.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="pahelix-utils">
+<h1><a class="toc-backref" href="#id1"><span class="section-number">1. </span>pahelix.utils</a><a class="headerlink" href="#pahelix-utils" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="table-of-contents">
+<p class="topic-title">Table of Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pahelix-utils" id="id1">pahelix.utils</a></p>
+<ul>
+<li><p><a class="reference internal" href="#module-pahelix.utils.compound_tools" id="id2">pahelix.utils.compound_tools</a></p></li>
+<li><p><a class="reference internal" href="#module-pahelix.utils.data_utils" id="id3">pahelix.utils.data_utils</a></p></li>
+<li><p><a class="reference internal" href="#module-pahelix.utils.language_model_tools" id="id4">pahelix.utils.language_model_tools</a></p></li>
+<li><p><a class="reference internal" href="#module-pahelix.utils.paddle_utils" id="id5">pahelix.utils.paddle_utils</a></p></li>
+<li><p><a class="reference internal" href="#module-pahelix.utils.protein_tools" id="id6">pahelix.utils.protein_tools</a></p></li>
+<li><p><a class="reference internal" href="#module-pahelix.utils.splitters" id="id7">pahelix.utils.splitters</a></p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="module-pahelix.utils.compound_tools">
+<span id="pahelix-utils-compound-tools"></span><h2><a class="toc-backref" href="#id2"><span class="section-number">1.1. </span>pahelix.utils.compound_tools</a><a class="headerlink" href="#module-pahelix.utils.compound_tools" title="Permalink to this headline">¶</a></h2>
+<p>Tools for compound features.
+Adapted from <a class="reference external" href="https://github.com/snap-stanford/pretrain-gnns/blob/master/chem/loader.py">https://github.com/snap-stanford/pretrain-gnns/blob/master/chem/loader.py</a></p>
+<dl class="py function">
+<dt id="pahelix.utils.compound_tools.atom_numeric_feat">
+<code class="sig-prename descclassname">pahelix.utils.compound_tools.</code><code class="sig-name descname">atom_numeric_feat</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">allowable</span></em>, <em class="sig-param"><span class="n">to_one_hot</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pahelix/utils/compound_tools.html#atom_numeric_feat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pahelix.utils.compound_tools.atom_numeric_feat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Restrict the numeric feature to [0, <cite>max_n</cite>].</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pahelix.utils.compound_tools.check_smiles_validity">
+<code class="sig-prename descclassname">pahelix.utils.compound_tools.</code><code class="sig-name descname">check_smiles_validity</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">smiles</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pahelix/utils/compound_tools.html#check_smiles_validity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pahelix.utils.compound_tools.check_smiles_validity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether the smile can’t be converted to rdkit mol object.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pahelix.utils.compound_tools.create_standardized_mol_id">
+<code class="sig-prename descclassname">pahelix.utils.compound_tools.</code><code class="sig-name descname">create_standardized_mol_id</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">smiles</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pahelix/utils/compound_tools.html#create_standardized_mol_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pahelix.utils.compound_tools.create_standardized_mol_id" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>smiles</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>inchi</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pahelix.utils.compound_tools.get_gasteiger_partial_charges">
+<code class="sig-prename descclassname">pahelix.utils.compound_tools.</code><code class="sig-name descname">get_gasteiger_partial_charges</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mol</span></em>, <em class="sig-param"><span class="n">n_iter</span><span class="o">=</span><span class="default_value">12</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pahelix/utils/compound_tools.html#get_gasteiger_partial_charges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pahelix.utils.compound_tools.get_gasteiger_partial_charges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates list of gasteiger partial charges for each atom in mol object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mol</strong> – rdkit mol object</p></li>
+<li><p><strong>n_iter</strong> (<em>int</em>) – number of iterations. Default 12</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>list of computed partial charges for each atom.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pahelix.utils.compound_tools.get_largest_mol">
+<code class="sig-prename descclassname">pahelix.utils.compound_tools.</code><code class="sig-name descname">get_largest_mol</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mol_list</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pahelix/utils/compound_tools.html#get_largest_mol"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pahelix.utils.compound_tools.get_largest_mol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a list of rdkit mol objects, returns mol object containing the
+largest num of atoms. If multiple containing largest num of atoms,
+picks the first one</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>mol_list</strong> (<em>list</em>) – a list of rdkit mol object.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the largest mol.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pahelix.utils.compound_tools.mol_to_graph_data">
+<code class="sig-prename descclassname">pahelix.utils.compound_tools.</code><code class="sig-name descname">mol_to_graph_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mol</span></em>, <em class="sig-param"><span class="n">add_self_loop</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pahelix/utils/compound_tools.html#mol_to_graph_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pahelix.utils.compound_tools.mol_to_graph_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts rdkit mol object to graph data which is a dict of numpy ndarray.
+NB: Uses simplified atom and bond features, and represent as indices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mol</strong> – rdkit mol object.</p></li>
+<li><p><strong>add_self_loop</strong> – whether to add self loop or not.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a dict of numpy ndarray for the graph data. It consists of atom attibutes, edge attibutes and edge index.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pahelix.utils.compound_tools.smiles_to_graph_data">
+<code class="sig-prename descclassname">pahelix.utils.compound_tools.</code><code class="sig-name descname">smiles_to_graph_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">smiles</span></em>, <em class="sig-param"><span class="n">add_self_loop</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pahelix/utils/compound_tools.html#smiles_to_graph_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pahelix.utils.compound_tools.smiles_to_graph_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert smiles to graph data.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pahelix.utils.compound_tools.split_rdkit_mol_obj">
+<code class="sig-prename descclassname">pahelix.utils.compound_tools.</code><code class="sig-name descname">split_rdkit_mol_obj</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mol</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pahelix/utils/compound_tools.html#split_rdkit_mol_obj"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pahelix.utils.compound_tools.split_rdkit_mol_obj" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split rdkit mol object containing multiple species or one species into a
+list of mol objects or a list containing a single object respectively</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>mol</strong> – rdkit mol object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-pahelix.utils.data_utils">
+<span id="pahelix-utils-data-utils"></span><h2><a class="toc-backref" href="#id3"><span class="section-number">1.2. </span>pahelix.utils.data_utils</a><a class="headerlink" href="#module-pahelix.utils.data_utils" title="Permalink to this headline">¶</a></h2>
+<p>Tools for data.</p>
+<dl class="py function">
+<dt id="pahelix.utils.data_utils.get_part_files">
+<code class="sig-prename descclassname">pahelix.utils.data_utils.</code><code class="sig-name descname">get_part_files</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_path</span></em>, <em class="sig-param"><span class="n">trainer_id</span></em>, <em class="sig-param"><span class="n">trainer_num</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pahelix/utils/data_utils.html#get_part_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pahelix.utils.data_utils.get_part_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split the files in data_path so that each trainer can train from different examples.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pahelix.utils.data_utils.load_npz_to_data_list">
+<code class="sig-prename descclassname">pahelix.utils.data_utils.</code><code class="sig-name descname">load_npz_to_data_list</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">npz_file</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pahelix/utils/data_utils.html#load_npz_to_data_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pahelix.utils.data_utils.load_npz_to_data_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reload the data list save by <code class="docutils literal notranslate"><span class="pre">save_data_list_to_npz</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>npz_file</strong> (<em>str</em>) – the npz file location.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a list of data where each data is a dict of numpy ndarray.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pahelix.utils.data_utils.save_data_list_to_npz">
+<code class="sig-prename descclassname">pahelix.utils.data_utils.</code><code class="sig-name descname">save_data_list_to_npz</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_list</span></em>, <em class="sig-param"><span class="n">npz_file</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pahelix/utils/data_utils.html#save_data_list_to_npz"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pahelix.utils.data_utils.save_data_list_to_npz" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save a list of data to the npz file. Each data is a dict
+of numpy ndarray.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_list</strong> (<em>list</em>) – a list of data.</p></li>
+<li><p><strong>npz_file</strong> (<em>str</em>) – the npz file location.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-pahelix.utils.language_model_tools">
+<span id="pahelix-utils-language-model-tools"></span><h2><a class="toc-backref" href="#id4"><span class="section-number">1.3. </span>pahelix.utils.language_model_tools</a><a class="headerlink" href="#module-pahelix.utils.language_model_tools" title="Permalink to this headline">¶</a></h2>
+<p>Tools for language models.</p>
+<dl class="py function">
+<dt id="pahelix.utils.language_model_tools.apply_bert_mask">
+<code class="sig-prename descclassname">pahelix.utils.language_model_tools.</code><code class="sig-name descname">apply_bert_mask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">token_ids</span></em>, <em class="sig-param"><span class="n">tokenizer</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pahelix/utils/language_model_tools.html#apply_bert_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pahelix.utils.language_model_tools.apply_bert_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply BERT mask to the token_ids.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>token_ids</strong> – The list of token ids.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The list of masked token ids.
+labels: The labels for traininig BERT.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>masked_token_ids</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-pahelix.utils.paddle_utils">
+<span id="pahelix-utils-paddle-utils"></span><h2><a class="toc-backref" href="#id5"><span class="section-number">1.4. </span>pahelix.utils.paddle_utils</a><a class="headerlink" href="#module-pahelix.utils.paddle_utils" title="Permalink to this headline">¶</a></h2>
+<p>paddle utils.</p>
+<dl class="py function">
+<dt id="pahelix.utils.paddle_utils.get_distributed_optimizer">
+<code class="sig-prename descclassname">pahelix.utils.paddle_utils.</code><code class="sig-name descname">get_distributed_optimizer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">optimizer</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pahelix/utils/paddle_utils.html#get_distributed_optimizer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pahelix.utils.paddle_utils.get_distributed_optimizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the default collective distributed optimizer under fleet.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pahelix.utils.paddle_utils.load_partial_params">
+<code class="sig-prename descclassname">pahelix.utils.paddle_utils.</code><code class="sig-name descname">load_partial_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">exe</span></em>, <em class="sig-param"><span class="n">init_model</span></em>, <em class="sig-param"><span class="n">main_program</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pahelix/utils/paddle_utils.html#load_partial_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pahelix.utils.paddle_utils.load_partial_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load partial params by checking whether it’s in the <code class="xref py py-attr docutils literal notranslate"><span class="pre">init_model</span></code> folder.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>exe</strong> – Paddle executor.</p></li>
+<li><p><strong>init_model</strong> (<em>str</em>) – the model folder to load from.</p></li>
+<li><p><strong>main_program</strong> – Paddle program.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-pahelix.utils.protein_tools">
+<span id="pahelix-utils-protein-tools"></span><h2><a class="toc-backref" href="#id6"><span class="section-number">1.5. </span>pahelix.utils.protein_tools</a><a class="headerlink" href="#module-pahelix.utils.protein_tools" title="Permalink to this headline">¶</a></h2>
+<p>Mutiple tokenizers.</p>
+<dl class="py class">
+<dt id="pahelix.utils.protein_tools.ProteinTokenizer">
+<em class="property">class </em><code class="sig-prename descclassname">pahelix.utils.protein_tools.</code><code class="sig-name descname">ProteinTokenizer</code><a class="reference internal" href="../_modules/pahelix/utils/protein_tools.html#ProteinTokenizer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pahelix.utils.protein_tools.ProteinTokenizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Protein Tokenizer.</p>
+<dl class="py method">
+<dt id="pahelix.utils.protein_tools.ProteinTokenizer.convert_token_to_id">
+<code class="sig-name descname">convert_token_to_id</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">token</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pahelix/utils/protein_tools.html#ProteinTokenizer.convert_token_to_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pahelix.utils.protein_tools.ProteinTokenizer.convert_token_to_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a token to an id.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>token</strong> – Token.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The id of the input token.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>id</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pahelix.utils.protein_tools.ProteinTokenizer.convert_tokens_to_ids">
+<code class="sig-name descname">convert_tokens_to_ids</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tokens</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pahelix/utils/protein_tools.html#ProteinTokenizer.convert_tokens_to_ids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pahelix.utils.protein_tools.ProteinTokenizer.convert_tokens_to_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert multiple tokens to ids.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>tokens</strong> – The list of tokens.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The id list of the input tokens.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ids</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pahelix.utils.protein_tools.ProteinTokenizer.gen_token_ids">
+<code class="sig-name descname">gen_token_ids</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sequence</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pahelix/utils/protein_tools.html#ProteinTokenizer.gen_token_ids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pahelix.utils.protein_tools.ProteinTokenizer.gen_token_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate the list of token ids according the input sequence.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>sequence</strong> – Sequence to be tokenized.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The list of token ids.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>token_ids</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pahelix.utils.protein_tools.ProteinTokenizer.tokenize">
+<code class="sig-name descname">tokenize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sequence</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pahelix/utils/protein_tools.html#ProteinTokenizer.tokenize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pahelix.utils.protein_tools.ProteinTokenizer.tokenize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split the sequence into token list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>sequence</strong> – The sequence to be tokenized.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The token lists.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tokens</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-pahelix.utils.splitters">
+<span id="pahelix-utils-splitters"></span><h2><a class="toc-backref" href="#id7"><span class="section-number">1.6. </span>pahelix.utils.splitters</a><a class="headerlink" href="#module-pahelix.utils.splitters" title="Permalink to this headline">¶</a></h2>
+<p>splitters</p>
+<dl class="py class">
+<dt id="pahelix.utils.splitters.IndexSplitter">
+<em class="property">class </em><code class="sig-prename descclassname">pahelix.utils.splitters.</code><code class="sig-name descname">IndexSplitter</code><a class="reference internal" href="../_modules/pahelix/utils/splitters.html#IndexSplitter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pahelix.utils.splitters.IndexSplitter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split daatasets that has already been orderd. The first <cite>frac_train</cite> proportion
+is used for train set, the next <cite>frac_valid</cite> for valid set and the final <cite>frac_test</cite>
+for test set.</p>
+<dl class="py method">
+<dt id="pahelix.utils.splitters.IndexSplitter.split">
+<code class="sig-name descname">split</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dataset</span></em>, <em class="sig-param"><span class="n">frac_train</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">frac_valid</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">frac_test</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pahelix/utils/splitters.html#IndexSplitter.split"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pahelix.utils.splitters.IndexSplitter.split" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> (<em>InMemoryDataset</em>) – the dataset to split.</p></li>
+<li><p><strong>frac_train</strong> (<em>float</em>) – the fraction of data to be used for the train split.</p></li>
+<li><p><strong>frac_valid</strong> (<em>float</em>) – the fraction of data to be used for the valid split.</p></li>
+<li><p><strong>frac_test</strong> (<em>float</em>) – the fraction of data to be used for the test split.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="pahelix.utils.splitters.RandomScaffoldSplitter">
+<em class="property">class </em><code class="sig-prename descclassname">pahelix.utils.splitters.</code><code class="sig-name descname">RandomScaffoldSplitter</code><a class="reference internal" href="../_modules/pahelix/utils/splitters.html#RandomScaffoldSplitter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pahelix.utils.splitters.RandomScaffoldSplitter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adapted from <a class="reference external" href="https://github.com/pfnet-research/chainer-chemistry/blob/master/chainer_chemistry/dataset/splitters/scaffold_splitter.py">https://github.com/pfnet-research/chainer-chemistry/blob/master/chainer_chemistry/dataset/splitters/scaffold_splitter.py</a>
+Split dataset by Bemis-Murcko scaffolds</p>
+<dl class="py method">
+<dt id="pahelix.utils.splitters.RandomScaffoldSplitter.split">
+<code class="sig-name descname">split</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dataset</span></em>, <em class="sig-param"><span class="n">frac_train</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">frac_valid</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">frac_test</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">seed</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pahelix/utils/splitters.html#RandomScaffoldSplitter.split"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pahelix.utils.splitters.RandomScaffoldSplitter.split" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> (<em>InMemoryDataset</em>) – the dataset to split. Make sure each element in
+the dataset has key “smiles” which will be used to calculate the
+scaffold.</p></li>
+<li><p><strong>frac_train</strong> (<em>float</em>) – the fraction of data to be used for the train split.</p></li>
+<li><p><strong>frac_valid</strong> (<em>float</em>) – the fraction of data to be used for the valid split.</p></li>
+<li><p><strong>frac_test</strong> (<em>float</em>) – the fraction of data to be used for the test split.</p></li>
+<li><p><strong>seed</strong> (<em>int|None</em>) – the random seed.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="pahelix.utils.splitters.RandomSplitter">
+<em class="property">class </em><code class="sig-prename descclassname">pahelix.utils.splitters.</code><code class="sig-name descname">RandomSplitter</code><a class="reference internal" href="../_modules/pahelix/utils/splitters.html#RandomSplitter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pahelix.utils.splitters.RandomSplitter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Random splitter.</p>
+<dl class="py method">
+<dt id="pahelix.utils.splitters.RandomSplitter.split">
+<code class="sig-name descname">split</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dataset</span></em>, <em class="sig-param"><span class="n">frac_train</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">frac_valid</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">frac_test</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">seed</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pahelix/utils/splitters.html#RandomSplitter.split"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pahelix.utils.splitters.RandomSplitter.split" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> (<em>InMemoryDataset</em>) – the dataset to split.</p></li>
+<li><p><strong>frac_train</strong> (<em>float</em>) – the fraction of data to be used for the train split.</p></li>
+<li><p><strong>frac_valid</strong> (<em>float</em>) – the fraction of data to be used for the valid split.</p></li>
+<li><p><strong>frac_test</strong> (<em>float</em>) – the fraction of data to be used for the test split.</p></li>
+<li><p><strong>seed</strong> (<em>int|None</em>) – the random seed.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="pahelix.utils.splitters.ScaffoldSplitter">
+<em class="property">class </em><code class="sig-prename descclassname">pahelix.utils.splitters.</code><code class="sig-name descname">ScaffoldSplitter</code><a class="reference internal" href="../_modules/pahelix/utils/splitters.html#ScaffoldSplitter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pahelix.utils.splitters.ScaffoldSplitter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adapted from <a class="reference external" href="https://github.com/deepchem/deepchem/blob/master/deepchem/splits/splitters.py">https://github.com/deepchem/deepchem/blob/master/deepchem/splits/splitters.py</a>
+Split dataset by Bemis-Murcko scaffolds</p>
+<dl class="py method">
+<dt id="pahelix.utils.splitters.ScaffoldSplitter.split">
+<code class="sig-name descname">split</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dataset</span></em>, <em class="sig-param"><span class="n">frac_train</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">frac_valid</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">frac_test</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pahelix/utils/splitters.html#ScaffoldSplitter.split"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pahelix.utils.splitters.ScaffoldSplitter.split" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> (<em>InMemoryDataset</em>) – the dataset to split. Make sure each element in
+the dataset has key “smiles” which will be used to calculate the
+scaffold.</p></li>
+<li><p><strong>frac_train</strong> (<em>float</em>) – the fraction of data to be used for the train split.</p></li>
+<li><p><strong>frac_valid</strong> (<em>float</em>) – the fraction of data to be used for the valid split.</p></li>
+<li><p><strong>frac_test</strong> (<em>float</em>) – the fraction of data to be used for the test split.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="../tutorials.html" class="btn btn-neutral float-left" title="Tutorials" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Baidu Inc.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

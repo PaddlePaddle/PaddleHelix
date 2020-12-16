@@ -50,16 +50,23 @@ def load_bbbp_dataset(data_path, task_names=None, featurizer=None):
     :name:Name of the compound
     :smiles:SMILES representation of the molecular structure
     :p_np:Binary labels for penetration/non-penetration
-    :Valid ratio: 1.0
-    :Task evaluated: 1/1
 
     Args:
         data_path(str): the path to the cached npz path.
-        task_names: get the default lipophilicity task names.
-        featurizer: the featurizer to use for processing the data.  
+        task_names(list): a list of header names to specify the columns to fetch from 
+            the csv file.
+        featurizer(pahelix.featurizers.Featurizer): the featurizer to use for 
+            processing the data. If not none, The ``Featurizer.gen_features`` will be 
+            applied to the raw data.
     
     Returns:
-        dataset(InMemoryDataset): the data_list(list of dict of numpy ndarray).
+        an InMemoryDataset instance.
+    
+    Example:
+        .. code-block:: python
+
+            dataset = load_bbbp_dataset('./bbbp/raw')
+            print(len(dataset))
         
     References:
     [1] Martins, Ines Filipa, et al. “A Bayesian approach to in silico blood-brain barrier penetration modeling.” Journal of chemical information and modeling 52.6 (2012): 1686-1697.
