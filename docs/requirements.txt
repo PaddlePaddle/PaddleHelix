@@ -1,2 +1,5 @@
 sphinx>=3.0
 sphinxcontrib-httpdomain
+paddle
+pgl
+numpy
