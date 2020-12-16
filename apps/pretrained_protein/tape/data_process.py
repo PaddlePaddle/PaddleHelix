@@ -16,15 +16,18 @@
 Multiple protein datasets.
 """
 
+import json
 import numpy as np
-from pahelix.utils.tokenizers import Tokenizer, VocabType
+import sys
+from pahelix.utils.protein_tools import ProteinTokenizer
 
 class Pfam(object):
     """
     Class for pfam dataset.
+    For more details, please check paper "Evaluating Protein Transfer Learning with TAPE".
     """
-    def __init__(self, vocab_type=VocabType.PROTEIN):
-        self.tokenizer = Tokenizer(vocab_type=vocab_type)
+    def __init__(self):
+        self.tokenizer = ProteinTokenizer()
         self.clear()
 
     def gen_sequence_data(self, data):
@@ -59,12 +62,13 @@ class Pfam(object):
                 lengths=np.array(self.lengths, dtype='int64'))
 
 
-class SecondStructure(object):
+class SecondaryStructure(object):
     """
     Class for second structure dataset.
+    For more details, please check paper "Evaluating Protein Transfer Learning with TAPE".
     """
-    def __init__(self, vocab_type=VocabType.PROTEIN):
-        self.tokenizer = Tokenizer(vocab_type=vocab_type)
+    def __init__(self):
+        self.tokenizer = ProteinTokenizer()
         self.clear()
 
     def gen_sequence_data(self, data):
@@ -110,9 +114,10 @@ class SecondStructure(object):
 class RemoteHomology(object):
     """
     Class for remote homology dataset.
+    For more details, please check paper "Evaluating Protein Transfer Learning with TAPE".
     """
-    def __init__(self, vocab_type=VocabType.PROTEIN):
-        self.tokenizer = Tokenizer(vocab_type=vocab_type)
+    def __init__(self):
+        self.tokenizer = ProteinTokenizer()
         self.clear()
 
     def gen_sequence_data(self, data):
@@ -154,9 +159,10 @@ class RemoteHomology(object):
 class Fluorescence(object):
     """
     Class for fluorescene dataset.
+    For more details, please check paper "Evaluating Protein Transfer Learning with TAPE".
     """
-    def __init__(self, vocab_type=VocabType.PROTEIN):
-        self.tokenizer = Tokenizer(vocab_type=vocab_type)
+    def __init__(self):
+        self.tokenizer = ProteinTokenizer()
         self.clear()
 
     def gen_sequence_data(self, data):
@@ -198,9 +204,10 @@ class Fluorescence(object):
 class Stability(object):
     """
     Class for stability dataset.
+    For more details, please check paper "Evaluating Protein Transfer Learning with TAPE".
     """
-    def __init__(self, vocab_type=VocabType.PROTEIN):
-        self.tokenizer = Tokenizer(vocab_type=vocab_type)
+    def __init__(self):
+        self.tokenizer = ProteinTokenizer()
         self.clear()
 
     def gen_sequence_data(self, data):
@@ -238,3 +245,14 @@ class Stability(object):
                 labels=np.array(self.labels, dtype='int8'),
                 lengths=np.array(self.lengths, dtype='int64'))
 
+
+if __name__ == '__main__':
+    dataset = SecondaryStructure()
+    with open('raw_data', 'r') as fin:
+        for line in fin:
+            data = json.loads(line)
+            dataset.append(data)
+        dataset.save_npz('data')
+            
+
+    

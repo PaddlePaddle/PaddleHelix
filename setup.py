@@ -117,7 +117,7 @@ requires = [
 'pandas',
 'networkx',
 'pgl>=1.2.0',
-'paddlepaddle==2.0.0-rc0',
+'paddlepaddle>=2.0.0-rc0',
 "sklearn",
 ]
 
