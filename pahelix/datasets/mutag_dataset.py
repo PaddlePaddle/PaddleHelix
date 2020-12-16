@@ -31,8 +31,8 @@ from pahelix.utils.compound_tools import mol_to_graph_data
 def load_mutag_dataset(data_path):
     """Load mutag dataset, process the raw dataset to graph data.
     """
-    smiles_path = os.path.join(raw_dir, 'mutag_188_data.can')
-    labels_path = os.path.join(raw_dir, 'mutag_188_target.txt')
+    smiles_path = os.path.join(data_path, 'mutag_188_data.can')
+    labels_path = os.path.join(data_path, 'mutag_188_target.txt')
 
     smiles_list = pd.read_csv(smiles_path, sep=' ', header=None)[0]
     labels = pd.read_csv(labels_path, header=None)[0].replace(-1, 0).values

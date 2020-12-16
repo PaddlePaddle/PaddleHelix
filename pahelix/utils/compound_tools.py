@@ -80,7 +80,7 @@ def mol_to_graph_data(mol, add_self_loop=True):
         add_self_loop: whether to add self loop or not.
 
     Returns:
-        data(dict): a dict of numpy ndarray for the graph data. It consists of 
+        a dict of numpy ndarray for the graph data. It consists of 
             atom attibutes, edge attibutes and edge index.
     """
     # atoms
@@ -194,7 +194,7 @@ def get_gasteiger_partial_charges(mol, n_iter=12):
         n_iter(int): number of iterations. Default 12
     
     Returns: 
-        partial_charges: list of computed partial charges for each atom.
+        list of computed partial charges for each atom.
     """
     Chem.rdPartialCharges.ComputeGasteigerCharges(mol, nIter=n_iter,
                                                   throwOnParamFailure=True)
@@ -210,7 +210,7 @@ def create_standardized_mol_id(smiles):
         smiles:
     
     Returns: 
-        inchi:
+        inchi
     """
     if check_smiles_validity(smiles):
         # remove stereochemistry
