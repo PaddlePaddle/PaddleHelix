@@ -80,8 +80,7 @@ def mol_to_graph_data(mol, add_self_loop=True):
         add_self_loop: whether to add self loop or not.
 
     Returns:
-        a dict of numpy ndarray for the graph data. It consists of 
-            atom attibutes, edge attibutes and edge index.
+        a dict of numpy ndarray for the graph data. It consists of atom attibutes, edge attibutes and edge index.
     """
     # atoms
     atom_types = []
