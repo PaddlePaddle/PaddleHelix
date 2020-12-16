@@ -29,9 +29,7 @@ import numpy as np
 
 from pahelix.datasets.inmemory_dataset import InMemoryDataset
 
-from pahelix.datasets.stream_dataset import StreamDataset
-
-__all__ = ['load_zinc_dataset', 'load_stream_zinc_dataset']
+__all__ = ['load_zinc_dataset']
 
 
 def load_zinc_dataset(data_path, featurizer=None, return_smiles=False, indices=None):
@@ -83,32 +81,6 @@ def load_zinc_dataset(data_path, featurizer=None, return_smiles=False, indices=N
     dataset = InMemoryDataset(data_list)
     return dataset
 
-
-def load_stream_zinc_dataset(data_path, featurizer=None):
-    """
-    Args:
-        data_path(str): the path to the cached npz path.
-        featurizer: the featurizer to use for processing the data.  
-        
-    Returns:
-        dataset(StreamDataset): the data_list(list of dict of numpy ndarray).
-    """
-    smiles_list = _load_zinc_dataset(data_path)
-    
-    def _get_data_generator(smiles_list, featurizer):
-        for i in range(len(smiles_list)):
-            raw_data = {}
-            raw_data['smiles'] = smiles_list[i]        
-            if not featurizer is None:
-                data = featurizer.gen_features(raw_data)
-            else:
-                data = raw_data
-            if not data is None:
-                yield data
-    
-    data_generator = _get_data_generator(smiles_list, featurizer)
-    dataset = StreamDataset(data_generator=data_generator)
-    return dataset
 
 def _load_zinc_dataset(data_path):
     """

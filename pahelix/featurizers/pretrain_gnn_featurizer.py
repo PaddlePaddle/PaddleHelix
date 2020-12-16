@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Featurizers from pretrain-gnn.
+Featurizers for pretrain-gnn.
 Adapted from https://github.com/snap-stanford/pretrain-gnns/tree/master/chem/utils.py
 """
 
@@ -41,7 +41,7 @@ class PreGNNAttrMaskFeaturizer(Featurizer):
         self.mask_ratio = mask_ratio
     
     def gen_features(self, raw_data):
-        """Convert smiles to graph data.
+        """Convert smiles into graph data.
 
         Returns:
             data(dict): a dict of numpy ndarray consists of graph features.
@@ -93,7 +93,7 @@ class PreGNNSupervisedFeaturizer(Featurizer):
         self.graph_wrapper = graph_wrapper
     
     def gen_features(self, raw_data):
-        """Convert smiles to graph data.
+        """Convert smiles into graph data.
 
         Returns:
             data(dict): a dict of numpy ndarray consists of graph features.
@@ -163,6 +163,7 @@ def graph_data_obj_to_nx_simple(data):
 
     Args:
         data(dict): a dict of numpy ndarray consists of graph features.
+
     Returns: 
         G: a network x object
     """
@@ -202,6 +203,7 @@ def nx_to_graph_data_obj_simple(G):
 
     Args: 
         G: nx graph object
+
     Returns: 
         data(dict): a dict of numpy ndarray consists of graph features.
     """
@@ -319,7 +321,7 @@ class PreGNNContextPredFeaturizer(Featurizer):
         self.l2 = l2
     
     def gen_features(self, raw_data):
-        """Convert smiles to graph data.
+        """Convert smiles into graph data.
 
         Returns:
             data(dict): a dict of numpy ndarray consists of graph features.
