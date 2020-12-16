@@ -1,12 +1,12 @@
 # InfoGraph
 
-[中文版本](./README.ch.md) [English Version](./README.en.md)
+[中文版本](./README_ch.md) [English Version](./README.md)
 
 * [Background](#background)
 * [Instructions](#instructions)
     * [Configuration](#configuration)
     * [Training and Evaluation](#train-and-evaluation)
-* [Data](#data)
+* [Datasets](#datasets)
     * [MUTAG](#mutag)
     * [PTC-MR](#ptc-mr)
 * [Reference](#reference)
@@ -37,7 +37,7 @@ Evaluation results:
 | MUTAG         | 89.01+/-1.13 | 91.43     | 90.20     | 90.45     |
 | PTC-MR        | 61.64+/-1.43 | 60.59     | 64.09     | 60.28     |
 
-## Data
+## Datasets
 
 ### MUTAG
 
