@@ -24,7 +24,14 @@ from pahelix.networks.gnn_block import gin_layer
 import pgl
 
 class GINEncoder(object):
-    """GIN Encoder for unsupervised InfoGraph"""
+    """
+    | GIN Encoder for unsupervised InfoGraph.
+
+    Public Functions:
+        - ``forward``: forward to create the GIN compound encoder.
+        - ``get_embeddings``: compute all the embeddings given dataset.
+        - ``embedding_dim``: get dimension of the embedding.
+    """
     def __init__(self, config):
         self.hidden_size = config['hidden_size']
         self.num_layers = config['num_layers']
@@ -67,6 +74,11 @@ class GINEncoder(object):
         return bond_features
 
     def forward(self, gw):
+        """Forward.
+
+        Args:
+            gw (pgl.graph_wrapper.GraphWrapper): a graph wrapper for GIN model.
+        """
         x = self._atom_encoder(gw)
         patch_repr = []
         for i in range(self.num_layers):
@@ -83,6 +95,14 @@ class GINEncoder(object):
         return global_repr, patch_summary
 
     def get_embeddings(self, loader, exe, prog, graph_emb):
+        """Compute embeddins for given dataloader.
+
+        Args:
+            loader (pgl.utils.data.dataloader.Dataloader): an instance of PGL dataloader.
+            exe (fluild.Executor): executor of Paddle.
+            prog (fluild.Program): program of Paddle.
+            graph_emb (Variable): the graph representation variable, create by `forward`.
+        """
         emb_lst, ys = [], []
         for feed_dict in loader:
             y = feed_dict['label'].copy()

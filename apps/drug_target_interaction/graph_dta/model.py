@@ -26,7 +26,13 @@ from pahelix.model_zoo.pretrain_gnns_model import PretrainGNNModel
 
 
 class CompoundGNNModel(object):
-    """tbd"""
+    """
+    | CompoundGNNModel, implementation of the variant GNN models in paper
+        ``GraphDTA: Predicting drug-target binding affinity with graph neural networks``.
+
+    Public Functions:
+        - ``forward``: forward to create the compound representation.
+    """
     def __init__(self, model_config, name=''):
         self.name = name
 
@@ -145,6 +151,12 @@ class CompoundGNNModel(object):
 
 
 class ProteinSequenceModel(object):
+    """
+    | ProteinSequenceModel, implementation of Conv1D model for protein representation.
+
+    Public Functions:
+        - ``forward``: forward to create protein sequence representation.
+    """
     def __init__(self, model_config, name=''):
         self.name = name
         self.model_config = model_config
@@ -166,6 +178,11 @@ class ProteinSequenceModel(object):
             self.model_config['pool_type'] = 'average'
 
     def forward(self, token):
+        """Forward.
+
+        Args:
+            token (Variable): data variable that represents the amino acid sequence as IDs.
+        """
         token_emb = fluid.layers.embedding(
                 input=token,
                 param_attr=fluid.ParamAttr(name='%s_token_emb' % self.name, initializer=self.param_initializer),
@@ -191,6 +208,14 @@ class ProteinSequenceModel(object):
 
 
 class DTAModel(object):
+    """
+    | DTAModel, implementation of the network architecture in GraphDTA.
+
+    Public Functions:
+        - ``forward``: forward.
+        - ``train``: build the network, predictor and loss.
+        - ``inference``: build the network and predictor.
+    """
     def __init__(self,
                  model_config,
                  use_pretrained_compound_gnns=False):

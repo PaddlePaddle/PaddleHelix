@@ -34,13 +34,15 @@ import pgl
 from pgl.utils import paddle_helper
 from pgl.graph_wrapper import GraphWrapper
 from pgl.utils.data.dataloader import Dataloader
+from pahelix.utils.paddle_utils import load_partial_params
 
 from model import GINEncoder, FF, PriorDiscriminator
 from data_gen import MoleculeCollateFunc
-from utils import load_partial_vars, load_data, calc_rocauc_score
+from utils import load_data, calc_rocauc_score
 
 
 def create_model(args, config, graph_label):
+    """Create model for given model configuration."""
     logging.info('building model')
     graph_wrapper = GraphWrapper(
         name="graph",
@@ -73,6 +75,7 @@ def create_model(args, config, graph_label):
 
 
 def train(args, exe, train_prog, agent, train_data_list, epoch_id):
+    """Model training for one epoch and log the average loss."""
     collate_fn = MoleculeCollateFunc(
         agent.graph_wrapper,
         task_type='cls',
@@ -107,6 +110,7 @@ def train(args, exe, train_prog, agent, train_data_list, epoch_id):
 
 
 def evaluate(args, exe, test_prog, agent, test_data_list, epoch_id):
+    """Evaluate the model on test dataset."""
     collate_fn = MoleculeCollateFunc(
         agent.graph_wrapper,
         task_type='cls',
@@ -169,7 +173,7 @@ def main(args):
     exe.run(startup_prog)
 
     if not args.init_model is None and not args.init_model == "":
-        load_partial_vars(exe, args.init_model, train_prog)
+        load_partial_params(exe, args.init_model, train_prog)
         logging.info('Loaded %s' % args.init_model)
 
     list_val_auc, list_test_auc, best_val_auc = [], [], 0

@@ -23,8 +23,11 @@ import numpy as np
 from paddle import fluid
 from sklearn.metrics import roc_auc_score
 
+from pahelix.utils.data_utils import load_npz_to_data_list
+
 
 def get_positive_expectation(p_samples, measure, average=True):
+    """Get the expectation from positive samples for given measurement."""
     if measure == 'GAN':
         Ep = - fluid.layers.softplus(-p_samples)
     elif measure == 'JSD':
@@ -49,7 +52,9 @@ def get_positive_expectation(p_samples, measure, average=True):
     else:
         return Ep
 
+
 def get_negative_expectation(q_samples, measure, average=True):
+    """Get the expectation from negative samples fro given measurement."""
     if measure == 'GAN':
         Eq = fluid.layers.softplus(-q_samples) + q_samples
     elif measure == 'JSD':
@@ -74,68 +79,8 @@ def get_negative_expectation(q_samples, measure, average=True):
         return Eq
 
 
-def load_partial_vars(exe, init_model, main_program):
-    """tbd"""
-    assert os.path.exists(init_model), "[%s] cann't be found." % init_model
-
-    def existed_params(var):
-        """tbd"""
-        if not isinstance(var, fluid.framework.Parameter):
-            logging.info("%s not existed", var.name)
-            return False
-        if os.path.exists(os.path.join(init_model, var.name)):
-            logging.info("load %s successful", var.name)
-            return True
-        else:
-            logging.info("%s not existed", var.name)
-            return False
-
-    fluid.io.load_vars(
-            exe,
-            init_model,
-            main_program=main_program,
-            predicate=existed_params)
-    logging.info("Load parameters from %s", init_model)
-
-
-def save_data_list_to_npz(data_list, npz_file):
-    """tbd"""
-    keys = data_list[0].keys()
-    merged_data = {}
-    for key in keys:
-        lens = np.array([len(data[key]) for data in data_list])
-        values = np.concatenate([data[key] for data in data_list], 0)
-        merged_data[key] = values
-        merged_data[key + '.seq_len'] = lens
-    np.savez_compressed(npz_file, **merged_data)
-
-
-def load_npz_to_data_list(npz_file):
-    """tbd"""
-    def split_data(values, seq_lens):
-        """tbd"""
-        res = []
-        s = 0
-        for l in seq_lens:
-            res.append(values[s: s + l])
-            s += l
-        return res
-
-    merged_data = np.load(npz_file)
-    names = [name for name in merged_data.keys() if not name.endswith('.seq_len')]
-    data_dict = {}
-    for name in names:
-        data_dict[name] = split_data(merged_data[name], merged_data[name + '.seq_len'])
-
-    data_list = []
-    n = len(data_dict[names[0]])
-    for i in range(n):
-        data = {name:data_dict[name][i] for name in names}
-        data_list.append(data)
-    return data_list
-
-
 def load_data(npz_dir):
+    """Load data from multiple npz files for a given folder."""
     files = glob.glob('%s/*.npz' % npz_dir)
     data_list = []
     for f in files:
