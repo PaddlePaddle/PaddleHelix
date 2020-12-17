@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-splitters
+| Splitters
 """
 
 import random
@@ -36,8 +36,8 @@ def generate_scaffold(smiles, include_chirality=False):
     Obtain Bemis-Murcko scaffold from smiles
 
     Args:
-        smiles:
-        include_chirality:
+        smiles: smiles sequence
+        include_chirality: Default=False
     
     Return: 
         the scaffold of the given smiles.

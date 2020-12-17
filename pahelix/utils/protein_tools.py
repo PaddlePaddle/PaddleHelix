@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Mutiple tokenizers.
+| Mutiple tokenizers.
 """
 
 from collections import OrderedDict

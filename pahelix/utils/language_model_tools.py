@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Tools for language models.
+| Tools for language models.
 """
 
 from copy import copy

@@ -13,8 +13,8 @@
 # limitations under the License.
 
 """
-Tools for compound features.
-Adapted from https://github.com/snap-stanford/pretrain-gnns/blob/master/chem/loader.py
+| Tools for compound features.
+| Adapted from https://github.com/snap-stanford/pretrain-gnns/blob/master/chem/loader.py
 """
 
 import numpy as np
@@ -72,8 +72,9 @@ def atom_numeric_feat(n, allowable, to_one_hot=True):
 
 def mol_to_graph_data(mol, add_self_loop=True):
     """
-    Converts rdkit mol object to graph data which is a dict of numpy ndarray. 
-    NB: Uses simplified atom and bond features, and represent as indices.
+    | Converts rdkit mol object to graph data which is a dict of numpy ndarray. 
+    
+    | NB: Uses simplified atom and bond features, and represent as indices.
 
     Args: 
         mol: rdkit mol object.
@@ -206,7 +207,7 @@ def create_standardized_mol_id(smiles):
     """
 
     Args:
-        smiles:
+        smiles: smiles sequence
     
     Returns: 
         inchi
