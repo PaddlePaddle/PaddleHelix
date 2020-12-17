@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Tools for data.
+| Tools for data.
 """
 
 import numpy as np
