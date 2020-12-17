@@ -34,10 +34,11 @@ import pgl
 from pgl.utils import paddle_helper
 from pgl.graph_wrapper import GraphWrapper
 from pgl.utils.data.dataloader import Dataloader
+from pahelix.utils.paddle_utils import load_partial_params
 
 from model import GINEncoder, FF, PriorDiscriminator
 from data_gen import MoleculeCollateFunc
-from utils import load_partial_vars, load_data, calc_rocauc_score
+from utils import load_data, calc_rocauc_score
 
 
 def create_model(args, config, graph_label):
@@ -169,7 +170,7 @@ def main(args):
     exe.run(startup_prog)
 
     if not args.init_model is None and not args.init_model == "":
-        load_partial_vars(exe, args.init_model, train_prog)
+        load_partial_params(exe, args.init_model, train_prog)
         logging.info('Loaded %s' % args.init_model)
 
     list_val_auc, list_test_auc, best_val_auc = [], [], 0

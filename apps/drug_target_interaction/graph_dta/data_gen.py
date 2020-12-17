@@ -24,8 +24,7 @@ from paddle import fluid
 import pgl
 from pgl.utils.data.dataset import Dataset, StreamDataset
 from pahelix.utils.protein_tools import ProteinTokenizer
-
-from utils import load_npz_to_data_list
+from pahelix.utils.data_utils import load_npz_to_data_list
 
 
 class DTADataset(StreamDataset):

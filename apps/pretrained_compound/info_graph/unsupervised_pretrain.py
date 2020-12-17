@@ -48,7 +48,7 @@ from pahelix.datasets import load_mutag_dataset, load_ptc_mr_dataset
 from model import GINEncoder, FF, PriorDiscriminator
 from data_gen import MoleculeCollateFunc
 from classifier import eval_on_classifiers
-from utils import get_positive_expectation, get_negative_expectation, load_data, save_data_list_to_npz
+from utils import get_positive_expectation, get_negative_expectation, load_data
 
 
 def create_model(args, config):
@@ -219,18 +219,6 @@ def main(args):
             # use processed data.npz
             train_data_list.extend(
                 load_data(os.path.join(args.root, ds, 'processed')))
-            # dataset = MoleculeDataset(
-            #     args.root, ds,
-            #     add_symmetry=False,
-            #     add_self_loop=False)
-            # data_list = dataset.get_data_list()
-            # processed_dir = os.path.join(args.root, ds, 'processed')
-            # os.makedirs(processed_dir, exist_ok=True)
-            # save_data_list_to_npz(
-            #     data_list, os.path.join(processed_dir, 'data.npz'))
-
-            # logging.info('Processed {}'.format(ds))
-            # train_data_list.extend(data_list)
     else:
         if args.dataset == 'mutag':
             train_data_list, _ = load_mutag_dataset(

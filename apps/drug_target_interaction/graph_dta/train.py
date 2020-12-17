@@ -24,10 +24,11 @@ import numpy as np
 
 import paddle.fluid as fluid
 from pgl.utils.data.dataloader import Dataloader
+from pahelix.utils.paddle_utils import load_partial_params
 
 from data_gen import DTADataset, DTACollateFunc
 from model import DTAModel
-from utils import load_partial_vars, get_exe_params, concordance_index
+from utils import default_exe_params, concordance_index
 
 logging.basicConfig(
         format='%(asctime)s [%(filename)s:%(lineno)d] %(message)s',
@@ -129,7 +130,8 @@ def save_metric(model_dir, epoch_id, best_mse, best_ci):
 def main(args):
     model_config = json.load(open(args.model_config, 'r'))
 
-    exe, exe_params = get_exe_params(args.is_distributed, args.use_cuda, args.thread_num)
+    exe_params = default_exe_params(args.is_distributed, args.use_cuda, args.thread_num)
+    exe = exe_params['exe']
 
     selector = None if not args.use_val else lambda l: l[:int(len(l)*0.8)]
     train_dataset = DTADataset(
@@ -170,7 +172,7 @@ def main(args):
 
     exe.run(train_startup)
     if not args.init_model is None and not args.init_model == "":
-        load_partial_vars(exe, args.init_model, train_program)
+        load_partial_params(exe, args.init_model, train_program)
 
     config = os.path.basename(args.model_config)
     best_mse, best_mse_, best_ci, best_ep = np.inf, np.inf, 0, 0
