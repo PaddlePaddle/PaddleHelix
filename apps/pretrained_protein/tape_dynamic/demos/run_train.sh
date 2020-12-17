@@ -2,7 +2,7 @@
 
 source ~/.bashrc
 
-batch_size="16"
+batch_size="64"
 lr="0.001"
 regularization="0"
 thread_num="8" # thread_num is for cpu, please set CUDA_VISIBLE_DEVICES for gpu
@@ -16,7 +16,7 @@ distributed="false" # candidates: true/false
 train_data="./toy_data/${task}/npz"
 test_data="./toy_data/${task}/npz/valid"
 
-# export PYTHONPATH="../../../../"
+export PYTHONPATH="../../../../"
 
 if [ "${distributed}" == "true" ]; then
     if [ "${use_cuda}" == "true" ]; then
@@ -42,7 +42,7 @@ if [ "${distributed}" == "true" ]; then
     fi
 else
     if [ "${use_cuda}" == "true" ]; then
-        export CUDA_VISIBLE_DEVICES="2"
+        export CUDA_VISIBLE_DEVICES="0"
         python ../train.py \
                 --train_data ${train_data} \
                 --test_data ${test_data} \
