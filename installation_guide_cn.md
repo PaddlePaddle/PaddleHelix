@@ -38,18 +38,31 @@ conda create -n paddlehelix python=3.7
 conda activate paddlehelix
 ```
 
-4. 在安装 PaddleHelix 之前，首先需要使用 conda 安装 rdkit：
+4. 在安装 PaddleHelix 之前，首先需要使用 conda 安装 `rdkit`：
 ```bash
 conda install -c conda-forge rdkit
 ```
-5. 等待 rdkit 安装完成，之后使用 pip 命令安装 PaddleHelix
+5. 此外需要基于你对CPU/GPU版本的选择来安装`paddle`:
+
+   参看paddle[官方文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/2.0-rc1/install/index_cn.html)安装
+
+   
+   
+6. 使用pip命令安装`PGL`:
+```bash
+pip insatll pgl
+```
+
+7. 使用 pip 命令安装 `PaddleHelix`
 ```bash
 pip install paddlehelix
 ```
 
-6. 等待 PaddleHelix 安装完成！
+8. 等待 PaddleHelix 安装完成！
 
->如果想要退出当前 conda 环境，可以使用下列命令：
->```bash
->conda deactivate
->```
+
+9. 运行完项目之后,如果想要退出当前 conda 环境，可以使用下列命令：
+```bash
+conda deactivate
+```
+

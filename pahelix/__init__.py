@@ -16,3 +16,11 @@
 Initialize.
 """
 
+def get_fluid_version():
+    import paddle
+    paddle_version = int(paddle.__version__.replace('.', '').split('-')[0])
+    return paddle_version
+
+paddle_version = get_fluid_version()
+if paddle_version <200:
+    print('Warning:\n \tYou are using paddle version less than 2.0.0, which will cause errors during the execution.\n \t To avoid that, please use paddle version >= 2.0.0rc0')

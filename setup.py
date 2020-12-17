@@ -116,17 +116,15 @@ requires = [
 'numpy',
 'pandas',
 'networkx',
-'pgl>=1.2.0',
-'paddlepaddle>=2.0.0-rc0',
 "sklearn",
 ]
 
 setup(
     name="paddlehelix",
-    version="1.0.0a0",
+    version="1.0.0b",
     author="fangxiaomin",
     author_email="fangxiaomin01@baidu.com",
-    description="",
+    description="Adding version check",
     long_description="",
     packages = find_packages(),
     ext_modules=[CMakeExtension("linear_rna")],

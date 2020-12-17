@@ -43,17 +43,28 @@ conda activate paddlehelix
 ```bash
 conda install -c conda-forge rdkit
 ```
-5. Install PaddleHelix using pip:
+5. Install `paddle` base on your choice of GPU/CPU version:
+
+    check paddlepaddle's [official document](https://www.paddlepaddle.org.cn/documentation/docs/en/2.0-rc1/install/index_en.html) to install paddle2.0
+
+
+6. Install `PGL` using pip:
+   
+```bash
+pip install pgl
+```
+
+7. Install `PaddleHelix` using pip:
 
 ```bash
 pip install paddlehelix
 ```
 
-6. The installation is done!
+8. The installation is done!
 
 
-> If you want to deactivate the conda environment, do this:
-> 
-> ```bash
-> conda deactivate
-> ```
+9. After runing the project, if you want to deactivate the conda environment, do this:
+
+ ```bash
+ conda deactivate
+ ```
