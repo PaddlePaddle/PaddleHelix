@@ -58,7 +58,7 @@
 pretrain_attrmask.py          # 节点级别的属性遮蔽预训练文件
 pretrain_contextpred.py       # 节点级别的上下文预测的预训练文件
 pretrain_supervised.py        # 整图级别的预训练文件
-``` 
+```
  - 以     pretrain_attrmask.py为例训练的相关参数解释如下:
 
 `use_cuda` :  是否使用GPU
@@ -86,7 +86,7 @@ CUDA_VISIBLE_DEVICES=0 python pretrain_attrmask.py \
                 --model_dir=../../../output/pretrain_gnns/pretrain_attrmask        
 ```
  -  在这里我们提供了几种直接运行shell脚本的示例，你可以在这些脚本里更改你的模型配置参数：
-   
+
 ```bash 
 sh scripts/pretrain_attrmask.sh         #运行脚本，用此方法来执行上面的py文件，具体路径可根据需要更改。
 sh scripts/pretrain_contextpred.sh      #运行脚本，用此方法来执行上面的py文件，具体路径可根据需要更改。
@@ -257,7 +257,7 @@ CUDA_VISIBLE_DEVICES=0 python finetune.py \
        - BACE数据集提供了一组人β分泌酶1抑制剂（BACE-1）的定量（IC50）和定性（二进制标记）结合结果。 所有数据均为过去十年间科学文献中报道的实验值，其中一些具有详细的晶体结构。 提供了152种化合物的2D结构和性质。
     - 输入：
        - 数据文件包含一个csv表，其中使用了以下列：
-          - “mol” :分子结构的SMILES表示
+         - “mol” :分子结构的SMILES表示
     -  特性：
        -  ”pIC50” : IC50结合亲和力的负对数
        - “class” : 抑制剂的二元标签 
@@ -269,9 +269,9 @@ CUDA_VISIBLE_DEVICES=0 python finetune.py \
        - 血脑屏障渗透（Blood-brain barrier penetration）数据集是从对屏障渗透性建模和预测的研究中提取的。 作为分隔循环血液和大脑细胞外液的膜，血脑屏障可以阻止大多数药物，激素和神经递质。 因此，在针对中枢神经系统的药物开发中，屏障的渗透形成了长期存在的问题。 该数据集包括针对2000多种化合物的渗透性特性的二进制标记。
     -  输入：
        - 数据文件包含一个csv表，其中使用了以下列：
-       - Num-编号
-       -   “名称”: 化合物的名称(药物之类的）
-       -  “SMILES” : 分子结构的SMILES表示
+         - Num-编号
+         - “名称”: 化合物的名称(药物之类的）
+         - “SMILES” : 分子结构的SMILES表示
     - 特性：
        - “ p_np” : 渗透/不渗透的二进制标签
        - Valid ratio: 1.0
@@ -285,7 +285,7 @@ CUDA_VISIBLE_DEVICES=0 python finetune.py \
 
     -  输入：
        - 数据文件包含一个csv表，其中使用了以下列：
-       -  “SMILES” : 分子结构的SMILES表示
+         -  “SMILES” : 分子结构的SMILES表示
     - 特性：
        -   “ FDA_APPROVED” : FDA批准状态   1是批准，0是不批准
        -  “ CT_TOX” : 临床试验结果  0表示没有毒，1是有毒
@@ -298,7 +298,7 @@ CUDA_VISIBLE_DEVICES=0 python finetune.py \
 
     -  输入：
        - 数据文件包含一个csv表，其中使用了以下列：
-       -   “SMILES” : 分子结构的SMILES表示
+         -   “SMILES” : 分子结构的SMILES表示
     - 特性：
        -   “ACTIVITY” : 用于筛选结果的三类标签：CI / CM / CA
        -  “HIV_active” - 筛查结果的二进制标签：1（CA / CM）和0（CI）
@@ -311,8 +311,8 @@ CUDA_VISIBLE_DEVICES=0 python finetune.py \
        - 最大无偏验证（The Maximum Unbiased Validation）组是通过应用精确的最近邻分析从PubChem BioAssay中选择的基准数据集。 MUV数据集包含针对90,000种化合物的17个具有挑战性的任务，是专门为验证虚拟筛选技术而设计的。
     - 输入：
        - 数据文件包含一个csv表，其中使用了以下列：
-       - “ mol_id” : 该化合物的PubChem CID
-       -  “SMILES” : 分子结构的SMILES表示
+         - “ mol_id” : 该化合物的PubChem CID
+         -  “SMILES” : 分子结构的SMILES表示
     - 特性：
        -  “ MUV-XXX”-生物测定的测量结果（有效/无效）：测量指标
        -  Valid ratio: 0.155、0.160
@@ -323,7 +323,7 @@ CUDA_VISIBLE_DEVICES=0 python finetune.py \
        - 副作用资源（SIDER）是市售药物和药物不良反应（ADR）的数据库。 DeepChem的SIDER数据集版本根据对1427种批准药物进行的MedDRA分类，将药物副作用分为27种系统器官类别。
     - 输入：
        - 数据文件包含一个csv表，其中使用了以下列：
-       - “SMILES” : 分子结构的SMILES表示；
+         - “SMILES” : 分子结构的SMILES表示；
     - 特性：
        - “肝胆疾病”〜“伤害，中毒和程序并发症”-记录的药物副作用
        -   Valid ratio: 1.0
@@ -334,7 +334,7 @@ CUDA_VISIBLE_DEVICES=0 python finetune.py \
 
     - 输入：
        - 数据文件包含一个csv表，其中使用了以下列：
-       - “SMILES”-分子结构的SMILES表示
+         - “SMILES”-分子结构的SMILES表示
     - 特性：
        - “ NR-XXX” : 核受体信号传导生物测定结果
        - “ SR-XXX” : 压力反应生物测定结果
@@ -346,7 +346,7 @@ CUDA_VISIBLE_DEVICES=0 python finetune.py \
        - ToxCast(toxicity forecaster)是来自与Tox21相同的计划的扩展数据收集，可基于体外高通量筛选为大型化合物库提供毒理学数据。 处理后的集合包括对8k化合物进行的600多次实验的定性结果。
     - 输入：
        - 数据文件包含一个csv表，其中使用了以下列：
-       -  “SMILES” : 分子结构的SMILES表示
+         -  “SMILES” : 分子结构的SMILES表示
     - 特性：
        - “ ACEA_T47D_80hr_Negative”〜“ Tanguay_ZF_120hpf_YSE_up” : 生物测定结果
        -  Valid ratio: 0.234、0.268

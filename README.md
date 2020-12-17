@@ -44,4 +44,4 @@ The installation prerequisites and guide can be found [here](./installation_guid
 * [LinearRNA](./c/pahelix/toolkit/linear_rna)
 
 ### The API reference
-* Detailed API reference of PaddleHelix can be found [here](https://readthedocs.org/projects/paddlehelix/).
+* Detailed API reference of PaddleHelix can be found [here](https://paddlehelix.readthedocs.io/en/dev/).

@@ -277,7 +277,7 @@ This compound pre-training method uses the data set in the paper [**Pretrain-GNN
    -  Introduction：
      - The Blood-brain barrier penetration (BBBP) dataset is extracted from a study on the modeling and prediction of the barrier permeability. As a membrane separating circulating blood and brain extracellular fluid, the blood-brain barrier blocks most drugs, hormones and neurotransmitters. Thus penetration of the barrier forms a long-standing issue in development of drugs targeting central nervous system. This dataset includes binary labels for over 2000 compounds on their permeability properties.
 
-   -  Input：
+   - Input：
      - The data file contains a csv table, in which columns below are used:
        - Num:number
        - ”name” - Name of the compound
@@ -290,7 +290,7 @@ This compound pre-training method uses the data set in the paper [**Pretrain-GNN
  - Clintox
    - Introduction：
      - The ClinTox dataset compares drugs approved by the FDA and drugs that have failed clinical trials for toxicity reasons. The dataset includes two classification tasks for 1491 drug compounds with known chemical structures: (1) clinical trial toxicity (or absence of toxicity) and (2) FDA approval status. List of FDA-approved drugs are compiled from the SWEETLEAD database, and list of drugs that failed clinical trials for toxicity reasons are compiled from the Aggregate Analysis of ClinicalTrials.gov(AACT) database.
-   -  Input：
+   - Input：
      - The data file contains a csv table, in which columns below are used:
        - “smiles” - SMILES representation of the molecular structure
    - Properties：
@@ -303,7 +303,7 @@ This compound pre-training method uses the data set in the paper [**Pretrain-GNN
    - Introduction：
      - The HIV dataset was introduced by the Drug Therapeutics Program (DTP) AIDS Antiviral Screen, which tested the ability to inhibit HIV replication for over 40,000 compounds. Screening results were evaluated and placed into three categories: confirmed inactive (CI),confirmed active (CA) and confirmed moderately active (CM). We further combine the latter two labels, making it a classification task between inactive (CI) and active (CA and CM).
 
-   -  Input：
+   - Input：
      - The data file contains a csv table, in which columns below are used:
        -  “smiles” - SMILES representation of the molecular structure
    - Properties：
