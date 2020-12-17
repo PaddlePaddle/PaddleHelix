@@ -63,7 +63,7 @@ pip install paddlehelix
 8. The installation is done!
 
 
-9. If you want to deactivate the conda environment, do this:
+9. After runing the project, if you want to deactivate the conda environment, do this:
 
  ```bash
  conda deactivate

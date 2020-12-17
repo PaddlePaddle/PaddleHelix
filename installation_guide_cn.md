@@ -61,7 +61,7 @@ pip install paddlehelix
 8. 等待 PaddleHelix 安装完成！
 
 
-9. 如果想要退出当前 conda 环境，可以使用下列命令：
+9. 运行完项目之后,如果想要退出当前 conda 环境，可以使用下列命令：
 ```bash
 conda deactivate
 ```
