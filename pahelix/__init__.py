@@ -16,7 +16,6 @@
 Initialize.
 """
 
-from warnings import warn
 def get_fluid_version():
     import paddle
     paddle_version = int(paddle.__version__.replace('.', '').split('-')[0])
