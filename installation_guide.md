@@ -51,9 +51,9 @@ pip install paddlehelix
 
 6. The installation is done!
 
+### Note
+If you want to deactivate the conda environment, do this:
 
-> If you want to deactivate the conda environment, do this:
-> 
-> ```bash
-> conda deactivate
-> ```
+```bash
+conda deactivate
+```
