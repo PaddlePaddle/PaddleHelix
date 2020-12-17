@@ -54,11 +54,11 @@
 
  以下为对具体三种策略进行验证的代码示例：
 
-
-   pretrain_attrmask.py          #节点级别的属性遮蔽预训练文件
-   pretrain_contextpred.py       #节点级别的上下文预测的预训练文件
-   pretrain_supervised.py        #整图级别的预训练文件
-
+```bash 
+pretrain_attrmask.py          # 节点级别的属性遮蔽预训练文件
+pretrain_contextpred.py       # 节点级别的上下文预测的预训练文件
+pretrain_supervised.py        # 整图级别的预训练文件
+``` 
  - 以     pretrain_attrmask.py为例训练的相关参数解释如下:
 
 `use_cuda` :  是否使用GPU
@@ -87,11 +87,11 @@ CUDA_VISIBLE_DEVICES=0 python pretrain_attrmask.py \
 ```
  -  在这里我们提供了几种直接运行shell脚本的示例，你可以在这些脚本里更改你的模型配置参数：
    
-      ``` 
-         sh scripts/pretrain_attrmask.sh         #运行脚本，用此方法来执行上面的py文件，具体路径可根据需要更改。
-         sh scripts/pretrain_contextpred.sh      #运行脚本，用此方法来执行上面的py文件，具体路径可根据需要更改。
-         sh scripts/pretrain_supervised.sh       #运行脚本，用此方法来执行上面的py文件，具体路径可根据需要更改。
-   ```
+```bash 
+sh scripts/pretrain_attrmask.sh         #运行脚本，用此方法来执行上面的py文件，具体路径可根据需要更改。
+sh scripts/pretrain_contextpred.sh      #运行脚本，用此方法来执行上面的py文件，具体路径可根据需要更改。
+sh scripts/pretrain_supervised.sh       #运行脚本，用此方法来执行上面的py文件，具体路径可根据需要更改。
+```
 
 ### 模型微调
 模型微调和模型训练方式类似，具体的相关参数解释与上面的类似，目前是在8个数据集上进行下游任务的微调。init_model就是从上面下载的已经训练好的模型，放在对应的文件夹下以便进行finetune。
@@ -241,7 +241,7 @@ CUDA_VISIBLE_DEVICES=0 python finetune.py \
 
 使用图级别多任务监督预训练的模型对下游任务finetuning后的结果如下表，是八个二分类任务：
 
-![图片](https://agroup-bos-bj.cdn.bcebos.com/bj-d3579ebc70a3cc3cac4f8fc96f18bc0e0a12c9ae)
+![图片](https://agroup-bos-bj.cdn.bcebos.com/bj-65af0e23c7f4a691db22fa2f7ee855ccf2f71087)
 
 
 
