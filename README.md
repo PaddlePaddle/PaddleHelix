@@ -1,7 +1,7 @@
 English | [简体中文](README_cn.md)
 
 <p align="center">
-<img src="./.github/paddlehelix_logo.png" align="middle"
+<img src="./.github/paddlehelix_logo.png" align="middle" heigh="90%" width="90%" />
 </p>
 
 ------
@@ -17,12 +17,12 @@ PaddleHelix is a machine-learning-based bio-computing framework aiming at facili
 ## Features
 * Highly Efficent: We provide LinearRNA - highly efficient toolkit for mRNA vaccine development. LinearFold & LinearParitition achieves O(n) complexity in RNA-folding prediction, which is hundreds of times faster than traditional folding techniques.
 <p align="center">
-<img src="./.github/LinearRNA.jpg" align="middle"
+<img src="./.github/LinearRNA.jpg" align="middle" />
 </p>
 
 * Large-scale Representation Learning and Transfer Learning: Self-supervised learning for molecule representations offers prospects of a breakthrough in tasks with limited annotation, including drug profiling, drug-target interaction, protein-protein interaction, RNA-RNA interaction, protein folding, RNA folding, and molecule design. PaddleHelix implements a variety of representation learning algorithms and state-of-the-art large-scale pre-trained models to help developers to start from "the shoulders of giants" quickly.
 <p align="center">
-<img src="./.github/paddlehelix_features.jpg" align="middle"
+<img src="./.github/paddlehelix_features.jpg" align="middle" />
 </p>
 
 * Easy-to-use APIs: PaddleHelix provide frequently used structures and pre-trained models. You can easily use those components to build up your models and systems.

@@ -181,9 +181,9 @@ def main(args):
             print("Average loss: %.5f" % avg_loss)
 
             print("Save model epoch%d." % epoch)
-            param_path = os.path.join(args.model, 'epoch%d' % epoch,
+            param_path = os.path.join(args.model_dir, 'epoch%d' % epoch,
                                       'saved_params.pdparams')
-            opt_path = os.path.join(args.model, 'epoch%d' % epoch,
+            opt_path = os.path.join(args.model_dir, 'epoch%d' % epoch,
                                     'saved_opt.pdopt')
             paddle.save(model.state_dict(), param_path)
             paddle.save(optimizer.state_dict(), opt_path)

@@ -41,7 +41,6 @@ protein_tools
 
 splitters
 =========
-
 .. automodule:: pahelix.utils.splitters
 
 .. autoclass:: pahelix.utils.splitters.RandomSplitter
@@ -68,3 +67,4 @@ Helpful Link
 Please refer to our `GitHub repo`_ to see the whole module.
 
 .. _GitHub repo: https://github.com/PaddlePaddle/PaddleHelix/tree/dev/pahelix/utils
+

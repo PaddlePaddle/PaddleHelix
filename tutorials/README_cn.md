@@ -11,7 +11,7 @@
 
 # PaddleHelix 导览
 <p align="center">
-<img src="../.github/PaddleHelix_Structure.png" align="middle"
+<img src="../.github/PaddleHelix_Structure.png" align="middle" heigh="80%" width="80%" />
 </p>
 
 # 教程
