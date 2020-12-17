@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Mutiple tokenizers.
+| Mutiple tokenizers.
 """
 
 from collections import OrderedDict
@@ -115,7 +115,7 @@ class ProteinTokenizer(object):
         Args:
             sequence: Sequence to be tokenized.
 
-        Retuens:
+        Returns:
             token_ids: The list of token ids.
         """
         tokens = []

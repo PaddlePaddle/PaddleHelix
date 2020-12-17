@@ -30,23 +30,40 @@ __all__ = ['InMemoryDataset']
 
 class InMemoryDataset(object):
     """
-    The InMemoryDataset manages :attr:`data_list` which is an array of data
-    and the data is a dict of numpy ndarray. 
+    The InMemoryDataset manages ``data_list`` which is a list of `data` and 
+    the `data` is a dict of numpy ndarray. And each dict has the same keys.
 
-    It works like a list: you can call `dataset[i]` to get the i-th element of 
-    the :attr:`data_list` and call `len(dataset)` to get the length of :attr:`data_list`.
+    It works like a list: you can call `dataset[i] to get the i-th element of 
+    the ``data_list`` and call `len(dataset)` to get the length of ``data_list``.
 
-    The :attr:`data_list` can be cached in npz forward by calling `dataset.save_data(data_path)` 
+    The ``data_list`` can be cached in npz files by calling `dataset.save_data(data_path)` 
     and after that, call `InMemoryDataset(data_path)` to reload.
 
-    Args:
-        data_list(list of dict of numpy ndarray): a list of dict of numpy ndarray.
-        data_path(str): the path to the cached npz path.
+    Attributes:
+        data_list(list): a list of dict of numpy ndarray.
 
+    Example:
+        .. code-block:: python
+
+            data_list = [{'a': np.zeros([4, 5])}, {'a': np.zeros([7, 5])}]
+            dataset = InMemoryDataset(data_list=data_list)
+            print(len(dataset))
+            dataset.save_data('./cached_npz')   # save data_list to ./cached_npz
+
+            dataset2 = InMemoryDataset(npz_data_path='./cached_npz')    # will load the saved `data_list`
+            print(len(dataset))
     """
     def __init__(self, 
             data_list=None,
             npz_data_path=None):
+        """
+        Users can either directly pass the ``data_list`` or pass the `data_path` from 
+        which the cached ``data_list`` will be loaded.
+
+        Args:
+            data_list(list): a list of dict of numpy ndarray.
+            data_path(str): the path to the cached npz path.
+        """
         super(InMemoryDataset, self).__init__()
         assert (data_list is None) ^ (npz_data_path is None), \
                 "Only data_list or npz_data_path should be set."
@@ -74,8 +91,8 @@ class InMemoryDataset(object):
 
     def save_data(self, data_path):
         """
-        Save the :attr:`data_list` to the :attr:`data_path` in the disk with npz format.
-        After that, call `InMemoryDataset(data_path)` to reload the :attr:`data_list`.
+        Save the ``data_list`` to the disk specified by ``data_path`` with npz format.
+        After that, call `InMemoryDataset(data_path)` to reload the ``data_list``.
 
         Args:
             data_path(str): the path to the cached npz path.
@@ -105,17 +122,20 @@ class InMemoryDataset(object):
     def iter_batch(self, batch_size, num_workers=4, shuffle=False, collate_fn=None):
         """
         It returns an batch iterator which yields a batch of data. Firstly, a sub-list of
-        `data` of size :attr:`batch_size` will be draw from the :attr:`data_list`, then 
-        the function :attr:`collate_fn` will be applied to the sub-list to create a batch and 
+        `data` of size ``batch_size`` will be draw from the ``data_list``, then 
+        the function ``collate_fn`` will be applied to the sub-list to create a batch and 
         yield back. This process is accelerated by multiprocess.
 
         Args:
-            batch_size(int): the batch_size.
+            batch_size(int): the batch_size of the batch data of each yield.
             num_workers(int): the number of workers used to generate batch data. Required by 
                 multiprocess.
-            shuffle(bool): whether to shuffle the order of the :attr:`data_list`.
-            collate_fn(function): used to convert the sub-list of :attr:`data_list` to the 
+            shuffle(bool): whether to shuffle the order of the ``data_list``.
+            collate_fn(function): used to convert the sub-list of ``data_list`` to the 
                 aggregated batch data.
+
+        Yields:
+            the batch data processed by ``collate_fn``.
         """
         return Dataloader(self, 
                 batch_size=batch_size, 

@@ -58,6 +58,11 @@ def get_chembl_filtered_task_num():
 def load_chembl_filtered_dataset(data_path, featurizer=None):
     """load chembl_filtered dataset ,process the classification labels and the input information.
 
+    Note that, in order to load this dataset, you should have other datasets (bace, bbbp, clintox,
+    esol, freesolv, hiv, lipophilicity, muv, sider, tox21, toxcast) downloaded. Since the chembl
+    dataset may overlap with the above listed dataset, the overlapped smiles for test will be filtered
+    for a fair evaluation.
+
     The data file contains a csv table, in which columns below are used:
 
     :It contains the ID, SMILES/CTAB, InChI and InChIKey compound information.
@@ -65,10 +70,18 @@ def load_chembl_filtered_dataset(data_path, featurizer=None):
 
     Args:
         data_path(str): the path to the cached npz path.
-        featurizer: the featurizer to use for processing the data.  
+        featurizer(pahelix.featurizers.Featurizer): the featurizer to use for 
+            processing the data. If not none, The ``Featurizer.gen_features`` will be 
+            applied to the raw data.
     
     Returns:
-        dataset(InMemoryDataset): the data_list(list of dict of numpy ndarray).
+        an InMemoryDataset instance.
+    
+    Example:
+        .. code-block:: python
+
+            dataset = load_bbbp_dataset('./bace/raw')
+            print(len(dataset))
 
     References:
     -- Gaulton, A; et al. (2011). “ChEMBL: a large-scale bioactivity database for drug discovery”. Nucleic Acids Research. 40 (Database issue): D1100-7.

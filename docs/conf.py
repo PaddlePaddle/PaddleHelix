@@ -14,7 +14,7 @@ import sphinx_rtd_theme
 import os
 import sys
 import re
-sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('..'))
 
 
 # -- Project information -----------------------------------------------------
@@ -25,7 +25,7 @@ copyright = author
 language = 'en'
 
 # Import mock dependencies packages
-autodoc_mock_imports = ['paddle', 'pgl']
+autodoc_mock_imports = ['paddle', 'pgl', 'rdkit']
 
 
 # -- General configuration ---------------------------------------------------
@@ -79,14 +79,14 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 
 # do not skip documentation of the __init__ function of a class
-def skip(app, what, name, obj, would_skip, options):
-    if name == "__init__":
-        return False
-    return would_skip
+#def skip(app, what, name, obj, would_skip, options):
+#    if name == "__init__":
+#        return False
+#    return would_skip
 
 
-def setup(app):
-    app.connect("autodoc-skip-member", skip)
+#def setup(app):
+#    app.connect("autodoc-skip-member", skip)
 
 
 # -- Options for HTML output -------------------------------------------------
