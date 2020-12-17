@@ -78,13 +78,14 @@ class MoleculeCollateFunc(object):
             feed_dict['valid'] = batch_valid
 
         if self.with_pos_neg_mask:
-            pos_mask, neg_mask = self.get_pos_neg_mask(g_list)
+            pos_mask, neg_mask = MoleculeCollateFunc.get_pos_neg_mask(g_list)
             feed_dict['pos_mask'] = pos_mask
             feed_dict['neg_mask'] = neg_mask
 
         return feed_dict
 
-    def get_pos_neg_mask(self, g_list):
+    @staticmethod
+    def get_pos_neg_mask(g_list):
         """Get the mask"""
         num_nodes = np.cumsum([0] + [g.num_nodes for g in g_list])
         num_graphs = len(g_list)

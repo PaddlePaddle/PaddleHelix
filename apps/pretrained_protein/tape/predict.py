@@ -53,6 +53,8 @@ def show_results(examples, pred, task):
 
 def main(args):
     """main"""
+    paddle.enable_static()
+
     model_config = json.load(open(args.model_config, 'r'))
 
     exe_params = default_exe_params(False, args.use_cuda, args.thread_num)
@@ -65,7 +67,7 @@ def main(args):
 
     task = model_config['task']
 
-    model = TAPEModel(model_config=model_config)
+    model = TAPEModel(model_config=model_config, name=task)
 
     test_program = fluid.Program()
     test_startup = fluid.Program()

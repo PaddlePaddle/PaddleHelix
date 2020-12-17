@@ -1,6 +1,6 @@
-# Protein Sequence Pretraining (TAPE)
+# TAPE
 
-[中文版本](./README.ch.md) [English Version](./README.en.md)
+[中文版本](./README_cn.md) [English Version](./README.md)
 
 * [Background](#background)
 * [Instructions](#instructions)
@@ -206,8 +206,8 @@ Accuracy：
 | Model         | Fold  | Superfamily   | Family    |   
 | :--:          | :--:  | :--:          | :--:      |
 | Transformer   | 0.143 | 0.291         | 0.851     |
-| LSTM          |       |               |           |
-| ResNet        |       |               |           |
+| LSTM          | 0.092 | 0.075         | 0.455     |
+| ResNet        | 0.075 | 0.066         | 0.487     |
 
 
 #### Fluorescence
@@ -261,15 +261,6 @@ python train.py \
 
 ### Complete Example
 We provide multiple training and evaluation examples in the folder *demos*. Here is a pretraining example of the Transformer.
-```bash
-python train.py \
-        ... \
-        --init_model ./init_model # 初始化模型目录。如果不设定该参数，则模型冷启动训练。 \
-        ... 
-```
-
-### 完整样例
-我们在demos文件夹内提供多个训练和评估样例。以下是transformer预训练的样例。
 ```bash
 #!/bin/bash
 
@@ -360,18 +351,18 @@ Following shows the demo of model_config.
 ```
 
 ## Data
-**TO DO：Provide data's address**
+The datasets can be downloaded from the following urls:
+pfam: [raw](https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fdatasets%2Fprotein_datasets%2Fpfam.npz.tgz), [npz](https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fdatasets%2Fprotein_datasets%2Fpfam.npz.tgz)
+secondary structure: [all](https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fdatasets%2Fprotein_datasets%2Fsecondary_structure.tgz)
+remote homology: [all](https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fdatasets%2Fprotein_datasets%2Fremote_homology.tgz)
+fluorescence: [all](https://baidu-nlp.bj.bcebos.com/PaddleHelix/datasets/protein_datasets/fluorescence.tgz)
+stability: [all](https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fdatasets%2Fprotein_datasets%2Fstability.tgz)
 
 ## Pre-trained Models
-**TO DO：Provide pre-trained models' address**
-
-## Q&A
-- Q1: What to to when memory is out of limit?
-    - Use smaller batch size。
-    - Use smaller *linear_bound* and *square bound* when calling function *set_loader_generator* in *train.py* and *eval.py*.
-- Q2: How to fine-tune new supervised tasks？
-    - Develop new task's input format in file *loader_generator.py*.
-    - Develop new tasks' network in *protein_sequence_model.py*.
+The pre-trained models can be downloaded from the following urls:
+Transformer: [model](https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fpretrained_models%2Fprotein%2Ftape_transformer.tgz)
+LSTM: [model](https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fpretrained_models%2Fprotein%2Ftape_lstm.tgz)
+ResNet: [model](https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fpretrained_models%2Fprotein%2Ftape_resnet.tgz)
 
 ## Reference
 ### Paper-related

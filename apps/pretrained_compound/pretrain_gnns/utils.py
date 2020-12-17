@@ -33,7 +33,6 @@ else:
 from collections import OrderedDict
 from datetime import datetime
 from sklearn.metrics import roc_auc_score
-import logging
 
 from paddle import fluid
 
@@ -116,8 +115,8 @@ def calc_rocauc_score(labels, preds, valid):
         if len(np.unique(c_label)) == 2:
             rocauc_list.append(roc_auc_score(c_label, c_pred))
 
-    logging.info('Valid ratio: %s' % (np.mean(valid)))
-    logging.info('Task evaluated: %s/%s' % (len(rocauc_list), labels.shape[1]))
+    print('Valid ratio: %s' % (np.mean(valid)))
+    print('Task evaluated: %s/%s' % (len(rocauc_list), labels.shape[1]))
     if len(rocauc_list) == 0:
         raise RuntimeError("No positively labeled data available. Cannot compute ROC-AUC.")
 

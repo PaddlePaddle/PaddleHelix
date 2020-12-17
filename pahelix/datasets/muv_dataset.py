@@ -52,16 +52,23 @@ def load_muv_dataset(data_path, task_names=None, featurizer=None):
     :smiles:  SMILES representation of the molecular structure.
     :mol_id:  PubChem CID of the compound.
     :MUV-XXX: Measured results (Active/Inactive) for bioassays.
-    :Valid ratio: we get two ratio: 0.155、0.160
-    :Task evaluated: we get two values: 15/17、16/17
 
     Args:
         data_path(str): the path to the cached npz path.
-        task_names:get the default lipophilicity task names.
-        featurizer: the featurizer to use for processing the data.       
-
+        task_names(list): a list of header names to specify the columns to fetch from 
+            the csv file.
+        featurizer(pahelix.featurizers.Featurizer): the featurizer to use for 
+            processing the data. If not none, The ``Featurizer.gen_features`` will be 
+            applied to the raw data.
+    
     Returns:
-        dataset(InMemoryDataset): the data_list(list of dict of numpy ndarray).
+        an InMemoryDataset instance.
+    
+    Example:
+        .. code-block:: python
+
+            dataset = load_muv_dataset('./muv/raw')
+            print(len(dataset))
 
     References:
     [1]Rohrer, Sebastian G., and Knut Baumann. “Maximum unbiased validation (MUV) data sets for virtual screening based on PubChem bioactivity data.” Journal of chemical information and modeling 49.2 (2009): 169-184.
@@ -70,8 +77,8 @@ def load_muv_dataset(data_path, task_names=None, featurizer=None):
     if task_names is None:
         task_names = get_default_muv_task_names()
 
-    file = os.listdir(data_path)[0]
-    input_df = pd.read_csv(join(data_path, file), sep=',')
+    csv_file = os.listdir(data_path)[0]
+    input_df = pd.read_csv(join(data_path, csv_file), sep=',')
     smiles_list = input_df['smiles']
     labels = input_df[task_names]
     labels = labels.replace(0, -1)  # convert 0 to -1

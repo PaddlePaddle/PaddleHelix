@@ -48,16 +48,23 @@ def load_clintox_dataset(data_path, task_names=None, featurizer=None):
     :smiles: SMILES representation of the molecular structure
     :FDA_APPROVED:FDA approval status
     :CT_TOX: Clinical trial results
-    :Valid ratio: 1.0
-    :Task evaluated: 2/2
 
     Args:
         data_path(str): the path to the cached npz path.
-        task_names: get the default lipophilicity task names.
-        featurizer: the featurizer to use for processing the data.  
+        task_names(list): a list of header names to specify the columns to fetch from 
+            the csv file.
+        featurizer(pahelix.featurizers.Featurizer): the featurizer to use for 
+            processing the data. If not none, The ``Featurizer.gen_features`` will be 
+            applied to the raw data.
     
     Returns:
-        dataset(InMemoryDataset): the data_list(list of dict of numpy ndarray).
+        an InMemoryDataset instance.
+    
+    Example:
+        .. code-block:: python
+
+            dataset = load_clintox_dataset('./clintox/raw')
+            print(len(dataset))
     
     References:
     [1] Gayvert, Kaitlyn M., Neel S. Madhukar, and Olivier Elemento. “A data-driven approach to predicting successes and failures of clinical trials.” Cell chemical biology 23.10 (2016): 1294-1301.
@@ -69,8 +76,8 @@ def load_clintox_dataset(data_path, task_names=None, featurizer=None):
     if task_names is None:
         task_names = get_default_clintox_task_names()
 
-    file = os.listdir(data_path)[0]
-    input_df = pd.read_csv(join(data_path, file), sep=',')
+    csv_file = os.listdir(data_path)[0]
+    input_df = pd.read_csv(join(data_path, csv_file), sep=',')
     smiles_list = input_df['smiles']
     from rdkit.Chem import AllChem
     rdkit_mol_objs_list = [AllChem.MolFromSmiles(s) for s in smiles_list]

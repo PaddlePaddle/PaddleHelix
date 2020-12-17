@@ -194,7 +194,7 @@ class PreGNNAttrmaskModel(object):
         self.loss: the loss variance of the model.
     """
     def __init__(self, model_config):
-        self.gnn_model = PretrainGNNModel(model_config, name='gnn')
+        self.gnn_model = PretrainGNNModel(model_config, name='compound')
 
     def forward(self, is_test=False):
         """
@@ -242,8 +242,8 @@ class PreGNNContextpredModel(object):
         self.context_pooling = model_config['context_pooling']
 
         # set up models, one for pre-training and one for context embeddings
-        self.substruct_model = PretrainGNNModel(model_config, name='gnn')
-        self.context_model = PretrainGNNModel(model_config, name='context_gnn')
+        self.substruct_model = PretrainGNNModel(model_config, name='compound')
+        self.context_model = PretrainGNNModel(model_config, name='context_compound')
 
     def forward(self, is_test=False):
         """
@@ -305,7 +305,7 @@ class PreGNNSupervisedModel(object):
         self.task_num = model_config['task_num']
         self.pool_type = model_config['pool_type']
 
-        self.gnn_model = PretrainGNNModel(model_config, name='gnn')
+        self.gnn_model = PretrainGNNModel(model_config, name='compound')
 
     def forward(self, is_test=False):
         """

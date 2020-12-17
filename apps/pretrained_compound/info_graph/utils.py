@@ -81,13 +81,13 @@ def load_partial_vars(exe, init_model, main_program):
     def existed_params(var):
         """tbd"""
         if not isinstance(var, fluid.framework.Parameter):
-            logging.info("%s not existed" % var.name)
+            logging.info("%s not existed", var.name)
             return False
         if os.path.exists(os.path.join(init_model, var.name)):
-            logging.info("load %s successful" % var.name)
+            logging.info("load %s successful", var.name)
             return True
         else:
-            logging.info("%s not existed" % var.name)
+            logging.info("%s not existed", var.name)
             return False
 
     fluid.io.load_vars(
@@ -95,7 +95,7 @@ def load_partial_vars(exe, init_model, main_program):
             init_model,
             main_program=main_program,
             predicate=existed_params)
-    logging.info("Load parameters from {}.".format(init_model))
+    logging.info("Load parameters from %s", init_model)
 
 
 def save_data_list_to_npz(data_list, npz_file):
@@ -158,8 +158,8 @@ def calc_rocauc_score(labels, preds, valid):
         if len(np.unique(c_label)) == 2:
             rocauc_list.append(roc_auc_score(c_label, c_pred))
 
-    logging.info('Valid ratio: %s' % (np.mean(valid)))
-    logging.info('Task evaluated: %s/%s' % (len(rocauc_list), labels.shape[1]))
+    logging.info('Valid ratio: %s', np.mean(valid))
+    logging.info('Task evaluated: %s/%s', len(rocauc_list), labels.shape[1])
     if len(rocauc_list) == 0:
         raise RuntimeError("No positively labeled data available. Cannot compute ROC-AUC.")
 

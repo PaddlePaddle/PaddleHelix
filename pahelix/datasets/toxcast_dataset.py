@@ -29,8 +29,6 @@ from os.path import join, exists
 import pandas as pd
 import numpy as np
 
-from rdkit.Chem import AllChem
-
 from pahelix.datasets.inmemory_dataset import InMemoryDataset
 
 
@@ -40,8 +38,8 @@ __all__ = ['get_default_toxcast_task_names', 'load_toxcast_dataset']
 def get_default_toxcast_task_names(data_path):
     """Get that default toxcast task names and return the list of the input information"""
 
-    file = os.listdir(data_path)[0]
-    input_df = pd.read_csv(join(data_path, file), sep=',')
+    csv_file = os.listdir(data_path)[0]
+    input_df = pd.read_csv(join(data_path, csv_file), sep=',')
     return list(input_df.columns)[1:]
 
 
@@ -53,18 +51,23 @@ def load_toxcast_dataset(data_path, task_names=None, featurizer=None):
     :smiles:  SMILES representation of the molecular structure.
     :ACEA_T47D_80hr_Negative~ “Tanguay_ZF_120hpf_YSE_up” - Bioassays results
     :SR-XXX: Stress response bioassays results
-    :Valid ratio: we get two ratio: 0.234、0.268
-    :Task evaluated: 610/617
-
-    For the label, you can convert 0 to -1 and convert nan to 0
 
     Args:
         data_path(str): the path to the cached npz path.
-        task_names: get the default lipophilicity task names.
-        featurizer: the featurizer to use for processing the data.  
-
+        task_names(list): a list of header names to specify the columns to fetch from 
+            the csv file.
+        featurizer(pahelix.featurizers.Featurizer): the featurizer to use for 
+            processing the data. If not none, The ``Featurizer.gen_features`` will be 
+            applied to the raw data.
+    
     Returns:
-        dataset(InMemoryDataset): the data_list(list of dict of numpy ndarray).
+        an InMemoryDataset instance.
+    
+    Example:
+        .. code-block:: python
+
+            dataset = load_toxcast_dataset('./toxcast/raw')
+            print(len(dataset))
 
 
     References:

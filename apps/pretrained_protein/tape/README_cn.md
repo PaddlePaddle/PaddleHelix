@@ -1,6 +1,6 @@
-# 蛋白质序列预训练 (TAPE)
+# TAPE
 
-[中文版本](./README.ch.md) [English Version](./README.en.md)
+[中文版本](./README_ch.md) [English Version](./README.md)
 
 * [背景介绍](#背景介绍)
 * [使用说明](#使用说明)
@@ -26,14 +26,9 @@
     * [完整样例](#完整样例)
 * [数据](#数据)
 * [预训练模型](#预训练模型)
-* [Q&A](#q&a)
 * [引用](#引用)
     * [论文相关](#论文相关)
     * [数据相关](#数据相关)
-
-
-
-[Eng](./README.en.md)
 
 ## 背景介绍
 近年来，随着测序技术的发展，蛋白质序列的数据库的规模大幅度增长。然而，带标签的蛋白质序列的获取代价依然十分昂贵，因为它们因为它们需要通过通过生物实验才能获取。此外，由于带标签的样本量非常不充足，模型很容易对数据过拟合(overfit)。借鉴自然语言处理(Natural Language Processing, NLP)中对大量未标记的序列使用自监督学习(self-supervised learning)的方式进行预训练(pre-training)，从而提取蛋白质中有用的生物学信息，并将这些信息迁移到其他带标签的任务，使得这些任务训练更快更稳定的收敛。本篇蛋白质预训练模型参考论文TAPE，提供Transformer，LSTM和ResNet的模型实现。
@@ -212,8 +207,8 @@ Accuracy：
 | Model         | Fold  | Superfamily   | Family    |   
 | :--:          | :--:  | :--:          | :--:      |
 | Transformer   | 0.143 | 0.291         | 0.851     |
-| LSTM          |       |               |           |
-| ResNet        |       |               |           |
+| LSTM          | 0.092 | 0.075         | 0.455     |
+| ResNet        | 0.075 | 0.066         | 0.487     |
 
 
 #### Fluorescence
@@ -354,18 +349,18 @@ fi
 ```
 
 ## 数据
-**TO DO：提供数据获取地址**
+数据集可以从以下链接获取：
+pfam: [raw](https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fdatasets%2Fprotein_datasets%2Fpfam.npz.tgz), [npz](https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fdatasets%2Fprotein_datasets%2Fpfam.npz.tgz)
+secondary structure: [all](https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fdatasets%2Fprotein_datasets%2Fsecondary_structure.tgz)
+remote homology: [all](https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fdatasets%2Fprotein_datasets%2Fremote_homology.tgz)
+fluorescence: [all](https://baidu-nlp.bj.bcebos.com/PaddleHelix/datasets/protein_datasets/fluorescence.tgz)
+stability: [all](https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fdatasets%2Fprotein_datasets%2Fstability.tgz)
 
 ## 预训练模型
-**TO DO：提供预训练模型获取地址**
-
-## Q&A
-- Q1: 显存超限时，如何调整模型？
-    - 减小batch大小。
-    - 在*train.py*和*eval.py*调用*set_loader_generator*函数时，将linear_bound和square_bound设置小一些。
-- Q2: 如何训练新的下游任务？
-    - 在*loader_generator.py*中开发新任务的数据输入格式。
-    - 在*protein_sequence_model.py*中开发新任务的网络。
+预训练模型可以从以下链接获取：
+Transformer: [model](https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fpretrained_models%2Fprotein%2Ftape_transformer.tgz)
+LSTM: [model](https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fpretrained_models%2Fprotein%2Ftape_lstm.tgz)
+ResNet: [model](https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fpretrained_models%2Fprotein%2Ftape_resnet.tgz)
 
 ## 引用
 ### 论文相关

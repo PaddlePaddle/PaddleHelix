@@ -1,10 +1,8 @@
-# LinearX: 线性时间RNA结构分析算法
+# LinearRNA: 线性时间RNA结构分析算法
 
-<!-- [中文版本](./README.ch.md) [English Version](./README.en.md) -->
+[中文版本](./README_cn.md) [English Version](./README.md)
 
 * [背景介绍](#背景介绍)
-* [安装说明](#安装说明)
-    * [编译](#编译)
 * [LinearFold调用](#linearFold调用)
     * [机器学习模型](#机器学习模型)
     * [热力学模型](#热力学模型)
@@ -41,16 +39,6 @@ LinearFold能够在线性时间内预测RNA二级结构，在长序列RNA上的�
 
 2020年，百度再次发表世界最快RNA配分方程和碱基对概率预测算法LinearPartition。该算法功能更加强大，可以模拟RNA序列在平衡态时成千上万种不同结构的分布，并预测碱基对概率矩阵。LinearPartition算法同样被ISMB顶会接收并在Bioinformatics杂志上发表，论文链接请见：[LinearPartition: linear-time approximation of RNA folding partition function and base-pairing probabilities](https://academic.oup.com/bioinformatics/article/36/Supplement_1/i258/5870487)。
 
-## 安装说明
-### 编译
-```bash
-sh scripts/prepare.sh  # 准备pybind
-sh scripts/build.sh # 编译
-
-cd build
-python
-```
-
 ## LinearFold调用
 ### 机器学习模型
 ```bash
@@ -65,13 +53,12 @@ linear_fold_v(rna_sequence, beam_size = 100, use_constraints = False, constraint
 - beam_size: int (optional), 控制beam pruning size的参数，默认值为100。该参数越大，则预测速度越慢，而与精确搜索相比近似效果越好;
 - use_constraints: bool (optional), 在预测二级结构时增加约束条件, 默认值时False。为True时, constraint参数需要提供约束序列;
 - constraint: string (optional), 二级结构预测约束条件, 默认为空。当提供约束序列时, use_constraints参数需要设置为True。该约束须与输入的RNA序列长度相同，每个点位可以指定“? . ( )”四种符号中的一种，其中“?”表示该点位无限制，“.”表示该点位必须是unpaired，“(”与“)”表示该点位必须是paired。注意“(”与“)”必须数量相等，即相互匹配。具体操作请参考运行实例。
-- no_sharp_turn: bool (optional), 允许在预测的hairpin结构中出现sharp turn, 默认为False。
+- no_sharp_turn: bool (optional), 不允许在预测的hairpin结构中出现sharp turn, 默认为True。
 ### 返回值
 - tuple(string, double): 返回一个二元组, 第一个位置是结构序列, 第二个位置是结构的folding free energy
 ### 运行示例
 #### 二级结构预测（无约束条件）
 ```bash
-cd build
 python
 >>> import pahelix.toolkit.linear_rna as linear_rna
 >>> linear_rna.linear_fold_c("GGGCUCGUAGAUCAGCGGUAGAUCGCUUCCUUCGCAAGGAAGCCCUGGGUUCAAAUCCCAGCGAGUCCACCA")
@@ -140,13 +127,12 @@ linear_partition_v(rna_sequence, beam_size = 100, bp_cutoff = 0.0, no_sharpe_tur
 ### 参数说明
 - rna_sequence: string, 需要计算配分函数和碱基对概率的RNA sequence
 - beam_size: int (optional), 控制beam pruning size的参数，默认值为100。该参数越大，则预测速度越慢，而与精确搜索相比近似效果越好;
-- pf_cutoff: double (optinal), 只输出概率大于等于pf_cutoff的碱基对及其概率, 0 <= pf_cutoff <= 1, 默认为0.0; 
-- no_sharp_turn: bool (optional), 允许在预测的hairpin结构中出现sharp turn, 默认为False。
+- bp_cutoff: double (optinal), 只输出概率大于等于bp_cutoff的碱基对及其概率, 0 <= pf_cutoff <= 1, 默认为0.0; 
+- no_sharp_turn: bool (optional), 不允许在预测的hairpin结构中出现sharp turn, 默认为True。
 ### 返回值
 - tuple(string, list): 返回一个二元组, 第一个位置是配分函数值, 第二个位置是存有碱基对及其概率的列表
 ### 运行示例
 ```bash
-cd build
 python
 >>> import pahelix.toolkit.linear_rna as linear_rna
 >>> linear_rna.linear_partition_c("UGAGUUCUCGAUCUCUAAAAUCG", bp_cutoff = 0.2)

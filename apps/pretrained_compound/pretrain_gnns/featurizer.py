@@ -27,9 +27,10 @@ from pahelix.utils.compound_tools import mol_to_graph_data
 
 class DownstreamFeaturizer(Featurizer):
     """docstring for DownstreamFeaturizer"""
-    def __init__(self, graph_wrapper):
+    def __init__(self, graph_wrapper, is_inference=False):
         super(DownstreamFeaturizer, self).__init__()
         self.graph_wrapper = graph_wrapper
+        self.is_inference = is_inference
     
     def gen_features(self, raw_data):
         """
@@ -43,12 +44,14 @@ class DownstreamFeaturizer(Featurizer):
             data: It contains reshape label and smiles.
 
         """
-        smiles, label = raw_data['smiles'], raw_data['label']
+        smiles = raw_data['smiles']
         mol = AllChem.MolFromSmiles(smiles)
         if mol is None:
             return None
         data = mol_to_graph_data(mol)
-        data['label'] = label.reshape([-1])
+        if not self.is_inference:
+            label = raw_data['label']
+            data['label'] = label.reshape([-1])
         data['smiles'] = smiles
         return data
 
@@ -80,16 +83,17 @@ class DownstreamFeaturizer(Featurizer):
                         'bond_direction': data['bond_direction'].reshape([-1, 1]),
                     })
             g_list.append(g)
-            label_list.append(data['label'])
+            if not self.is_inference:
+                label_list.append(data['label'])
 
         join_graph = pgl.graph.MultiGraph(g_list)
         feed_dict = self.graph_wrapper.to_feed(join_graph)
-        batch_label = np.array(label_list)
-        
-        # label: -1 -> 0, 1 -> 1
-        batch_label = ((batch_label + 1.0) / 2).astype('float32')
-        batch_valid = (batch_label != 0.5).astype("float32")
-        feed_dict['finetune_label'] = batch_label
-        feed_dict['valid'] = batch_valid
+        if not self.is_inference:
+            batch_label = np.array(label_list)
+            # label: -1 -> 0, 1 -> 1
+            batch_label = ((batch_label + 1.0) / 2).astype('float32')
+            batch_valid = (batch_label != 0.5).astype("float32")
+            feed_dict['finetune_label'] = batch_label
+            feed_dict['valid'] = batch_valid
         return feed_dict
 

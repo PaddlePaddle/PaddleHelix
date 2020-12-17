@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Mutiple tokenizers.
+Tools for protein features.
 """
 
 from collections import OrderedDict

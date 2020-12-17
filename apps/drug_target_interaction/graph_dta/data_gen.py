@@ -48,7 +48,7 @@ class DTADataset(StreamDataset):
                 data_list = self.subset_selector(data_list)
             for data in data_list:
                 if self.max_protein_len > 0:
-                    protein_token_ids = np.zeros(self.max_protein_len, dtype=np.int64) + ProteinTokenizer.padding_token_ID
+                    protein_token_ids = np.zeros(self.max_protein_len, dtype=np.int64) + ProteinTokenizer.padding_token_id
                     n = min(self.max_protein_len, data['protein_token_ids'].size)
                     protein_token_ids[:n] = data['protein_token_ids'][:n]
                     data['protein_token_ids'] = protein_token_ids

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Tools for data.
+| Tools for data.
 """
 
 import numpy as np
@@ -42,14 +42,13 @@ def save_data_list_to_npz(data_list, npz_file):
 
 def load_npz_to_data_list(npz_file):
     """
-    Reload the data list save by :function:`save_data_list_to_npz`.
+    Reload the data list save by ``save_data_list_to_npz``.
 
     Args:
         npz_file(str): the npz file location.
 
     Returns:
-        data_list(list): a list of data where each data is a dict of numpy 
-            ndarray.
+        a list of data where each data is a dict of numpy ndarray.
     """
     def _split_data(values, seq_lens):
         res = []
