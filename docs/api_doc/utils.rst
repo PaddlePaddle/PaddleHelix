@@ -41,6 +41,7 @@ protein_tools
 
 splitters
 =========
+
 .. automodule:: pahelix.utils.splitters
 
 .. autoclass:: pahelix.utils.splitters.RandomSplitter

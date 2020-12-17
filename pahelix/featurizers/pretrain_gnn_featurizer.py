@@ -13,8 +13,9 @@
 # limitations under the License.
 
 """
-Featurizers for pretrain-gnn.
-Adapted from https://github.com/snap-stanford/pretrain-gnns/tree/master/chem/utils.py
+| Featurizers for pretrain-gnn.
+
+| Adapted from https://github.com/snap-stanford/pretrain-gnns/tree/master/chem/utils.py
 """
 
 import numpy as np
@@ -156,10 +157,11 @@ def reset_idxes(G):
 
 def graph_data_obj_to_nx_simple(data):
     """
-    Converts graph data object into a network x data object. NB: Uses simplified 
-    atom and bond features, and represent as indices. NB: possible issues with 
-    recapitulating relative stereochemistry since the edges in the nx object are 
-    unordered.
+    Converts graph data object into a network x data object. 
+    
+    NB: Uses simplified atom and bond features, and represent as indices. 
+    
+    NB: possible issues with recapitulating relative stereochemistry since the edges in the nx object are unordered.
 
     Args:
         data(dict): a dict of numpy ndarray consists of graph features.
@@ -197,9 +199,11 @@ def graph_data_obj_to_nx_simple(data):
 def nx_to_graph_data_obj_simple(G):
     """
     Converts nx graph to graph data. Assume node indices are numbered from 
-    0 to num_nodes - 1. NB: Uses simplified atom and bond features, and 
-    represent as indices. NB: possible issues with recapitulating relative 
-    stereochemistry since the edges in the nx object are unordered.
+    0 to num_nodes - 1. 
+    
+    NB: Uses simplified atom and bond features, and represent as indices. 
+    
+    NB: possible issues with recapitulating relative stereochemistry since the edges in the nx object are unordered.
 
     Args: 
         G: nx graph object

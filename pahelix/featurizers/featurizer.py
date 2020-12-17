@@ -26,9 +26,14 @@ __all__ = ['Featurizer']
 
 class Featurizer(object):
     """
-    This is an abstract class for feature extraction. It has two steps:
+    This is an abstract class for feature extraction. 
+    
+    It has two steps:
+    
     firstly ``gen_features`` is used to convert a single `raw_data` to a
-    single `data`, secondly ``collate_fn`` is used to aggregate a list of 
+    single `data` 
+    
+    secondly ``collate_fn`` is used to aggregate a list of 
     `data` into a batch data.
     """
     def __init__(self):

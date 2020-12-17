@@ -63,8 +63,8 @@ def load_sider_dataset(data_path, task_names=None, featurizer=None):
 
     The data file contains a csv table, in which columns below are used:
 
-    :smiles:  SMILES representation of the molecular structure.
-    :Hepatobiliary disorders ~ Injury, poisoning and procedural complications:Recorded side effects for the drug
+    :smiles:SMILES representation of the molecular structure.
+    :Hepatobiliary disorders:Injury, poisoning and procedural complications. Recorded side effects for the drug
     
     Args:
         data_path(str): the path to the cached npz path.
