@@ -30,15 +30,17 @@ __all__ = ['InMemoryDataset']
 
 class InMemoryDataset(object):
     """
-    The InMemoryDataset manages ``data_list`` which is a list of `data` and 
-    the `data` is a dict of numpy ndarray. And each dict has the same keys.
+    Description：
+        The InMemoryDataset manages ``data_list`` which is a list of `data` and 
+        the `data` is a dict of numpy ndarray. And each dict has the same keys.
 
-    It works like a list: you can call `dataset[i] to get the i-th element of the ``data_list`` and call `len(dataset)` to get the length of ``data_list``.
+        It works like a list: you can call `dataset[i] to get the i-th element of 
+        the ``data_list`` and call `len(dataset)` to get the length of ``data_list``.
+        
+        The ``data_list`` can be cached in npz files by calling `dataset.save_data(data_path)` 
+        and after that, call `InMemoryDataset(data_path)` to reload.
 
-    The ``data_list`` can be cached in npz files by calling `dataset.save_data(data_path)` 
-    and after that, call `InMemoryDataset(data_path)` to reload.
-
-    Args:
+    Attributes:
         data_list(list): a list of dict of numpy ndarray.
 
     Example:
@@ -133,7 +135,7 @@ class InMemoryDataset(object):
             collate_fn(function): used to convert the sub-list of ``data_list`` to the 
                 aggregated batch data.
 
-        Returns:
+        Yields:
             the batch data processed by ``collate_fn``.
         """
         return Dataloader(self, 

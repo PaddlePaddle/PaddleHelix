@@ -36,27 +36,27 @@ __all__ = ['get_default_esol_task_names', 'load_esol_dataset']
 
 
 def get_default_esol_task_names():
-    """Get that default esol task names and return measured values"""
+    """get that default esol task names and return measured values"""
     return ['measured log solubility in mols per litre']
 
 
 def load_esol_dataset(data_path, task_names=None, featurizer=None):
-    """Load esol dataset ,process the classification labels and the input information.
+    """load esol dataset ,process the classification labels and the input information.
 
-    The data file contains a csv table, in which columns below are used:
-
-    :smiles: SMILES representation of the molecular structure;
-    :Compound ID: Name of the compound;
-    :measured log solubility in mols per litre: Log-scale water solubility of the compound, used as label.
+    Description：
+        The data file contains a csv table, in which columns below are used:
+            smiles:SMILES representation of the molecular structure
+            Compound ID:Name of the compound
+            measured log solubility in mols per litre - Log-scale water solubility of the compound, used as label
    
-    Args:
+   Args:
         data_path(str): the path to the cached npz path.
         task_names(list): a list of header names to specify the columns to fetch from 
             the csv file.
         featurizer(pahelix.featurizers.Featurizer): the featurizer to use for 
             processing the data. If not none, The ``Featurizer.gen_features`` will be 
             applied to the raw data.
-
+    
     Returns:
         an InMemoryDataset instance.
     
@@ -65,10 +65,8 @@ def load_esol_dataset(data_path, task_names=None, featurizer=None):
 
             dataset = load_esol_dataset('./esol/raw')
             print(len(dataset))
-  
-
+    
     References:
-
     [1] Delaney, John S. "ESOL: estimating aqueous solubility directly from molecular structure." Journal of chemical information and computer sciences 44.3 (2004): 1000-1005.
 
     """

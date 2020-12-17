@@ -43,16 +43,19 @@ def get_default_freesolv_task_names():
 def load_freesolv_dataset(data_path, task_names=None, featurizer=None):
     """Load freesolv dataset,process the input information and the featurizer.
     
-    The data file contains a csv table, in which columns below are used:
-
-    :smiles: SMILES representation of the molecular structure;
-    :Compound ID: Name of the compound;
-    :measured log solubility in mols per litre: Log-scale water solubility of the compound, used as label.
+    Description：
+        The data file contains a csv table, in which columns below are used:
+            smiles:  SMILES representation of the molecular structure
+            Compound ID: Name of the compound
+            measured log solubility in mols per litre: Log-scale water solubility of the compound, used as label.
    
     Args:
         data_path(str): the path to the cached npz path.
-        task_names(list): a list of header names to specify the columns to fetch from the csv file.
-        featurizer(pahelix.featurizers.Featurizer): the featurizer to use for processing the data. If not none, The ``Featurizer.gen_features`` will be applied to the raw data.
+        task_names(list): a list of header names to specify the columns to fetch from 
+            the csv file.
+        featurizer(pahelix.featurizers.Featurizer): the featurizer to use for 
+            processing the data. If not none, The ``Featurizer.gen_features`` will be 
+            applied to the raw data.
     
     Returns:
         an InMemoryDataset instance.
@@ -63,11 +66,8 @@ def load_freesolv_dataset(data_path, task_names=None, featurizer=None):
             dataset = load_freesolv_dataset('./freesolv/raw')
             print(len(dataset))
 
-
     References:
-    
     [1] Mobley, David L., and J. Peter Guthrie. "FreeSolv: a database of experimental and calculated hydration free energies, with input files." Journal of computer-aided molecular design 28.7 (2014): 711-720.
-    
     [2] https://github.com/MobleyLab/FreeSolv
 
     """

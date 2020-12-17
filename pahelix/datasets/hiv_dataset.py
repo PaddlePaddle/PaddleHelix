@@ -42,21 +42,20 @@ def get_default_hiv_task_names():
 
 def load_hiv_dataset(data_path, task_names=None, featurizer=None):
     """Load hiv dataset,process the input information and the featurizer.
-    
-    The data file contains a csv table, in which columns below are used:
 
-    :smiles: SMILES representation of the molecular structure;
-    :activity: Three-class labels for screening;
-    :results: CI/CM/CA;
-    :HIV_active: Binary labels for screening results: 1(CA/CM) and 0CI).
+    Description：
+        The data file contains a csv table, in which columns below are used:
+            smiles: SMILES representation of the molecular structure
+            activity: Three-class labels for screening results: CI/CM/CA.
+            HIV_active: Binary labels for screening results: 1 (CA/CM) and 0 (CI)
 
     Args:
-        data_path(str): the path to the cached npz path.
+        data_path(str): the path to the cached npz path
         task_names(list): a list of header names to specify the columns to fetch from 
             the csv file.
         featurizer(pahelix.featurizers.Featurizer): the featurizer to use for 
             processing the data. If not none, The ``Featurizer.gen_features`` will be 
-            applied to the raw data.
+            applied to the raw data
     
     Returns:
         an InMemoryDataset instance.
@@ -69,7 +68,6 @@ def load_hiv_dataset(data_path, task_names=None, featurizer=None):
 
 
     References:
-    
     [1] AIDS Antiviral Screen Data. https://wiki.nci.nih.gov/display/NCIDTPdata/AIDS+Antiviral+Screen+Data
 
     """
