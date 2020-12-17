@@ -46,4 +46,4 @@
 * [LinearRNA](./c/pahelix/toolkit/linear_rna/README_cn.md)
 
 ### API 文档
-* 如果你对 PaddleHelix 的详细接口感兴趣，请查阅 [API 文档](https://readthedocs.org/projects/paddlehelix/)。
+* 如果你对 PaddleHelix 的详细接口感兴趣，请查阅 [API 文档](https://paddlehelix.readthedocs.io/en/dev/)。
