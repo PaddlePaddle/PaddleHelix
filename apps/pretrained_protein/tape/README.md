@@ -1,6 +1,6 @@
-# Protein Sequence Pretraining (TAPE)
+# TAPE
 
-[中文版本](./README.ch.md) [English Version](./README.en.md)
+[中文版本](./README_cn.md) [English Version](./README.md)
 
 * [Background](#background)
 * [Instructions](#instructions)
@@ -206,8 +206,8 @@ Accuracy：
 | Model         | Fold  | Superfamily   | Family    |   
 | :--:          | :--:  | :--:          | :--:      |
 | Transformer   | 0.143 | 0.291         | 0.851     |
-| LSTM          |       |               |           |
-| ResNet        |       |               |           |
+| LSTM          | 0.092 | 0.075         | 0.455     |
+| ResNet        | 0.075 | 0.066         | 0.487     |
 
 
 #### Fluorescence

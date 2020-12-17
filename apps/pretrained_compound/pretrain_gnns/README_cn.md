@@ -1,20 +1,21 @@
-#README.cn.md
+# PretrainGNNs
 
-[中文版本](./README.ch.md) [English Version](./README.en.md)
+[中文版本](./README_cn.md) [English Version](./README.md)
 
 * [背景介绍](#背景介绍)
 * [使用说明](#使用说明)
+	*  [预训练模型](#预训练模型)
+		* [模型地址](#模型地址)
     * [模型训练](#模型训练)
     * [模型微调](#模型微调)
     * [图网络模型](#序列模型)
         * [GIN](#gin)
         * [GAT](#gat)
         * [GCN](#gcn)
-        *  [GraphSAGE](#graphsage)
         * [其他参数](#其他参数)
     * [化合物相关任务](#化合物相关任务)
         * [预训练任务](#预训练任务) 
-	        *  [Pre-training datasets](#Pre-training-datasets)
+	        * [Pre-training datasets](#Pre-training-datasets)
             * [Node-level](#node-level)
             * [Graph-level](#graph-level)
        
@@ -24,21 +25,23 @@
             *  [Fine-tuning](#fine-tuning)
             
         * [评估结果](#评估结果)
-    * [热启动/Finetuning](#热启动/Finetuning)
 * [数据](#数据)
 	* [数据获取地址](#数据获取地址)
 	* [数据介绍](#数据介绍)
-* [预训练模型](#预训练模型)
-	* [预训练模型获取地址](#预训练模型获取地址)
-* [Q&A](#q&a)
+
+
 * [引用](#引用)
     * [论文相关](#论文相关)
     * [数据相关](#数据相关)
 
 ## 背景介绍
-在近些年来，深度学习在各个领域都取得了很好的成果，但是在分子信息学和药物研发领域内依旧有一些限制。而药物研发是一个比较昂贵并且耗时的过程，中间对成药性化合物的筛选是最需要提高效率的，早期大多用传统的机器学习方法来预测物化性质，而图形具有不规则的形状和大小，节点上也没有空间顺序，节点的邻居也与所处的位置有关，因此分子结构数据可以被看做图形来处理，图网络的应用开发也逐渐被重视起来。但是在实际训练的过程中可能会缺少特定任务的标签，测试集与训练集分布不同，因此本篇主要是采取在数据丰富的相关任务上预训练模型，在节点级别和整图级别进行预训练，再对下游任务进行微调的策略。本篇预训练模型参考论文[《Strategies for Pre-training Graph Neural Networks》](https://openreview.net/pdf?id=HJlWWJSFDH)，提供了GIN、GAT、GCN、Graphsage等模型进行实现。
+在近些年来，深度学习在各个领域都取得了很好的成果，但是在分子信息学和药物研发领域内依旧有一些限制。而药物研发是一个比较昂贵并且耗时的过程，中间对成药性化合物的筛选是最需要提高效率的，早期大多用传统的机器学习方法来预测物化性质，而图形具有不规则的形状和大小，节点上也没有空间顺序，节点的邻居也与所处的位置有关，因此分子结构数据可以被看做图形来处理，图网络的应用开发也逐渐被重视起来。但是在实际训练的过程中可能会缺少特定任务的标签，测试集与训练集分布不同，因此本篇主要是采取在数据丰富的相关任务上预训练模型，在节点级别和整图级别进行预训练，再对下游任务进行微调的策略。本篇预训练模型参考论文[《Strategies for Pre-training Graph Neural Networks》](https://openreview.net/pdf?id=HJlWWJSFDH)，提供了GIN、GAT、GCN等模型进行实现。
 
 ## 使用说明
+
+### 预训练模型
+####模型地址
+这里我们提供已经已经预训练好的好的模型获取[地址](https://baidu-nlp.bj.bcebos.com/PaddleHelix/pretrained_models/compound/pretrain_gnns_attr_super.tgz)供您使用，您也可以选择自己训练。
 
 ### 模型训练
 
@@ -50,85 +53,62 @@
  以下为对具体三种策略进行验证的代码示例：
 
 
-	pretrain_attrmask.py		 \ #节点级别的属性遮蔽预训练文件
-	pretrain_contextpred.py      \ #节点级别的上下文预测的预训练文件
-	pretrain_supervised.py       \ #整图级别的预训练文件
+	pretrain_attrmask.py		  #节点级别的属性遮蔽预训练文件
+	pretrain_contextpred.py       #节点级别的上下文预测的预训练文件
+	pretrain_supervised.py        #整图级别的预训练文件
 
  - 以  	pretrain_attrmask.py为例训练的相关参数解释如下:
 
 `use_cuda` :  是否使用GPU
 
-`lr` : 基准学习率
+`lr` : 基准学习率, 这里用的是0.001
 
 `batch_size` :  batch大小，训练阶段为256
 
-`max_epoch` : 最大训练步数可以自己选择，但attrmask每一个epoch预估耗时15分钟左右，可以根据算力进行设置
+`max_epoch` : 最大训练步数可以自己选择，但attrmask每一个epoch预估耗时15分钟左右，可以根据算力进行设置.
 
-`train_data` : 训练数据目录，包含多个训练数据文件
+`init_model` :  init_model在这里是指加入预训练策略的模型，参考[路径](https://baidu-nlp.bj.bcebos.com/PaddleHelix/pretrained_models/compound/pretrain_gnns_attr_super.tgz)，你也可以根据需要自己调整。
 
-`test_data` : 测试数据目录，包含多个测试数据文件，在测试过程中评估模型。如果该参数不指定，则不在测试过程中评估模型
+`model_config` : 模型配置文件，关于配gnn_model的参数选择文件，可参考gnn_model.json.
 
-`init_model` :  init_model在这里是指有没有加入预训练策略的模型init_model在这里是指有没有加入预训练策略的模型
-
-`model_config` : 模型配置文件，关于配置配置gnn_model的参数选择文件
-
-`dropout_rate` : 模型随机丢弃的概率大小，在这里你可以选择0，0.2，0.5
+`dropout_rate` : 模型随机丢弃的概率大小，在这里是0.5
 
 `model_dir` : 模型的存放地址  
 
-`log_dir` : log的存放位置 
-
-`mask_ratio` : mask的概率大小
-
 ```bash
-CUDA_VISIBLE_DEVICES=0 paddle2.0 -m paddle.distributed.launch pretrain_attrmask.py \
+CUDA_VISIBLE_DEVICES=0 python pretrain_attrmask.py \
 		--use_cuda \ 
-		--batch_size=$batch_size \ 
-		--max_epoch=$max_epoch \ 
-		--lr=$lr \ 
-		--train_data=$npz_root/train \  
-		--test_data=$npz_root/test \ 
-		--model_config=$model_config \ 
-		--init_model=$init_model \ 
-		--model_dir=../../model/ \ 
-		--dropout_rate=$dropout_rate \
-		--log_dir=../../log/ \
-		--mask_ratio=0.15 \ 
-        ... # 设定模型参数和任务参数，将在后续章节介绍。
+		--batch_size=256 \ 
+		--max_epoch=100  \ 
+		--model_config=gnn_model.json \
+		--model_dir=../../../output/pretrain_gnns/pretrain_attrmask        
 ```
  -  在这里我们提供了几种直接运行shell脚本的示例，你可以在这些脚本里更改你的模型配置参数：
 	
-		    sh local_pretrain_attrmask.sh       \ #运行脚本，用此方法来执行上面对应对应的py文件，具体路径设置可根据需要更改。\
-		    sh local_pretrain_contextpred.sh    \ #运行脚本，用此方法来执行上面对应的py文件，具体路径设置可根据需要更改。
-		    sh local_pretrain_supervised.sh     \ #运行脚本，用此方法来执行上面的py文件，具体路径设置可根据需要更改。 \
+		   sh scripts/pretrain_attrmask.sh         #运行脚本，用此方法来执行上面的py文件，具体路径可根据需要更改。
+		   sh scripts/pretrain_contextpred.sh      #运行脚本，用此方法来执行上面的py文件，具体路径可根据需要更改。
+		   sh scripts/pretrain_supervised.sh       #运行脚本，用此方法来执行上面的py文件，具体路径可根据需要更改。 
 
 ### 模型微调
-模型微调和模型训练方式类似，具体的相关参数解释与上面的类似，目前是在8个数据集上进行下游任务的微调。
+模型微调和模型训练方式类似，具体的相关参数解释与上面的类似，目前是在8个数据集上进行下游任务的微调。init_model就是从上面下载的已经训练好的模型，放在对应的文件夹下以便进行finetune。
 ```bash
-CUDA_VISIBLE_DEVICES=$cuda_id paddle2.0 finetune.py \ 
-                --use_cuda \ 
-                --batch_size=$batch_size \ 
-                --max_epoch=$max_epoch \ 
-                --lr=$lr \ 
-                --dataset_name=$dataset \ 
-                --train_data=$data_root/train \
-                --valid_data=$data_root/valid \ 
-                --test_data=$data_root/test \ 
-                --model_config=$model_config \ 
-                --init_model=$init_model \ 
-                --model_dir=../../model/$dataset-$cuda_id \ 
-                --dropout_rate=$dropout_rate \ #
-                --log_dir=../../log/$dataset-$cuda_id &> ../../log/$prefix-$cuda_id.log \ 
-        ... # 设定模型参数和任务参数，将在后续章节介绍。
+CUDA_VISIBLE_DEVICES=0 python finetune.py \ 
+        --use_cuda \
+        --batch_size=128 \ 
+        --max_epoch=4 \ 
+        --dataset_name=tox21 \  
+        --model_config=gnn_model.json \  
+        --init_model= ../../pretrain_gnns_attr_super \
+        --model_dir=../../../output/pretrain_gnns/finetune/tox21
 ```
 -  在这里我们提供了一个直接运行shell脚本的示例，你可以在这个脚本里更改你的模型配置参数：
 ```bash 
- sh   local_finetune.sh   \ #运行脚本，用此方法来执行上面对应的py文件，具体路径设置可根据需要更改。\
+   sh scripts/local_finetune.sh   #运行脚本，用此方法来执行上面对应的py文件，具体路径可根据需要更改。
 ```
 
 
 ### 图网络模型
-我们提供了GIN、GCN、GAT和GraphSAGE四种图网络模型。我们通过gnn_type设定来决定使用哪一种模型，通过参数model_param设定对应模型的超参数，以下为使用模型的具体介绍：
+我们提供了GIN、GCN和GAT三三种图网络模型，以下为使用模型的具体介绍：
 
 #### GIN
 Graph Isomorphism Network (GIN) 图同构网络，使用递归迭代的方式对图中的节点特征按照边的结构进行聚合来进行计算，并且同构图处理后的图特证应该相同，对非同构图处理后的图特证应该不同。使用GIN需要设定以下超参数：
@@ -164,17 +144,6 @@ GCN可以参考以下文章：
 
 - [Semi-Supervised Classification with Graph Convolutional Networks](https://arxiv.org/pdf/1609.02907.pdf)
 
-#### GraphSAGE
-  GraphSAGE同时利用节点特征信息和结构信息得到Graph Embedding的映射，并且保存了生成embedding的映射，可扩展性更强，对于节点分类和链接预测问题的表现也比较突出。在这里我们使用多层GraphSAGE。使用GraphSAGE我们需要设定以下超参数：
-
-- hidden_size: GraphSAGE的hidden_size。
-- embed_dim:GraphSAGE的嵌入向量。
-- layer_num:  GraphSAGE的层数。
-
-GraphSAGE可以参考以下文章：
-
-- [Inductive Representation Learning on Large Graphs](https://arxiv.org/abs/1706.02216)
-
 
 #### 其他参数
 模型还可设置其他参数避免过拟合和模型参数值过大，以及调整运行速度。
@@ -196,27 +165,29 @@ GraphSAGE可以参考以下文章：
   
 ##### Node-level：Self-supervised pre-training
 
- 在每个目录中，我们有两种方法来训练GNN。这会将预训练的模型加载到`model_dir`中，将所得的预训练模型log文件保存到`log_dir`中。
+ 在每个目录中，我们有两种方法来训练GNN。这会将预训练的模型加载到`model_dir`中，将所得的预训练模型log文件保存。
 
 对于GNN的节点级预训练，我们的方法是先使用容易得到的unlabeled数据，并使用自然图分布来捕获图中的特定领域知识/规则。 接下来，再用两种self-supervised的方法：context prediction和attribute masking。 
 
  - Context prediction
 	 - 用子图来预测其周围的图结构，找到每个节点的邻域图和上下文图，用辅助的GNN把上下文编码成固定向量，再通过负采样来学习主GNN和上下文GNN，再用来预训练模型。
 ```bash
-paddle2.0 -m paddle.distributed.launch pretrain_contextpred.py\
-        ... # 设定训练和模型参数，已在上面章节介绍。 \
-        --model_dir=../../model/pretrain_contextpred/$dataset \ # 生成的模型的存放地址
-        --log_dir=../../logs/pretrain_contextpred/$dataset   \  # 生成的预训练模型的logs文件存放地址
-        --task context prediction
+CUDA_VISIBLE_DEVICES=0 python pretrain_contextpred.py \
+        --use_cuda \ 
+		--batch_size=256 \ 
+		--max_epoch=100  \ 
+		--model_config=gnn_model.json \
+        --model_dir= ../../../output/pretrain_gnns/pretrain_contextpred
 ```
  - Attribute masking
 	 - 通过学习分布在图结构上的节点/边属性的规律性来捕获领域知识，屏蔽node/edge属性，让GNN根据相邻结构预测这些属性。
 ```bash
-paddle2.0 -m paddle.distributed.launch pretrain_attrmask.py \
-        ... # 设定训练和模型参数，已在上面章节介绍。 \
-        --model_dir=../../model/pretrain_attrmask/$dataset \  # 生成的模型的存放地址
-        --log_dir=../../logs/pretrain_attrmask/$dataset \    # 生成的预训练模型的logs文件存放地址
-        --task attribute masking
+CUDA_VISIBLE_DEVICES=0 python pretrain_attrmask.py \
+        --use_cuda \ 
+		--batch_size=256 \ 
+		--max_epoch=100  \ 
+		--model_config=gnn_model.json \
+        --model_dir= ../../../output/pretrain_gnns/pretrain_attrmask
 ```
 
 ##### Graph-level ：Supervised pre-training
@@ -227,14 +198,16 @@ paddle2.0 -m paddle.distributed.launch pretrain_attrmask.py \
 	 - 首先先在单个节点级别上对GNN进行正则化，也就是上面的两个策略执行完之后再加在supervised，再在整个图上进行多任务的监督预训练，来预测各个图的不同监督标签集。
 
 ```bash
-paddle2.0 pretrain_supervised.py \
-        ... # 设定训练和模型参数，已在上面章节介绍。 \
-        --model_dir=../../model/pretrain_supervised/$dataset \ # 这里可以选择是否加入节点级别已经训练好的模型
-        --log_dir=../../logs/pretrain_supervised/$dataset \ # 生成的log文件
-        --task supervised
+CUDA_VISIBLE_DEVICES=0 python pretrain_supervised.py \
+        --use_cuda \ 
+		--batch_size=256 \ 
+		--max_epoch=100  \ 
+		--model_config=gnn_model.json \
+		--init_model=../../../output/pretrain_gnns/pretrain_attrmask \
+        --model_dir=../../../output/pretrain_gnns/pretrain_supervised
 ```
 
-这会将预训练的模型加载到`model_dir`中，使用监督式预训练进一步对其进行预训练，然后将所得的预训练模型log文件保存到`log_dir`中。
+这会将预训练的模型加载到`model_dir`中，使用监督式预训练进一步对其进行预训练，然后将所得的预训练模型log文件保存。
 
 
 
@@ -250,38 +223,30 @@ paddle2.0 pretrain_supervised.py \
 
 #####Fine-tuning
 
-在每个目录中，我们提供三种训练GNN的方法，将使用下游任务数据集来微调 `model_dir`中指定的预训练模型。 微调的结果将保存到 `log_dir`中。
+在每个目录中，我们提供三种训练GNN的方法，将使用下游任务数据集来微调 `model_dir`中指定的预训练模型，并且保存微调的结果。
 ```bash
-paddle2.0 finetune.py \
-        ... # 设定训练和模型参数，已在上面章节介绍。 \
-        --model_dir=../../model/finetune/$dataset \ # 这里可以选择调用哪个预训练模型
-        --log_dir=../../logs/finetune/$dataset # 生成的log文件
-        --task finetune
+CUDA_VISIBLE_DEVICES=0 python finetune.py \
+        --use_cuda \
+        --batch_size=128 \ 
+        --max_epoch=4 \ 
+        --dataset_name=tox21 \  
+        --model_config=gnn_model.json \  
+        --init_model=../../pretrain_gnns_attr_super \
+        --model_dir=../../../output/pretrain_gnns/finetune/tox21
 ```
 
 
 ####评估结果
 使用图级别多任务监督预训练的模型对下游任务finetuning后的结果如下表，是八个二分类任务：
 
-![图片](https://agroup-bos-bj.cdn.bcebos.com/bj-3deae92e534c38eeb847a9992b766171a9e45d28)
+![图片](https://agroup-bos-bj.cdn.bcebos.com/bj-d3579ebc70a3cc3cac4f8fc96f18bc0e0a12c9ae)
 
-
-
-
-### 热启动/Finetuning
-在训练时，通过设置参数"--init_model"设置初始化模型，用于热启动训练模型，或finetune下游任务。
-```bash
-python finetune.py \
-        ... \
-        --init_model ./init_model # 初始化模型目录。如果不设定该参数，则模型冷启动训练。 \
-        ... 
-```
 
 
 ## 数据
 **数据获取地址**
 
-  您可以选择从我们提供的[网址](http://moleculenet.ai/datasets-1)上下载数据集然后进行相应的预处理来供您使用，如果需要处理好的数据集您也可以联系我们。
+  您可以选择从我们提供的[网址](http://snap.stanford.edu/gnn-pretrain/data/chem_dataset.zip)上下载数据集然后进行相应的预处理来供您使用。
 ### 数据介绍
 本篇化合物预训练方法使用论文[**Pretrain-GNN**](https://openreview.net/pdf?id=HJlWWJSFDH)中的数据集进行进一步处理。
 
@@ -386,17 +351,6 @@ python finetune.py \
 		 - Task evaluated: 610/617
 
 
-
-## 预训练模型
-**TO DO：提供预训练模型获取地址**
-
-## Q&A
-- Q1: 预训练的时候超参配置和finetune的时候必须一致吗？
-    - 每个数据集valid的比例不同，数据集大小也不一致，可以根据不同数据集选择不同的配置文件。
-   
-- Q2: 预训练的时候时间太久？
-    - 在shell脚本中更改您的max_epoch大小，改小相应的值。
-    - 调大 batch_size
 
 ## 引用
 ### 论文相关

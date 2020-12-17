@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-paddle utils.
+| Paddle utils.
 """
 
 import os

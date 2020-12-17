@@ -49,17 +49,23 @@ def load_tox21_dataset(data_path, task_names=None, featurizer=None):
     :smiles:  SMILES representation of the molecular structure.
     :NR-XXX: Nuclear receptor signaling bioassays results.
     :SR-XXX: Stress response bioassays results
-    :Valid ratio: we get two ratio: 0.751、0.760
-    :Task evaluated: 12/12
-
+    
     Args:
         data_path(str): the path to the cached npz path.
-        task_names: get the default lipophilicity task names.
-        featurizer: the featurizer to use for processing the data. 
-        
-
+        task_names(list): a list of header names to specify the columns to fetch from 
+            the csv file.
+        featurizer(pahelix.featurizers.Featurizer): the featurizer to use for 
+            processing the data. If not none, The ``Featurizer.gen_features`` will be 
+            applied to the raw data.
+    
     Returns:
-        dataset(InMemoryDataset): the data_list(list of dict of numpy ndarray).
+        an InMemoryDataset instance.
+    
+    Example:
+        .. code-block:: python
+
+            dataset = load_tox21_dataset('./tox21/raw')
+            print(len(dataset))
 
     References:
     [1]Tox21 Challenge. https://tripod.nih.gov/tox21/challenge/

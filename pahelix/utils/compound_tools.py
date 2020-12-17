@@ -13,8 +13,8 @@
 # limitations under the License.
 
 """
-Tools for compound features.
-Adapted from https://github.com/snap-stanford/pretrain-gnns/blob/master/chem/loader.py
+| Tools for compound features.
+| Adapted from https://github.com/snap-stanford/pretrain-gnns/blob/master/chem/loader.py
 """
 
 import numpy as np
@@ -72,16 +72,16 @@ def atom_numeric_feat(n, allowable, to_one_hot=True):
 
 def mol_to_graph_data(mol, add_self_loop=True):
     """
-    Converts rdkit mol object to graph data which is a dict of numpy ndarray. 
-    NB: Uses simplified atom and bond features, and represent as indices.
+    | Converts rdkit mol object to graph data which is a dict of numpy ndarray. 
+    
+    | NB: Uses simplified atom and bond features, and represent as indices.
 
     Args: 
         mol: rdkit mol object.
         add_self_loop: whether to add self loop or not.
 
     Returns:
-        data(dict): a dict of numpy ndarray for the graph data. It consists of 
-            atom attibutes, edge attibutes and edge index.
+        a dict of numpy ndarray for the graph data. It consists of atom attibutes, edge attibutes and edge index.
     """
     # atoms
     atom_types = []
@@ -194,7 +194,7 @@ def get_gasteiger_partial_charges(mol, n_iter=12):
         n_iter(int): number of iterations. Default 12
     
     Returns: 
-        partial_charges: list of computed partial charges for each atom.
+        list of computed partial charges for each atom.
     """
     Chem.rdPartialCharges.ComputeGasteigerCharges(mol, nIter=n_iter,
                                                   throwOnParamFailure=True)
@@ -207,10 +207,10 @@ def create_standardized_mol_id(smiles):
     """
 
     Args:
-        smiles:
+        smiles: smiles sequence
     
     Returns: 
-        inchi:
+        inchi
     """
     if check_smiles_validity(smiles):
         # remove stereochemistry

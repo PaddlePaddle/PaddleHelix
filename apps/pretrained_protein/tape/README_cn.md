@@ -1,6 +1,6 @@
-# 蛋白质序列预训练 (TAPE)
+# TAPE
 
-[中文版本](./README.ch.md) [English Version](./README.en.md)
+[中文版本](./README_ch.md) [English Version](./README.md)
 
 * [背景介绍](#背景介绍)
 * [使用说明](#使用说明)
@@ -207,8 +207,8 @@ Accuracy：
 | Model         | Fold  | Superfamily   | Family    |   
 | :--:          | :--:  | :--:          | :--:      |
 | Transformer   | 0.143 | 0.291         | 0.851     |
-| LSTM          |       |               |           |
-| ResNet        |       |               |           |
+| LSTM          | 0.092 | 0.075         | 0.455     |
+| ResNet        | 0.075 | 0.066         | 0.487     |
 
 
 #### Fluorescence

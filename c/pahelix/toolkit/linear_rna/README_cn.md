@@ -1,10 +1,8 @@
-# LinearX: 线性时间RNA结构分析算法
+# LinearRNA: 线性时间RNA结构分析算法
 
-<!-- [中文版本](./README.ch.md) [English Version](./README.en.md) -->
+[中文版本](./README_cn.md) [English Version](./README.md)
 
 * [背景介绍](#背景介绍)
-* [安装说明](#安装说明)
-    * [编译](#编译)
 * [LinearFold调用](#linearFold调用)
     * [机器学习模型](#机器学习模型)
     * [热力学模型](#热力学模型)
@@ -41,16 +39,6 @@ LinearFold能够在线性时间内预测RNA二级结构，在长序列RNA上的�
 
 2020年，百度再次发表世界最快RNA配分方程和碱基对概率预测算法LinearPartition。该算法功能更加强大，可以模拟RNA序列在平衡态时成千上万种不同结构的分布，并预测碱基对概率矩阵。LinearPartition算法同样被ISMB顶会接收并在Bioinformatics杂志上发表，论文链接请见：[LinearPartition: linear-time approximation of RNA folding partition function and base-pairing probabilities](https://academic.oup.com/bioinformatics/article/36/Supplement_1/i258/5870487)。
 
-## 安装说明
-### 编译
-```bash
-sh scripts/prepare.sh  # 准备pybind
-sh scripts/build.sh # 编译
-
-cd build
-python
-```
-
 ## LinearFold调用
 ### 机器学习模型
 ```bash
@@ -71,7 +59,6 @@ linear_fold_v(rna_sequence, beam_size = 100, use_constraints = False, constraint
 ### 运行示例
 #### 二级结构预测（无约束条件）
 ```bash
-cd build
 python
 >>> import pahelix.toolkit.linear_rna as linear_rna
 >>> linear_rna.linear_fold_c("GGGCUCGUAGAUCAGCGGUAGAUCGCUUCCUUCGCAAGGAAGCCCUGGGUUCAAAUCCCAGCGAGUCCACCA")
@@ -146,7 +133,6 @@ linear_partition_v(rna_sequence, beam_size = 100, bp_cutoff = 0.0, no_sharpe_tur
 - tuple(string, list): 返回一个二元组, 第一个位置是配分函数值, 第二个位置是存有碱基对及其概率的列表
 ### 运行示例
 ```bash
-cd build
 python
 >>> import pahelix.toolkit.linear_rna as linear_rna
 >>> linear_rna.linear_partition_c("UGAGUUCUCGAUCUCUAAAAUCG", bp_cutoff = 0.2)
