@@ -43,7 +43,7 @@ from pahelix.datasets import *
 
 def get_downstream_task_names(dataset_name, data_path):
     """
-    get task names of downstream dataset
+    Get task names of downstream dataset
     """
     task_name_dict = {
         'bace': get_default_bace_task_names(),
@@ -62,7 +62,7 @@ def get_downstream_task_names(dataset_name, data_path):
 
 
 def get_dataset(dataset_name, data_path, task_names, featurizer):
-    """tbd"""
+    """Return dataset according to the ``dataset_name``"""
     if dataset_name == 'bace':
         dataset = load_bace_dataset(data_path, task_names, featurizer=featurizer)
     elif dataset_name == 'bbbp':
@@ -86,7 +86,7 @@ def get_dataset(dataset_name, data_path, task_names, featurizer):
 
 
 def create_splitter(split_type):
-    """tbd"""
+    """Return a splitter according to the ``split_type``"""
     if split_type == 'random':
         splitter = RandomSplitter()
     elif split_type == 'index':
