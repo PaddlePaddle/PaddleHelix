@@ -4,5 +4,5 @@
 
 We provide the following pretrained compound methods.
 
-* [PretrainGNNs](./pretrained_gnns/README.md)
+* [PretrainGNNs](./pretrain_gnns/README.md)
 * [InfoGraph](./info_graph/README.md)

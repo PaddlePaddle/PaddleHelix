@@ -4,5 +4,5 @@
 
 我们提供以下化合物预训练模型。
 
-* [PretrainGNNs](./pretrained_gnns/README_cn.md)
+* [PretrainGNNs](./pretrain_gnns/README_cn.md)
 * [InfoGraph](./info_graph/README_cn.md)
