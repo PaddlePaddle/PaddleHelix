@@ -44,11 +44,11 @@ def get_default_tox21_task_names():
 def load_tox21_dataset(data_path, task_names=None, featurizer=None):
     """Load tox21 dataset,process the input information and the featurizer.
 
-    The data file contains a csv table, in which columns below are used:
-
-    :smiles: SMILES representation of the molecular structure;
-    :NR-XXX: Nuclear receptor signaling bioassays results;
-    :SR-XXX: Stress response bioassays results.
+    Description:
+        The data file contains a csv table, in which columns below are used:
+            smiles:  SMILES representation of the molecular structure.
+            NR-XXX: Nuclear receptor signaling bioassays results.
+            SR-XXX: Stress response bioassays results
     
     Args:
         data_path(str): the path to the cached npz path.
@@ -68,9 +68,7 @@ def load_tox21_dataset(data_path, task_names=None, featurizer=None):
             print(len(dataset))
 
     References:
-    
     [1]Tox21 Challenge. https://tripod.nih.gov/tox21/challenge/
-    
     [2]please refer to the links at https://tripod.nih.gov/tox21/challenge/data.jsp for details.
 
     """

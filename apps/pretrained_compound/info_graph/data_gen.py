@@ -41,6 +41,15 @@ class MoleculeCollateFunc(object):
         self.with_pos_neg_mask = with_pos_neg_mask
 
     def __call__(self, batch_data_list):
+        """
+        Function caller to convert a batch of data into a big batch feed dictionary.
+
+        Args:
+            batch_data_list: a batch of the compound graph data.
+
+        Returns:
+            feed_dict: a dictionary contains `graph/xxx` inputs for PGL.
+        """
         g_list = []
         label_list = []
         for data in batch_data_list:
@@ -86,7 +95,11 @@ class MoleculeCollateFunc(object):
 
     @staticmethod
     def get_pos_neg_mask(g_list):
-        """Get the mask"""
+        """Get the mask.
+
+        Positive mask records the nodes in a batch from the same molecule.
+        Negative mask records the nodes in a batch from the other molecule.
+        """
         num_nodes = np.cumsum([0] + [g.num_nodes for g in g_list])
         num_graphs = len(g_list)
 

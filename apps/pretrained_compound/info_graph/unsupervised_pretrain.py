@@ -48,10 +48,11 @@ from pahelix.datasets import load_mutag_dataset, load_ptc_mr_dataset
 from model import GINEncoder, FF, PriorDiscriminator
 from data_gen import MoleculeCollateFunc
 from classifier import eval_on_classifiers
-from utils import get_positive_expectation, get_negative_expectation, load_data, save_data_list_to_npz
+from utils import get_positive_expectation, get_negative_expectation, load_data
 
 
 def create_model(args, config):
+    """Create model for given model configuration."""
     logging.info('building model')
     graph_wrapper = GraphWrapper(
         name="graph",
@@ -105,6 +106,7 @@ def create_model(args, config):
 
 
 def train(args, exe, train_prog, agent, train_data_list, epoch_id):
+    """Model training for one epoch and log the average loss."""
     collate_fn = MoleculeCollateFunc(
         agent.graph_wrapper,
         task_type='cls',
@@ -136,6 +138,7 @@ def train(args, exe, train_prog, agent, train_data_list, epoch_id):
 
 
 def save_embedding(args, exe, test_prog, agent, data_list, epoch_id):
+    """Save the embeddings of all the testing data for multiple classifier evaluation."""
     collate_fn = MoleculeCollateFunc(
         agent.graph_wrapper,
         task_type='cls',
@@ -157,6 +160,7 @@ def save_embedding(args, exe, test_prog, agent, data_list, epoch_id):
 
 
 def parallel_eval(data_queue, pkl_lst):
+    """The target function to run a multi-classifier evaluation for given embeddings."""
     for pkl in pkl_lst:
         with open(pkl, 'rb') as f:
             data = pickle.load(f)
@@ -179,6 +183,7 @@ def parallel_eval(data_queue, pkl_lst):
 
 
 def save_eval_metric(res_collect, emb_dir):
+    """Save the evaluation metrics from parallel evaluation workers."""
     base = os.path.basename(emb_dir)
     json_file = os.path.join(os.path.dirname(emb_dir), '%s_eval.json' % base)
 
@@ -219,18 +224,6 @@ def main(args):
             # use processed data.npz
             train_data_list.extend(
                 load_data(os.path.join(args.root, ds, 'processed')))
-            # dataset = MoleculeDataset(
-            #     args.root, ds,
-            #     add_symmetry=False,
-            #     add_self_loop=False)
-            # data_list = dataset.get_data_list()
-            # processed_dir = os.path.join(args.root, ds, 'processed')
-            # os.makedirs(processed_dir, exist_ok=True)
-            # save_data_list_to_npz(
-            #     data_list, os.path.join(processed_dir, 'data.npz'))
-
-            # logging.info('Processed {}'.format(ds))
-            # train_data_list.extend(data_list)
     else:
         if args.dataset == 'mutag':
             train_data_list, _ = load_mutag_dataset(

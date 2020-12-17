@@ -30,8 +30,7 @@ from collections import OrderedDict
 
 from pahelix.utils.compound_tools import smiles_to_graph_data
 from pahelix.utils.protein_tools import ProteinTokenizer
-
-from utils import save_data_list_to_npz
+from pahelix.utils.data_utils import save_data_list_to_npz
 
 
 def main():

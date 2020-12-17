@@ -61,10 +61,10 @@ def get_default_sider_task_names():
 def load_sider_dataset(data_path, task_names=None, featurizer=None):
     """Load sider dataset,process the input information and the featurizer.
 
-    The data file contains a csv table, in which columns below are used:
-
-    :smiles: SMILES representation of the molecular structure;
-    :Hepatobiliary disorders: Injury, poisoning and procedural complications. Recorded side effects for the drug.
+    Description:
+        The data file contains a csv table, in which columns below are used:
+            smiles:  SMILES representation of the molecular structure.
+            Hepatobiliary disorders ~ Injury, poisoning and procedural complications:Recorded side effects for the drug
     
     Args:
         data_path(str): the path to the cached npz path.
@@ -84,13 +84,9 @@ def load_sider_dataset(data_path, task_names=None, featurizer=None):
             print(len(dataset))
 
     References:
-    
     [1]Kuhn, Michael, et al. “The SIDER database of drugs and side effects.” Nucleic acids research 44.D1 (2015): D1075-D1079.
-    
     [2]Altae-Tran, Han, et al. “Low data drug discovery with one-shot learning.” ACS central science 3.4 (2017): 283-293.
-    
     [3]Medical Dictionary for Regulatory Activities. http://www.meddra.org/
-    
     [4]Please refer to http://sideeffects.embl.de/se/?page=98 for details on ADRs.
 
     """
