@@ -52,6 +52,7 @@ from utils import get_positive_expectation, get_negative_expectation, load_data
 
 
 def create_model(args, config):
+    """Create model for given model configuration."""
     logging.info('building model')
     graph_wrapper = GraphWrapper(
         name="graph",
@@ -105,6 +106,7 @@ def create_model(args, config):
 
 
 def train(args, exe, train_prog, agent, train_data_list, epoch_id):
+    """Model training for one epoch and log the average loss."""
     collate_fn = MoleculeCollateFunc(
         agent.graph_wrapper,
         task_type='cls',
@@ -136,6 +138,7 @@ def train(args, exe, train_prog, agent, train_data_list, epoch_id):
 
 
 def save_embedding(args, exe, test_prog, agent, data_list, epoch_id):
+    """Save the embeddings of all the testing data for multiple classifier evaluation."""
     collate_fn = MoleculeCollateFunc(
         agent.graph_wrapper,
         task_type='cls',
@@ -157,6 +160,7 @@ def save_embedding(args, exe, test_prog, agent, data_list, epoch_id):
 
 
 def parallel_eval(data_queue, pkl_lst):
+    """The target function to run a multi-classifier evaluation for given embeddings."""
     for pkl in pkl_lst:
         with open(pkl, 'rb') as f:
             data = pickle.load(f)
@@ -179,6 +183,7 @@ def parallel_eval(data_queue, pkl_lst):
 
 
 def save_eval_metric(res_collect, emb_dir):
+    """Save the evaluation metrics from parallel evaluation workers."""
     base = os.path.basename(emb_dir)
     json_file = os.path.join(os.path.dirname(emb_dir), '%s_eval.json' % base)
 

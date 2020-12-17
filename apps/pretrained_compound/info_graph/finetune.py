@@ -42,6 +42,7 @@ from utils import load_data, calc_rocauc_score
 
 
 def create_model(args, config, graph_label):
+    """Create model for given model configuration."""
     logging.info('building model')
     graph_wrapper = GraphWrapper(
         name="graph",
@@ -74,6 +75,7 @@ def create_model(args, config, graph_label):
 
 
 def train(args, exe, train_prog, agent, train_data_list, epoch_id):
+    """Model training for one epoch and log the average loss."""
     collate_fn = MoleculeCollateFunc(
         agent.graph_wrapper,
         task_type='cls',
@@ -108,6 +110,7 @@ def train(args, exe, train_prog, agent, train_data_list, epoch_id):
 
 
 def evaluate(args, exe, test_prog, agent, test_data_list, epoch_id):
+    """Evaluate the model on test dataset."""
     collate_fn = MoleculeCollateFunc(
         agent.graph_wrapper,
         task_type='cls',

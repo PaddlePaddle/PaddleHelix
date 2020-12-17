@@ -37,6 +37,7 @@ logging.basicConfig(
 
 
 def train(args, exe, train_program, model, train_dataset):
+    """Model training for one epoch and return the average loss."""
     label_name = 'KIBA' if args.use_kiba_label else 'Log10_Kd'
     collate_fn = DTACollateFunc(
         model.compound_graph_wrapper, is_inference=False,
@@ -58,7 +59,7 @@ def train(args, exe, train_program, model, train_dataset):
 
 def evaluate(args, exe, test_program, model, test_dataset, best_mse,
              val_dataset=None):
-    """tbd"""
+    """Evaluate the model on the test dataset and return MSE and CI."""
     if args.use_val:
         assert val_dataset is not None
 
@@ -120,6 +121,7 @@ def evaluate(args, exe, test_program, model, test_dataset, best_mse,
 
 
 def save_metric(model_dir, epoch_id, best_mse, best_ci):
+    """Save the evaluation metric to txt file."""
     metric = 'Epoch: {}, Best MSE: {}, Best CI: {}'.format(
         epoch_id, best_mse, best_ci)
     logging.info(metric)

@@ -28,10 +28,12 @@ from pahelix.utils.data_utils import load_npz_to_data_list
 
 
 class DTADataset(StreamDataset):
-    """tbd"""
+    """DTADataset a subclass of StreamDataset for PGL inputs.
+    """
     def __init__(self, data_dir, trainer_id=0, trainer_num=1, max_protein_len=1000, subset_selector=None):
         self.max_protein_len = max_protein_len
         self.subset_selector = subset_selector
+        self.cached_len = None
         files = glob('%s/*_%s.npz' % (data_dir, trainer_id))
         files = sorted(files)
         self.files = []
@@ -54,16 +56,31 @@ class DTADataset(StreamDataset):
                 yield data
 
     def __len__(self):
-        n = 0
-        for file in self.files:
-            data_list = load_npz_to_data_list(file)
-            n += len(data_list)
-        return n
+        if self.cached_len is not None:
+            return self.cached_len
+        else:
+            n = 0
+            for file in self.files:
+                data_list = load_npz_to_data_list(file)
+                n += len(data_list)
+
+            self.cached_len = n
+            return n
 
 
 class DTACollateFunc(object):
-    """docstring for GraphPredCollateFunc"""
     def __init__(self, graph_wrapper, label_name='Log10_Kd', is_inference=False):
+    """Collate function for PGL dataloader.
+
+    Args:
+        graph_wrapper (pgl.graph_wrapper.GraphWrapper): graph wrapper for GNN.
+        label_name (str): the key in the feed dictionary for the drug-target affinity.
+            For Davis, it is `Log10_Kd`; For Kiba, it is `KIBA`.
+        is_inference (bool): when its value is True, there is no label in the generated feed dictionary.
+
+    Return:
+        collate_fn: a callable function.
+    """
         assert label_name in ['Log10_Kd', 'Log10_Ki', 'KIBA']
         super(DTACollateFunc, self).__init__()
         self.graph_wrapper = graph_wrapper
@@ -71,7 +88,15 @@ class DTACollateFunc(object):
         self.label_name = label_name
 
     def __call__(self, batch_data_list):
-        """tbd"""
+        """
+        Function caller to convert a batch of data into a big batch feed dictionary.
+
+        Args:
+            batch_data_list: a batch of the compound graph data and protein sequence tokens data.
+
+        Returns:
+            feed_dict: a dictionary contains `graph/xxx` inputs for PGL and `protein_xxx` for protein model.
+        """
         graph_list = []
         for data in batch_data_list:
             atom_numeric_feat = np.concatenate([

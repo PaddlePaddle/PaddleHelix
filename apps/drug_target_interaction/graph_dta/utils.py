@@ -83,6 +83,15 @@ def default_exe_params(is_distributed, use_cuda, thread_num):
 
 
 def concordance_index(y, f):
+    """Compute the concordance index (CI).
+
+    Args:
+        y (ndarray): 1-dim ndarray representing the Kd from the ground truth.
+        f (ndarray): 1-dim ndarray representing the predicted Kd from the model.
+
+    Returns:
+        ci (float): the concordance index.
+    """
     ind = np.argsort(y)
     y = y[ind]
     f = f[ind]

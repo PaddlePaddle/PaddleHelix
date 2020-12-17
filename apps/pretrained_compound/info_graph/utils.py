@@ -27,6 +27,7 @@ from pahelix.utils.data_utils import load_npz_to_data_list
 
 
 def get_positive_expectation(p_samples, measure, average=True):
+    """Get the expectation from positive samples for given measurement."""
     if measure == 'GAN':
         Ep = - fluid.layers.softplus(-p_samples)
     elif measure == 'JSD':
@@ -51,7 +52,9 @@ def get_positive_expectation(p_samples, measure, average=True):
     else:
         return Ep
 
+
 def get_negative_expectation(q_samples, measure, average=True):
+    """Get the expectation from negative samples fro given measurement."""
     if measure == 'GAN':
         Eq = fluid.layers.softplus(-q_samples) + q_samples
     elif measure == 'JSD':
@@ -77,6 +80,7 @@ def get_negative_expectation(q_samples, measure, average=True):
 
 
 def load_data(npz_dir):
+    """Load data from multiple npz files for a given folder."""
     files = glob.glob('%s/*.npz' % npz_dir)
     data_list = []
     for f in files:
