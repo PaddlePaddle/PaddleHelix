@@ -9,6 +9,7 @@
 
    installation
    tutorials
+   contactus
 
 .. toctree::
    :caption: Examples
