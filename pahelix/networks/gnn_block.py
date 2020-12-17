@@ -13,8 +13,8 @@
 # limitations under the License.
 
 """
-blocks for Graph Neural Network (GNN)
-Adapted from https://github.com/snap-stanford/pretrain-gnns/blob/master/chem/model.py
+| Blocks for Graph Neural Network (GNN)
+| Adapted from https://github.com/snap-stanford/pretrain-gnns/blob/master/chem/model.py
 """
 
 import os

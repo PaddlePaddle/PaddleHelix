@@ -25,6 +25,7 @@ def pre_post_process_layer(prev_out, out, process_cmd, dropout_rate=0., epsilon=
     """
     Add residual connection, layer normalization and droput to the out tensor
     optionally according to the value of process_cmd.
+
     This will be used before or after multi-head attention and position-wise
     feed-forward networks.
     """

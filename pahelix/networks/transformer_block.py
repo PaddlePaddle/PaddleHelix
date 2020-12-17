@@ -37,7 +37,9 @@ def multi_head_attention(queries,
                          name="multi_head_att",
                          is_test=False):
     """
-    Multi-Head Attention. Note that attn_bias is added to the logit before
+    Multi-Head Attention. 
+
+    Note that attn_bias is added to the logit before
     computing softmax activiation to mask certain selected positions so that
     they will not considered in attention weights.
     """
@@ -183,6 +185,7 @@ def positionwise_feed_forward(x,
                               is_test=False):
     """
     Position-wise Feed-Forward Networks.
+
     This module consists of two linear transformations with a ReLU activation
     in between, which is applied to each position separately and identically.
     """
@@ -231,6 +234,7 @@ def transformer_encoder_layer(input,
                   is_test=False):
     """
     The encoder layers that can be stacked to form a deep encoder.
+    
     This module consits of a multi-head (self) attention followed by
     position-wise feed-forward networks and both the two components companied
     with the pre_process_layer / post_process_layer to add residual connection,

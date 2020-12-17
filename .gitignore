@@ -6,3 +6,5 @@
 paddlecloud*
 internal*
 */internal*
+.DS_Store
+*/.DS_Store
