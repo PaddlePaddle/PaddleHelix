@@ -150,11 +150,7 @@ def load_chembl_filtered_dataset(data_path, featurizer=None):
 
 def _load_chembl_filtered_dataset(root_path):
     """
-<<<<<<< HEAD
     Description:
-=======
-    Description：
->>>>>>> f7fb468f8f5c7764763ff31376f2e9845c0b576c
         Data from 'Large-scale comparison of machine learning methods for drug target prediction on ChEMBL'
             param root_path: path to the folder containing the reduced chembl dataset
             return: list of smiles, preprocessed rdkit mol obj list, list of np.array
