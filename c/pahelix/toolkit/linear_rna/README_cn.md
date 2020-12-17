@@ -1,6 +1,6 @@
-# LinearX: 线性时间RNA结构分析算法
+# LinearRNA: 线性时间RNA结构分析算法
 
-<!-- [中文版本](./README.ch.md) [English Version](./README.en.md) -->
+[中文版本](./README_cn.md) [English Version](./README.md)
 
 * [背景介绍](#背景介绍)
 * [LinearFold调用](#linearFold调用)

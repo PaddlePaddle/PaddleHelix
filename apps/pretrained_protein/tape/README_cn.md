@@ -1,6 +1,6 @@
-# 蛋白质序列预训练 (TAPE)
+# TAPE
 
-[中文版本](./README.ch.md) [English Version](./README.en.md)
+[中文版本](./README_ch.md) [English Version](./README.md)
 
 * [背景介绍](#背景介绍)
 * [使用说明](#使用说明)

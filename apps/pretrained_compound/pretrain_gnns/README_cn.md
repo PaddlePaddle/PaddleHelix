@@ -1,6 +1,6 @@
-# README.cn.md
+# PretrainedGNNs
 
-[中文版本](./README.ch.md) [English Version](./README.en.md)
+[中文版本](./README_cn.md) [English Version](./README.md)
 
 * [背景介绍](#背景介绍)
 * [使用说明](#使用说明)
@@ -15,7 +15,7 @@
         * [其他参数](#其他参数)
     * [化合物相关任务](#化合物相关任务)
         * [预训练任务](#预训练任务) 
-	        *  [Pre-training datasets](#Pre-training-datasets)
+	        * [Pre-training datasets](#Pre-training-datasets)
             * [Node-level](#node-level)
             * [Graph-level](#graph-level)
        

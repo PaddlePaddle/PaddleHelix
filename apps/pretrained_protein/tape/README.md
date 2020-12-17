@@ -1,6 +1,6 @@
-# Protein Sequence Pretraining (TAPE)
+# TAPE
 
-[中文版本](./README.ch.md) [English Version](./README.en.md)
+[中文版本](./README_cn.md) [English Version](./README.md)
 
 * [Background](#background)
 * [Instructions](#instructions)
