@@ -60,7 +60,7 @@ class CompoundGNNModel(object):
         return node_features
 
     def _gnn_forward(self, graph_wrapper):
-        """tbd"""
+        """GCN, GAT, or GIN"""
         node_features = self._mol_encoder(graph_wrapper, name=self.name)
 
         features_list = [node_features]
@@ -143,7 +143,6 @@ class CompoundGNNModel(object):
         return feat
 
     def forward(self, graph_wrapper):
-        """tbd"""
         if self.gnn_type == "gat_gcn":
             return self._hybrid_gnn_forward(graph_wrapper)
         else:
