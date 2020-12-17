@@ -53,7 +53,7 @@ conda install -c conda-forge rdkit
 pip insatll pgl
 ```
 
-7. 使用 pip 命令安装 PaddleHelix
+7. 使用 pip 命令安装 `PaddleHelix`
 ```bash
 pip install paddlehelix
 ```
