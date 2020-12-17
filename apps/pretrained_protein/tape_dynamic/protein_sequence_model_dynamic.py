@@ -47,7 +47,7 @@ class LstmSeqClassificationModel(nn.Layer):
             epsilon (float, optional): epsilon. Defaults to 1e-5.
             dropout_rate (float, optional): dropout rate. Defaults to 0.1.
         """
-        super().__init__()
+        super(LstmSeqClassificationModel, self).__init__()
         self.padding_idx = padding_idx
         self.embedder = nn.Embedding(vocab_size,
                                      emb_dim,
@@ -195,7 +195,7 @@ class TransformerSeqClassificationModel(nn.Layer):
             epsilon (float, optional): epsilon. Defaults to 1e-5.
             dropout_rate (float, optional): dropout rate. Defaults to 0.1.
         """
-        super().__init__()
+        super(TransformerSeqClassificationModel, self).__init__()
         self.padding_idx = padding_idx
         self.embedder = nn.Embedding(vocab_size,
                                      emb_dim,
