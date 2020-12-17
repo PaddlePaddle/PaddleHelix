@@ -1,4 +1,4 @@
-# PretrainedGNNs
+# PretrainGNNs
 
 [中文版本](./README_cn.md) [English Version](./README.md)
 
