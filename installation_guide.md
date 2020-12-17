@@ -1,6 +1,6 @@
 # Installation guide
 
-## Prerequisits
+## Prerequisites
 
 * OS support: Windows, Linux and OSX
 * Python version: 3.6, 3.7

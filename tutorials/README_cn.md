@@ -22,7 +22,7 @@
 
 # 在本地运行
 
-我们的教程以 Jupyter Notebook 的形式编写，可以方便的在你的本地计算机上运行。如果你没有安装过 Jupyter，请看[这里](https://jupyter.org/install)。另外也请安装好 PaddleHelix（[教程](../README_cn.md)）。
+我们的教程以 Jupyter Notebook 的形式编写，可以方便的在你的本地计算机上运行。如果你没有安装过 Jupyter，请看[这里](https://jupyter.org/install)。另外也请安装好 PaddleHelix（[教程](../installation_guide_cn.md)）。
 
 安装好 Jupyter 之后，请按照以下的步骤来运行：
 
