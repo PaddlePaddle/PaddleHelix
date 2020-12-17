@@ -44,7 +44,7 @@ conda activate paddlehelix
 conda install -c conda-forge rdkit
 ```
 5. Install `paddle` base on your choice of GPU/CPU version:
-you can check paddlepaddle's [official document][https://www.paddlepaddle.org.cn/documentation/docs/en/2.0-rc1/install/index_en.html ] to install paddle2.0
+you can check paddlepaddle's [official document](https://www.paddlepaddle.org.cn/documentation/docs/en/2.0-rc1/install/index_en.html) to install paddle2.0
 
 
 6. Install `PGL` using pip:
