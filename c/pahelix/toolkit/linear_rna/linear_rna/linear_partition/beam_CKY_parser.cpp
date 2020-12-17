@@ -445,7 +445,6 @@ void LinearPartitionBeamCKYParser::cal_pair_probs(LinearPartitionState& viterbi)
                 if(prob > 1.0) prob = 1.0;
                 if(prob < bpp_cutoff) continue;
                 pij[make_pair(i+1, j+1)] = prob;
-                printf("%d, %d, %f\n", i+1, j+1, prob);
             }
         }
     }

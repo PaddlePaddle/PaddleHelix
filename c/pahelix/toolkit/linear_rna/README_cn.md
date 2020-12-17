@@ -137,7 +137,7 @@ python
 >>> import pahelix.toolkit.linear_rna as linear_rna
 >>> linear_rna.linear_partition_c("UGAGUUCUCGAUCUCUAAAAUCG", bp_cutoff = 0.2)
 (0.64, [(4, 13, 2.0071e-01), (10, 22, 2.4662e-01), (11, 21, 2.4573e-01), (12, 20, 2.0927e-01)])
->>> linear_rna.linear_partition("UGAGUUCUCGAUCUCUAAAAUCG", energy_model = "v", bp_cutoff = 0.2) // V model
+>>> linear_rna.linear_partition_v("UGAGUUCUCGAUCUCUAAAAUCG", bp_cutoff = 0.2) // V model
 (-1.96, [(2, 15, 8.3313e-01), (3, 14, 8.3655e-01), (4, 13, 8.3554e-01)])
 ```
 
