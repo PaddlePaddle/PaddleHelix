@@ -45,9 +45,10 @@ def load_hiv_dataset(data_path, task_names=None, featurizer=None):
     
     The data file contains a csv table, in which columns below are used:
 
-    :smiles:SMILES representation of the molecular structure
-    :activity:Three-class labels for screening results: CI/CM/CA
-    :HIV_active:Binary labels for screening results: 1(CA/CM) and 0CI)
+    :smiles: SMILES representation of the molecular structure;
+    :activity: Three-class labels for screening;
+    :results: CI/CM/CA;
+    :HIV_active: Binary labels for screening results: 1(CA/CM) and 0CI).
 
     Args:
         data_path(str): the path to the cached npz path.
@@ -68,6 +69,7 @@ def load_hiv_dataset(data_path, task_names=None, featurizer=None):
 
 
     References:
+    
     [1] AIDS Antiviral Screen Data. https://wiki.nci.nih.gov/display/NCIDTPdata/AIDS+Antiviral+Screen+Data
 
     """

@@ -129,6 +129,7 @@ class IndexSplitter(Splitter):
 class ScaffoldSplitter(Splitter):
     """
     Adapted from https://github.com/deepchem/deepchem/blob/master/deepchem/splits/splitters.py
+    
     Split dataset by Bemis-Murcko scaffolds
     """
     def __init__(self):
@@ -208,6 +209,7 @@ class ScaffoldSplitter(Splitter):
 class RandomScaffoldSplitter(Splitter):
     """
     Adapted from https://github.com/pfnet-research/chainer-chemistry/blob/master/chainer_chemistry/dataset/splitters/scaffold_splitter.py
+    
     Split dataset by Bemis-Murcko scaffolds
     """
     def __init__(self):

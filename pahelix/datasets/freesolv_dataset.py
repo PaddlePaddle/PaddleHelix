@@ -45,9 +45,9 @@ def load_freesolv_dataset(data_path, task_names=None, featurizer=None):
     
     The data file contains a csv table, in which columns below are used:
 
-    :smiles:SMILES representation of the molecular structure
-    :Compound ID:Name of the compound
-    :measured log solubility in mols per litre:Log-scale water solubility of the compound, used as label.
+    :smiles: SMILES representation of the molecular structure;
+    :Compound ID: Name of the compound;
+    :measured log solubility in mols per litre: Log-scale water solubility of the compound, used as label.
    
     Args:
         data_path(str): the path to the cached npz path.
@@ -63,8 +63,11 @@ def load_freesolv_dataset(data_path, task_names=None, featurizer=None):
             dataset = load_freesolv_dataset('./freesolv/raw')
             print(len(dataset))
 
+
     References:
+    
     [1] Mobley, David L., and J. Peter Guthrie. "FreeSolv: a database of experimental and calculated hydration free energies, with input files." Journal of computer-aided molecular design 28.7 (2014): 711-720.
+    
     [2] https://github.com/MobleyLab/FreeSolv
 
     """

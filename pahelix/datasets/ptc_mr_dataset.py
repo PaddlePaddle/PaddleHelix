@@ -13,9 +13,9 @@
 # limitations under the License.
 
 """
-Processsing of mutag dataset.
+Processsing of PTC-MR dataset.
 
-The MUTAG dataset is a dataset with 344 compounds with annotated carcinogenicity on rodent.
+The PTC-MR dataset is a dataset with 344 compounds with annotated carcinogenicity on rodent.
 
 You can download the dataset from
 ftp://ftp.ics.uci.edu:21/pub/baldig/learning/ptc/

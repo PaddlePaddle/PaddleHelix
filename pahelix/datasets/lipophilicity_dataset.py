@@ -45,8 +45,8 @@ def load_lipophilicity_dataset(data_path, task_names=None, featurizer=None):
     
     The data file contains a csv table, in which columns below are used:
 
-    :smiles:  SMILES representation of the molecular structure
-    :exp: Measured octanol/water distribution coefficient (logD) of the compound, used as label
+    :smiles: SMILES representation of the molecular structure;
+    :exp: Measured octanol/water distribution coefficient (logD) of the compound, used as label.
     
     Args:
         data_path(str): the path to the cached npz path.
@@ -66,6 +66,7 @@ def load_lipophilicity_dataset(data_path, task_names=None, featurizer=None):
             print(len(dataset))
 
     References:
+    
     [1]Hersey, A. ChEMBL Deposited Data Set - AZ dataset; 2015. https://doi.org/10.6019/chembl3301361
 
     """

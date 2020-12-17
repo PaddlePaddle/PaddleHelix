@@ -51,12 +51,12 @@ __all__ = ['get_chembl_filtered_task_num', 'load_chembl_filtered_dataset']
 
 
 def get_chembl_filtered_task_num():
-    """get that default bace task names and return class"""
+    """Get that default bace task names and return class"""
     return 1310
 
 
 def load_chembl_filtered_dataset(data_path, featurizer=None):
-    """load chembl_filtered dataset ,process the classification labels and the input information.
+    """Load chembl_filtered dataset ,process the classification labels and the input information.
 
     Note that, in order to load this dataset, you should have other datasets (bace, bbbp, clintox,
     esol, freesolv, hiv, lipophilicity, muv, sider, tox21, toxcast) downloaded. Since the chembl
@@ -65,8 +65,9 @@ def load_chembl_filtered_dataset(data_path, featurizer=None):
 
     The data file contains a csv table, in which columns below are used:
 
-    :It contains the ID, SMILES/CTAB, InChI and InChIKey compound information.
-    :smiles:SMILES representation of the molecular structure
+    ``ID``, ``SMILES/CTAB``, ``InChI`` and ``InChIKey`` compound information.
+    
+    :smiles: SMILES representation of the molecular structure.
 
     Args:
         data_path(str): the path to the cached npz path.
@@ -84,7 +85,8 @@ def load_chembl_filtered_dataset(data_path, featurizer=None):
             print(len(dataset))
 
     References:
-    -- Gaulton, A; et al. (2011). “ChEMBL: a large-scale bioactivity database for drug discovery”. Nucleic Acids Research. 40 (Database issue): D1100-7.
+
+    [1] Gaulton, A; et al. (2011). “ChEMBL: a large-scale bioactivity database for drug discovery”. Nucleic Acids Research. 40 (Database issue): D1100-7.
     
     """
     downstream_datasets = [
@@ -151,9 +153,9 @@ def _load_chembl_filtered_dataset(root_path):
     """
     Data from 'Large-scale comparison of machine learning methods for drug target prediction on ChEMBL'
 
-    :param root_path: path to the folder containing the reduced chembl dataset
+    :param root_path: path to the folder containing the reduced chembl dataset;
     :return: list of smiles, preprocessed rdkit mol obj list, list of np.array
-    containing indices for each of the 3 folds, np.array containing the labels
+    containing indices for each of the 3 folds, np.array containing the labels.
     """
     # adapted from https://github.com/ml-jku/lsc/blob/master/pythonCode/lstm/loadData.py
     # first need to download the files and unzip:
