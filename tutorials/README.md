@@ -10,7 +10,7 @@ In contrast to the powerful ability of DL metrics, a key challenge lying in util
 
 # Navigating PaddleHelix
 <p align="center">
-<img src="../.github/PaddleHelix_Structure.jpg" align="middle"
+<img src="../.github/PaddleHelix_Structure.png" align="middle"
 </p>
 
 

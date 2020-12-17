@@ -1,7 +1,7 @@
 [English](README.md) | 简体中文
 
 <p align="center">
-<img src="./.github/paddlehelix_logo.png" align="middle"
+<img src="./.github/飞桨-螺旋桨_logo.png" align="middle"
 </p>
 
 ------
@@ -9,7 +9,7 @@
 ![python version](https://img.shields.io/badge/python-3.6+-orange.svg)
 ![support os](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
 
-PaddleHelix（螺旋桨）是一个基于机器学习的生物计算工具集，致力于加速如下领域的进展：
+螺旋桨（PaddleHelix）是一个基于机器学习的生物计算工具集，致力于加速如下领域的进展：
 > * 疫苗设计
 > * 新药发现
 > * 精准医疗
@@ -30,66 +30,8 @@ PaddleHelix（螺旋桨）是一个基于机器学习的生物计算工具集，
 ----
 
 ## 安装
+详细的安装指引和环境配置请查阅[这里](./installation_guide_cn.md)。
 
-### 操作系统支持
-
-Windows，Linux 以及 OSX
-
-### Python 版本
-
-Python 3.6, 3.7
-
-### 包依赖
-
-('-'代表对应的依赖没有具体的版本要求)
-
-
-|  名字 |版本 |
-|  ----  | ----  |
-| numpy | - |
-| pandas | - |
-|networkx|-|
-|paddlepaddle|\>=2.0.0rc0|
-|pgl|\>=1.2.0|
-|rdkit|-|
-
-
-### 安装命令
-
-因为 PaddleHelix 安装包的依赖有最新版的 paddlepaddle（2.0.0rc0 或以上），以及无法直接使用 `pip` 命令直接安装的 rdkit，因此我们建议创建一个新的 conda 环境来运行代码，具体命令如下：
-
-* 如果你之前从来没有使用过 conda，可以参考这个网页来安装 conda:
-
-   https://docs.conda.io/projects/conda/en/latest/user-guide/install/
-
-* 在安装完 conda 之后, 可以开始创建一个新的 conda 环境:
-
-```bash
-conda create -n paddlehelix python=3.7
-```
-
-* 使用如下命令激活 conda 环境:
-
-```bash
-conda activate paddlehelix
-```
-
-* 在安装 PaddleHelix 之前，首先需要使用 conda 安装 rdkit：
-```bash
-conda install -c conda-forge rdkit
-```
-* rdkit 安装完成之后，使用 pip 命令安装 PaddleHelix
-```bash
-pip install paddlehelix
-```
-
-* 等待 PaddleHelix 安装完成！
-
-* 如果想要退出当前 conda 环境，可以使用下列命令：
-
-```bash
-conda deactivate
-```
 ----
 ## 文档
 
@@ -103,4 +45,5 @@ conda deactivate
 * [药物-分子作用预测](./apps/drug_target_interaction)
 * [LinearRNA](./c/pahelix/toolkit/linear_rna)
 
-### [The API reference](https://readthedocs.org/projects/paddlehelix/)
+### API 文档
+* 如果你对 PaddleHelix 的详细接口感兴趣，请查阅 [API 文档](https://readthedocs.org/projects/paddlehelix/)。
