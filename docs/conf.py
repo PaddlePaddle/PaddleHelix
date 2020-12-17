@@ -25,7 +25,7 @@ copyright = author
 language = 'en'
 
 # Import mock dependencies packages
-autodoc_mock_imports = ['paddle', 'pgl', 'rdkit']
+autodoc_mock_imports = ['paddle', 'pgl', 'rdkit', 'numpy', 'random', 'pandas', 'sklearn', 'networkx']
 
 
 # -- General configuration ---------------------------------------------------
