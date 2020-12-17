@@ -22,7 +22,7 @@ In contrast to the powerful ability of DL metrics, a key challenge lying in util
 
 # Run tutorials locally
 
-The tutorials are written as Jupyter Notebooks and designed to be smoothly run on you own machine. If you don't have Jupyter installed, please refer to [here](https://jupyter.org/install). And please also install PaddleHelix before proceeding ([instructions](../README.md)).
+The tutorials are written as Jupyter Notebooks and designed to be smoothly run on you own machine. If you don't have Jupyter installed, please refer to [here](https://jupyter.org/install). And please also install PaddleHelix before proceeding ([instructions](../installation_guide.md)).
 
 After the installation of Jypyter, please go through the following steps:
 

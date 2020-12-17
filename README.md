@@ -15,7 +15,7 @@ PaddleHelix is a machine-learning-based bio-computing framework aiming at facili
 > * Precision medicine
 
 ## Features
-* Highly Efficent: We provide LinearRNA - highly efficient toolkit for mRNA vaccine development. LinearFold & LinearParitition achieves O(n) complexity in RNA-folding prediction, which is hundreds of times faster than traditional folding techniques.
+* High Efficency: We provide LinearRNA, a highly efficient toolkit for mRNA vaccine development. LinearFold & LinearParitition achieve O(n) complexity in RNA-folding prediction, which is hundreds of times faster than traditional folding techniques.
 <p align="center">
 <img src="./.github/LinearRNA.jpg" align="middle" />
 </p>
@@ -25,11 +25,11 @@ PaddleHelix is a machine-learning-based bio-computing framework aiming at facili
 <img src="./.github/paddlehelix_features.jpg" align="middle" />
 </p>
 
-* Easy-to-use APIs: PaddleHelix provide frequently used structures and pre-trained models. You can easily use those components to build up your models and systems.
+* Easy-to-use APIs: PaddleHelix provides frequently used structures and pre-trained models. You can easily use those components to build up your models and systems.
 
 ## Installation
 
-The installation prerequisits and guide can be found [here](./installation_guide.md).
+The installation prerequisites and guide can be found [here](./installation_guide.md).
 
 ## Documentation
 
