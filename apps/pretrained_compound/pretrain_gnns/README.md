@@ -54,9 +54,9 @@ The training methods of the pre-training strategy we provide are divided into tw
 ![图片](https://agroup-bos-bj.cdn.bcebos.com/bj-136829c31a8edcaa1800c88bdb02038cfb1630e6)
 Following are the examples:
 ```
-    pretrain_attrmask.py          #Node-level attribute masking pre-training file
-    pretrain_contextpred.py       #Pre-training file for node-level context prediction
-    pretrain_supervised.py        #Pre-training files at the entire graph level
+pretrain_attrmask.py          # Node-level attribute masking pre-training file
+pretrain_contextpred.py       # Pre-training file for node-level context prediction
+pretrain_supervised.py        # Pre-training files at the entire graph level
 ```
 Using pretrain_attrmask.py as an example to show the usage of the model parameters:
 
@@ -87,9 +87,9 @@ CUDA_VISIBLE_DEVICES=0 python pretrain_attrmask.py \
 We provide the shell scripts to run the python files directly, you can adjust the parameters in the scripts.
 
 ```bash
-   sh scripts/pretrain_attrmask.sh       #run pretrain_attrmask.py with given parameters
-   sh scripts/pretrain_contextpred.sh    #run pretrain_contextpred.py with given parameters
-   sh scripts/pretrain_supervised.sh     #run pretrain_supervised.py with given parameters 
+sh scripts/pretrain_attrmask.sh       #run pretrain_attrmask.py with given parameters
+sh scripts/pretrain_contextpred.sh    #run pretrain_contextpred.py with given parameters
+sh scripts/pretrain_supervised.sh     #run pretrain_supervised.py with given parameters 
 ```
 
 ### Fine Tune
@@ -250,7 +250,7 @@ CUDA_VISIBLE_DEVICES=0 python finetune.py \
 
 ##### Evaluation Results
 The results of finetuning downstream tasks using the graph-level multi-task supervision pre-training model are as follows, which are eight binary classification tasks:
-![图片](https://agroup-bos-bj.cdn.bcebos.com/bj-d3579ebc70a3cc3cac4f8fc96f18bc0e0a12c9ae)
+![图片](https://agroup-bos-bj.cdn.bcebos.com/bj-65af0e23c7f4a691db22fa2f7ee855ccf2f71087)
 
 
 ## Data

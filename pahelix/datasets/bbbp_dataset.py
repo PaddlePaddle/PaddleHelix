@@ -42,7 +42,7 @@ def get_default_bbbp_task_names():
 
 
 def load_bbbp_dataset(data_path, task_names=None, featurizer=None):
-    """load bbbp dataset ,process the classification labels and the input information.
+    """load bbbp dataset, process the classification labels and the input information.
 
     The data file contains a csv table, in which columns below are used:
 

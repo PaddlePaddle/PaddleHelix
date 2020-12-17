@@ -48,9 +48,9 @@ def load_toxcast_dataset(data_path, task_names=None, featurizer=None):
 
     The data file contains a csv table, in which columns below are used:
 
-    :smiles:  SMILES representation of the molecular structure.
-    :ACEA_T47D_80hr_Negative~ “Tanguay_ZF_120hpf_YSE_up” - Bioassays results
-    :SR-XXX: Stress response bioassays results
+    :smiles:SMILES representation of the molecular structure.
+    :ACEA_T47D_80hr_Negative: ``Tanguay_ZF_120hpf_YSE_up`` - Bioassays results
+    :SR-XXX:Stress response bioassays results
 
     Args:
         data_path(str): the path to the cached npz path.

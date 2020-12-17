@@ -46,8 +46,7 @@ def load_partial_params(exe, init_model, main_program):
     """
     assert exists(init_model), "[%s] cann't be found." % init_model
 
-    def existed_params(var):
-        """tbd"""
+    def _existed_params(var):
         if not isinstance(var, fluid.framework.Parameter):
             # print("%s not existed" % var.name)
             return False
@@ -62,5 +61,5 @@ def load_partial_params(exe, init_model, main_program):
             exe,
             init_model,
             main_program=main_program,
-            predicate=existed_params)
+            predicate=_existed_params)
     print("Load parameters from {}.".format(init_model))

@@ -11,14 +11,22 @@
    tutorials
 
 .. toctree::
-    :caption: Examples
-    :maxdepth: 2
+   :caption: Examples
+   :maxdepth: 2
 
 .. toctree::
-    :maxdepth: 3
-    :numbered:
-    :caption: Documentation
+   :caption: Datasets
+   :maxdepth: 3
 
-    api_doc/utils
-    api_doc/networks
+   api_doc/datasets
+
+.. toctree::
+   :maxdepth: 4
+   :numbered:
+   :caption: Documentation
+
+   api_doc/featurizers
+   api_doc/model_zoo
+   api_doc/networks
+   api_doc/utils
 
