@@ -25,7 +25,7 @@ copyright = author
 language = 'en'
 
 # Import mock dependencies packages
-autodoc_mock_imports = ['paddle', 'pgl', 'rdkit']
+autodoc_mock_imports = ['paddle', 'pgl', 'rdkit', 'numpy', 'pandas', 'sklearn', 'networkx']
 
 
 # -- General configuration ---------------------------------------------------
@@ -95,12 +95,12 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # a list of builtin themes.
 #
 html_theme = 'sphinx_rtd_theme'
-#html_theme_options = {
-#    'logo_only': True,
-#    'navigation_depth': 5,
-#}
-#html_context = {}
-#html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+html_theme_options = {
+    'logo_only': True,
+    'navigation_depth': 5,
+}
+html_context = {}
+html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

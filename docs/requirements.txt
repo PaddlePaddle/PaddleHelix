@@ -3,3 +3,8 @@ sphinxcontrib-httpdomain
 paddlepaddle>=2.0.0rc0
 pgl>=1.2.0
 numpy
+pandas
+random
+networkx
+rdkit
+sklearn
