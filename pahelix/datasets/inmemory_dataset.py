@@ -30,11 +30,7 @@ __all__ = ['InMemoryDataset']
 
 class InMemoryDataset(object):
     """
-<<<<<<< HEAD
     Description:
-=======
-    Description：
->>>>>>> f7fb468f8f5c7764763ff31376f2e9845c0b576c
         The InMemoryDataset manages ``data_list`` which is a list of `data` and 
         the `data` is a dict of numpy ndarray. And each dict has the same keys.
 

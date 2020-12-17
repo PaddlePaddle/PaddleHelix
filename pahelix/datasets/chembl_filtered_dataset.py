@@ -58,21 +58,13 @@ def get_chembl_filtered_task_num():
 def load_chembl_filtered_dataset(data_path, featurizer=None):
     """load chembl_filtered dataset ,process the classification labels and the input information.
 
-<<<<<<< HEAD
     Introduction:
-=======
-    Introduction：
->>>>>>> f7fb468f8f5c7764763ff31376f2e9845c0b576c
         Note that, in order to load this dataset, you should have other datasets (bace, bbbp, clintox,
         esol, freesolv, hiv, lipophilicity, muv, sider, tox21, toxcast) downloaded. Since the chembl
         dataset may overlap with the above listed dataset, the overlapped smiles for test will be filtered
         for a fair evaluation.
 
-<<<<<<< HEAD
     Description:
-=======
-    Description：
->>>>>>> f7fb468f8f5c7764763ff31376f2e9845c0b576c
         The data file contains a csv table, in which columns below are used:
             It contains the ID, SMILES/CTAB, InChI and InChIKey compound information
             smiles:SMILES representation of the molecular structure

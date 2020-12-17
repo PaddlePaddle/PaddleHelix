@@ -46,11 +46,7 @@ def get_default_toxcast_task_names(data_path):
 def load_toxcast_dataset(data_path, task_names=None, featurizer=None):
     """Load toxcast dataset,process the input information and the featurizer.
 
-<<<<<<< HEAD
     Description:
-=======
-    Description：
->>>>>>> f7fb468f8f5c7764763ff31376f2e9845c0b576c
         The data file contains a csv table, in which columns below are used:
             smiles:  SMILES representation of the molecular structure.
             ACEA_T47D_80hr_Negative~ “Tanguay_ZF_120hpf_YSE_up” - Bioassays results
