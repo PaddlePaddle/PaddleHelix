@@ -44,7 +44,11 @@ def get_default_tox21_task_names():
 def load_tox21_dataset(data_path, task_names=None, featurizer=None):
     """Load tox21 dataset,process the input information and the featurizer.
 
+<<<<<<< HEAD
     Description:
+=======
+    Description：
+>>>>>>> f7fb468f8f5c7764763ff31376f2e9845c0b576c
         The data file contains a csv table, in which columns below are used:
             smiles:  SMILES representation of the molecular structure.
             NR-XXX: Nuclear receptor signaling bioassays results.
