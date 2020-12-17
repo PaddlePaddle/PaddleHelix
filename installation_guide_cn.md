@@ -43,7 +43,8 @@ conda activate paddlehelix
 conda install -c conda-forge rdkit
 ```
 5. 此外需要基于你对CPU/GPU版本的选择来安装`paddle`:
-   可以参看官网的[安装文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/2.0-rc1/install/index_cn.html)来进行安装paddle2.0
+
+   参看paddle[官方文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/2.0-rc1/install/index_cn.html)安装
 
    
    
