@@ -40,10 +40,10 @@
 * PaddleHelix 基于[飞桨（PaddlePaddle）](https://github.com/paddlepaddle/paddle)开源深度学习框架实现，该框架在性能表现上尤其出色。
 
 ### 使用示例
-* [表示学习 - 化合物](./apps/pretrained_compound)
-* [表示学习 - 蛋白质](./apps/pretrained_protein)
-* [药物-分子作用预测](./apps/drug_target_interaction)
-* [LinearRNA](./c/pahelix/toolkit/linear_rna)
+* [表示学习 - 化合物](./apps/pretrained_compound/README_cn.md)
+* [表示学习 - 蛋白质](./apps/pretrained_protein/README_cn.md)
+* [药物-分子作用预测](./apps/drug_target_interaction/README_cn.md)
+* [LinearRNA](./c/pahelix/toolkit/linear_rna/README_cn.md)
 
 ### API 文档
 * 如果你对 PaddleHelix 的详细接口感兴趣，请查阅 [API 文档](https://readthedocs.org/projects/paddlehelix/)。
