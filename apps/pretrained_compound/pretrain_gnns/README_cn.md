@@ -50,7 +50,7 @@
 #### 数据地址
 您可以选择从我们提供的[网址](http://snap.stanford.edu/gnn-pretrain/data/chem_dataset.zip)上下载数据集然后进行相应的预处理来供您使用。建议解压数据集并将其放入根目录下的data文件夹中，如果没有请新建一个data文件夹。
 
-    # cd to pahelix folder
+    # cd to PaddleHelix folder
     mkdir -p data
     cd data
     wget http://snap.stanford.edu/gnn-pretrain/data/chem_dataset.zip
