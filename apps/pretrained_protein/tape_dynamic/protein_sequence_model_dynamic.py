@@ -250,6 +250,7 @@ class TransformerSeqClassificationModel(nn.Layer):
         """
         # model
         embedded_text = self._prepare_emb(tokens)
+        # pylint: disable=E1102
         output = self.transformer_encoder(embedded_text)
         logits = self._seq_classification_task(
             output.transpose(perm=(0, 2, 1)))
