@@ -2,7 +2,7 @@
 
 如果你需要修改 PaddleHelix 中的算法，则需要以开发者模式使用 PaddleHelix。PaddleHelix 的核心算法大部分以 Python 实现，但也包含 C++，所以不能简单的采用 `pip install --editable {pahelix_path}` 来进行开发。为了在你的本地计算机上开发 PaddleHelix，请阅读以下教程。
 
-1. 首先请按照[安装指引](./installation_guide_cn.md)安装 PaddleHelix 的依赖（paddlepaddle>=2.0.0rc0, pgl>=1.2.0）。
+1. 首先请按照[安装指引](./installation_guide_cn.md)安装 PaddleHelix 的依赖（paddlepaddle >= 2.0.0rc0，pgl >= 1.2.0）。
 
 2. 如果你之前已经使用 `pip install paddlehelix` 安装了 PaddleHelix 的发行包，请卸载：
 

@@ -28,7 +28,7 @@ If you need to modify the algorithms/models in PaddleHelix, you have to switch t
     sh scripts/build.sh
     ```
 
-    After a successful compilaiton, `import` LinearRNA as following:
+    After a successful compilation, `import` LinearRNA as following:
 
     ```bash
     cd build
