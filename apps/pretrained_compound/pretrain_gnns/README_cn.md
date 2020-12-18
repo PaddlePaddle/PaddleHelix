@@ -6,25 +6,26 @@
 
 * [背景介绍](#背景介绍)
 * [使用说明](#使用说明)
-   *  [预训练模型](#预训练模型)
+   *  [下载链接](#下载链接)
       * [模型地址](#模型地址)
+      * [数据地址](#数据地址)
     * [模型训练](#模型训练)
     * [模型微调](#模型微调)
     * [图网络模型](#序列模型)
-        * [GIN](#gin)
-        * [GAT](#gat)
-        * [GCN](#gcn)
+        * [GIN](#GIN)
+        * [GAT](#GAT)
+        * [GCN](#GCN)
         * [其他参数](#其他参数)
     * [化合物相关任务](#化合物相关任务)
         * [预训练任务](#预训练任务) 
            * [Pre-training datasets](#Pre-training-datasets)
-            * [Node-level](#node-level)
-            * [Graph-level](#graph-level)
+            * [Node-level](#Node-level)
+            * [Graph-level](#Graph-level)
         
         * [下游任务](#下游任务)
-            * [Chemical molecular properties prediction](#chemical-molecular-properties-prediction)
+            * [Chemical molecular properties prediction](#Chemical-molecular-properties-prediction)
             *  [Downstream classification datasets](#Downstream-classification-datasets)
-            *  [Fine-tuning](#fine-tuning)
+            *  [Fine-tuning](#Fine-tuning)
             
         * [评估结果](#评估结果)
 * [数据](#数据)
@@ -37,13 +38,17 @@
     * [数据相关](#数据相关)
 
 ## 背景介绍
-​      在近些年来，深度学习在各个领域都取得了很好的成果，但是在分子信息学和药物研发领域内依旧有一些限制。而药物研发是一个比较昂贵并且耗时的过程，中间对成药性化合物的筛选是最需要提高效率的，早期大多用传统的机器学习方法来预测物化性质，而图形具有不规则的形状和大小，节点上也没有空间顺序，节点的邻居也与所处的位置有关，因此分子结构数据可以被看做图形来处理，图网络的应用开发也逐渐被重视起来。但是在实际训练的过程中可能会缺少特定任务的标签，测试集与训练集分布不同，因此本篇主要是采取在数据丰富的相关任务上预训练模型，在节点级别和整图级别进行预训练，再对下游任务进行微调的策略。本篇预训练模型参考论文[《Strategies for Pre-training Graph Neural Networks》](https://openreview.net/pdf?id=HJlWWJSFDH)，提供了GIN、GAT、GCN等模型进行实现。
+在近些年来，深度学习在各个领域都取得了很好的成果，但是在分子信息学和药物研发领域内依旧有一些限制。而药物研发是一个比较昂贵并且耗时的过程，中间对成药性化合物的筛选是最需要提高效率的，早期大多用传统的机器学习方法来预测物化性质，而图形具有不规则的形状和大小，节点上也没有空间顺序，节点的邻居也与所处的位置有关，因此分子结构数据可以被看做图形来处理，图网络的应用开发也逐渐被重视起来。但是在实际训练的过程中可能会缺少特定任务的标签，测试集与训练集分布不同，因此本篇主要是采取在数据丰富的相关任务上预训练模型，在节点级别和整图级别进行预训练，再对下游任务进行微调的策略。本篇预训练模型参考论文[《Strategies for Pre-training Graph Neural Networks》](https://openreview.net/pdf?id=HJlWWJSFDH)，提供了GIN、GAT、GCN等模型进行实现。
 
 ## 使用说明
 
-### 预训练模型
+### 下载链接
+
 #### 模型地址
 这里我们提供已经已经预训练好的好的模型获取[地址](https://baidu-nlp.bj.bcebos.com/PaddleHelix/pretrained_models/compound/pretrain_gnns_attr_super.tgz)供您使用，您也可以选择自己训练。
+
+#### 数据地址
+您可以选择从我们提供的[网址](http://snap.stanford.edu/gnn-pretrain/data/chem_dataset.zip)上下载数据集然后进行相应的预处理来供您使用。建议解压数据集并将其放入根目录下的data文件夹中，如果没有请新建一个data文件夹。
 
 ### 模型训练
 
@@ -69,6 +74,8 @@ pretrain_supervised.py        # 整图级别的预训练文件
 
 `max_epoch` : 最大训练步数可以自己选择，但attrmask每一个epoch预估耗时15分钟左右，可以根据算力进行设置.
 
+`data_path` : 加载数据的路径。首先需要从我们提供的链接中下载数据集，建议解压数据集并将其放入根目录下的data文件夹中，如果没有请新建一个data文件夹。
+
 `init_model` :  init_model在这里是指加入预训练策略的模型，参考[路径](https://baidu-nlp.bj.bcebos.com/PaddleHelix/pretrained_models/compound/pretrain_gnns_attr_super.tgz)，你也可以根据需要自己调整。
 
 `model_config` : 模型配置文件，关于配gnn_model的参数选择文件，可参考gnn_model.json.
@@ -79,11 +86,12 @@ pretrain_supervised.py        # 整图级别的预训练文件
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 python pretrain_attrmask.py \
-                --use_cuda \ 
-                --batch_size=256 \ 
-                --max_epoch=100  \ 
-                --model_config=gnn_model.json \
-                --model_dir=../../../output/pretrain_gnns/pretrain_attrmask        
+        --use_cuda \ 
+        --batch_size=256 \ 
+        --max_epoch=100 \ 
+        --data_path=../../../data/chem_dataset/zinc_standard_agent/raw \
+        --model_config=gnn_model.json \
+        --model_dir=../../../output/pretrain_gnns/pretrain_attrmask        
 ```
  -  在这里我们提供了几种直接运行shell脚本的示例，你可以在这些脚本里更改你的模型配置参数：
 
@@ -96,14 +104,15 @@ sh scripts/pretrain_supervised.sh       #运行脚本，用此方法来执行上
 ### 模型微调
 模型微调和模型训练方式类似，具体的相关参数解释与上面的类似，目前是在8个数据集上进行下游任务的微调。init_model就是从上面下载的已经训练好的模型，放在对应的文件夹下以便进行finetune。
 ```bash
-CUDA_VISIBLE_DEVICES=0 python finetune.py \ 
-                --use_cuda \
-                --batch_size=128 \ 
-                --max_epoch=4 \ 
-                --dataset_name=tox21 \  
-                --model_config=gnn_model.json \  
-                --init_model= ../../pretrain_gnns_attr_super \
-                --model_dir=../../../output/pretrain_gnns/finetune/tox21
+CUDA_VISIBLE_DEVICES=0 python finetune.py \
+        --use_cuda \
+        --batch_size=128 \ 
+        --max_epoch=4 \ 
+        --dataset_name=tox21 \ 
+        --data_path=../../../data/chem_dataset/tox21/raw \
+        --model_config=gnn_model.json \  
+        --init_model= ../../pretrain_gnns_attr_super \
+        --model_dir=../../../output/pretrain_gnns/finetune/tox21
 ```
 -  在这里我们提供了一个直接运行shell脚本的示例，你可以在这个脚本里更改你的模型配置参数：
 ```bash 
@@ -177,21 +186,23 @@ GCN可以参考以下文章：
     - 用子图来预测其周围的图结构，找到每个节点的邻域图和上下文图，用辅助的GNN把上下文编码成固定向量，再通过负采样来学习主GNN和上下文GNN，再用来预训练模型。
 ```bash
 CUDA_VISIBLE_DEVICES=0 python pretrain_contextpred.py \
-                --use_cuda \ 
-                --batch_size=256 \ 
-                --max_epoch=100  \ 
-                --model_config=gnn_model.json \
-                --model_dir= ../../../output/pretrain_gnns/pretrain_contextpred
+        --use_cuda \ 
+        --batch_size=256 \ 
+        --max_epoch=100 \ 
+        --data_path=../../../data/chem_dataset/zinc_standard_agent/raw \
+        --model_config=gnn_model.json \
+        --model_dir= ../../../output/pretrain_gnns/pretrain_contextpred
 ```
  - Attribute masking
     - 通过学习分布在图结构上的节点/边属性的规律性来捕获领域知识，屏蔽node/edge属性，让GNN根据相邻结构预测这些属性。
 ```bash
 CUDA_VISIBLE_DEVICES=0 python pretrain_attrmask.py \
-                --use_cuda \ 
-                --batch_size=256 \ 
-                --max_epoch=100  \ 
-                --model_config=gnn_model.json \
-                --model_dir= ../../../output/pretrain_gnns/pretrain_attrmask
+        --use_cuda \ 
+        --batch_size=256 \ 
+        --max_epoch=100 \ 
+        --data_path=../../../data/chem_dataset/zinc_standard_agent/raw \
+        --model_config=gnn_model.json \
+        --model_dir= ../../../output/pretrain_gnns/pretrain_attrmask
 ```
 
 ##### Graph-level ：Supervised pre-training
@@ -203,12 +214,13 @@ CUDA_VISIBLE_DEVICES=0 python pretrain_attrmask.py \
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 python pretrain_supervised.py \
-                --use_cuda \ 
-                --batch_size=256 \ 
-                --max_epoch=100  \ 
-                --model_config=gnn_model.json \
-                --init_model=../../../output/pretrain_gnns/pretrain_attrmask \
-                --model_dir=../../../output/pretrain_gnns/pretrain_supervised
+        --use_cuda \ 
+        --batch_size=256 \ 
+        --max_epoch=100 \ 
+        --data_path=../../../data/chem_dataset/chembl_filtered/raw \
+        --model_config=gnn_model.json \
+        --init_model=../../../output/pretrain_gnns/pretrain_attrmask \
+        --model_dir=../../../output/pretrain_gnns/pretrain_supervised
 ```
 
 这会将预训练的模型加载到`model_dir`中，使用监督式预训练进一步对其进行预训练，然后将所得的预训练模型log文件保存。
@@ -228,13 +240,14 @@ CUDA_VISIBLE_DEVICES=0 python pretrain_supervised.py \
 在每个目录中，我们提供三种训练GNN的方法，将使用下游任务数据集来微调 `model_dir`中指定的预训练模型，并且保存微调的结果。
 ```bash
 CUDA_VISIBLE_DEVICES=0 python finetune.py \
-                --use_cuda \
-                --batch_size=128 \ 
-                --max_epoch=4 \ 
-                --dataset_name=tox21 \  
-                --model_config=gnn_model.json \  
-                --init_model=../../pretrain_gnns_attr_super \
-                --model_dir=../../../output/pretrain_gnns/finetune/tox21
+        --use_cuda \
+        --batch_size=128 \ 
+        --max_epoch=4 \ 
+        --dataset_name=tox21 \  
+        --data_path=../../../data/chem_dataset/tox21/raw \
+        --model_config=gnn_model.json \  
+        --init_model=../../pretrain_gnns_attr_super \
+        --model_dir=../../../output/pretrain_gnns/finetune/tox21
 ```
 
 #### 评估结果
@@ -246,9 +259,11 @@ CUDA_VISIBLE_DEVICES=0 python finetune.py \
 
 
 ## 数据
-**数据获取地址**
+
+### 数据获取地址
 
   您可以选择从我们提供的[网址](http://snap.stanford.edu/gnn-pretrain/data/chem_dataset.zip)上下载数据集然后进行相应的预处理来供您使用。
+
 ### 数据介绍
 本篇化合物预训练方法使用论文[**Pretrain-GNN**](https://openreview.net/pdf?id=HJlWWJSFDH)中的数据集进行进一步处理。
 
@@ -374,8 +389,6 @@ CUDA_VISIBLE_DEVICES=0 python finetune.py \
   year={2019}
 }
 
-
-
 **GIN**
 >@article{xu2018powerful,
   title={How powerful are graph neural networks?},
@@ -399,16 +412,6 @@ CUDA_VISIBLE_DEVICES=0 python finetune.py \
   journal={arXiv preprint arXiv:1609.02907},
   year={2016}
 }
-
-**GraphSAGE**
->@inproceedings{hamilton2017inductive,
-  title={Inductive representation learning on large graphs},
-  author={Hamilton, Will and Ying, Zhitao and Leskovec, Jure},
-  booktitle={Advances in neural information processing systems},
-  pages={1024--1034},
-  year={2017}
-}
-
 
 ### 数据相关
 数据是从[MoleculeNet](http://moleculenet.ai/datasets-1)中挑选的部分数据集：

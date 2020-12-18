@@ -16,7 +16,7 @@
 
 
 """
-Processing of zinc dataset.
+Processing of ZINC dataset.
 
 The ZINC database is a curated collection of commercially available chemical compounds prepared especially for virtual screening. ZINC15 is designed to bring together biology and chemoinformatics with a tool that is easy to use for nonexperts, while remaining fully programmable for chemoinformaticians and computational biologists.
 
@@ -33,11 +33,14 @@ __all__ = ['load_zinc_dataset']
 
 
 def load_zinc_dataset(data_path, featurizer=None, return_smiles=False, indices=None):
-    """Load zinc dataset,process the input information and the featurizer.
+    """Load ZINC dataset,process the input information and the featurizer.
 
     Description:
+        
         The data file contains a csv table, in which columns below are used:
+            
             smiles:  SMILES representation of the molecular structure.
+            
             zinc_id: the id of the compound
 
     Args:
@@ -58,6 +61,7 @@ def load_zinc_dataset(data_path, featurizer=None, return_smiles=False, indices=N
             print(len(dataset))
 
     References:
+    
     [1]Teague Sterling and John J. Irwin. Zinc 15 – ligand discovery for everyone. Journal of Chemical Information and Modeling, 55(11):2324–2337, 2015. doi: 10.1021/acs.jcim.5b00559. PMID: 26479676.
 
     """

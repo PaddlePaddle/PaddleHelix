@@ -16,7 +16,7 @@
 
 ## 特色
 
-* **高性能**：提供了 LinearRNA 系列高性能算法助力 mRNA 疫苗设计。例如，LinearFold 和 LinearParition 能够迅速准确定位能量较低 RNA 二级结构，性能相比传统方法提升数百甚至上千倍。
+* **高性能**：提供了 LinearRNA 系列高性能算法助力 RNA 结构预测和分析。例如，LinearFold 和 LinearParition 能够迅速准确定位能量较低 RNA 二级结构，性能相比传统方法提升数百甚至上千倍。
 <p align="center">
 <img src="./.github/LinearRNA.jpg" align="middle" />
 </p>
@@ -47,3 +47,6 @@
 
 ### API 文档
 * 如果你对 PaddleHelix 的详细接口感兴趣，请查阅 [API 文档](https://paddlehelix.readthedocs.io/en/dev/)。
+
+### 开发者指南
+* 如果你需要修改 PaddleHelix 的源代码，请查阅我们提供的[开发者指南](./developer_guide_cn.md)。

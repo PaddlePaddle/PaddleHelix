@@ -31,6 +31,7 @@ __all__ = ['InMemoryDataset']
 class InMemoryDataset(object):
     """
     Description:
+
         The InMemoryDataset manages ``data_list`` which is a list of `data` and 
         the `data` is a dict of numpy ndarray. And each dict has the same keys.
 
@@ -40,8 +41,8 @@ class InMemoryDataset(object):
         The ``data_list`` can be cached in npz files by calling `dataset.save_data(data_path)` 
         and after that, call `InMemoryDataset(data_path)` to reload.
 
-    Attributes:
-        data_list(list): a list of dict of numpy ndarray.
+        Attributes:
+            data_list(list): a list of dict of numpy ndarray.
 
     Example:
         .. code-block:: python
@@ -53,6 +54,7 @@ class InMemoryDataset(object):
 
             dataset2 = InMemoryDataset(npz_data_path='./cached_npz')    # will load the saved `data_list`
             print(len(dataset))
+
     """
     def __init__(self, 
             data_list=None,

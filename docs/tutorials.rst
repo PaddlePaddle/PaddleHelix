@@ -33,7 +33,7 @@ Tutorials
 Run tutorials locally
 =====================
 
-The tutorials are written as **Jupyter** Notebooks and designed to be smoothly run on you own machine. If you don't have **Jupyter** installed, please refer to `here <https://jupyter.org/install>`_. And please also install PaddleHelix before proceeding (`instructions <https://github.com/PaddlePaddle/PaddleHelix/blob/dev/installation_guide.md>`_).
+The tutorials are written as **Jupyter** Notebooks and designed to be smoothly run on you own machine. If you don't have **Jupyter** installed, please refer to `here <https://jupyter.org/install>`_. And please also install **PaddleHelix** before proceeding (:doc:`/installation`).
 
 After the installation of **Jypyter**, please go through the following steps:
 

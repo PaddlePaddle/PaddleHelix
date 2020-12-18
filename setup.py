@@ -122,8 +122,8 @@ requires = [
 setup(
     name="paddlehelix",
     version="1.0.0b",
-    author="fangxiaomin",
-    author_email="fangxiaomin01@baidu.com",
+    author="baidu-nlp-bio",
+    author_email="nlp-bio@baidu.com",
     description="Adding version check",
     long_description="",
     packages = find_packages(),

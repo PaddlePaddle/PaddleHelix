@@ -26,7 +26,7 @@ Since PaddleHelix depends on the `paddlepaddle` of version 2.0.0rc0 or above, an
 
   https://docs.conda.io/projects/conda/en/latest/user-guide/install/
 
-2. Create a new envoronment with conda:
+2. Create a new environment with conda:
 
 ```bash
 conda create -n paddlehelix python=3.7  
@@ -45,7 +45,7 @@ conda install -c conda-forge rdkit
 ```
 5. Install `paddle` based on your choice of GPU/CPU version:
 
-Check `paddlepaddle`'s [official document](https://www.paddlepaddle.org.cn/documentation/docs/en/2.0-rc1/install/index_en.html)
+Check `paddlepaddle`'s [official document](https://www.paddlepaddle.org.cn/documentation/docs/en/install/index_en.html)
 to install **paddle2.0**.
 
 6. Install `PGL` using pip:
