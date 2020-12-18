@@ -45,8 +45,14 @@ conda install -c conda-forge rdkit
 ```
 5. Install `paddle` based on your choice of GPU/CPU version:
 
-Check `paddlepaddle`'s [official document](https://www.paddlepaddle.org.cn/documentation/docs/en/install/index_en.html)
+Check `paddlepaddle`'s [official document](https://www.paddlepaddle.org.cn/documentation/docs/en/2.0-rc1/install/index_en.html)
 to install **paddle2.0**.
+
+For example, if you want to use GPU version of PaddlePaddle on Linux, run this command:
+
+```bash
+python -m pip install paddlepaddle-gpu==2.0.0rc1.post90 -f https://paddlepaddle.org.cn/whl/stable.html
+```
 
 6. Install `PGL` using pip:
    
