@@ -4,7 +4,7 @@ cd $(dirname $0)
 ############
 # config
 ############
-root="/mnt/xueyang/Datasets/PaddleHelix"
+root="data"
 dataset="chembl_filtered,zinc_standard_agent"
 config="config_on_zinc15_chembl.json"
 

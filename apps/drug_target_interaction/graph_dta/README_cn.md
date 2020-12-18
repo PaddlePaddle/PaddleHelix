@@ -3,17 +3,79 @@
 [中文版本](./README_cn.md) [English Version](./README.md)
 
 * [背景介绍](#背景介绍)
-* [使用说明](#使用说明)
-    * [参数设置](#参数设置)
-    * [训练与评估](#训练与评估)
 * [数据](#数据)
     * [Davis](#davis)
     * [Kiba](#kiba)
+* [使用说明](#使用说明)
+    * [参数设置](#参数设置)
+    * [训练与评估](#训练与评估)
 * [引用](#引用)
 
 ## 背景介绍
 
 了解哪些药物对靶标蛋白起作用对于新药研发、老药新用都很有帮助。GraphDTA模型将药物分子表示为图数据，然后使用图神经网络预测药物和靶标蛋白的亲和性。
+
+## 数据集
+
+首先，在`demos`目录下创建一个`data`子目录，作为数据集的root目录。
+
+```sh
+mkdir -p demos/data && cd demos/data
+```
+
+### Davis
+
+Davis数据集包含了72种药物和442种靶标蛋白任意之间的Kd值（平衡解离常数）。Kd值越小，说明药物和靶标蛋白之间的亲和性越高。
+
+执行下面的命令即可下载并解压Davis数据集：
+
+```sh
+wget "https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fdatasets%2Fdti_datasets%2Fdavis.tgz" -O davis.tgz
+tar -zxvf davis.tgz
+```
+
+### Kiba
+
+Kiba数据集包含了2,116种药物和229种靶标蛋白，不同于Davis数据集，部分药物和靶标蛋白直接没有亲和性指标。另外，Kiba使用KIBA分数作为亲和性的评估指标。KIBA分数提供了一种基于统计分析的归一化不同亲和性指标（Ki, Kd, IC50）的方法。
+
+执行下面的命令即可下载并解压Kiba数据集：
+
+```sh
+wget "https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fdatasets%2Fdti_datasets%2Fkiba.tgz" -O kiba.tgz
+tar -zxvf kiba.tgz
+```
+
+下载完成后，`demos/data`目录看起来是这样的：
+
+```txt
+data
+|-- davis
+|   |-- folds
+|   |   |-- test_fold_setting1.txt
+|   |   `-- train_fold_setting1.txt
+|   |-- ligands_can.txt
+|   |-- processed
+|   |   |-- test
+|   |   |   `-- davis_test_0.npz
+|   |   `-- train
+|   |       `-- davis_train_0.npz
+|   |-- proteins.txt
+|   `-- Y
+|-- davis.tgz
+|-- kiba
+|   |-- folds
+|   |   |-- test_fold_setting1.txt
+|   |   `-- train_fold_setting1.txt
+|   |-- ligands_can.txt
+|   |-- processed
+|   |   |-- test
+|   |   |   `-- kiba_test_0.npz
+|   |   `-- train
+|   |       `-- kiba_train_0.npz
+|   |-- proteins.txt
+|   `-- Y
+`-- kiba.tgz
+```
 
 ## 使用说明
 
@@ -69,30 +131,6 @@ Kiba数据集上的效果：
 | GAT_GCN      | 0.142      | 0.895     |
 | GAT          | 0.192      | 0.867     |
 | GIN          | 0.177      | 0.878     |
-
-## 数据集
-
-### Davis
-
-Davis数据集包含了72种药物和442种靶标蛋白任意之间的Kd值（平衡解离常数）。Kd值越小，说明药物和靶标蛋白之间的亲和性越高。
-
-执行下面的命令即可下载并解压Davis数据集：
-```sh
-cd data
-wget "https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fdatasets%2Fdti_datasets%2Fdavis.tgz" -O davis.tgz
-tar -zxvf davis.tgz
-```
-
-### Kiba
-
-Kiba数据集包含了2,116种药物和229种靶标蛋白，不同于Davis数据集，部分药物和靶标蛋白直接没有亲和性指标。另外，Kiba使用KIBA分数作为亲和性的评估指标。KIBA分数提供了一种基于统计分析的归一化不同亲和性指标（Ki, Kd, IC50）的方法。
-
-执行下面的命令即可下载并解压Kiba数据集：
-```sh
-cd data
-wget "https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fdatasets%2Fdti_datasets%2Fkiba.tgz" -O kiba.tgz
-tar -zxvf kiba.tgz
-```
 
 ## 引用
 

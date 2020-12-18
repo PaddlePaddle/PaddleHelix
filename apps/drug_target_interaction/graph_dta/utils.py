@@ -82,6 +82,19 @@ def default_exe_params(is_distributed, use_cuda, thread_num):
             'places': places}
 
 
+def setup_optimizer(optimizer, model, use_cuda, is_distributed):
+    """
+    Setup the optimizer
+    """
+    if use_cuda:
+        if is_distributed:
+            dist_strategy.recompute_checkpoints = model.checkpoints
+            optimizer = fleet.distributed_optimizer(optimizer, strategy=dist_strategy)
+        else:
+            optimizer = fluid.optimizer.RecomputeOptimizer(optimizer)
+            optimizer._set_checkpoints(model.checkpoints)
+
+
 def concordance_index(y, f):
     """Compute the concordance index (CI).
 

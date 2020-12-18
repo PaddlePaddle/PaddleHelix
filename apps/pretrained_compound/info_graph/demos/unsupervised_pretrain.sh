@@ -5,7 +5,7 @@ cd $(dirname $0)
 # config
 ############
 runs=3
-root="/mnt/xueyang/Datasets/PaddleHelix"
+root="data"
 config="unsupervised_pretrain_config.json"
 
 ############
