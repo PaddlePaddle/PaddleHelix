@@ -27,14 +27,18 @@ PaddleHelix is a machine-learning-based bio-computing framework aiming at facili
 
 * Easy-to-use APIs: PaddleHelix provides frequently used structures and pre-trained models. You can easily use those components to build up your models and systems.
 
+----
+
 ## Installation
 
 The installation prerequisites and guide can be found [here](./installation_guide.md).
 
+----
+
 ## Documentation
 
 ### Tutorials
-* We provide abundant [tutorials](./tutorials) to help you navigate the directory and start quickly.
+* We provide abundant [tutorials](./tutorials) to help you navigate the repository and start quickly.
 * PaddleHelix is based on [PaddlePaddle](https://github.com/paddlepaddle/paddle), a high-performance Parallelized Deep Learning Platform.
 
 ### Examples
@@ -45,3 +49,6 @@ The installation prerequisites and guide can be found [here](./installation_guid
 
 ### The API reference
 * Detailed API reference of PaddleHelix can be found [here](https://paddlehelix.readthedocs.io/en/dev/).
+
+### Developer‘s guide for advanced users
+* If you need help in modifying the source code of PaddleHelix, please see our [developer's guide](./developer_guide.md).
