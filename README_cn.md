@@ -47,3 +47,6 @@
 
 ### API 文档
 * 如果你对 PaddleHelix 的详细接口感兴趣，请查阅 [API 文档](https://paddlehelix.readthedocs.io/en/dev/)。
+
+### 开发者指南
+* 如果你需要修改 PaddleHelix 的源代码，请查阅我们提供的[开发者指南](./developer_guide_cn.md)。
