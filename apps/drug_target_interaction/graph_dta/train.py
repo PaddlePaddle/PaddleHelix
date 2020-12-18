@@ -168,7 +168,7 @@ def main(args):
             model.train()
             test_program = train_program.clone(for_test=True)
             optimizer = fluid.optimizer.Adam(learning_rate=args.lr)
-            setup_optimizer(optimizer, model, args.use_cuda, args.is_distributed)
+            setup_optimizer(optimizer, args.use_cuda, args.is_distributed)
             optimizer.minimize(model.loss)
 
     exe.run(train_startup)
