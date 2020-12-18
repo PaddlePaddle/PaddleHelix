@@ -6,14 +6,15 @@
 
  * [Background](#Background)
  * [Instructions](#Instructions)
-   * [Pre-trained Models](#Pre-trained-Models)
-     *  [How to get ?](#How-to-get-?)
+   * [How to get ?](#How-to-get-?)
+     *  [Model link](#Model-link)
+     *  [Data link](#Data-link)
    * [Training Models](#Training-Models)
-   * [Evaluating Models](#Evaluating-Models)
+   * [Finetuning Models](#Finetuning-Models)
      * [GNN Models](#GNN-Models)
-        * [GIN](#gin)
-        * [GAT](#gat)
-        * [GCN](#gcn)
+        * [GIN](#GIN)
+        * [GAT](#GAT)
+        * [GCN](#GCN)
         * [Other Parameters](#Other-Parameters)
    * [Compound Related Tasks](#Compound-Related-Tasks)
         * [Pretraining Tasks](#Pretraining-Tasks)
@@ -22,9 +23,9 @@
             * [Graph-level](#graph-level)
             
         * [Downstream Tasks](#Downstream-Tasks)
-            * [Chemical molecular properties prediction](#chemical-molecular-properties-prediction)
+            * [Chemical molecular properties prediction](#Chemical-molecular-properties-prediction)
             *  [Downstream classification datasets](#Downstream-classification-datasets)
-            * [Fine-tuning](#fine-tuning)
+            * [Fine-tuning](#Fine-tuning)
         
    *  [Evaluating results](#Evaluating-results)
     
@@ -37,16 +38,19 @@
           * [Data-related](#Data-related)
 
 ## Background
-​    In recent years, deep learning has achieved good results in various fields, but there are still some limitations in the fields of molecular informatics and drug development.  However, drug development is a relatively expensive and time-consuming process. The screening of pharmaceutical compounds in the middle of the process is in need for efficiency improving. In the early days, traditional machine learning methods were used to predict physical and chemical properties, and the graphs have irregular shapes and sizes.  There is no spatial order on the nodes, and the neighbors of the nodes are also related to their positions. Therefore, molecular structure data can be treated as graphs, and the application development of graph networks is gradually being valued.  However, in the actual training process, the model's performance is limited by  missing labels, and different distributions between the training and testing set. Therefore, this article mainly adopts pre-training models on data-rich related tasks, and pre-training at the node level and the entire image level.  , And then fine-tune the downstream tasks.  This pre-training model refers to the paper "Strategies for Pre-training Graph Neural Networks", which provides GIN, GAT, GCN, and other models for implementation.
-​    Therefore, we implement the model mentioned in "Strategies for Pre-training Graph Neural Networks" to mitigate this issue. The model is firstly pre-trained on the data-rich related tasks, on both node level and graph level. Then the pre-trained model is fine-tuned for the downstream tasks. As for the implementation details, we provide GIN,GAT,GCN, and other models implementation of the model.
+ In recent years, deep learning has achieved good results in various fields, but there are still some limitations in the fields of molecular informatics and drug development.  However, drug development is a relatively expensive and time-consuming process. The screening of pharmaceutical compounds in the middle of the process is in need for efficiency improving. In the early days, traditional machine learning methods were used to predict physical and chemical properties, and the graphs have irregular shapes and sizes.  There is no spatial order on the nodes, and the neighbors of the nodes are also related to their positions. Therefore, molecular structure data can be treated as graphs, and the application development of graph networks is gradually being valued.  However, in the actual training process, the model's performance is limited by  missing labels, and different distributions between the training and testing set. Therefore, this article mainly adopts pre-training models on data-rich related tasks, and pre-training at the node level and the entire image level.  , And then fine-tune the downstream tasks.  This pre-training model refers to the paper "Strategies for Pre-training Graph Neural Networks", which provides GIN, GAT, GCN, and other models for implementation.
+ Therefore, we implement the model mentioned in "Strategies for Pre-training Graph Neural Networks" to mitigate this issue. The model is firstly pre-trained on the data-rich related tasks, on both node level and graph level. Then the pre-trained model is fine-tuned for the downstream tasks. As for the implementation details, we provide GIN,GAT,GCN, and other models implementation of the model.
 
 ## Instructions
 
-### Pre-trained Models
+### How to get ?
 
-#### How to get ?
+#### Model link
 
 You can download the [pretrained models](https://baidu-nlp.bj.bcebos.com/PaddleHelix/pretrained_models/compound/pretrain_gnns_attr_super.tgz)  or train them by yourself.
+
+#### Data link
+You can choose to download the dataset from the [link](http://snap.stanford.edu/gnn-pretrain/data/chem_dataset.zip) provided by us and perform the corresponding preprocessing for your use. It is recommended to unzip the data set and put it in the data folder under the root directory, if not, please create a new data folder.
 
 ### Training Models
 
@@ -68,6 +72,8 @@ Using pretrain_attrmask.py as an example to show the usage of the model paramete
 
 `max_epoch` : Max epochs to train the model, can be chosen according to the compute power (Train on a single Telsa V will take about 11 minutes to finish an epoch)
 
+`data_path` : The path you load data.First you need to download the datasets from the link we provide,It is recommended to unzip the data set and put it in the data folder under the root directory, if not, please create a new data folder.
+
 `init_model` : init_model referes to the model without using the pre-training strategy,here is the [address](https://baidu-nlp.bj.bcebos.com/PaddleHelix/pretrained_models/compound/pretrain_gnns_attr_super.tgz) of our pretrained model
 
 `model_config` : the path of the model config file, containing the parameters of the gnn model
@@ -76,12 +82,12 @@ Using pretrain_attrmask.py as an example to show the usage of the model paramete
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 python pretrain_attrmask.py \
-                --use_cuda \ 
-                --batch_size=256 \ 
-                --max_epoch=100 \ 
-                --lr=0.001 \
-                --model_config=gnn_model.json \ 
-                --model_dir=../../../output/pretrain_gnns/pretrain_attrmask
+        --use_cuda \ 
+        --batch_size=256 \ 
+        --max_epoch=100 \ 
+        --data_path=../../../data/chem_dataset/zinc_standard_agent/raw \
+        --model_config=gnn_model.json \
+        --model_dir=../../../output/pretrain_gnns/pretrain_attrmask
 ```
 
 We provide the shell scripts to run the python files directly, you can adjust the parameters in the scripts.
@@ -92,18 +98,20 @@ sh scripts/pretrain_contextpred.sh    #run pretrain_contextpred.py with given pa
 sh scripts/pretrain_supervised.sh     #run pretrain_supervised.py with given parameters 
 ```
 
-### Fine Tune
+### Finetuning Models
 
 Fine tuning the model is similar to trainging the model. Parameters' definition is the same. The init model is the [Pre-trained Models](https://baidu-nlp.bj.bcebos.com/PaddleHelix/pretrained_models/compound/pretrain_gnns_attr_super.tgz) we downloaded before, you can put it in the corresponding file.
 
 ```bash
-CUDA_VISIBLE_DEVICES=0 python finetune.py \ 
-                --use_cuda \ 
-                --batch_size=128 \
-                --dataset_name=tox21 \           
-                --model_config=gnn_model.json \ 
-                --init_model= ../../pretrain_gnns_attr_super\ 
-                --model_dir=../../../output/pretrain_gnns/finetune/tox21 
+CUDA_VISIBLE_DEVICES=0 python finetune.py \
+        --use_cuda \
+        --batch_size=128 \ 
+        --max_epoch=4 \ 
+        --dataset_name=tox21 \ 
+        --data_path=../../../data/chem_dataset/tox21/raw \
+        --model_config=gnn_model.json \  
+        --init_model= ../../pretrain_gnns_attr_super \
+        --model_dir=../../../output/pretrain_gnns/finetune/tox21
 ```
 
 We proivde the shell script to run the fine tune file, you can adjust the parameters in the script.
@@ -154,7 +162,6 @@ For details of GCN, please refer to the following papers:
 
 
 
-
 #### Other Parameters
 The model can also set other parameters to avoid over-fitting and excessive model parameter values, and to adjust the running speed.
 
@@ -169,7 +176,9 @@ The model can also set other parameters to avoid over-fitting and excessive mode
 Referring to the paper [Pretrain-gnn](https://openreview.net/pdf?id=HJlWWJSFDH), we reproduced the following tasks using PaddleHelix.
 
 #### Pretraining Tasks
-##### Pre-training datasets      
+
+##### Pre-training datasets  
+
  -  Node-level：Two million unlabeled molecules sampled from the ZINC15 database are used for node-level self-supervised pre-training.
  - Graph-level：For graph-level multi-task supervised pre-training, we use the pre-processed ChEMBL data set, which contains 456K molecules and 1310 diverse and extensive biochemical analyses.
 
@@ -182,13 +191,13 @@ For the node-level pre-training of GNN, our method is to first use the easily av
    - Use subgraphs to predict the surrounding graph structure, find the neighborhood graph and context graph of each node, use auxiliary GNN to encode the context into a fixed vector, and then use negative sampling to learn the main GNN and context GNN, and then use it to predict  train the model.
 
 ```bash
-CUDA_VISIBLE_DEVICES=0 python pretrain_contextpred.py\
-                --use_cuda \ 
-                --batch_size=256 \ 
-                --max_epoch=100 \ 
-                --lr=0.001 \
-                --model_config=gnn_model.json \ 
-                --model_dir=../../../output/pretrain_gnns/pretrain_contextpred
+CUDA_VISIBLE_DEVICES=0 python pretrain_contextpred.py \
+        --use_cuda \ 
+        --batch_size=256 \ 
+        --max_epoch=100 \ 
+        --data_path=../../../data/chem_dataset/zinc_standard_agent/raw \
+        --model_config=gnn_model.json \
+        --model_dir= ../../../output/pretrain_gnns/pretrain_contextpred
 ```
 
  - Attribute masking
@@ -196,12 +205,12 @@ CUDA_VISIBLE_DEVICES=0 python pretrain_contextpred.py\
   
 ```bash
 CUDA_VISIBLE_DEVICES=0 python pretrain_attrmask.py \
-                --use_cuda \ 
-                --batch_size=256 \ 
-                --max_epoch=100 \ 
-                --lr=0.001 \
-                --model_config=gnn_model.json \ 
-                ---model_dir= ../../../output/pretrain_gnns/pretrain_attrmask
+        --use_cuda \ 
+        --batch_size=256 \ 
+        --max_epoch=100 \ 
+        --data_path=../../../data/chem_dataset/zinc_standard_agent/raw \
+        --model_config=gnn_model.json \
+        --model_dir= ../../../output/pretrain_gnns/pretrain_attrmask
 ```
 ##### Graph-level ：Supervised pre-training
 
@@ -211,13 +220,13 @@ The pre-training at the graph level is completed on the basis of the pre-trainin
    - First, the GNN is regularized at the single node level, that is, after the above two strategies are executed, they are added to supervised, and then multi-task supervised pre-training is performed on the entire graph to predict the different supervised label sets of each graph  .
 ```bash
 CUDA_VISIBLE_DEVICES=0 python pretrain_supervised.py \
-                --use_cuda \ 
-                --batch_size=256 \ 
-                --max_epoch=100 \ 
-                --lr=0.001 \
-                --model_config=gnn_model.json \ 
-                --init_model=../../../output/pretrain_gnns/pretrain_attrmask  \
-                --model_dir=../../../output/pretrain_gnns/pretrain_supervised 
+        --use_cuda \ 
+        --batch_size=256 \ 
+        --max_epoch=100 \ 
+        --data_path=../../../data/chem_dataset/chembl_filtered/raw \
+        --model_config=gnn_model.json \
+        --init_model=../../../output/pretrain_gnns/pretrain_attrmask \
+        --model_dir=../../../output/pretrain_gnns/pretrain_supervised
 ```
 
 It will load the pretrained model to `model_dir`,and use supervised pretraining to do further experiments, and it will save the pretrained model log file.
@@ -239,12 +248,14 @@ In each directory, we provide three methods for training GNN, which will use the
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 python finetune.py \
-                --use_cuda \ 
-                --batch_size=128 \
-                --dataset_name=tox21 \           
-                --model_config=gnn_model.json \ 
-                --init_model= ../../pretrain_gnns_attr_super  \
-                --model_dir=../../../output/pretrain_gnns/finetune/tox21
+        --use_cuda \
+        --batch_size=128 \ 
+        --max_epoch=4 \ 
+        --dataset_name=tox21 \  
+        --data_path=../../../data/chem_dataset/tox21/raw \ 
+        --model_config=gnn_model.json \  
+        --init_model=../../pretrain_gnns_attr_super \
+        --model_dir=../../../output/pretrain_gnns/finetune/tox21
 ```
 
 
@@ -256,7 +267,7 @@ The results of finetuning downstream tasks using the graph-level multi-task supe
 ## Data
 ### How to get?
 
-You can choose to download the dataset from the [link](http://snap.stanford.edu/gnn-pretrain/data/chem_dataset.zip) provided by us and perform the corresponding preprocessing for your use. If you need a processed dataset, you can also contact us  .
+You can choose to download the dataset from the [link](http://snap.stanford.edu/gnn-pretrain/data/chem_dataset.zip) provided by us and perform the corresponding preprocessing for your use. 
 
 ### Data introduction
 This compound pre-training method uses the data set in the paper [**Pretrain-GNN**](https://openreview.net/pdf?id=HJlWWJSFDH) for further processing.
@@ -384,8 +395,6 @@ We mainly refer to paper **Pretrain-GNN** The way we train the models and the hy
   year={2019}
 }
 
-
-
 **GIN**
 >@article{xu2018powerful,
   title={How powerful are graph neural networks?},
@@ -408,15 +417,6 @@ We mainly refer to paper **Pretrain-GNN** The way we train the models and the hy
   author={Kipf, Thomas N and Welling, Max},
   journal={arXiv preprint arXiv:1609.02907},
   year={2016}
-}
-
-**GraphSAGE**
->@inproceedings{hamilton2017inductive,
-  title={Inductive representation learning on large graphs},
-  author={Hamilton, Will and Ying, Zhitao and Leskovec, Jure},
-  booktitle={Advances in neural information processing systems},
-  pages={1024--1034},
-  year={2017}
 }
 
 
