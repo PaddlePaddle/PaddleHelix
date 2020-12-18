@@ -22,13 +22,14 @@ import logging
 import argparse
 import numpy as np
 
+import paddle
 import paddle.fluid as fluid
 from pgl.utils.data.dataloader import Dataloader
 from pahelix.utils.paddle_utils import load_partial_params
 
 from data_gen import DTADataset, DTACollateFunc
 from model import DTAModel
-from utils import default_exe_params, concordance_index
+from utils import default_exe_params, setup_optimizer, concordance_index
 
 logging.basicConfig(
         format='%(asctime)s [%(filename)s:%(lineno)d] %(message)s',
@@ -130,6 +131,9 @@ def save_metric(model_dir, epoch_id, best_mse, best_ci):
 
 
 def main(args):
+    # Enable static graph mode.
+    paddle.enable_static()
+
     model_config = json.load(open(args.model_config, 'r'))
 
     exe_params = default_exe_params(args.is_distributed, args.use_cuda, args.thread_num)
@@ -164,16 +168,11 @@ def main(args):
             model.train()
             test_program = train_program.clone(for_test=True)
             optimizer = fluid.optimizer.Adam(learning_rate=args.lr)
-
-            if args.use_cuda:
-                if args.is_distributed:
-                    dist_strategy = exe_params['dist_strategy']
-                    optimizer = fleet.distributed_optimizer(optimizer, strategy=dist_strategy)
-
+            setup_optimizer(optimizer, model, args.use_cuda, args.is_distributed)
             optimizer.minimize(model.loss)
 
     exe.run(train_startup)
-    if not args.init_model is None and not args.init_model == "":
+    if args.init_model is not None and args.init_model != "":
         load_partial_params(exe, args.init_model, train_program)
 
     config = os.path.basename(args.model_config)

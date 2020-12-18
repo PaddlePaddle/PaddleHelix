@@ -3,16 +3,76 @@
 [中文版本](./README_cn.md) [English Version](./README.md)
 
 * [Background](#background)
-* [Instructions](#instructions)
-    * [Configuration](#configuration)
-    * [Training and Evaluation](#train-and-evaluation)
 * [Datasets](#datasets)
     * [Davis](#davis)
     * [Kiba](#kiba)
+* [Instructions](#instructions)
+    * [Configuration](#configuration)
+    * [Training and Evaluation](#train-and-evaluation)
 * [Reference](#reference)
 
 ## Background
 Knowing which proteins are targeted by which drugs is very useful for new drug design, drug repurposing etc. GraphDTA is a model which represents drugs as graphs and uses graph neural networks to predict drug-target affinity.
+
+## Datasets
+
+First, let us create a dataset root folder `data` under this `demos` folder.
+
+```sh
+mkdir -p demos/data && cd demos/data
+```
+
+### Davis
+
+Davis contains the binding affinities for all pairs of 72 drugs and 442 targets, measured as Kd constant (equilibrium dissociation constant). The smaller the Kd value, the greater the binding affinity of the drug for its target. You can download and uncompress this dataset using following command:
+
+```sh
+wget "https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fdatasets%2Fdti_datasets%2Fdavis.tgz" -O davis.tgz
+tar -zxvf davis.tgz
+```
+
+### Kiba
+
+Kiba contains the binding affinity for 2,116 drugs and 229 targets. Comparing to Davis, some drug-target pairs do not have affinity labels. Moreover, the affinity in Kiba is measured as KIBA scores, which were constructed to optimize the consistency between Ki, Kd, and IC50 by utilizing the statistical information they contained. You can download and uncompress this dataset using following command:
+
+```sh
+wget "https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fdatasets%2Fdti_datasets%2Fkiba.tgz" -O kiba.tgz
+tar -zxvf kiba.tgz
+```
+
+Then, you can redirect to this `demos` folder and follow instructions to finish next steps.
+
+After downloaed these datasets, the `demos/data` folder looks like:
+
+```txt
+data
+|-- davis
+|   |-- folds
+|   |   |-- test_fold_setting1.txt
+|   |   `-- train_fold_setting1.txt
+|   |-- ligands_can.txt
+|   |-- processed
+|   |   |-- test
+|   |   |   `-- davis_test_0.npz
+|   |   `-- train
+|   |       `-- davis_train_0.npz
+|   |-- proteins.txt
+|   `-- Y
+|-- davis.tgz
+|-- kiba
+|   |-- folds
+|   |   |-- test_fold_setting1.txt
+|   |   `-- train_fold_setting1.txt
+|   |-- ligands_can.txt
+|   |-- processed
+|   |   |-- test
+|   |   |   `-- kiba_test_0.npz
+|   |   `-- train
+|   |       `-- kiba_train_0.npz
+|   |-- proteins.txt
+|   `-- Y
+`-- kiba.tgz
+```
 
 ## Instructions
 
@@ -33,6 +93,7 @@ For convenience, we provide a shell script `demos/train.sh` for easy experiments
 Its usage is:
 
 ```sh
+cd demos
 ./train.sh DATASET YOU_CONFIG_JSON [EXTRA-ARGS]
 ```
 
@@ -69,28 +130,6 @@ Evaluation results on Kiba:
 | GAT_GCN      | 0.142      | 0.895     |
 | GAT          | 0.192      | 0.867     |
 | GIN          | 0.177      | 0.878     |
-
-## Datasets
-
-### Davis
-
-Davis contains the binding affinities for all pairs of 72 drugs and 442 targets, measured as Kd constant (equilibrium dissociation constant). The smaller the Kd value, the greater the binding affinity of the drug for its target. You can download and uncompress this dataset using following command:
-
-```sh
-cd data
-wget "https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fdatasets%2Fdti_datasets%2Fdavis.tgz" -O davis.tgz
-tar -zxvf davis.tgz
-```
-
-### Kiba
-
-Kiba contains the binding affinity for 2,116 drugs and 229 targets. Comparing to Davis, some drug-target pairs do not have affinity labels. Moreover, the affinity in Kiba is measured as KIBA scores, which were constructed to optimize the consistency between Ki, Kd, and IC50 by utilizing the statistical information they contained. You can download and uncompress this dataset using following command:
-
-```sh
-cd data
-wget "https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fdatasets%2Fdti_datasets%2Fkiba.tgz" -O kiba.tgz
-tar -zxvf kiba.tgz
-```
 
 ## Reference
 

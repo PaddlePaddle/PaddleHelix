@@ -41,9 +41,8 @@ import pgl
 from pgl.utils import paddle_helper
 from pgl.graph_wrapper import GraphWrapper
 from pgl.utils.data.dataloader import Dataloader
-# from pahelix.datasets.compound_datasets import MoleculeDataset
-# TODO: @xy, update the dataset to use Featurizer-based dataloader
-from pahelix.datasets import load_mutag_dataset, load_ptc_mr_dataset
+from pahelix.datasets.mutag_dataset import load_mutag_dataset
+from pahelix.datasets.ptc_mr_dataset import load_ptc_mr_dataset
 
 from model import GINEncoder, FF, PriorDiscriminator
 from data_gen import MoleculeCollateFunc
@@ -212,6 +211,9 @@ def save_eval_metric(res_collect, emb_dir):
 
 
 def main(args):
+    # Enable static graph mode.
+    paddle.enable_static()
+
     with open(args.config, 'r') as f:
         config = json.load(f)
 

@@ -112,7 +112,7 @@ def default_optimizer(lr, warmup_steps=0, max_grad_norm=0.1):
     return optimizer
 
 
-def setup_optimizer(optimizer, model, use_cuda, is_distributed):
+def setup_optimizer(optimizer, model, use_cuda, is_distributed, dist_strategy=None):
     """
     Setup the optimizer
     """

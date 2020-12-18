@@ -4,7 +4,7 @@ cd $(dirname $0)
 ############
 # config
 ############
-root="/mnt/xueyang/Datasets/PaddleHelix/"
+root="data"
 
 train() {
     local dataset=$1
@@ -12,8 +12,8 @@ train() {
     local extra_args=${@:3}
 
     python ../train.py --use_cuda \
-           --train_data $root$dataset"/processed/train/" \
-           --test_data $root$dataset"/processed/test/" \
+           --train_data "$root/$dataset/processed/train/" \
+           --test_data "$root/$dataset/processed/test/" \
            --model_config $config \
            --model_dir $model_dir \
            $extra_args
