@@ -44,13 +44,19 @@ conda install -c conda-forge rdkit
 ```
 5. 基于你对 CPU/GPU 版本的选择来安装 `paddle`:
 
-请注意安装 **paddle2.0** 以上版本，方法参见 paddlepaddle [官方文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/2.0-rc1/install/index_cn.html)。
+   请注意安装 **paddle2.0** 以上版本，方法参见 paddlepaddle [官方文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/2.0-rc1/install/index_cn.html)。
 
-比如，你想在Linux系统上安装PaddlePaddle 2.0 GPU版本，你可以运行以下命令：
+   比如，你想在 Linux 系统上安装 paddlepaddle 2.0 GPU 版本，你可以运行以下命令：
 
-```bash
-python -m pip install paddlepaddle-gpu==2.0.0rc1.post90 -f https://paddlepaddle.org.cn/whl/stable.html
-```
+   ```bash
+   python -m pip install paddlepaddle-gpu==2.0.0rc1.post90 -f https://paddlepaddle.org.cn/whl/stable.html
+   ```
+
+   如果你想在 Linux 系统上安装 paddlepaddle 2.0 CPU 版本，你可以运行以下命令：
+
+   ```bash
+   python -m pip install paddlepaddle==2.0.0rc1 -i https://mirror.baidu.com/pypi/simple
+   ```
 
 6. 使用 pip 命令安装`PGL`:
 ```bash
