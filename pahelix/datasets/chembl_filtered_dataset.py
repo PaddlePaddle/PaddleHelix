@@ -51,23 +51,27 @@ __all__ = ['get_chembl_filtered_task_num', 'load_chembl_filtered_dataset']
 
 
 def get_chembl_filtered_task_num():
-    """get that default bace task names and return class"""
+    """Get that default bace task names and return class"""
     return 1310
 
 
 def load_chembl_filtered_dataset(data_path, featurizer=None):
-    """load chembl_filtered dataset ,process the classification labels and the input information.
+    """Load chembl_filtered dataset ,process the classification labels and the input information.
 
     Introduction:
+
         Note that, in order to load this dataset, you should have other datasets (bace, bbbp, clintox,
         esol, freesolv, hiv, lipophilicity, muv, sider, tox21, toxcast) downloaded. Since the chembl
         dataset may overlap with the above listed dataset, the overlapped smiles for test will be filtered
         for a fair evaluation.
 
     Description:
+
         The data file contains a csv table, in which columns below are used:
+            
             It contains the ID, SMILES/CTAB, InChI and InChIKey compound information
-            smiles:SMILES representation of the molecular structure
+            
+            smiles: SMILES representation of the molecular structure
 
     Args:
         data_path(str): the path to the cached npz path
@@ -85,7 +89,8 @@ def load_chembl_filtered_dataset(data_path, featurizer=None):
             print(len(dataset))
 
     References:
-    -- Gaulton, A; et al. (2011). “ChEMBL: a large-scale bioactivity database for drug discovery”. Nucleic Acids Research. 40 (Database issue): D1100-7.
+    
+    [1] Gaulton, A; et al. (2011). “ChEMBL: a large-scale bioactivity database for drug discovery”. Nucleic Acids Research. 40 (Database issue): D1100-7.
     
     """
     downstream_datasets = [

@@ -47,9 +47,13 @@ def load_toxcast_dataset(data_path, task_names=None, featurizer=None):
     """Load toxcast dataset,process the input information and the featurizer.
 
     Description:
+        
         The data file contains a csv table, in which columns below are used:
+            
             smiles:  SMILES representation of the molecular structure.
-            ACEA_T47D_80hr_Negative~ “Tanguay_ZF_120hpf_YSE_up” - Bioassays results
+            
+            ACEA_T47D_80hr_Negative: “Tanguay_ZF_120hpf_YSE_up” - Bioassays results
+            
             SR-XXX: Stress response bioassays results
 
     Args:
@@ -71,7 +75,9 @@ def load_toxcast_dataset(data_path, task_names=None, featurizer=None):
 
 
     References:
+    
     [1]Richard, Ann M., et al. “ToxCast chemical landscape: paving the road to 21st century toxicology.” Chemical research in toxicology 29.8 (2016): 1225-1251.
+    
     [2]please refer to the section “high-throughput assay information” at https://www.epa.gov/chemical-research/toxicity-forecaster-toxcasttm-data for details.
 
     """

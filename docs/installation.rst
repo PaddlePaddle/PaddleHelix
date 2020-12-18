@@ -4,15 +4,12 @@ Installation
 
 .. contents:: Table of Contents
 
-OS support
-----------
+Prerequisites
+-------------
 
-Windows, Linux and OSX
+- OS support: Windows, Linux and OSX
 
-Python version
---------------
-
-Python **3.6, 3.7**
+- Python version: **3.6, 3.7**
 
 Dependencies
 ------------
@@ -40,40 +37,51 @@ Dependencies
 Instruction
 ------------
 
-Since our package requires a paddlepaddle version of 2.0.0rc0 or above and the rdkit dependency cannot be installed directly installed using ``pip`` command, we suggest you use ``conda`` to create a new environment for our project. Detailed instructions are shown below:
+Since PaddleHelix depends on the ``paddlepaddle`` of version 2.0.0rc0 or above, and ``rdkit`` cannot be installed directly using ``pip``, we suggest using ``conda`` to create a new environment for the installation. Detailed instruction is shown below:
 
-- If you haven't used ``conda`` before, you can check this website to `install`_ it:
+- If you do not have ``conda`` installed, please check this website to `install`_ it:
 
 .. _install: https://docs.conda.io/projects/conda/en/latest/user-guide/install/
 
-- After installing ``conda``, you can create a new ``conda`` envoronment:
+- Create a new environment with ``conda``:
 
 .. code:: console
 
    $ conda create -n paddlehelix python=3.7
 
-- To activate the environment, you can use this command:
+- Activate the environment just created:
 
 .. code:: console
 
    $ conda activate paddlehelix
 
-- Before installing the paddlhelix package, you should install the rdkit package using ``conda`` command:
+- Install ``rdkit`` using ``conda``:
 
 .. code:: console
 
    $ conda install -c conda-forge rdkit
 
-- Then you can install the paddlehelix package using the ``pip`` command:
+- Install ``paddle`` based on your choice of GPU/CPU version:
+
+  Check `paddlepaddle official document <https://www.paddlepaddle.org.cn/documentation/docs/en/install/index_en.html>`_ to install **paddle2.0**.
+
+- Install ``pgl`` using ``pip``:
+
+.. code:: console
+
+   $ pip install pgl
+
+- Install **PaddleHelix** using ``pip``:
 
 .. code:: console
 
    $ pip install paddlehelix
 
-- After installing the paddlehelix, you can run the code now.
+- The installation is done!
 
-- If you want to deactivate the ``conda`` environment, you can use this command:
+.. note:: After playing, if you want to deactivate the ``conda`` environment, do this:
 
 .. code:: console
 
    $ conda deactivate
+

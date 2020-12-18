@@ -37,7 +37,7 @@ __all__ = ['get_default_bbbp_task_names', 'load_bbbp_dataset']
 
 
 def get_default_bbbp_task_names():
-    """get that default bbbp task names and return the binary labels"""
+    """Get that default bbbp task names and return the binary labels"""
     return ['p_np']
 
 
@@ -45,10 +45,15 @@ def load_bbbp_dataset(data_path, task_names=None, featurizer=None):
     """Load bbbp dataset ,process the classification labels and the input information.
 
     Description:
+
         The data file contains a csv table, in which columns below are used:
+            
             Num:number
+            
             name:Name of the compound
+            
             smiles:SMILES representation of the molecular structure
+            
             p_np:Binary labels for penetration/non-penetration
 
     Args:
@@ -69,6 +74,7 @@ def load_bbbp_dataset(data_path, task_names=None, featurizer=None):
             print(len(dataset))
         
     References:
+    
     [1] Martins, Ines Filipa, et al. “A Bayesian approach to in silico blood-brain barrier penetration modeling.” Journal of chemical information and modeling 52.6 (2012): 1686-1697.
     
     """

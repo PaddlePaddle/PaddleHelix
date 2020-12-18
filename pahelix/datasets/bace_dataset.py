@@ -47,9 +47,13 @@ def load_bace_dataset(data_path, task_names=None, featurizer=None):
     """Load bace dataset ,process the classification labels and the input information.
 
     Description:
+        
         The data file contains a csv table, in which columns below are used:
+            
             mol: The smile representation of the molecular structure;
+            
             pIC50: The negative log of the IC50 binding affinity;
+            
             class: The binary labels for inhibitor.
    
     Args:
@@ -70,6 +74,7 @@ def load_bace_dataset(data_path, task_names=None, featurizer=None):
             print(len(dataset))
 
     References:
+    
     [1]Subramanian, Govindan, et al. “Computational modeling of β-secretase 1 (BACE-1) inhibitors using ligand based approaches.” Journal of chemical information and modeling 56.10 (2016): 1936-1949.
     """
 
