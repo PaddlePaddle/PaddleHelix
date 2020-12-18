@@ -52,6 +52,12 @@ You can download the [pretrained models](https://baidu-nlp.bj.bcebos.com/PaddleH
 #### Data link
 You can choose to download the dataset from the [link](http://snap.stanford.edu/gnn-pretrain/data/chem_dataset.zip) provided by us and perform the corresponding preprocessing for your use. It is recommended to unzip the data set and put it in the data folder under the root directory, if not, please create a new data folder.
 
+    # cd to PaddleHelix folder
+    mkdir -p data
+    cd data
+    wget http://snap.stanford.edu/gnn-pretrain/data/chem_dataset.zip
+    unzip chem_dataset.zip
+
 ### Training Models
 
 The training methods of the pre-training strategy we provide are divided into two aspects. The first is the pre-training at the node level. There are two methods. The second is the supervised pre-training strategy for the whole image. You can choose during the specific experiment.  Perform pre-training at the node level first, and then perform the pre-training at the graph level at the entire graph level, as follows:

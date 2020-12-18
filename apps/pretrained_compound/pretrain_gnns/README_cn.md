@@ -50,6 +50,12 @@
 #### 数据地址
 您可以选择从我们提供的[网址](http://snap.stanford.edu/gnn-pretrain/data/chem_dataset.zip)上下载数据集然后进行相应的预处理来供您使用。建议解压数据集并将其放入根目录下的data文件夹中，如果没有请新建一个data文件夹。
 
+    # cd to PaddleHelix folder
+    mkdir -p data
+    cd data
+    wget http://snap.stanford.edu/gnn-pretrain/data/chem_dataset.zip
+    unzip chem_dataset.zip
+
 ### 模型训练
 
 我们提供的预训练策略的训练方式分为两个方面，首先是在节点级别的预训练，一共有两种方法，其次是整图的监督预训练策略，在具体实验的过程中，你可以选择先在节点级别进行预训练，再在整图级别上进行图级别的预训练，具体模型结构图如下：
