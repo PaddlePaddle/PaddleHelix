@@ -54,6 +54,12 @@ For example, if you want to use GPU version of PaddlePaddle on Linux, run this c
 python -m pip install paddlepaddle-gpu==2.0.0rc1.post90 -f https://paddlepaddle.org.cn/whl/stable.html
 ```
 
+Or if you want to use CPU version of PaddlePaddle on Linux, run this command:
+
+```bash
+python -m pip install paddlepaddle==2.0.0rc1 -i https://mirror.baidu.com/pypi/simple
+```
+
 6. Install `PGL` using pip:
    
 ```bash
