@@ -4,7 +4,7 @@ cd $(dirname $0)
 ############
 # config
 ############
-root="/mnt/xueyang/Datasets/chem_dataset"
+root="data"
 config="config_on_zinc15_chembl.json"
 
 ############

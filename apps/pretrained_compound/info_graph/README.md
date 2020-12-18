@@ -3,16 +3,58 @@
 [中文版本](./README_cn.md) [English Version](./README.md)
 
 * [Background](#background)
-* [Instructions](#instructions)
-    * [Configuration](#configuration)
-    * [Training and Evaluation](#train-and-evaluation)
 * [Datasets](#datasets)
     * [MUTAG](#mutag)
     * [PTC-MR](#ptc-mr)
+* [Instructions](#instructions)
+    * [Configuration](#configuration)
+    * [Training and Evaluation](#train-and-evaluation)
 * [Reference](#reference)
 
 ## Background
 Graph-level representations are essential in many real-world applications such as predicting the properties of molecules. InfoGraph is a recent state-of-the-art paper for learning graph-level representations through maximizing the mutual information between the graph-level representation and the representation of substructures of different scales.
+
+## Datasets
+
+First, let us create a dataset root folder `data` under this `demos` folder.
+
+```sh
+mkdir -p demos/data && cd demos/data
+```
+
+### MUTAG
+
+MUTAG is widely used dataset for graph learning. It consists of 188 organic molecules that were tested for mutagenicity. Assuming the root of your datasets is `data`, you can download this dataset using following command:
+
+```sh
+mkdir -p mutag/raw && cd mutag/raw
+wget ftp://ftp.ics.uci.edu/pub/baldig/learning/mutag/mutag_188_data.can
+wget ftp://ftp.ics.uci.edu/pub/baldig/learning/mutag/mutag_188_target.txt
+```
+
+### PTC-MR
+
+PTC-MR dataset has 344 molecules with a binary label indicating carcinogenicity of compounds on rodents. Assuming the root of your datasets is `data`, you can download this dataset using following command:
+
+```sh
+mkdir -p ptc_mr/raw && cd ptc_mr/raw
+wget ftp://ftp.ics.uci.edu:21/pub/baldig/learning/ptc/ptc_MR_data.can
+wget ftp://ftp.ics.uci.edu:21/pub/baldig/learning/ptc/ptc_MR_target.txt
+```
+
+After downloaed these datasets, the `demos/data` folder looks like:
+
+```txt
+data
+|-- mutag
+|   `-- raw
+|       |-- mutag_188_data.can
+|       `-- mutag_188_target.txt
+`-- ptc_mr
+    `-- raw
+        |-- ptc_MR_data.can
+        `-- ptc_MR_target.txt
+```
 
 ## Instructions
 
@@ -26,7 +68,7 @@ For convenience, we provide a shell script `demos/unsupervised_pretrain.sh` for 
 
 ```sh
 runs=3
-root="/path/to/datasets"
+root="data"
 config="unsupervised_pretrain_config.json"
 ```
 
@@ -36,30 +78,6 @@ Evaluation results:
 | :--:          | :--:         | :--:      | :--:      | :--:      |
 | MUTAG         | 89.01+/-1.13 | 91.43     | 90.20     | 90.45     |
 | PTC-MR        | 61.64+/-1.43 | 60.59     | 64.09     | 60.28     |
-
-## Datasets
-
-### MUTAG
-
-MUTAG is widely used dataset for graph learning. It consists of 188 organic molecules that were tested for mutagenicity. Assuming the root of your datasets is `data`, you can download this dataset using following command:
-
-```sh
-cd data
-mkdir -p mutag/raw && cd mutag/raw
-wget ftp://ftp.ics.uci.edu/pub/baldig/learning/mutag/mutag_188_data.can
-wget ftp://ftp.ics.uci.edu/pub/baldig/learning/mutag/mutag_188_target.txt
-```
-
-### PTC-MR
-
-PTC-MR dataset has 344 molecules with a binary label indicating carcinogenicity of compounds on rodents. Assuming the root of your datasets is `data`, you can download this dataset using following command:
-
-```sh
-cd data
-mkdir -p ptc_mr/raw && cd ptc_mr/raw
-wget ftp://ftp.ics.uci.edu:21/pub/baldig/learning/ptc/ptc_MR_data.can
-wget ftp://ftp.ics.uci.edu:21/pub/baldig/learning/ptc/ptc_MR_target.txt
-```
 
 ## Reference
 
