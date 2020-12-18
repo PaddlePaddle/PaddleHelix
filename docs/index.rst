@@ -8,6 +8,7 @@
    :maxdepth: 2
 
    installation
+   developer
    tutorials
    contactus
 

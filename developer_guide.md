@@ -1,8 +1,8 @@
 # Developer's guide
 
-If you need to modify the algorithms/models in PaddleHelix, you have to switch to the developer mode. The core algorithms of PaddleHelix are most implemented in Python, but some also in C++, so you cannot develop PaddleHelix simply with `pip install --editable {pahelix_path}`. To develop on your machiine, please do the following:
+If you need to modify the algorithms/models in PaddleHelix, you have to switch to the developer mode. The core algorithms of PaddleHelix are most implemented in Python, but some also in C++, so you cannot develop PaddleHelix simply with `pip install --editable {pahelix_path}`. To develop on your machine, please do the following:
 
-1. Please following the [installation guide](./installation_guide.md) to install all dependencies of PaddleHelix (paddlepaddle>=2.0.0rc0, pgl>=1.2.0).
+1. Please follow the [installation guide](./installation_guide.md) to install all dependencies of PaddleHelix (paddlepaddle>=2.0.0rc0, pgl>=1.2.0).
 
 2. If you have installed distributed PaddleHelix with `pip install paddlehelix`, please uninstall it with:
 
@@ -21,7 +21,7 @@ If you need to modify the algorithms/models in PaddleHelix, you have to switch t
 
     4.1. LinearRNA
             
-    The source code of LinearRNA is at "./c/pahelix/toolkit/linear_rna/linear_rna". You could modify it for your needs. Then remember to return to the root directory of the repository, call scripts below to re-compile (please ensure there are `cmake >= 3.6` and `g++ >= 4.8` on your machine):
+    The source code of LinearRNA is at "./c/pahelix/toolkit/linear_rna/linear_rna". You could modify it for your needs. Then remember to return to the root directory of the repository, run scripts below to re-compile (please ensure there are `cmake >= 3.6` and `g++ >= 4.8` on your machine):
 
     ```bash
     sh scripts/prepare.sh

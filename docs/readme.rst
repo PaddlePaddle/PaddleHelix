@@ -98,6 +98,12 @@ Examples
 - `LinearRNA <https://github.com/PaddlePaddle/PaddleHelix/tree/dev/c/pahelix/toolkit/linear_rna>`_
 
 
+Developer's guide for advanced users
+====================================
+
+- If you need help in modifying the source code of **PaddleHelix**, please see our :doc:`/developer`.
+
+
 Contribution
 ============
 
