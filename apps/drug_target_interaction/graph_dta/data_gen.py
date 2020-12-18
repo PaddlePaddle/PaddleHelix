@@ -70,17 +70,17 @@ class DTADataset(StreamDataset):
 
 class DTACollateFunc(object):
     def __init__(self, graph_wrapper, label_name='Log10_Kd', is_inference=False):
-    """Collate function for PGL dataloader.
+        """Collate function for PGL dataloader.
 
-    Args:
-        graph_wrapper (pgl.graph_wrapper.GraphWrapper): graph wrapper for GNN.
-        label_name (str): the key in the feed dictionary for the drug-target affinity.
-            For Davis, it is `Log10_Kd`; For Kiba, it is `KIBA`.
-        is_inference (bool): when its value is True, there is no label in the generated feed dictionary.
+        Args:
+            graph_wrapper (pgl.graph_wrapper.GraphWrapper): graph wrapper for GNN.
+            label_name (str): the key in the feed dictionary for the drug-target affinity.
+                For Davis, it is `Log10_Kd`; For Kiba, it is `KIBA`.
+            is_inference (bool): when its value is True, there is no label in the generated feed dictionary.
 
-    Return:
-        collate_fn: a callable function.
-    """
+        Return:
+            collate_fn: a callable function.
+        """
         assert label_name in ['Log10_Kd', 'Log10_Ki', 'KIBA']
         super(DTACollateFunc, self).__init__()
         self.graph_wrapper = graph_wrapper
