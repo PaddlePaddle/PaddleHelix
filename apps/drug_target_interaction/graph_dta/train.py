@@ -22,6 +22,7 @@ import logging
 import argparse
 import numpy as np
 
+import paddle
 import paddle.fluid as fluid
 from pgl.utils.data.dataloader import Dataloader
 from pahelix.utils.paddle_utils import load_partial_params
@@ -130,6 +131,9 @@ def save_metric(model_dir, epoch_id, best_mse, best_ci):
 
 
 def main(args):
+    # Enable static graph mode.
+    paddle.enable_static()
+
     model_config = json.load(open(args.model_config, 'r'))
 
     exe_params = default_exe_params(args.is_distributed, args.use_cuda, args.thread_num)

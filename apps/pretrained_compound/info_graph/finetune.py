@@ -120,7 +120,7 @@ def evaluate(args, exe, test_prog, agent, test_data_list, epoch_id):
     data_loader = Dataloader(
         test_data_list,
         batch_size=args.batch_size,
-        num_workers=args.num_workers,  # TODO: check this
+        num_workers=args.num_workers,
         shuffle=False,
         collate_fn=collate_fn)
 
@@ -140,6 +140,9 @@ def evaluate(args, exe, test_prog, agent, test_data_list, epoch_id):
 
 
 def main(args):
+    # Enable static graph mode.
+    paddle.enable_static()
+
     with open(args.config, 'r') as f:
         config = json.load(f)
 
