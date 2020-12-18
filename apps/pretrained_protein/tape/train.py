@@ -52,7 +52,7 @@ def main(args):
             model.cal_loss()
 
             optimizer = default_optimizer(args.lr, args.warmup_steps, args.max_grad_norm)
-            setup_optimizer(optimizer, model, args.use_cuda, args.is_distributed)
+            setup_optimizer(optimizer, model, args.use_cuda, args.is_distributed, dist_strategy)
 
             optimizer.minimize(model.loss)
 
