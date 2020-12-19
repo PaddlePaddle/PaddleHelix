@@ -50,5 +50,5 @@ The installation prerequisites and guide can be found [here](./installation_guid
 ### The API reference
 * Detailed API reference of PaddleHelix can be found [here](https://paddlehelix.readthedocs.io/en/dev/).
 
-### Developer‘s guide for advanced users
-* If you need help in modifying the source code of PaddleHelix, please see our [developer's guide](./developer_guide.md).
+### Guide for developers
+* If you need help in modifying the source code of PaddleHelix, please see our [Guide for developers](./developer_guide.md).

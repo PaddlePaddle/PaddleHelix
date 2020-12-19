@@ -42,21 +42,21 @@ conda activate paddlehelix
 ```bash
 conda install -c conda-forge rdkit
 ```
-5. 基于你对 CPU/GPU 版本的选择来安装 `paddle`:
+5. 基于你想在 CPU 或者 GPU 上运行 PaddleHelix 来选择安装不同版本的 `paddlepaddle`:
 
-   请注意安装 **paddle2.0** 以上版本，方法参见 paddlepaddle [官方文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/2.0-rc1/install/index_cn.html)。
-
-   比如，你想在 Linux 系统上安装 paddlepaddle 2.0 GPU 版本，你可以运行以下命令：
+   比如，你想使用 `paddlepaddle` 的 GPU 版本，你可以运行以下命令：
 
    ```bash
    python -m pip install paddlepaddle-gpu==2.0.0rc1.post90 -f https://paddlepaddle.org.cn/whl/stable.html
    ```
 
-   如果你想在 Linux 系统上安装 paddlepaddle 2.0 CPU 版本，你可以运行以下命令：
+   或者你想使用 `paddlepaddle` 的 CPU 版本，你可以运行以下命令：
 
    ```bash
    python -m pip install paddlepaddle==2.0.0rc1 -i https://mirror.baidu.com/pypi/simple
    ```
+
+   请注意安装 `paddlepaddle` **2.0** 以上版本，其他安装方法参见 `paddlepaddle` [官方文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/2.0-rc1/install/index_cn.html)。
 
 6. 使用 pip 命令安装`PGL`:
 ```bash
