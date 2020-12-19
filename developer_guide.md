@@ -1,10 +1,10 @@
-# Developer's guide
+# Guide for developers
 
-If you need to modify the algorithms/models in PaddleHelix, you have to switch to the developer mode. The core algorithms of PaddleHelix are most implemented in Python, but some also in C++, so you cannot develop PaddleHelix simply with `pip install --editable {pahelix_path}`. To develop on your machine, please do the following:
+If you need to modify the algorithms/models in PaddleHelix, you have to switch to the developer mode. The core algorithms of PaddleHelix are mostly implemented in Python, but some also in C++, so you cannot develop PaddleHelix simply with `pip install --editable {pahelix_path}`. To develop on your machine, please do the following:
 
-1. Please follow the [installation guide](./installation_guide.md) to install all dependencies of PaddleHelix (paddlepaddle>=2.0.0rc0, pgl>=1.2.0).
+1. Please follow the [installation guide](./installation_guide.md) to install all dependencies of PaddleHelix (paddlepaddle >= 2.0.0rc0, pgl >= 1.2.0).
 
-2. If you have installed distributed PaddleHelix with `pip install paddlehelix`, please uninstall it with:
+2. If you have already installed distributed PaddleHelix with `pip install paddlehelix`, please uninstall it with:
 
     ```bash
     pip uninstall paddlehelix
@@ -28,7 +28,7 @@ If you need to modify the algorithms/models in PaddleHelix, you have to switch t
     sh scripts/build.sh
     ```
 
-    After a successful compilation, `import` LinearRNA as following:
+    After a successful compilation, `import` LinearRNA as follows:
 
     ```bash
     cd build
@@ -38,7 +38,7 @@ If you need to modify the algorithms/models in PaddleHelix, you have to switch t
 
     4.2. Other algorithms
 
-    Except LinearRNA, other algorithms in PaddleHelix are all implemented in Python. If you want to change these algorithms, just find corresponding files under path "./pahelix", then add "/path_to_your_repo/" to your Python environment path:
+    Except LinearRNA, other algorithms in PaddleHelix are all implemented in Python. If you want to change these algorithms, just find and modify corresponding `.py` files under the path "./pahelix", then add "/path_to_your_repo/" to your Python environment path:
 
     ```python
     import sys
