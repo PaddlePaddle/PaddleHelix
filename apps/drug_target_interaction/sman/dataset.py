@@ -38,6 +38,7 @@ def random_split(dataset_size, split_ratio=0.9, seed=0, shuffle=True):
              (len(train_idx), len(valid_idx)))
     return train_idx, valid_idx
 
+# pylint: disable=unexpected-keyword-arg
 def split_train_valid(data_path, dataset_name, seed=2020):
     
     train_filename = os.path.join(data_path, "{0}_train.pickle".format(dataset_name))
@@ -209,6 +210,7 @@ class DrugDataset(BaseDataset):
         return expand_size, expand_node_feat, expand_e2e_edges
 
 
+    # pylint: disable=unexpected-keyword-arg
     def _load_data(self):
         """Loads dataset
         """
