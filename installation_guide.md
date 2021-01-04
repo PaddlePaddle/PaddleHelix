@@ -43,7 +43,7 @@ conda activate paddlehelix
 ```bash
 conda install -c conda-forge rdkit
 ```
-5. Install the right version of `paddlepaddle` depends on CPU/GPU you want to run PaddleHelix on.
+5. Install the right version of `paddlepaddle` according to the device (CPU/GPU) you want to run PaddleHelix on.
 
     If you want to use the GPU version of `paddlepaddle`, run this:
 
