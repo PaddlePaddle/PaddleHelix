@@ -60,7 +60,7 @@ conda install -c conda-forge rdkit
 
 6. 使用 pip 命令安装`PGL`:
 ```bash
-pip insatll pgl
+pip install pgl
 ```
 
 7. 使用 pip 命令安装 PaddleHelix
