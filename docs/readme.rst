@@ -25,7 +25,7 @@ PaddleHelix is a machine-learning-based bio-computing framework aiming at facili
 Features
 ========
 
-- High Efficency: We provide LinearRNA, a highly efficient toolkit for RNA structure prediction and analysis. LinearFold & LinearParitition achieves O(n) complexity in RNA-folding prediction, which is hundreds of times faster than traditional folding techniques.
+- High Efficency: We provide LinearRNA, a highly efficient toolkit for RNA structure prediction and analysis. LinearFold & LinearParitition achieve O(n) complexity in RNA-folding prediction, which is hundreds of times faster than traditional folding techniques.
 
 .. image:: ../.github/LinearRNA.jpg
    :align: center
@@ -35,7 +35,7 @@ Features
 .. image:: ../.github/paddlehelix_features.jpg
    :align: center
 
-- Easy-to-use APIs: PaddleHelix provide frequently used structures and pre-trained models. You can easily use those components to build up your models and systems.
+- Easy-to-use APIs: PaddleHelix provides frequently used structures and pre-trained models. You can easily use those components to build up your models and systems.
 
 
 Installation
@@ -78,7 +78,7 @@ Quick Start
 Tutorials
 =========
 
-- We provide abundant `tutorials`_ to navigate the directory and start quickly.
+- We provide abundant `tutorials`_ to navigate the repository and start quickly.
 
 - PaddleHelix is based on `PaddlePaddle`_, a high-performance Parallelized Deep Learning Platform.
 
@@ -98,8 +98,8 @@ Examples
 - `LinearRNA <https://github.com/PaddlePaddle/PaddleHelix/tree/dev/c/pahelix/toolkit/linear_rna>`_
 
 
-Developer's guide for advanced users
-====================================
+Guide for developers
+====================
 
 - If you need help in modifying the source code of **PaddleHelix**, please see our :doc:`/developer`.
 
