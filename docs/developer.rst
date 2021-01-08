@@ -22,7 +22,7 @@ If you need to modify the algorithms/models in **PaddleHelix**, you have to swit
 
 - Depends on which model you'd like to modify, go to **LinearRNA** or **Other algorithms**:
 
-  1)**LinearRNA**
+  **LinearRNA**
 
   The source code of LinearRNA is at `./c/pahelix/toolkit/linear_rna/linear_rna`. You could modify it for your needs. Then remember to return to the root directory of the repository, run scripts below to re-compile (please ensure there are ``cmake >= 3.6`` and ``g++ >= 4.8`` on your machine):
 
@@ -43,7 +43,7 @@ If you need to modify the algorithms/models in **PaddleHelix**, you have to swit
 
 - Except LinearRNA, other algorithms in PaddleHelix are all implemented in Python.
 
-  2)**Other algorithms**
+  **Other algorithms**
 
   If you want to change these algorithms, just find and modify corresponding ``.py`` files under the path `./pahelix`, then add `/path_to_your_repo/` to your Python environment path:
 

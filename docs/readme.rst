@@ -25,7 +25,7 @@ PaddleHelix is a machine-learning-based bio-computing framework aiming at facili
 Features
 ========
 
-- High Efficency: We provide LinearRNA, a highly efficient toolkit for RNA structure prediction and analysis. LinearFold & LinearParitition achieve O(n) complexity in RNA-folding prediction, which is hundreds of times faster than traditional folding techniques.
+- High Efficency: We provide LinearRNA, a highly efficient toolkit for RNA structure prediction and analysis. LinearFold & LinearPartition achieve O(n) complexity in RNA-folding prediction, which is hundreds of times faster than traditional folding techniques.
 
 .. image:: ../.github/LinearRNA.jpg
    :align: center
