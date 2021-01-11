@@ -25,7 +25,7 @@ from pahelix.featurizers import pretrain_gnn_featurizer
 
 class PreGNNAttrMaskFeaturizerTest(unittest.TestCase):
     def setUp(self):
-        self.model = PreGNNAttrMaskFeaturizer()
+        self.model = PreGNNAttrMaskFeaturizerTest()
     
     def test_gen_features(self):
         raw_data_list = [
