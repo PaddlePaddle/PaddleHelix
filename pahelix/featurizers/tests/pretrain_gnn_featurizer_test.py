@@ -23,7 +23,7 @@ from pahelix.utils.compound_tools import mol_to_graph_data
 from pahelix.featurizers import pretrain_gnn_featurizer
 
 
-class PreGNNAttrMaskFeaturizer(unittest.TestCase):
+class PreGNNAttrMaskFeaturizerTest(unittest.TestCase):
     def setUp(self):
         self.model = PreGNNAttrMaskFeaturizer()
     
@@ -37,7 +37,7 @@ class PreGNNAttrMaskFeaturizer(unittest.TestCase):
         data1 = mol_to_graph_data(mol)
         self.assertTrue(data1)
     
-class PreGNNSupervisedFeaturizer(unittest.TestCase):
+class PreGNNSupervisedFeaturizerTest(unittest.TestCase):
     
     def test_gen_features(self):
         raw_data_list = [
@@ -49,7 +49,7 @@ class PreGNNSupervisedFeaturizer(unittest.TestCase):
         data2 = mol_to_graph_data(mol)
         self.assertTrue(data2)
     
-class PreGNNContextPredFeaturizer(unittest.TestCase):
+class PreGNNContextPredFeaturizerTest(unittest.TestCase):
     
     def test_gen_features(self):
         raw_data_list = [
