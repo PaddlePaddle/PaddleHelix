@@ -77,7 +77,7 @@ def main(args):
                 model.forward(True)
                 model.cal_loss()
                 test_data_loader = setup_data_loader(
-                        model,
+                        model.input_list,
                         model_config,
                         args.test_data,
                         trainer_id,
