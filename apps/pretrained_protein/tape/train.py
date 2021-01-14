@@ -88,15 +88,16 @@ def main(args):
         test_metric = get_metric(task)
         test_fetch_list = model.get_fetch_list()
 
+    if args.init_model is not None and args.init_model != "":
+        load_partial_params(exe, args.init_model, train_program)
+        load_partial_params(exe, args.init_model, test_program)
+
     if not args.is_distributed:
         train_program = fluid.compiler.CompiledProgram(train_program).with_data_parallel(
                 loss_name=model.loss.name)
         if args.test_data is not None and args.test_data != "":
             test_program = fluid.compiler.CompiledProgram(test_program).with_data_parallel(
                     loss_name=model.loss.name)
-
-    if args.init_model is not None and args.init_model != "":
-        load_partial_params(exe, args.init_model, test_program)
 
     for epoch_id in range(args.max_epoch):
         print(time.time(), 'Start epoch %d' % epoch_id)
