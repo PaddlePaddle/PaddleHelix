@@ -46,4 +46,4 @@
     import pahelix
     ```
 
-如果仍有疑问或者建议, 欢迎提出 [issue](https://github.com/PaddlePaddle/PaddleHelix/issues)，我们会尽快回复。
+如果仍有疑问或者建议，欢迎提出 [issue](https://github.com/PaddlePaddle/PaddleHelix/issues)，我们会尽快回复。
