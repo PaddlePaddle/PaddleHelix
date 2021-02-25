@@ -13,7 +13,7 @@
 | pandas       | - |
 | networkx     | - |
 | paddlepaddle | \>=2.0.0rc0 |
-| pgl          | \>=1.2.0 |
+| pgl          | ==1.2.0 or 1.2.1|
 | rdkit        | - |
 |sklearn|-|
 
@@ -64,7 +64,7 @@ conda install -c conda-forge rdkit
 6. Install `PGL` using pip:
    
 ```bash
-pip install pgl
+pip install pgl==1.2.1
 ```
 
 7. Install PaddleHelix using pip:
