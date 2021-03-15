@@ -1,0 +1,48 @@
+task_name: train.hiv
+dataset_name: ogbg-molhiv
+metrics: mse
+use_cuda: True
+
+warm_start_from: null 
+model_path_for_infer: null 
+
+# new:
+mgf_file: "./dataset/ogbg_molhiv/mgf_feat.npy"  # null
+
+# data config
+num_class: null
+
+# deeper GCN
+model_config:
+    pt_model_type: DeeperGCNModel
+    num_layers: 7
+    embed_dim: 256
+    hidden_size: 256
+    dropout_rate: 0.2
+    graph_pool_type: average
+    norm: "no_layer_norm"  #no_layer_norm
+    appnp: True
+    alpha: 0.2
+    GN: True
+
+# runconfig
+epochs: 100
+batch_size: 32
+lr: 0.001   # 0.00001 too small
+num_workers: 1
+shuffle: True
+shuffle_size: 0
+save_steps: 1620000000000000
+log_steps: 200
+max_ckpt: 8
+skip_steps: 0  # 前n个steps不打log
+eval_steps: 1020 # 636 #81
+eval_max_steps: 10000
+
+# logger
+stdout: True
+log_dir: ./logs
+log_filename: log.txt
+save_dir: ./checkpoints
+output_dir: ./outputs
+files2saved: ["*.yaml", "*.py", "./models", "./utils"]
