@@ -1,19 +1,31 @@
-#-*- coding: utf-8 -*-
+# Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import os
+import sys
+import json
+import pickle
+import argparse
+import numpy as np
+import pandas as pd
+from tqdm import tqdm
+
 from ogb.graphproppred import GraphPropPredDataset
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import average_precision_score, roc_auc_score
-import pickle
-import ogbcomp_helper as helper
-import numpy as np
-import pandas as pd
-import json
-import os
-import argparse
-import sys
-from tqdm import tqdm
 
 def main(args):
-    ds = args.dataset_name
     all_probs = {}
     all_ap = {}
     all_rocs = {}
@@ -21,78 +33,67 @@ def main(args):
 
     n_estimators = 1000
     max_tasks = None
-    nreps = 10
+    run_times = 10
 
     eval_scores = []
     test_scores = []
 
-    # Read in dataset
-    print("Reading dataset")
-    dataset = GraphPropPredDataset(name=ds)
-    
-    # By default, the line above will save data to the path below
-    df_smi = pd.read_csv(f"dataset/{ds}/mapping/mol.csv.gz".replace("-", "_"))
-    smiles = df_smi["smiles"]
-    outcomes = df_smi.set_index("smiles").drop(["mol_id"], axis=1)
-    
-    # Generate features
-    print("Extracting features...")
-    X = helper.parallel_apply(smiles, func=helper.getmorganfingerprint2)
-    
+    mgf_file = "./dataset/%s/mgf_feat.npy" % (args.dataset_name.replace("-", "_"))
     soft_mgf_file = "./dataset/%s/soft_mgf_feat.npy" % (args.dataset_name.replace("-", "_"))
     maccs_file = "./dataset/%s/maccs_feat.npy" % (args.dataset_name.replace("-", "_"))
+    mgf_feat = np.load(mgf_file)
     soft_mgf_feat = np.load(soft_mgf_file)
     maccs_feat = np.load(maccs_file)
-    maccs_feat_dim = maccs_feat.shape[1]
+    mgf_dim = mgf_feat.shape[1]
+    maccs_dim = maccs_feat.shape[1]
 
-    print("concat mgf and maccs feature")
-    gnn_feat = pd.DataFrame(soft_mgf_feat, columns=[2048+i for i in range(2048)])
-    index = X.index
-    new_X = pd.concat([X.reset_index(drop=True), gnn_feat.reset_index(drop=True)], axis=1)
-    X = pd.DataFrame(new_X.values, index=index)
+    dataset = GraphPropPredDataset(name=args.dataset_name)
+    smiles_file = "dataset/%s/mapping/mol.csv.gz" % (args.dataset_name.replace("-", "_"))
+    df_smi = pd.read_csv(smiles_file)
+    smiles = df_smi["smiles"]
+    outcomes = df_smi.set_index("smiles").drop(["mol_id"], axis=1)
 
-    maccs_feat = pd.DataFrame(maccs_feat, columns=[X.values.shape[1]+i for i in range(maccs_feat_dim)])
-    index = X.index
-    new_X = pd.concat([X.reset_index(drop=True), maccs_feat.reset_index(drop=True)], axis=1)
-    X = pd.DataFrame(new_X.values, index=index)
+    feat = np.concatenate([mgf_feat, soft_mgf_feat, maccs_feat], axis=1)
+    X =  pd.DataFrame(feat, 
+            index=smiles,
+            columns=[i for i in range(feat.shape[1])])
 
+    # Split into train/val/test
+    split_idx = dataset.get_idx_split()
+    train_idx, val_idx, test_idx = split_idx["train"], split_idx["valid"], split_idx["test"]
 
-    for rep in range(nreps):
-        # Split into train/val/test
-        split_idx = dataset.get_idx_split()
-        train_idx, val_idx, test_idx = split_idx["train"], split_idx["valid"], split_idx["test"]
-        X_train, X_val, X_test = X.iloc[train_idx], X.iloc[val_idx], X.iloc[test_idx]
+    X_train, X_val, X_test = X.iloc[train_idx], X.iloc[val_idx], X.iloc[test_idx]
 
+    for rep in range(run_times):
         for oo in tqdm(outcomes.columns[:max_tasks]):
             # Get probabilities
-            val_key = ds, oo, rep, "val"
-            test_key = ds, oo, rep, "test"
-            
+            val_key = args.dataset_name, oo, rep, "val"
+            test_key = args.dataset_name, oo, rep, "test"
+
             # If re-running, skip finished runs
             if val_key in all_probs:
                 print("Skipping", val_key[:-1])
                 continue
-    
+
             # Split outcome in to train/val/test
             Y = outcomes[oo]
             y_train, y_val, y_test = Y.loc[X_train.index], Y.loc[X_val.index], Y.loc[X_test.index]
-            
+
             # Skip outcomes with no positive training examples
             if y_train.sum() == 0:
                 continue
-            
+
             # Remove missing labels in validation
             y_val, y_test = y_val.dropna(), y_test.dropna()
             X_v, X_t = X_val.loc[y_val.index], X_test.loc[y_test.index]
             
             # Remove missing values in the training labels, and downsample imbalance to cut runtime
-            y_tr = helper.process_y(y_train)
-            train_label_props[ds, oo, rep] = y_tr.mean()
+            y_tr = y_train.dropna()
+            train_label_props[args.dataset_name, oo, rep] = y_tr.mean()
             print(f"Sampled label balance:\n{y_tr.value_counts()}")
-            
+
             # Fit model
             print("Fitting model...")
-            #  rf = RandomForestClassifier(min_samples_leaf=2, n_estimators=n_estimators, n_jobs=-1)
             rf = RandomForestClassifier(min_samples_leaf=2,
                     n_estimators=n_estimators,
                     n_jobs=-1,
@@ -130,7 +131,4 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser(description='gnn')
     parser.add_argument("--dataset_name", type=str, default="ogbg-molhiv")
     args = parser.parse_args()
-
     main(args)
-
-
