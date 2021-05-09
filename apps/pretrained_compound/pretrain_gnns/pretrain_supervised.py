@@ -1,6 +1,6 @@
-#!/usr/bin/python                                                                                                                                                                                             
-#-*-coding:utf-8-*-  
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#!/usr/bin/python                                                                                  
+#-*-coding:utf-8-*- 
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,177 +14,165 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-pretrain supervised
+Reproduction of paper Pretrain GNNs
 """
+
 import os
 from os.path import join, exists
-import sys
 import json
 import argparse
 import numpy as np
 
 import paddle
-import paddle.fluid as fluid
-from paddle.fluid.incubate.fleet.collective import fleet
+import paddle.nn as nn
+import paddle.distributed as dist
+import pgl
 
-# Enable static graph mode.
-paddle.enable_static()
-
-from pahelix.model_zoo import PreGNNSupervisedModel
-from pahelix.datasets import load_chembl_filtered_dataset, get_chembl_filtered_task_num
-from pahelix.featurizers import PreGNNSupervisedFeaturizer
-from pahelix.utils.paddle_utils import load_partial_params, get_distributed_optimizer
+from pahelix.model_zoo.pretrain_gnns_model import PretrainGNNModel, SupervisedModel
+from pahelix.datasets.inmemory_dataset import InMemoryDataset
+from pahelix.datasets.chembl_filtered_dataset import load_chembl_filtered_dataset, get_chembl_filtered_task_num
 from pahelix.utils.splitters import RandomSplitter
-from pahelix.utils.compound_tools import CompoundConstants
+from pahelix.featurizers.pretrain_gnn_featurizer import SupervisedTransformFn, SupervisedCollateFn
+from pahelix.utils import load_json_config
 
 
-def train(args, exe, train_prog, model, train_dataset, featurizer):
+def train(args, model, train_dataset, collate_fn, opt):
     """
     Define the training function according to the given settings, calculate the training loss.
-
     Args:
-        args,exe,train_prog,model,train_dataset,featurizer;
+        args,model,train_dataset,collate_fn,opt;
     Returns:
-        the average of the list loss
-    
+        the average of the list loss.
     """
-    data_gen = train_dataset.iter_batch(
+    data_gen = train_dataset.get_data_loader(
             batch_size=args.batch_size, 
             num_workers=args.num_workers, 
             shuffle=True,
-            collate_fn=featurizer.collate_fn)
+            collate_fn=collate_fn)
     list_loss = []
-    for batch_id, feed_dict in enumerate(data_gen):
-        train_loss, = exe.run(train_prog, 
-                feed=feed_dict, fetch_list=[model.loss], return_numpy=False)
-        list_loss.append(np.array(train_loss).mean())
+    model.train()
+    for graphs, labels, valids in data_gen:
+        graphs = graphs.tensor()
+        labels = paddle.to_tensor(labels, 'float32')
+        valids = paddle.to_tensor(valids, 'float32')
+        loss = model(graphs, labels, valids)
+        loss.backward()
+        opt.step()
+        opt.clear_grad()
+        list_loss.append(loss.numpy())
     return np.mean(list_loss)
 
 
-def evaluate(args, exe, test_prog, model, test_dataset, featurizer):
+def evaluate(args, model, test_dataset, collate_fn):
     """
     Define the evaluate function
-
     In the dataset, a proportion of labels are blank. So we use a `valid` tensor 
     to help eliminate these blank labels in both training and evaluation phase.
-
     """
-    data_gen = test_dataset.iter_batch(
+    data_gen = test_dataset.get_data_loader(
             batch_size=args.batch_size, 
             num_workers=args.num_workers, 
-            shuffle=True,
-            collate_fn=featurizer.collate_fn)
+            shuffle=False,
+            collate_fn=collate_fn)
     list_loss = []
-    for batch_id, feed_dict in enumerate(data_gen):
-        test_loss, = exe.run(test_prog, 
-                feed=feed_dict, fetch_list=[model.loss], return_numpy=False)
-        list_loss.append(np.array(test_loss).mean())
+    model.eval()
+    for graphs, labels, valids in data_gen:
+        graphs = graphs.tensor()
+        labels = paddle.to_tensor(labels, 'float32')
+        valids = paddle.to_tensor(valids, 'float32')
+        loss = model(graphs, labels, valids)
+        list_loss.append(loss.numpy())
     return np.mean(list_loss)
 
 
 def main(args):
     """
-    Call the configuration function of the model, build the model and load data, then start training.
+    Call the configuration function of the compound encoder and model, 
+    build the model and load data, then start training.
 
-    model_config:
-        a json file  with the  model configurations,such as dropout rate ,learning rate,num tasks and so on;
-    task_num:
-        It means the number of chembl filtered task;
+    compound_encoder_config: a json file with the compound encoder configurations,
+    such as dropout rate ,learning rate,num tasks and so on;
+
+    model_config: a json file with the pretrain_gnn model configurations,such as dropout rate ,
+    learning rate,num tasks and so on;
+
+    task_num: It means the number of chembl filtered task;
     
-    PreGNNSupervisedModel:
-        It means the PretrainGNNModel for supervised strategy.
-        Graph-level multi-task supervised pre-training to jointly predict a diverse set of supervised labels of individual graphs.
+    SupervisedModel: It means the PretrainGNNModel for supervised strategy.Graph-level multi-task 
+    supervised pre-training to jointly predict a diverse set of supervised labels of individual graphs.
     """
-    model_config = json.load(open(args.model_config, 'r'))
+    if args.dist:
+        dist.init_parallel_env()
+
+    compound_encoder_config = load_json_config(args.compound_encoder_config)
+    model_config = load_json_config(args.model_config)
     if not args.dropout_rate is None:
+        compound_encoder_config['dropout_rate'] = args.dropout_rate
         model_config['dropout_rate'] = args.dropout_rate
     task_num = get_chembl_filtered_task_num()
     model_config['task_num'] = task_num
-    
-    ### build model
-    train_prog = fluid.Program()
-    test_prog = fluid.Program()
-    startup_prog = fluid.Program()
-    with fluid.program_guard(train_prog, startup_prog):
-        with fluid.unique_name.guard():
-            model = PreGNNSupervisedModel(model_config)
-            model.forward()
-            opt = fluid.optimizer.Adam(learning_rate=args.lr)
-            if args.distributed:
-                opt = get_distributed_optimizer(opt)
-            opt.minimize(model.loss)
-    with fluid.program_guard(test_prog, fluid.Program()):
-        with fluid.unique_name.guard():
-            model = PreGNNSupervisedModel(model_config)
-            model.forward(is_test=True)
 
-    # Use CUDAPlace for GPU training, or use CPUPlace for CPU training.
-    place = fluid.CUDAPlace(int(os.environ.get('FLAGS_selected_gpus', 0))) \
-            if args.use_cuda else fluid.CPUPlace()
-    exe = fluid.Executor(place)
-    exe.run(startup_prog)
+    ### build model
+    compound_encoder = PretrainGNNModel(compound_encoder_config)
+    model = SupervisedModel(model_config, compound_encoder)
+    if args.dist:
+        model = paddle.DataParallel(model)
+    opt = paddle.optimizer.Adam(args.lr, parameters=model.parameters())
 
     if not args.init_model is None and not args.init_model == "":
-        load_partial_params(exe, args.init_model, train_prog)
+        compound_encoder.set_state_dict(paddle.load(args.init_model))
+        print('Load state_dict from %s' % args.init_model)
 
     ### load data
-    # PreGNNSupervisedFeaturizer:
-    #     It is used along with `PreGNNSupervised`. It inherits from the super class `Featurizer` which is used for feature extractions. The `Featurizer` has two functions: `gen_features` for converting from a single raw smiles to a single graph data, `collate_fn` for aggregating a sublist of graph data into a big batch. 
-    # splitter:
-    #     split type of the dataset:random,scaffold,random with scaffold. Here is randomsplit.
-    #     `ScaffoldSplitter` will firstly order the compounds according to Bemis-Murcko scaffold, 
-    #     then take the first `frac_train` proportion as the train set, the next `frac_valid` proportion as the valid set 
-    #     and the rest as the test set. `ScaffoldSplitter` can better evaluate the generalization ability of the model on 
-    #     out-of-distribution samples. Note that other splitters like `RandomSplitter`, `RandomScaffoldSplitter` 
-    #     and `IndexSplitter` is also available."
-    featurizer = PreGNNSupervisedFeaturizer(model.graph_wrapper)
-    dataset = load_chembl_filtered_dataset(args.data_path, featurizer=featurizer)
-
-    splitter = RandomSplitter()
-    train_dataset, _, test_dataset = splitter.split(
-            dataset, frac_train=0.9, frac_valid=0, frac_test=0.1)
-    if args.distributed:
-        indices = list(range(fleet.worker_index(), len(train_dataset), fleet.worker_num()))
-        train_dataset = train_dataset[indices]
+    # dataset = load_chembl_filtered_dataset(args.data_path)
+    # splitter = RandomSplitter()
+    # train_dataset, _, test_dataset = splitter.split(
+    #         dataset, frac_train=0.9, frac_valid=0.0, frac_test=0.1, seed=32)
+    # if args.dist:
+    #     train_dataset = train_dataset[dist.get_rank()::dist.get_world_size()]
+    # transform_fn = SupervisedTransformFn()
+    # train_dataset.transform(transform_fn, num_workers=args.num_workers)
+    # train_dataset.save_data('./cached_chembl_filter/train/')
+    # test_dataset.transform(transform_fn, num_workers=args.num_workers)
+    # test_dataset.save_data('./cached_chembl_filter/test/')
+    ###########
+    # DEBUG
+    train_dataset = InMemoryDataset(npz_data_path='./cached_chembl_filter/train/')
+    test_dataset = InMemoryDataset(npz_data_path='./cached_chembl_filter/test/')
+    ###########
     print("Train/Test num: %s/%s" % (len(train_dataset), len(test_dataset)))
 
     ### start train
-    # Load the train function and calculate the train loss and test loss in each epoch.
-    # Here we set the epoch is in range of max epoch,you can change it if you want. 
-    # Then we will calculate the train loss ,test loss and print them.
-    # Finally we save the best epoch to the model according to the dataset.
-    list_test_loss = []
+    collate_fn = SupervisedCollateFn(
+            atom_names=compound_encoder_config['atom_names'], 
+            bond_names=compound_encoder_config['bond_names'])
     for epoch_id in range(args.max_epoch):
-        train_loss = train(args, exe, train_prog, model, train_dataset, featurizer)
-        test_loss = evaluate(args, exe, test_prog, model, test_dataset, featurizer)
-        if not args.distributed or fleet.worker_index() == 0:
-            fluid.io.save_params(exe, '%s/epoch%s' % (args.model_dir, epoch_id), train_prog)
-            list_test_loss.append(test_loss)
+        train_loss = train(args, model, train_dataset, collate_fn, opt)
+        test_loss = evaluate(args, model, test_dataset, collate_fn)
+        if not args.dist or dist.get_rank() == 0:
             print("epoch:%d train/loss:%s" % (epoch_id, train_loss))
             print("epoch:%d test/loss:%s" % (epoch_id, test_loss))
-
-    if not args.distributed or fleet.worker_index() == 0:
-        best_epoch_id = np.argmin(list_test_loss)
-        fluid.io.load_params(exe, '%s/epoch%d' % (args.model_dir, best_epoch_id), train_prog)
-        fluid.io.save_params(exe, '%s/epoch_best' % (args.model_dir), train_prog)
-        return list_test_loss[best_epoch_id]
+            paddle.save(compound_encoder.state_dict(), 
+                    '%s/epoch%d/compound_encoder.pdparams' % (args.model_dir, epoch_id))
+            paddle.save(model.state_dict(), 
+                    '%s/epoch%d/model.pdparams' % (args.model_dir, epoch_id))
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--use_cuda", action='store_true', default=False)
-    parser.add_argument("--distributed", action='store_true', default=False)
+    parser.add_argument("--dist", action='store_true', default=False)
 
     parser.add_argument("--batch_size", type=int, default=256)
     parser.add_argument("--num_workers", type=int, default=4)
     parser.add_argument("--max_epoch", type=int, default=100)
-    parser.add_argument("--lr", type=float, default=0.001)
-    parser.add_argument("--data_path", type=str)
+    parser.add_argument("--data_path", type=str, default=None)
 
+    parser.add_argument("--compound_encoder_config", type=str)
     parser.add_argument("--model_config", type=str)
-    parser.add_argument("--dropout_rate", type=float)
     parser.add_argument("--init_model", type=str)
     parser.add_argument("--model_dir", type=str)
+    parser.add_argument("--lr", type=float, default=0.001)
+    parser.add_argument("--dropout_rate", type=float)
     args = parser.parse_args()
     
     main(args)

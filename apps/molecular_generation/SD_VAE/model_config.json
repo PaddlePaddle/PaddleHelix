@@ -1,0 +1,7 @@
+{
+"latent_dim":56,
+"max_decode_steps":278,
+"eps_std":0.01,
+"encoder_type":"cnn",
+"rnn_type": "gru"
+}

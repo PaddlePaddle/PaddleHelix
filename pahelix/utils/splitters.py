@@ -241,7 +241,7 @@ class RandomScaffoldSplitter(Splitter):
             scaffold = generate_scaffold(dataset[ind]['smiles'], include_chirality=True)
             scaffolds[scaffold].append(ind)
 
-        scaffold_sets = rng.permutation(list(scaffolds.values()))
+        scaffold_sets = rng.permutation(np.array(list(scaffolds.values()), dtype=object))
 
         n_total_valid = int(np.floor(frac_valid * len(dataset)))
         n_total_test = int(np.floor(frac_test * len(dataset)))

@@ -16,10 +16,10 @@ Graph-level representations are essential in many real-world applications such a
 
 ## Datasets
 
-First, let us create a dataset root folder `data` under this `demos` folder.
+First, let us create a dataset root folder `data` under this application folder.
 
 ```sh
-mkdir -p demos/data && cd demos/data
+mkdir -p data && cd data
 ```
 
 ### MUTAG
@@ -42,34 +42,46 @@ wget ftp://ftp.ics.uci.edu:21/pub/baldig/learning/ptc/ptc_MR_data.can
 wget ftp://ftp.ics.uci.edu:21/pub/baldig/learning/ptc/ptc_MR_target.txt
 ```
 
-After downloaed these datasets, the `demos/data` folder looks like:
+After downloaed these datasets, run the script to preprocess the datasets:
+
+```sh
+python scripts/preprocess_data.py
+```
+
+Finally, the `data` folder looks like:
 
 ```txt
 data
-|-- mutag
-|   `-- raw
-|       |-- mutag_188_data.can
-|       `-- mutag_188_target.txt
-`-- ptc_mr
-    `-- raw
-        |-- ptc_MR_data.can
-        `-- ptc_MR_target.txt
+├── mutag
+│   ├── processed
+│   │   ├── data.npz
+│   │   └── smiles.txt
+│   └── raw
+│       ├── mutag_188_data.can
+│       └── mutag_188_target.txt
+└── ptc_mr
+    ├── processed
+    │   ├── data.npz
+    │   └── smiles.txt
+    └── raw
+        ├── ptc_MR_data.can
+        └── ptc_MR_target.txt
 ```
 
 ## Instructions
 
 ### Configuration
 
-The script `unsupervised_pretrain.py` is the entry for InfoGraph model to extract graph-level representation in an unsupervised manner. An example of hyperparameter configuration is `demos/unsupervised_pretrain_config.json`.
+The script `unsupervised_pretrain.py` is the entry for InfoGraph model to extract graph-level representation in an unsupervised manner. An example of hyperparameter configuration is `model_configs/unsupervised_pretrain_config.json`.
 
 ### Training and Evaluation
 
-For convenience, we provide a shell script `demos/unsupervised_pretrain.sh` for easy experiments. Before running it, you need to manually configurate the number of runs, the root directory to datasets and the path to hyperparameter configuration.
+For convenience, we provide a shell script `scripts/unsupervised_pretrain.sh` for easy experiments. Before running it, you need to manually configurate the number of runs, the root directory to datasets and the path to hyperparameter configuration.
 
 ```sh
 runs=3
 root="data"
-config="unsupervised_pretrain_config.json"
+config="model_configs/unsupervised_pretrain_config.json"
 ```
 
 Evaluation results:
