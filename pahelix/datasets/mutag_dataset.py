@@ -21,30 +21,30 @@ You can download the dataset from
 ftp://ftp.ics.uci.edu/pub/baldig/learning/mutag/
 """
 
-import os
-import pandas as pd
-from rdkit.Chem import AllChem
+# import os
+# import pandas as pd
+# from rdkit.Chem import AllChem
 
-from pahelix.utils.compound_tools import mol_to_graph_data
+# from pahelix.utils.compound_tools import mol_to_graph_data
 
 
-def load_mutag_dataset(data_path):
-    """Load mutag dataset, process the raw dataset to graph data.
-    """
-    smiles_path = os.path.join(data_path, 'mutag_188_data.can')
-    labels_path = os.path.join(data_path, 'mutag_188_target.txt')
+# def load_mutag_dataset(data_path):
+#     """Load mutag dataset, process the raw dataset to graph data.
+#     """
+#     smiles_path = os.path.join(data_path, 'mutag_188_data.can')
+#     labels_path = os.path.join(data_path, 'mutag_188_target.txt')
 
-    smiles_list = pd.read_csv(smiles_path, sep=' ', header=None)[0]
-    labels = pd.read_csv(labels_path, header=None)[0].replace(-1, 0).values
+#     smiles_list = pd.read_csv(smiles_path, sep=' ', header=None)[0]
+#     labels = pd.read_csv(labels_path, header=None)[0].replace(-1, 0).values
 
-    data_list, data_smiles_list = [], []
-    for i in range(len(smiles_list)):
-        s = smiles_list[i]
-        rdkit_mol = AllChem.MolFromSmiles(s)
-        if not rdkit_mol is None:  # ignore invalid mol objects
-            data = mol_to_graph_data(rdkit_mol)
-            data['label'] = labels[i].reshape([-1])
-            data_list.append(data)
-            data_smiles_list.append(smiles_list[i])
+#     data_list, data_smiles_list = [], []
+#     for i in range(len(smiles_list)):
+#         s = smiles_list[i]
+#         rdkit_mol = AllChem.MolFromSmiles(s)
+#         if not rdkit_mol is None:  # ignore invalid mol objects
+#             data = mol_to_graph_data(rdkit_mol)
+#             data['label'] = labels[i].reshape([-1])
+#             data_list.append(data)
+#             data_smiles_list.append(smiles_list[i])
 
-    return data_list, data_smiles_list
+#     return data_list, data_smiles_list

@@ -20,7 +20,7 @@ from copy import copy
 import numpy as np
 import random
 
-def apply_bert_mask(token_ids, tokenizer):
+def apply_bert_mask(inputs, pad_mask, tokenizer):
     """
     Apply BERT mask to the token_ids.
 
@@ -32,26 +32,24 @@ def apply_bert_mask(token_ids, tokenizer):
         labels: The labels for traininig BERT.
     """
     vocab_size = len(tokenizer.vocab)
-    masked_token_ids = copy(token_ids)
-    special_token_id_n = len(tokenizer.special_token_ids)
+    bert_mask = np.random.uniform(size=inputs.shape) < 0.15
+    bert_mask &= pad_mask
 
-    # 80% chance to change to mask token,
-    # 10% chance to change to random token,
-    # 10% chance to keep current token
-    prob = np.random.random(token_ids.size)
-    mask_token_ids = np.ones(token_ids.size) * tokenizer.mask_token_id
-    random_token_ids = np.random.randint(
-            low=special_token_id_n, high=vocab_size, size=token_ids.size)
-    replace_token_ids1 = np.where(prob < 0.8, mask_token_ids, random_token_ids)
-    replace_token_ids2 = np.where(prob < 0.9, replace_token_ids1, token_ids)
+    masked_inputs = inputs * ~bert_mask
+    random_uniform = np.random.uniform(size=inputs.shape)
+    token_bert_mask = random_uniform < 0.8
+    random_bert_mask = random_uniform > 0.9
+    true_bert_mask = ~token_bert_mask & ~random_bert_mask
 
-    # 15% change to replace the tokens
-    prob = np.random.random(token_ids.size)
-    masked_token_ids = np.where(
-            np.all([token_ids >= special_token_id_n, prob < 0.15], axis=0),
-            replace_token_ids2, token_ids)
-    labels = np.where(
-            np.all([token_ids >= special_token_id_n, prob < 0.15], axis=0),
-            token_ids, -1)
+    token_bert_mask = token_bert_mask & bert_mask
+    random_bert_mask = random_bert_mask & bert_mask
+    true_bert_mask = true_bert_mask & bert_mask
 
-    return masked_token_ids, labels
+    masked_inputs += tokenizer.mask_token_id * token_bert_mask
+
+    masked_inputs += np.random.randint(0, vocab_size, size=(inputs.shape)) * random_bert_mask
+    masked_inputs += inputs * true_bert_mask
+
+    labels = np.where(bert_mask, inputs, -1)
+
+    return masked_inputs, labels

@@ -1,0 +1,17 @@
+{
+    "hidden_size": 450,
+    "latent_size": 56,
+    "depthT": 20,
+    "depthG": 3,
+    "lr": 1e-3,
+    "clip_norm": 50.0,
+    "beta": 0.0,
+    "step_beta": 0.002,
+    "max_beta": 1.0,
+    "warmup": 40000,
+    "anneal_rate": 0.95,
+    "anneal_iter": 40000,
+    "kl_anneal_iter": 3000,
+    "print_iter": 50,
+    "save_iter": 500
+}

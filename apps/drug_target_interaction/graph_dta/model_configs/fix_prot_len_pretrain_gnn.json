@@ -1,0 +1,27 @@
+{
+    "compound": {
+        "atom_names": ["atomic_num", "chiral_tag"],
+        "bond_names": ["bond_dir", "bond_type"],
+
+        "residual": false,
+        "dropout_rate": 0.5,
+        "gnn_type": "gin",
+        "graph_norm": false,
+
+        "embed_dim": 300,
+        "layer_num": 5,
+        "hidden_size": 256,
+        "JK": "last",
+
+        "pool_type": "average"
+    },
+
+    "protein": {
+        "max_protein_len": 1000,
+        "embed_dim": 128,
+        "output_dim": 128,
+        "num_filters": 32
+    },
+
+    "dropout_rate": 0.2
+}

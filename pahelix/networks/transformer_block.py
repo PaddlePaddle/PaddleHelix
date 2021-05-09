@@ -34,6 +34,7 @@ def multi_head_attention(queries,
                          gather_idx=None,
                          store=False,
                          param_initializer=None,
+                         lr=1.0,
                          name="multi_head_att",
                          is_test=False):
     """
@@ -59,6 +60,7 @@ def multi_head_attention(queries,
                       num_flatten_dims=2,
                       param_attr=fluid.ParamAttr(
                           name=name + "_query_fc.w_0",
+                          learning_rate=lr,
                           initializer=param_initializer),
                       bias_attr=name + "_query_fc.b_0")
         k = layers.fc(input=keys,
@@ -66,6 +68,7 @@ def multi_head_attention(queries,
                       num_flatten_dims=2,
                       param_attr=fluid.ParamAttr(
                           name=name + "_key_fc.w_0",
+                          learning_rate=lr,
                           initializer=param_initializer),
                       bias_attr=name + "_key_fc.b_0")
         v = layers.fc(input=values,
@@ -73,6 +76,7 @@ def multi_head_attention(queries,
                       num_flatten_dims=2,
                       param_attr=fluid.ParamAttr(
                           name=name + "_value_fc.w_0",
+                          learning_rate=lr,
                           initializer=param_initializer),
                       bias_attr=name + "_value_fc.b_0")
         return q, k, v
@@ -170,6 +174,7 @@ def multi_head_attention(queries,
                          num_flatten_dims=2,
                          param_attr=fluid.ParamAttr(
                              name=name + "_output_fc.w_0",
+                             learning_rate=lr,
                              initializer=param_initializer),
                          bias_attr=name + "_output_fc.b_0")
     return proj_out
@@ -180,6 +185,7 @@ def positionwise_feed_forward(x,
                               d_hid,
                               dropout_rate,
                               hidden_act,
+                              num_flatten_dims=2,
                               param_initializer=None,
                               name="ffn",
                               is_test=False):
@@ -191,7 +197,7 @@ def positionwise_feed_forward(x,
     """
     hidden = layers.fc(input=x,
                        size=d_inner_hid,
-                       num_flatten_dims=2,
+                       num_flatten_dims=num_flatten_dims,
                        act=hidden_act,
                        param_attr=fluid.ParamAttr(
                            name=name + "_fc_0.w_0",
@@ -205,7 +211,7 @@ def positionwise_feed_forward(x,
             is_test=is_test)
     out = layers.fc(input=hidden,
                     size=d_hid,
-                    num_flatten_dims=2,
+                    num_flatten_dims=num_flatten_dims,
                     param_attr=fluid.ParamAttr(
                         name=name + "_fc_1.w_0", initializer=param_initializer),
                     bias_attr=name + "_fc_1.b_0")

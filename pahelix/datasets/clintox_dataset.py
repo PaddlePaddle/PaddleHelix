@@ -40,7 +40,7 @@ def get_default_clintox_task_names():
     return ['FDA_APPROVED', 'CT_TOX']
 
 
-def load_clintox_dataset(data_path, task_names=None, featurizer=None):
+def load_clintox_dataset(data_path, task_names=None):
     """Load Clintox dataset ,process the classification labels and the input information.
 
     Description:
@@ -57,9 +57,6 @@ def load_clintox_dataset(data_path, task_names=None, featurizer=None):
         data_path(str): the path to the cached npz path.
         task_names(list): a list of header names to specify the columns to fetch from 
             the csv file.
-        featurizer(pahelix.featurizers.Featurizer): the featurizer to use for 
-            processing the data. If not none, The ``Featurizer.gen_features`` will be 
-            applied to the raw data.
     
     Returns:
         an InMemoryDataset instance.
@@ -67,7 +64,7 @@ def load_clintox_dataset(data_path, task_names=None, featurizer=None):
     Example:
         .. code-block:: python
 
-            dataset = load_clintox_dataset('./clintox/raw')
+            dataset = load_clintox_dataset('./clintox')
             print(len(dataset))
     
     References:
@@ -84,8 +81,9 @@ def load_clintox_dataset(data_path, task_names=None, featurizer=None):
     if task_names is None:
         task_names = get_default_clintox_task_names()
 
-    csv_file = os.listdir(data_path)[0]
-    input_df = pd.read_csv(join(data_path, csv_file), sep=',')
+    raw_path = join(data_path, 'raw')
+    csv_file = os.listdir(raw_path)[0]
+    input_df = pd.read_csv(join(raw_path, csv_file), sep=',')
     smiles_list = input_df['smiles']
     from rdkit.Chem import AllChem
     rdkit_mol_objs_list = [AllChem.MolFromSmiles(s) for s in smiles_list]
@@ -102,18 +100,10 @@ def load_clintox_dataset(data_path, task_names=None, featurizer=None):
     for i in range(len(smiles_list)):
         if smiles_list[i] is None:
             continue
-        raw_data = {}
-        raw_data['smiles'] = smiles_list[i]        
-        raw_data['label'] = labels.values[i]
-
-        if not featurizer is None:
-            data = featurizer.gen_features(raw_data)
-        else:
-            data = raw_data
-
-        if not data is None:
-            data_list.append(data)
-
+        data = {}
+        data['smiles'] = smiles_list[i]        
+        data['label'] = labels.values[i]
+        data_list.append(data)
     dataset = InMemoryDataset(data_list)
     return dataset
 

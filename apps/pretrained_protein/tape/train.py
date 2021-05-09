@@ -1,159 +1,169 @@
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 """
-Train sequence-based models for protein.
+paddle_train
 """
 
-import argparse 
-import json
-import numpy as np
 import os
 import time
+import sys
+
+import argparse
+import json
+import codecs
+import numpy as np
+import random
 import paddle
-import paddle.fluid as fluid
-from pahelix.utils.paddle_utils import load_partial_params
-from data_gen import setup_data_loader
-from tape_model import TAPEModel
-from utils import *
+import paddle.nn.functional as F
+from pahelix.model_zoo.protein_sequence_model import ProteinEncoderModel, ProteinModel, ProteinCriterion
+from pahelix.utils.protein_tools import ProteinTokenizer
+
+from data_gen import create_dataloader
+from metrics import get_metric
+from paddle.distributed import fleet
+
+@paddle.no_grad()
+def eval(model, valid_loader, criterion, metric):
+    """
+    eval function
+    """
+    model.eval()
+    metric.clear()
+
+    loss_all = np.array([], dtype=np.float32)
+    for i, (text, pos, label) in enumerate(valid_loader, start=1):
+        pred = model(text, pos)
+        label = label.reshape([-1, 1])
+        pred = pred.reshape([-1, pred.shape[-1]])
+
+        loss = criterion.cal_loss(pred, label)
+        loss_all = np.append(loss_all, loss.numpy())
+
+        pred = pred.numpy()
+        label = label.numpy()
+        loss = loss.numpy()
+        metric.update(pred, label, loss)
+    
+    print("eval_metric: ")
+    metric.show()
+    print("eval_metric finished!")
+    metric.clear()
+    loss_avg = np.mean(loss_all)
+    return loss_avg
+
 
 def main(args):
-    paddle.enable_static()
+    """
+    main function
+    """
 
     model_config = json.load(open(args.model_config, 'r'))
+    if args.use_cuda:
+        paddle.set_device("gpu")
+    else:
+        paddle.set_device("cpu")
 
-    exe_params = default_exe_params(args.is_distributed, args.use_cuda, args.thread_num)
-    exe = exe_params['exe']
-    trainer_num = exe_params['trainer_num']
-    trainer_id = exe_params['trainer_id']
-    dist_strategy = exe_params['dist_strategy']
-    places = exe_params['places']
+    if args.is_distributed:
+        strategy = fleet.DistributedStrategy()
+        fleet.init(is_collective=args.use_cuda, strategy=strategy)
 
-    task = model_config['task']
+    train_loader = create_dataloader(
+        data_dir=args.train_data,
+        model_config=model_config)
 
-    model = TAPEModel(model_config=model_config, name=task)
+    valid_loader = create_dataloader(
+        data_dir=args.valid_data,
+        model_config=model_config)
 
-    train_program = fluid.Program()
-    train_startup = fluid.Program()
-    with fluid.program_guard(train_program, train_startup):
-        with fluid.unique_name.guard():
-            model.forward(False)
-            model.cal_loss()
+    encoder_model = ProteinEncoderModel(model_config, name='protein')
+    model = ProteinModel(encoder_model, model_config)
+    if args.is_distributed:
+        model = fleet.distributed_model(model)
 
-            optimizer = default_optimizer(args.lr, args.warmup_steps, args.max_grad_norm)
-            setup_optimizer(optimizer, model, args.use_cuda, args.is_distributed, dist_strategy)
+    # Generate parameter names needed to perform weight decay.
+    # All bias and LayerNorm parameters are excluded.
+    decay_params = [
+        p.name for n, p in model.named_parameters()
+        if not any(nd in n for nd in ["bias", "norm"])
+    ]
 
-            optimizer.minimize(model.loss)
+    grad_clip = paddle.nn.ClipGradByGlobalNorm(clip_norm=1.0)
+    optimizer = paddle.optimizer.AdamW(
+        learning_rate=1e-4,
+        epsilon=1e-06,
+        weight_decay=0.01,
+        parameters=model.parameters(),
+        apply_decay_param_fun=lambda x: x in decay_params)
 
-            train_data_loader = setup_data_loader(
-                    model.input_list,
-                    model_config,
-                    args.train_data,
-                    trainer_id,
-                    trainer_num,
-                    places,
-                    args.batch_size)
-            exe.run(train_startup)
+    if args.is_distributed:
+        optimizer = fleet.distributed_optimizer(optimizer)
+    criterion = ProteinCriterion(model_config)
+    metric = get_metric(model_config['task'])
 
-    train_metric = get_metric(task)
-    train_fetch_list = model.get_fetch_list()
+    if args.init_model:
+        print("load init_model")
+        # for hot_start
+        if args.hot_start == 'hot_start':
+            model.load_dict(paddle.load(args.init_model))
+        # for pre_train
+        else:
+            encoder_model.load_dict(paddle.load(args.init_model))
 
-    if args.test_data is not None:
-        test_program = fluid.Program()
-        test_startup = fluid.Program()
-        with fluid.program_guard(test_program, test_startup):
-            with fluid.unique_name.guard():
-                model.forward(True)
-                model.cal_loss()
-                test_data_loader = setup_data_loader(
-                        model.input_list,
-                        model_config,
-                        args.test_data,
-                        trainer_id,
-                        trainer_num,
-                        places,
-                        args.batch_size)
-                exe.run(test_startup)
-        test_metric = get_metric(task)
-        test_fetch_list = model.get_fetch_list()
+    train_sum_loss = 0
+    valid_min_loss = 10000
+    steps_per_epoch = 20
+    cur_step = 0
+    while True:
+        model.train()
+        for (text, pos, label) in train_loader:
+            # print("text: ", text)
+            cur_step += 1
+            pred = model(text, pos)
+            label = label.reshape([-1, 1])
+            pred = pred.reshape([-1, pred.shape[-1]])
+            loss = criterion.cal_loss(pred, label)
 
-    if args.init_model is not None and args.init_model != "":
-        load_partial_params(exe, args.init_model, train_program)
-        load_partial_params(exe, args.init_model, test_program)
+            print("loss: ", loss)
+            train_sum_loss += loss.numpy()
+            loss.backward()
+            optimizer.minimize(loss)
+            model.clear_gradients()
 
-    if not args.is_distributed:
-        train_program = fluid.compiler.CompiledProgram(train_program).with_data_parallel(
-                loss_name=model.loss.name)
-        if args.test_data is not None and args.test_data != "":
-            test_program = fluid.compiler.CompiledProgram(test_program).with_data_parallel(
-                    loss_name=model.loss.name)
+            pred = pred.numpy()
+            label = label.numpy()
+            loss = loss.numpy()
+            metric.update(pred, label, loss)
+            if cur_step % 10 == 0:
+                print('step %d, avg loss %.5f' % (cur_step, train_sum_loss / 10))
+                metric.show()
+                train_sum_loss = 0
+                metric.clear()
 
-    for epoch_id in range(args.max_epoch):
-        print(time.time(), 'Start epoch %d' % epoch_id)
-        print('Train:')
-        train_metric.clear()
-        for data in train_data_loader():
-            results = exe.run(
-                    program=train_program,
-                    feed=data,
-                    fetch_list=train_fetch_list,
-                    return_numpy=False)
-            update_metric(task, train_metric, results)
-            train_metric.show()
-        print()
-        
-        if args.test_data is not None and args.test_data != "":
-            print('Test:')
-            test_metric.clear()
-            for data in test_data_loader():
-                results = exe.run(
-                        program=test_program,
-                        feed=data,
-                        fetch_list=test_fetch_list,
-                        return_numpy=False)
-                update_metric(task, test_metric, results)
-            test_metric.show()
-            print()
-        
-        if trainer_id == 0:
-            print(time.time(), "Save model epoch%d." % epoch_id)
+            # save best_model
+            if cur_step % steps_per_epoch == 0:
+                print("eval begin_time: ", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
+                valid_cur_loss = eval(model, valid_loader, criterion, metric)
+                print("valid_cur_loss: ", valid_cur_loss)
+                print("eval end_time: ", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
+                if valid_cur_loss < valid_min_loss:
+                    print("%s Save best model step_%d." % \
+                            (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), cur_step))
+                    paddle.save(encoder_model.state_dict(), 'models/epoch_best_encoder.pdparams')
+                    paddle.save(model.state_dict(), 'models/epoch_best.pdparams')
+                    valid_min_loss = valid_cur_loss
 
-            is_exist = os.path.exists(args.model_dir)
-            if not is_exist:
-                os.makedirs(args.model_dir)
-            fluid.io.save_params(exe, '%s/epoch%d' % (args.model_dir, epoch_id), train_program)
-
+                    os.system("cp -rf models/epoch_best.pdparams models/step_%d.pdparams" % (cur_step))
+                    os.system("cp -rf models/epoch_best_encoder.pdparams models/step_%d_encoder.pdparams" % (cur_step))
+                model.train()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--use_cuda", action='store_true', default=False)
-    parser.add_argument('--distributed', dest='is_distributed', action='store_true')
-
-    parser.add_argument("--batch_size", type=int, default=32)
-    parser.add_argument("--num_workers", type=int, default=4)
-    parser.add_argument("--max_epoch", type=int, default=200)
-    parser.add_argument("--lr", type=float, default=0.001)
-    parser.add_argument("--max_grad_norm", type=float, default=0.1)
-    parser.add_argument("--warmup_steps", type=int, default=0)
-    parser.add_argument('--thread_num', type=int, default=8, help='thread for cpu') 
-
     parser.add_argument("--train_data", type=str)
-    parser.add_argument("--test_data", type=str)
-
+    parser.add_argument("--valid_data", type=str)
     parser.add_argument("--model_config", type=str)
-    parser.add_argument("--init_model", type=str)
-    parser.add_argument("--model_dir", type=str)
+    parser.add_argument("--lr", type=float, default=0.001)
+    parser.add_argument("--init_model", type=str, default='')
+    parser.add_argument("--hot_start", type=str, default='hot_start')
+    parser.add_argument("--use_cuda", action='store_true', default=False)
+    parser.add_argument("--is_distributed", action='store_true', default=False)
     args = parser.parse_args()
 
     main(args)

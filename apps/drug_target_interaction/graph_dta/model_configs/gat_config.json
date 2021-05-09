@@ -1,0 +1,23 @@
+{
+    "compound": {
+        "atom_names": ["atomic_num", "chiral_tag"],
+        "bond_names": ["bond_dir", "bond_type"],
+
+        "gnn_type": "gat",
+        "dropout_rate": 0.2,
+
+        "embed_dim": 32,
+        "output_dim": 128,
+        "layer_num": 2,
+        "hidden_size": 32
+    },
+
+    "protein": {
+        "max_protein_len": -1,
+        "embed_dim": 128,
+        "output_dim": 128,
+        "num_filters": 32
+    },
+
+    "dropout_rate": 0.2
+}

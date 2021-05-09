@@ -17,10 +17,10 @@
 
 ## 数据集
 
-首先，在`demos`目录下创建一个`data`子目录，作为数据集的root目录。
+首先，在该应用目录下创建一个`data`子目录，作为数据集的root目录。
 
 ```sh
-mkdir -p demos/data && cd demos/data
+mkdir -p data && cd data
 ```
 
 ### Davis
@@ -45,7 +45,7 @@ wget "https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fdatasets%2Fdti_datasets%2Fki
 tar -zxvf kiba.tgz
 ```
 
-下载完成后，`demos/data`目录看起来是这样的：
+下载完成后，`data`目录看起来是这样的：
 
 ```txt
 data
@@ -81,35 +81,31 @@ data
 
 ### 参数设置
 
-Python脚本`train.py`是GraphDTA模型的入口，它创建了`model.py`中的`DTAModel`模型，并完成训练和评估等功能。由于GraphDTA将蛋白质序列转换为定长的新序列，参数设置上最接近原论文的是：
+Python脚本`scripts/train.py`是GraphDTA模型的入口，它创建了`src/model.py`中的`DTAModel`模型，并完成训练和评估等功能。由于GraphDTA将蛋白质序列转换为定长的新序列，参数设置上最接近原论文的是：
 
-* `demos/fix_prot_len_gat_config.json` (GAT)
-* `demos/fix_prot_len_gat_gcn_config.json` (GAT-GCN)
-* `demos/fix_prot_len_gcn_config.json` (GCN)
-* `demos/fix_prot_len_gin_config.json` (GIN)
-
-我们也包含了一个配置`demos/fix_prot_len_pretrain_gnn.json`方便用户使用pretrain GNNs中预训练的模型来初始化化合物的图神经网络编码器。
+* `model_configs/fix_prot_len_gat_config.json` (GAT)
+* `model_configs/fix_prot_len_gat_gcn_config.json` (GAT-GCN)
+* `model_configs/fix_prot_len_gcn_config.json` (GCN)
+* `model_configs/fix_prot_len_gin_config.json` (GIN)
 
 ### 训练与评估
 
-为了方便实验，我们提供了shell脚本`demos/train.sh`来运行实验，它的使用方法是：
+为了方便实验，我们提供了shell脚本`scripts/train.sh`来运行实验，它的使用方法是：
 
 ```sh
-./train.sh DATASET YOU_CONFIG_JSON [EXTRA-ARGS]
+sh scripts/train.sh DATASET YOU_CONFIG_JSON [EXTRA-ARGS]
 ```
 
 例如，要在Davis数据集上训练GIN模型，只需要执行：
 
 ```sh
-cd demos
-./train.sh davis fix_prot_len_gin_config.json
+sh scripts/train.sh davis fix_prot_len_gin_config.json
 ```
 
 需要注意的是，在Kiba数据集上训练GIN模型时，由于数据集使用了KIBA分数作为指标，而非默认的Kd指标，运行脚本时需要加上额外参数：
 
 ```sh
-cd demos
-./train.sh kiba fix_prot_len_gin_config.json --use_kiba_label
+sh scripts/train.sh kiba fix_prot_len_gin_config.json --use_kiba_label
 ```
 
 进行评估时，我们使用回归任务中标准的均方误差MSE作为指标，除此之外，引入一致性指数CI作为新指标。均方误差越小，一致性指数越大，模型的预测性能越好。

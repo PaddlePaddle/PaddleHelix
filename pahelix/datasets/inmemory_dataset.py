@@ -20,9 +20,10 @@ import os
 from os.path import join, exists
 import numpy as np
 
-from pgl.utils.data.dataloader import Dataloader
+from pgl.utils.data import Dataloader
 
 from pahelix.utils.data_utils import save_data_list_to_npz, load_npz_to_data_list
+from pahelix.utils.basic_utils import mp_pool_map
 
 
 __all__ = ['InMemoryDataset']
@@ -31,7 +32,6 @@ __all__ = ['InMemoryDataset']
 class InMemoryDataset(object):
     """
     Description:
-
         The InMemoryDataset manages ``data_list`` which is a list of `data` and 
         the `data` is a dict of numpy ndarray. And each dict has the same keys.
 
@@ -41,8 +41,8 @@ class InMemoryDataset(object):
         The ``data_list`` can be cached in npz files by calling `dataset.save_data(data_path)` 
         and after that, call `InMemoryDataset(data_path)` to reload.
 
-        Attributes:
-            data_list(list): a list of dict of numpy ndarray.
+    Attributes:
+        data_list(list): a list of dict of numpy ndarray.
 
     Example:
         .. code-block:: python
@@ -54,11 +54,11 @@ class InMemoryDataset(object):
 
             dataset2 = InMemoryDataset(npz_data_path='./cached_npz')    # will load the saved `data_list`
             print(len(dataset))
-
     """
     def __init__(self, 
             data_list=None,
-            npz_data_path=None):
+            npz_data_path=None,
+            npz_data_files=None):
         """
         Users can either directly pass the ``data_list`` or pass the `data_path` from 
         which the cached ``data_list`` will be loaded.
@@ -68,19 +68,28 @@ class InMemoryDataset(object):
             data_path(str): the path to the cached npz path.
         """
         super(InMemoryDataset, self).__init__()
-        assert (data_list is None) ^ (npz_data_path is None), \
-                "Only data_list or npz_data_path should be set."
         self.data_list = data_list
         self.npz_data_path = npz_data_path
+        self.npz_data_files = npz_data_files
 
         if not npz_data_path is None:
-            self.data_list = self._load_npz_data(npz_data_path)
+            self.data_list = self._load_npz_data_path(npz_data_path)
 
-    def _load_npz_data(self, data_path):
+        if not npz_data_files is None:
+            self.data_list = self._load_npz_data_files(npz_data_files)
+
+    def _load_npz_data_path(self, data_path):
         data_list = []
         files = [f for f in os.listdir(data_path) if f.endswith('.npz')]
+        files = sorted(files)
         for f in files:
             data_list += load_npz_to_data_list(join(data_path, f))
+        return data_list
+
+    def _load_npz_data_files(self, data_files):
+        data_list = []
+        for f in data_files:
+            data_list += load_npz_to_data_list(f)
         return data_list
 
     def _save_npz_data(self, data_list, data_path, max_num_per_file=10000):
@@ -88,9 +97,9 @@ class InMemoryDataset(object):
             os.makedirs(data_path)
         n = len(data_list)
         for i in range(int((n - 1) / max_num_per_file) + 1):
-            filename = 'part-%05d.npz' % i
+            filename = 'part-%06d.npz' % i
             sub_data_list = self.data_list[i * max_num_per_file: (i + 1) * max_num_per_file]
-            save_data_list_to_npz(join(data_path, filename), sub_data_list)
+            save_data_list_to_npz(sub_data_list, join(data_path, filename))
 
     def save_data(self, data_path):
         """
@@ -122,7 +131,18 @@ class InMemoryDataset(object):
     def __len__(self):
         return len(self.data_list)
 
-    def iter_batch(self, batch_size, num_workers=4, shuffle=False, collate_fn=None):
+    def transform(self, transform_fn, num_workers=4, drop_none=False):
+        """
+        Inplace apply `transform_fn` on the `data_list` with multiprocess.
+        """
+        data_list = mp_pool_map(self.data_list, transform_fn, num_workers)
+        if drop_none:
+            self.data_list = [data for data in data_list if not data is None]
+        else:
+            self.data_list = data_list
+
+
+    def get_data_loader(self, batch_size, num_workers=4, shuffle=False, collate_fn=None):
         """
         It returns an batch iterator which yields a batch of data. Firstly, a sub-list of
         `data` of size ``batch_size`` will be draw from the ``data_list``, then 
@@ -145,4 +165,3 @@ class InMemoryDataset(object):
                 num_workers=num_workers, 
                 shuffle=shuffle,
                 collate_fn=collate_fn)
-        
