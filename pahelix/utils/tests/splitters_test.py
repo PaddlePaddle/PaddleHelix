@@ -20,7 +20,6 @@ import unittest
 from pahelix.utils.splitters import \
         RandomSplitter, IndexSplitter, ScaffoldSplitter, RandomScaffoldSplitter
 from pahelix.datasets.inmemory_dataset import InMemoryDataset
-from pahelix.featurizers.featurizer import Featurizer
 
 
 class RandomSplitterTest(unittest.TestCase):  
