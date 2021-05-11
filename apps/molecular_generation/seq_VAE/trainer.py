@@ -123,7 +123,6 @@ def main(config):
     # load data    
     dataset_file = config.dataset_dir
     src_data = load_zinc_dataset(dataset_file)
-    src_data = src_data[0:100]
     # load vocabulary and prepare dataloader    
     vocab = OneHotVocab.from_data(src_data)
     max_length = model_config["max_length"]

@@ -25,7 +25,7 @@ sys.path.append( '../cfg_parser')
 import cfg_parser
 from cmd_args import cmd_args
 
-class Node(object)
+class Node(object):
     """
     tbd
     """

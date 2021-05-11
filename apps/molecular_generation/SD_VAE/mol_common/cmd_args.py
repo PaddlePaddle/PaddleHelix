@@ -21,13 +21,13 @@ import argparse
 
 
 cmd_opt = argparse.ArgumentParser(description='Argparser for molecule vae')
-cmd_opt.add_argument('-save_dir', default='../../results/', help='result output root')
+cmd_opt.add_argument('-save_dir', default='./results/', help='result output root')
 cmd_opt.add_argument('-mode', default='cpu', help='cpu/gpu')
 cmd_opt.add_argument('-saved_model', default=None, help='start from existing model')
-cmd_opt.add_argument('-grammar_file', default='../data/context_free_grammars/mol_zinc.grammar', \
+cmd_opt.add_argument('-grammar_file', default='./data/data_SD_VAE/context_free_grammars/mol_zinc.grammar', \
 						help='grammar production rules')
-cmd_opt.add_argument('-info_fold', default='../data/context_free_grammars', help='the folder saves grammer info')
-cmd_opt.add_argument('-smiles_file', default='../data/250k_rndm_zinc_drugs_clean-0.h5', help='list of smiles strings')
+cmd_opt.add_argument('-info_fold', default='../data/data_SD_VAE/context_free_grammars', help='the folder saves grammer info')
+cmd_opt.add_argument('-smiles_file', default='./data/data_SD_VAE/zinc/250k_rndm_zinc_drugs_clean-0.h5', help='list of smiles strings')
 cmd_opt.add_argument('-model_config', default='model_config.json')
 
 cmd_opt.add_argument('-data_dump', help='location of h5 file')

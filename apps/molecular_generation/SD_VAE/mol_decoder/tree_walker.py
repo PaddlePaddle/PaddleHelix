@@ -38,7 +38,6 @@ from cmd_args import cmd_args
 sys.path.append('../cfg_parser')
 import cfg_parser
 
-from attribute_tree_decoder import AttMolGraphDecoder
 
 class DecodingLimitExceeded(Exception):
     """

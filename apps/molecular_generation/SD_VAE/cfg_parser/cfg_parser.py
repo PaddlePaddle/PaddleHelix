@@ -54,15 +54,6 @@ class Grammar(object):
                 rules = [_.strip() for _ in rules.split('|')]  # split and remove space
                 rules = [tuple([Nonterminal(_) if not _.startswith("'") \
                             else _[1:-1] for _ in rule.split()]) for rule in rules]
-                rules_return = []
-                for rule in rules:
-                    for _ in rule.split()
-                        if not _.startswith("'"):
-                            rules_return.append(Nonterminal(_))
-                        else:
-                            rules_return.append(_[1:-1])
-                rules = rules_return
-
                 head_to_rules[head] = rules
 
                 for rule in rules:

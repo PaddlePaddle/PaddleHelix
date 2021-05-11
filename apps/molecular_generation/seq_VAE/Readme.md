@@ -51,7 +51,7 @@ In order to train the model, we need to set the training parameters. The dafault
 
   
     # Train
-  '--n_epoch': number of trianing epoch, default=1000
+    '--n_epoch': number of trianing epoch, default=1000
     '--n_batch': number of bach size, default=1000
     '--lr_start': 'Initial lr value, default=3 * 1e-4
     
