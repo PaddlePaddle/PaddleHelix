@@ -35,8 +35,7 @@ from cmd_args import cmd_args
 from mol_tree import AnnotatedTree2MolTree
 
 sys.path.append('../mol_decoder')
-from attribute_tree_decoder import create_tree_decoder
-from mol_decoder import batch_make_att_masks
+from attribute_tree_decoder import create_tree_decoder,batch_make_att_masks
 
 sys.path.append('../cfg_parser')
 import cfg_parser as parser
@@ -87,7 +86,6 @@ if __name__ == '__main__':
     with open(smiles_file, 'r') as f:
         smiles = f.readlines()
 
-    smiles = smiles[0:11]
     for i in range(len(smiles)):
         smiles[i] = smiles[i].strip()
 
