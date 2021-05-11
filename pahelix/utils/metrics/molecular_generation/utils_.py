@@ -31,8 +31,8 @@ from rdkit.Chem.AllChem import GetMorganFingerprintAsBitVect as Morgan
 from rdkit.Chem.QED import qed
 from rdkit.Chem.Scaffolds import MurckoScaffold
 from rdkit.Chem import Descriptors
-from SA_Score import sascorer
-from NP_Score import npscorer
+from pahelix.utils.metrics.molecular_generation.SA_Score import sascorer
+from pahelix.utils.metrics.molecular_generation.NP_Score import npscorer
 from multiprocessing import Pool
 
 
