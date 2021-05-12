@@ -50,7 +50,7 @@ def load_zinc_SD_data():
     all_rule_masks = h5f['masks'][:]
     h5f.close()
 
-    return all_true_binary[0:100], all_rule_masks[0:100]
+    return all_true_binary, all_rule_masks
 
 
 class CreateDataset(Dataset):
