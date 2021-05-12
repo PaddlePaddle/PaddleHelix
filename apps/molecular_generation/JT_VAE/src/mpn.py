@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""grah message passing network"""
+"""graph encoding"""
 import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
@@ -30,7 +30,7 @@ MAX_NB = 6
 
 
 def atom_features(atom):
-    """return atom one-hot embedding"""
+    """atom one-hot embedding"""
     return np.array(onek_encoding_unk(atom.GetSymbol(), ELEM_LIST)
                     + onek_encoding_unk(atom.GetDegree(), [0, 1, 2, 3, 4, 5])
                     + onek_encoding_unk(atom.GetFormalCharge(), [-1, -2, 1, 2, 0])
@@ -40,11 +40,11 @@ def atom_features(atom):
 
 
 def bond_features(bond):
-    """return bond one-hot embedding"""
+    """bond one-hot embedding"""
     bt = bond.GetBondType()
     stereo = int(bond.GetStereo())
-    fbond = [int(bt == Chem.rdchem.BondType.SINGLE), int(bt == Chem.rdchem.BondType.DOUBLE), 
-             int(bt == Chem.rdchem.BondType.TRIPLE), int(bt == Chem.rdchem.BondType.AROMATIC), 
+    fbond = [int(bt == Chem.rdchem.BondType.SINGLE), int(bt == Chem.rdchem.BondType.DOUBLE),
+             int(bt == Chem.rdchem.BondType.TRIPLE), int(bt == Chem.rdchem.BondType.AROMATIC),
              int(bond.IsInRing())]
     fstereo = onek_encoding_unk(stereo, [0, 1, 2, 3, 4, 5])
     return np.array(fbond + fstereo)
@@ -63,10 +63,19 @@ class MPN(nn.Layer):
         self.W_o = nn.Linear(ATOM_FDIM + hidden_size, hidden_size)
 
     def forward(self, fatoms, fbonds, agraph, bgraph, scope):
-        """Forward"""
+        """Forward
+        Args:
+            fnode(list): nodes ids.
+            fbonds(list): bond features.
+            agraph(list): neighbors(atom).
+            bgraph(list): neighbors(atom) \ atom .
+            scope(list): scope.
+        Returns
+            mol vectors.
+        """
         fatoms = paddle.to_tensor(fatoms)
-        fbonds = paddle.to_tensor(fbonds) 
-        agraph = paddle.to_tensor(agraph) 
+        fbonds = paddle.to_tensor(fbonds)
+        agraph = paddle.to_tensor(agraph)
         bgraph = paddle.to_tensor(bgraph)
 
         binput = self.W_i(fbonds)
@@ -94,7 +103,16 @@ class MPN(nn.Layer):
 
     @staticmethod
     def tensorize(mol_batch):
-        """transform mol object into graph feature"""
+        """transform mol objects into graph features
+        Args:
+            mol_batch(list): smiles in a batch.
+        Returns:
+            fnode: nodes ids.
+            fbonds: bond features.
+            agraph: neighbors(atom).
+            bgraph: neighbors(atom) \ atom .
+            scope: scope
+        """
         padding = np.zeros([ATOM_FDIM + BOND_FDIM]).astype('int64')
 
         fatoms, fbonds = [], [padding]  

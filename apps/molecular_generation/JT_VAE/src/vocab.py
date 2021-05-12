@@ -19,6 +19,7 @@ import copy
 import json
 from src.utils import read_file
 
+
 def get_slots(smiles):
     """return the mol slots"""
     mol = Chem.MolFromSmiles(smiles)
@@ -28,7 +29,7 @@ def get_slots(smiles):
 def get_vocab(file):
     """return the cluster vocaburary"""
     return read_file(file)
-    
+
 
 class Vocab(object):
     """cluster vocaburary class"""
