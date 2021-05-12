@@ -28,6 +28,8 @@ __all__ = ['get_default_ddi_task_names', 'load_ddi_dataset']
 def get_default_ddi_task_names():
     """Get that default ddi task names and return class label"""
     return ['drug_a_name', 'drug_b_name', 'cell_line', 'synergy']
+
+    
 def load_ddi_dataset(data_path, task_names=None, cellline=None, featurizer=None):
     """Load ddi dataset,process the input information and the featurizer.
     Description:

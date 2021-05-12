@@ -15,22 +15,34 @@
 ## 背景
 药物联用，也叫做协同治疗，通常在应对复杂疾病时使用。而图神经网络能够结合多种生物学网络从而来预测药物的协同作用。
 ## 数据集
-药物协同的分值文件和药物的理化特征信息文件在 `data` 文件夹下. 首先在`data` 文件夹下创建`ddi`, `dti`和`ppi`文件夹。
+药物协同的分值文件和药物的理化特征信息文件在 `data` 文件夹下。
 ### ddi
 ```sh
 cd data/ddi && wget "http://www.bioinf.jku.at/software/DeepSynergy/labels.csv"
 ```
 ### dti
-### ppi
+```sh
+cd data && wget "https://baidu-nlp.bj.bcebos.com/PaddleHelix/datasets/drug_synergy_datasets/dti.tgz" && tar xzvf dti.tgz
+```
+
+### ppi 
+```sh
+cd data && wget "https://baidu-nlp.bj.bcebos.com/PaddleHelix/datasets/drug_synergy_datasets/ppi.tgz" && tar xzvf ppi.tgz
+```
+
+### drug features
+```sh
+cd data && wget "https://baidu-nlp.bj.bcebos.com/PaddleHelix/datasets/drug_synergy_datasets/drug_feat.tgz" && tar xzvf drug_feat.tgz
+```
 
 ## 使用说明
 为了方便展示，我们构建了一个脚本， `train.py`.
 用法如下:
 ```
 CUDA_VISIBLE_DEVICES=0 python3 train.py 
-                         --ddi ./data/ddi/DDs.csv
-                         --dti ./data/dti/drug_protein_links.tsv
-                         --ppi ./data/ppi/protein_protein_links.txt
+                         --ddi ./data/DDI/DDs.csv
+                         --dti ./data/DTI/drug_protein_links.tsv
+                         --ppi ./data/PPI/protein_protein_links.txt
                          --d_feat ./data/all_drugs_name.fet
                          --epochs 10
                          --num_graph 10

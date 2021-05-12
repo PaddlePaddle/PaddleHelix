@@ -29,6 +29,7 @@ def get_default_dti_task_names():
     """Get that default dti task names"""
     return ['chemical', 'protein']
 
+
 def load_dti_dataset(data_path, task_names=None, featurizer=None):
     """Load dti dataset,process the input information and the featurizer.
     Description:

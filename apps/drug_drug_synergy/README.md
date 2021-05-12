@@ -17,26 +17,36 @@
 Drug combinations, also known as combinatorial therapy, are frequently prescribed to treat patients with complex disease. Graph convolutional network(GCN) can be used to predict drug-drug synergy by intergrating multiple biological networks.
 
 ## Datasets
-Drug-drug synergy information and drug physi-chemical features can be put under `data` folder. Then let us create `ddi`, `dti` and `ppi` folder under `data` folder.
+Drug-drug synergy information and drug physi-chemical features can be put under `data` folder. 
 ### ddi
 
 ```sh
-cd data/ddi && wget "http://www.bioinf.jku.at/software/DeepSynergy/labels.csv"
+cd data/DDI && wget "http://www.bioinf.jku.at/software/DeepSynergy/labels.csv"
 ```
 
 ### dti
+```sh
+cd data && wget "https://baidu-nlp.bj.bcebos.com/PaddleHelix/datasets/drug_synergy_datasets/dti.tgz" && tar xzvf dti.tgz
+```
 
 ### ppi 
+```sh
+cd data && wget "https://baidu-nlp.bj.bcebos.com/PaddleHelix/datasets/drug_synergy_datasets/ppi.tgz" && tar xzvf ppi.tgz
+```
 
+### drug features
+```sh
+cd data && wget "https://baidu-nlp.bj.bcebos.com/PaddleHelix/datasets/drug_synergy_datasets/drug_feat.tgz" && tar xzvf drug_feat.tgz
+```
 
 ## Instructions
 For illustration, we provide a python script `train.py`.
 Its usage is:
 ```
 CUDA_VISIBLE_DEVICES=0 python3 train.py 
-                         --ddi ./data/ddi/DDs.csv
-                         --dti ./data/dti/drug_protein_links.tsv
-                         --ppi ./data/ppi/protein_protein_links.txt
+                         --ddi ./data/DDI/DDs.csv
+                         --dti ./data/DTI/drug_protein_links.tsv
+                         --ppi ./data/PPI/protein_protein_links.txt
                          --d_feat ./data/all_drugs_name.fet
                          --epochs 10
                          --num_graph 10
