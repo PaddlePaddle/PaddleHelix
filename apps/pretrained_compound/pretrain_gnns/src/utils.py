@@ -1,4 +1,4 @@
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -101,8 +101,7 @@ def create_splitter(split_type):
 
 
 def calc_rocauc_score(labels, preds, valid):
-    """compute ROC-AUC and averaged across tasks
-    """
+    """compute ROC-AUC and averaged across tasks"""
     if labels.ndim == 1:
         labels = labels.reshape(-1, 1)
         preds = preds.reshape(-1, 1)

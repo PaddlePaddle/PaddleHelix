@@ -1,4 +1,4 @@
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,10 +24,9 @@ import pgl
 
 
 class GraphNorm(nn.Layer):
-    """Implementation of graph normalization
-   
-    Reference Paper: BENCHMARKING GRAPH NEURAL NETWORKS
-   
+    """
+    Implementation of graph normalization.
+    Reference Paper: BENCHMARKING GRAPH NEURAL NETWORKS.
     Each node features is divied by sqrt(num_nodes) per graphs.
     Args:
         graph: the graph object from (:code:`Graph`)
@@ -41,7 +40,7 @@ class GraphNorm(nn.Layer):
         self.graph_pool = pgl.nn.GraphPool(pool_type="sum")
 
     def forward(self, graph, feature):
-        """tbd"""
+        """graph norm"""
         nodes = paddle.ones(shape=[graph.num_nodes, 1], dtype="float32")
         norm = self.graph_pool(graph, nodes)
         norm = paddle.sqrt(norm)
@@ -59,7 +58,7 @@ class MeanPool(nn.Layer):
 
     def forward(self, graph, node_feat):
         """
-        tbd
+        mean pooling
         """
         sum_pooled = self.graph_pool(graph, node_feat)
         ones_sum_pooled = self.graph_pool(
