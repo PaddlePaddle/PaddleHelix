@@ -200,77 +200,89 @@ The comparisons of different methods on KIBA are following:
 ## Reference
 
 **MolTrans**
->@article{10.1093/bioinformatics/btaa880,
-  author = {Huang, Kexin and Xiao, Cao and Glass, Lucas M and Sun, Jimeng},
-  title = "{MolTrans: Molecular Interaction Transformer for drug–target interaction prediction}",
-  journal = {Bioinformatics},
-  volume = {37},
-  number = {6},
-  pages = {830-836},
-  year = {2020},
-  month = {10},
-  issn = {1367-4803},
-  doi = {10.1093/bioinformatics/btaa880},
-  url = {https://doi.org/10.1093/bioinformatics/btaa880}
+```
+@article{10.1093/bioinformatics/btaa880,
+    author = {Huang, Kexin and Xiao, Cao and Glass, Lucas M and Sun, Jimeng},
+    title = {MolTrans: Molecular Interaction Transformer for drug–target interaction prediction},
+    journal = {Bioinformatics},
+    volume = {37},
+    number = {6},
+    pages = {830-836},
+    year = {2020},
+    month = {10},
+    issn = {1367-4803},
+    doi = {10.1093/bioinformatics/btaa880},
+    url = {https://doi.org/10.1093/bioinformatics/btaa880}
 }
+```
 
 **DAVIS**
->@article{10.1038/nbt.1990,
-  author = {Mindy I Davis, Jeremy P Hunt, Sanna Herrgard, Pietro Ciceri, Lisa M Wodicka, Gabriel Pallares, Michael Hocker, Daniel K Treiber and Patrick P Zarrinkar},
-  title = "{Comprehensive analysis of kinase inhibitor selectivity}",
-  journal = {Nature Biotechnology},
-  year = {2011},
-  url = {https://doi.org/10.1038/nbt.1990}
+```
+@article{10.1038/nbt.1990,
+    author = {Mindy I Davis, Jeremy P Hunt, Sanna Herrgard, Pietro Ciceri, Lisa M Wodicka, Gabriel Pallares, Michael Hocker, Daniel K Treiber and Patrick P Zarrinkar},
+    title = {Comprehensive analysis of kinase inhibitor selectivity},
+    journal = {Nature Biotechnology},
+    year = {2011},
+    url = {https://doi.org/10.1038/nbt.1990}
 }
+```
 
 **KIBA**
->@article{doi:10.1021/ci400709d,
-  author = {Tang, Jing and Szwajda, Agnieszka and Shakyawar, Sushil and Xu, Tao and Hintsanen, Petteri and Wennerberg, Krister and Aittokallio, Tero},
-  title = "{Making Sense of Large-Scale Kinase Inhibitor Bioactivity Data Sets: A Comparative and Integrative Analysis}",
-  journal = {Journal of Chemical Information and Modeling},
-  volume = {54},
-  number = {3},
-  pages = {735-743},
-  year = {2014},
-  doi = {10.1021/ci400709d},
-  note = {PMID: 24521231},
-  url = {https://doi.org/10.1021/ci400709d}
+```
+@article{doi:10.1021/ci400709d,
+    author = {Tang, Jing and Szwajda, Agnieszka and Shakyawar, Sushil and Xu, Tao and Hintsanen, Petteri and Wennerberg, Krister and Aittokallio, Tero},
+    title = {Making Sense of Large-Scale Kinase Inhibitor Bioactivity Data Sets: A Comparative and Integrative Analysis},
+    journal = {Journal of Chemical Information and Modeling},
+    volume = {54},
+    number = {3},
+    pages = {735-743},
+    year = {2014},
+    doi = {10.1021/ci400709d},
+    note = {PMID: 24521231},
+    url = {https://doi.org/10.1021/ci400709d}
 }
+```
 
 **BioSNAP**
->@misc{biosnapnets,
-  author = {Marinka Zitnik, Rok Sosi\v{c}, Sagar Maheshwari, and Jure Leskovec},
-  title = "{{BioSNAP Datasets}: {Stanford} Biomedical Network Dataset Collection}",
-  howpublished = {\url{http://snap.stanford.edu/biodata}},
-  month = aug,
-  year = 2018
+```
+@misc{biosnapnets,
+    author = {Marinka Zitnik, Rok Sosi\v{c}, Sagar Maheshwari, and Jure Leskovec},
+    title = {BioSNAP Datasets: Stanford Biomedical Network Dataset Collection},
+    month = aug,
+    year = 2018,
+    url = {http://snap.stanford.edu/biodata}
 }
+```
 
 **BindingDB**
->@article{10.1093/nar/gkv1072,
-  author = {Gilson, Michael K. and Liu, Tiqing and Baitaluk, Michael and Nicola, George and Hwang, Linda and Chong, Jenny},
-  title = "{BindingDB in 2015: A public database for medicinal chemistry, computational chemistry and systems pharmacology}",
-  journal = {Nucleic Acids Research},
-  volume = {44},
-  number = {D1},
-  pages = {D1045-D1053},
-  year = {2015},
-  month = {10},
-  issn = {0305-1048},
-  doi = {10.1093/nar/gkv1072},
-  url = {https://doi.org/10.1093/nar/gkv1072},
+```
+@article{10.1093/nar/gkv1072,
+    author = {Gilson, Michael K. and Liu, Tiqing and Baitaluk, Michael and Nicola, George and Hwang, Linda and Chong, Jenny},
+    title = {BindingDB in 2015: A public database for medicinal chemistry, computational chemistry and systems pharmacology},
+    journal = {Nucleic Acids Research},
+    volume = {44},
+    number = {D1},
+    pages = {D1045-D1053},
+    year = {2015},
+    month = {10},
+    issn = {0305-1048},
+    doi = {10.1093/nar/gkv1072},
+    url = {https://doi.org/10.1093/nar/gkv1072}
 }
+```
 
 **ChEMBL**
->@article{10.1093/nar/gkw1074,
-  author = {Gaulton, Anna and Hersey, Anne and Nowotka, Michał and Bento, A. Patrícia and Chambers, Jon and Mendez, David and Mutowo, Prudence and Atkinson, Francis and Bellis, Louisa J. and Cibrián-Uhalte, Elena and Davies, Mark and Dedman, Nathan and Karlsson, Anneli and Magariños, María Paula and Overington, John P. and Papadatos, George and Smit, Ines and Leach, Andrew R.},
-  title = "{The ChEMBL database in 2017}",
-  journal = {Nucleic Acids Research},
-  volume = {45},
-  number = {D1},
-  pages = {D945-D954},
-  year = {2016},
-  month = {11},
-  doi = {10.1093/nar/gkw1074},
-  url = {https://doi.org/10.1093/nar/gkw1074}
+```
+@article{10.1093/nar/gkw1074,
+    author = {Gaulton, Anna and Hersey, Anne and Nowotka, Michał and Bento, A. Patrícia and Chambers, Jon and Mendez, David and Mutowo, Prudence and Atkinson, Francis and Bellis, Louisa J. and Cibrián-Uhalte, Elena and Davies, Mark and Dedman, Nathan and Karlsson, Anneli and Magariños, María Paula and Overington, John P. and Papadatos, George and Smit, Ines and Leach, Andrew R.},
+    title = {The ChEMBL database in 2017},
+    journal = {Nucleic Acids Research},
+    volume = {45},
+    number = {D1},
+    pages = {D945-D954},
+    year = {2016},
+    month = {11},
+    doi = {10.1093/nar/gkw1074},
+    url = {https://doi.org/10.1093/nar/gkw1074}
 }
+```
