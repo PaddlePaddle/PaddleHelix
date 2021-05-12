@@ -1,6 +1,6 @@
 #!/usr/bin/python                                                                                                                                                                                             
 #-*-coding:utf-8-*- 
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -35,7 +35,6 @@ class DownstreamTransformFn(object):
         Args:
             raw_data: It contains smiles and label,we convert smiles 
             to mol by rdkit,then convert mol to graph data.
-        
         Returns:
             data: It contains reshape label and smiles.
         """

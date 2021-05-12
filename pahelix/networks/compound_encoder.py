@@ -1,4 +1,4 @@
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -41,8 +41,7 @@ class AtomEmbedding(nn.Layer):
 
     def forward(self, node_features):
         """
-        Args:
-            node_features(dict of tensor):
+        Args: node_features(dict of tensor):
         """
         out_embed = 0
         for i, name in enumerate(self.atom_names):
@@ -68,8 +67,7 @@ class BondEmbedding(nn.Layer):
 
     def forward(self, edge_features):
         """
-        Args:
-            edge_features(dict of tensor):
+        Args: edge_features(dict of tensor):
         """
         out_embed = 0
         for i, name in enumerate(self.bond_names):

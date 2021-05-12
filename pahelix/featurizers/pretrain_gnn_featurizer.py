@@ -1,4 +1,4 @@
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -129,16 +129,13 @@ class SupervisedCollateFn(object):
     def __call__(self, data_list):
         """
         Collate features about a sublist of graph data and return a big batch feed dictionary.
-
         Args:
             data_list : the graph data in SupervisedTransformFn for data in data_list,
             create node features and edge features according to pgl graph,and then 
             use graph wrapper to feed join graph, then the label can be arrayed to batch label.
-        
         Returns:
             The batch data contains finetune label and valid,which are 
-            collected from batch_label and batch_valid.
-            
+            collected from batch_label and batch_valid.      
         """
         g_list = []
         label_list = []
