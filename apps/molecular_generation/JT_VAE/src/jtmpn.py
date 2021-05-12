@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""tree message passing network"""
+"""subgraph message passing network"""
 
 import paddle
 import paddle.nn as nn
@@ -43,16 +43,16 @@ def bond_features(bond):
     """return bond one-hot embedding"""
     bt = bond.GetBondType()
     return np.array(
-        [int(bt == Chem.rdchem.BondType.SINGLE), 
-         int(bt == Chem.rdchem.BondType.DOUBLE), 
+        [int(bt == Chem.rdchem.BondType.SINGLE),
+         int(bt == Chem.rdchem.BondType.DOUBLE),
          int(bt == Chem.rdchem.BondType.TRIPLE),
-         int(bt == Chem.rdchem.BondType.AROMATIC), 
+         int(bt == Chem.rdchem.BondType.AROMATIC),
          int(bond.IsInRing())])
 
 
 
 class JTMPN(nn.Layer):
-    """tree message passing layer"""
+    """subgraph message passing layer"""
     def __init__(self, hidden_size, depth):
         super(JTMPN, self).__init__()
         self.hidden_size = hidden_size

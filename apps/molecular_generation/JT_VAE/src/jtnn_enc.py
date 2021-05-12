@@ -21,6 +21,7 @@ from src.nnutils import index_select_ND
 
 class JTNNEncoder(nn.Layer):
     """Tree encodee layer"""
+
     def __init__(self, hidden_size, depth, embedding):
         super(JTNNEncoder, self).__init__()
         self.hidden_size = hidden_size
@@ -34,7 +35,16 @@ class JTNNEncoder(nn.Layer):
         self.GRU = GraphGRU(hidden_size, hidden_size, depth=depth)
 
     def forward(self, fnode, fmess, node_graph, mess_graph, scope):
-        """Forward"""
+        """Forward
+        Args:
+            fnode(list): nodes ids.
+            fmess(list): nodes order in tensorize_nodes process.
+            node_graph(list): precursors of node_i.
+            mess_graph(list): precursors of node_i in message(i->j).
+            scope(list): record nodes number of each tree in a batch.
+        Returns:
+            tree vectors and message.
+        """
         fnode = paddle.to_tensor(fnode)
         fmess = paddle.to_tensor(fmess)
         node_graph = paddle.to_tensor(node_graph)
@@ -49,10 +59,9 @@ class JTNNEncoder(nn.Layer):
         node_vecs = paddle.concat([fnode, paddle.sum(mess_nei, axis=1)], axis=-1)
         node_vecs = self.outputNN(node_vecs)
 
-        max_len = max([x for _, x in scope])
         batch_vecs = []
         for st, le in scope:
-            cur_vecs = node_vecs[st]  
+            cur_vecs = node_vecs[st]
             batch_vecs.append(cur_vecs)
 
         tree_vecs = paddle.stack(batch_vecs, axis=0)
@@ -60,7 +69,7 @@ class JTNNEncoder(nn.Layer):
 
     @staticmethod
     def tensorize(tree_batch):
-        """tbd"""
+        """tensorize"""
         node_batch = []
         scope = []
         for tree in tree_batch:
@@ -71,7 +80,18 @@ class JTNNEncoder(nn.Layer):
 
     @staticmethod
     def tensorize_nodes(node_batch, scope):
-        """tbd"""
+        """tensorize_nodes.
+        Args:
+            node_batch(list): nodes in a batch.
+            scope: record nodes number of each tree in a batch.
+        Returns:
+            fnode: nodes ids.
+            fmess: nodes order in tensorize_nodes process.
+            node_graph: precursors of node_i.
+            mess_graph: precursors of node_i in message(i->j).
+            scope: record nodes number of each tree in a batch.
+            mess_dict: message order.
+        """
         messages, mess_dict = [None], {}
         fnode = []
         for x in node_batch:
@@ -102,12 +122,13 @@ class JTNNEncoder(nn.Layer):
         for t in mess_graph:
             pad_len = max_len - len(t)
             t.extend([0] * pad_len)
- 
+
         return (fnode, fmess, node_graph, mess_graph, scope), mess_dict
 
 
 class GraphGRU(nn.Layer):
     """tbd"""
+
     def __init__(self, input_size, hidden_size, depth):
         super(GraphGRU, self).__init__()
         self.hidden_size = hidden_size
@@ -122,7 +143,7 @@ class GraphGRU(nn.Layer):
     def forward(self, h, x, mess_graph):
         """tbd"""
         mask = paddle.ones([h.shape[0], 1])
-        mask[0] = 0  
+        mask[0] = 0
         for it in range(self.depth):
             h_nei = index_select_ND(h, 0, mess_graph)
             sum_h = paddle.sum(h_nei, axis=1)

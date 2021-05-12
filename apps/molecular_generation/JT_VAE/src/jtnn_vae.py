@@ -27,14 +27,14 @@ from src.jtmpn import JTMPN
 from src.chemutils import enum_assemble, set_atommap, copy_edit_mol, attach_mols
 
 
-
 class JTNNVAE(nn.Layer):
     """JTVAE layer"""
+
     def __init__(self, vocab, hidden_size, latent_size, depthT, depthG):
         super(JTNNVAE, self).__init__()
         self.vocab = vocab
         self.hidden_size = hidden_size
-        self.latent_size = latent_size = int(latent_size / 2)  
+        self.latent_size = latent_size = int(latent_size / 2)
 
         self.jtnn = JTNNEncoder(hidden_size, depthT, nn.Embedding(vocab.size(), hidden_size))
         self.decoder = JTNNDecoder(vocab, hidden_size, latent_size, nn.Embedding(vocab.size(), hidden_size))
@@ -73,14 +73,14 @@ class JTNNVAE(nn.Layer):
             z_vecs(tensor): latent representation.
             W_mean(tensor): mean vector.
             W_var(tensor): variance vaector.
-     
+
         Returns:
             z_vecs(tensor): resampled latent representation.
             kl_loss(tensor): kl loss.
         """
         batch_size = z_vecs.shape[0]
         z_mean = W_mean(z_vecs)
-        z_log_var = -paddle.abs(W_var(z_vecs))  
+        z_log_var = -paddle.abs(W_var(z_vecs))
         kl_loss = -0.5 * paddle.sum(1.0 + z_log_var - z_mean * z_mean - paddle.exp(z_log_var)) / batch_size
         z_mean_shape = paddle.to_tensor(z_mean.shape)
         epsilon = paddle.randn(z_mean_shape)
@@ -91,13 +91,13 @@ class JTNNVAE(nn.Layer):
         return z_vecs, kl_loss
 
     def sample_prior(self, prob_decode=False):
-        """       
+        """
         Sample a molecule from prior distribution.
         Args:
             prob_decode(bool): using bernoulli distribution in graph decode if prob_decode=true.
-    
+
         Returns:
-            a smiles.
+            smiles.
         """
         z_tree = paddle.randn([1, self.latent_size])
         z_mol = paddle.randn([1, self.latent_size])
@@ -110,7 +110,7 @@ class JTNNVAE(nn.Layer):
             x_jtenc_holder(tuple): (tree feature, message dict).
             x_mpn_holder(dict): graph feature.
         Returns:
-            a smiles list.
+            smiles list.
         """
         x_tree_vecs, x_tree_mess, x_mol_vecs = self.encode(x_jtenc_holder, x_mpn_holder)
         z_tree_vecs, tree_kl = self.rsample(x_tree_vecs, self.T_mean, self.T_var)
@@ -141,15 +141,15 @@ class JTNNVAE(nn.Layer):
         z_mol_vecs, mol_kl = self.rsample(x_mol_vecs, self.G_mean, self.G_var)
         kl_div = tree_kl + mol_kl
         decoder_res = self.decoder(x_batch, z_tree_vecs)
-        word_loss = decoder_res['pred_loss'] 
+        word_loss = decoder_res['pred_loss']
         topo_loss = decoder_res['stop_loss']
         word_acc = decoder_res['pred_acc']
         topo_acc = decoder_res['stop_acc']
         assm_loss, assm_acc = self.assm(x_batch, x_jtmpn_holder, z_mol_vecs, x_tree_mess)
-        return {'loss': word_loss + topo_loss + assm_loss + beta * kl_div, 
-                'kl_div': float(kl_div.numpy()), 
-                'word_acc': word_acc, 
-                'topo_acc': topo_acc, 
+        return {'loss': word_loss + topo_loss + assm_loss + beta * kl_div,
+                'kl_div': float(kl_div.numpy()),
+                'word_acc': word_acc,
+                'topo_acc': topo_acc,
                 'assm_acc': assm_acc}
 
     def assm(self, mol_batch, jtmpn_holder, x_mol_vecs, x_tree_mess):
@@ -158,8 +158,8 @@ class JTNNVAE(nn.Layer):
         Args:
             mol_batch(list): molecule trees.
             jtmpn_holder(tuple): (graph feature dict, batch idx).
-            x_mol_vecs(tensor): graph latent represenation.
-            x_tree_mess(tensor): tree latent represenation.
+            x_mol_vecs(tensor): graph latent representation.
+            x_tree_mess(tensor): tree latent representation.
         Returns:
             graph assemble loss and accuracy.
         """
@@ -174,7 +174,7 @@ class JTNNVAE(nn.Layer):
         cand_vecs = self.jtmpn(fatoms, fbonds, agraph, bgraph, scope, x_tree_mess)
 
         x_mol_vecs = paddle.index_select(axis=0, index=batch_idx, x=x_mol_vecs)
-        x_mol_vecs = self.A_assm(x_mol_vecs) 
+        x_mol_vecs = self.A_assm(x_mol_vecs)
         scores = paddle.bmm(
             x_mol_vecs.unsqueeze(1),
             cand_vecs.unsqueeze(-1)
@@ -226,9 +226,9 @@ class JTNNVAE(nn.Layer):
         scope = [(0, len(pred_nodes))]
         jtenc_holder, mess_dict = JTNNEncoder.tensorize_nodes(pred_nodes, scope)
         _, tree_mess = self.jtnn(*jtenc_holder)
-        tree_mess = (tree_mess, mess_dict)  
+        tree_mess = (tree_mess, mess_dict)
 
-        x_mol_vecs = self.A_assm(x_mol_vecs).squeeze()  
+        x_mol_vecs = self.A_assm(x_mol_vecs).squeeze()
 
         cur_mol = copy_edit_mol(pred_root.mol)
         global_amap = [{}] + [{} for node in pred_nodes]
@@ -287,7 +287,7 @@ class JTNNVAE(nn.Layer):
             scores = paddle.to_tensor([1.0])
 
         if prob_decode:
-            probs = paddle.squeeze(F.softmax(paddle.reshape(scores, shape=[1, -1]), axis=1)) + 1e-7  
+            probs = paddle.squeeze(F.softmax(paddle.reshape(scores, shape=[1, -1]), axis=1)) + 1e-7
             cand_idx = paddle.multinomial(probs, probs.numel())
         else:
             cand_idx = paddle.argsort(scores, descending=True)
@@ -304,7 +304,7 @@ class JTNNVAE(nn.Layer):
                     continue
                 new_global_amap[nei_id][nei_atom] = new_global_amap[cur_node.nid][ctr_atom]
 
-            cur_mol = attach_mols(cur_mol, children, [], new_global_amap) 
+            cur_mol = attach_mols(cur_mol, children, [], new_global_amap)
             new_mol = cur_mol.GetMol()
             new_mol = Chem.MolFromSmiles(Chem.MolToSmiles(new_mol))
 
