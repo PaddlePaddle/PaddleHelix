@@ -63,5 +63,23 @@ def inflate_tensor(tensor, scope):
     return paddle.stack(batch_vecs, axis=0)
 
 
+def GRU(x, h_nei, W_z, W_r, U_r, W_h):
+    """GRU"""
+    hidden_size = x.shape[-1]
+    sum_h = paddle.sum(h_nei, axis=1)
+    z_input = paddle.concat([x, sum_h], axis=1)
+    z = F.sigmoid(W_z(z_input))
+
+    r_1 = paddle.reshape(W_r(x), shape=[-1, 1, hidden_size])
+    r_2 = U_r(h_nei)
+    r = F.sigmoid(r_1 + r_2)
+
+    gated_h = r * h_nei
+    sum_gated_h = paddle.sum(gated_h, axis=1)
+    h_input = paddle.concat([x, sum_gated_h], axis=1)
+    pre_h = F.tanh(W_h(h_input))
+    new_h = (1.0 - z) * sum_h + z * pre_h
+    return new_h
+
 
 
