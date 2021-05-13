@@ -27,7 +27,9 @@ from pahelix.datasets.inmemory_dataset import InMemoryDataset
 __all__ = ['get_default_ppi_task_names', 'load_ppi_dataset']
 def get_default_ppi_task_names():
     """Get that default ppi task names"""
-    return ['protein1', 'protein2']
+    return ['protein1', 'protein2'] 
+
+
 def load_ppi_dataset(data_path, task_names=None, featurizer=None):
     """Load ppi dataset,process the input information and the featurizer.
     Description:

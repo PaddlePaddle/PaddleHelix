@@ -1,6 +1,6 @@
 #!/usr/bin/python3                                                                                                
 #-*-coding:utf-8-*- 
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,7 +24,8 @@ import numpy as np
 from tqdm import tqdm
 from rdkit import Chem
 from collections import Counter
-import pdb
+import json
+from pahelix.utils.metrics.molecular_generation.metrics_ import get_all_metrics
 
 # 0. Constants
 nb_latent_point = 200
@@ -53,12 +54,10 @@ def cal_valid_prior(model, latent_dim):
         decoded = c.most_common(1)[0][0]
         if decoded.startswith('JUNK'):
             continue
-        # m = Chem.MolFromSmiles(decoded)
-        # if m is None:
-        #     continue
         decode_list.append(decoded)
-        # if len(decode_list) == 100:
-        #     break
+
+    metrics = get_all_metrics(gen=decode_list,k=[100,1000])
+    print(metrics)
 
     valid_prior_save_file =  cmd_args.saved_model + '-sampled_prior.txt'
     with open(valid_prior_save_file, 'w') as fout:
@@ -76,10 +75,11 @@ def main():
 
     from att_model_proxy import AttMolProxy as ProxyModel
     from att_model_proxy import cmd_args
+    model_config = json.load(open(cmd_args.model_config, 'r'))
 
     model = ProxyModel()
 
-    cal_valid_prior(model, cmd_args.latent_dim)
+    cal_valid_prior(model, model_config['latent_dim'])
 
 
 if __name__ == '__main__':
