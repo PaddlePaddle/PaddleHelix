@@ -36,6 +36,8 @@ cmd_opt.add_argument('-data_dump', help='location of h5 file')
 cmd_opt.add_argument('-skip_deter', type=int, default=0, help='skip deterministic position')
 cmd_opt.add_argument('-bondcompact', type=int, default=0, help='compact ringbond representation or not')
 cmd_opt.add_argument('-data_gen_threads', default=1, type=int, help='number of threads for data generation')
+cmd_opt.add_argument('-max_decode_steps', type=int, default=278, help='max_decode_steps')
+
 
 # training
 cmd_opt.add_argument('-loss_type', default='vanilla', help='choose loss from [perplexity | binary | vanilla]')

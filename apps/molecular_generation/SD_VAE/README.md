@@ -15,8 +15,11 @@ You can download the data from [datalink] (https://baidu-nlp.bj.bcebos.com/Paddl
 
 
 data (project root)
+
 |__  data_SD_VAE
+
 |__  |__ context_free_grammars
+
 |__  |__ zinc
 
 
@@ -67,14 +70,35 @@ To run the trianing scripts:
     CUDA_VISIBLE_DEVICES=0 python train_zinc.py \
     -mode='gpu' \
 
+#### Run sampling
 
-#### Sampling results from prior
-valid: 0.41
+
+    python sample_prior.py -info_fold ../data/data_SD_VAE/context_free_grammars  \
+      -grammar_file ../data/data_SD_VAE/context_free_grammars/mol_zinc.grammar \
+      -model_config ../model_config.json \
+      -saved_model ../model/train_model_epoch499
+
+
+    python reconstruct_zinc.py  \
+      -info_fold ../data/data_SD_VAE/context_free_grammars \        
+      -grammar_file ../data/data_SD_VAE/context_free_grammars/mol_zinc.grammar \      
+      -model_config ../model_config.json \       
+      -saved_model ../model/train_model_epoch499 \
+      -smiles_file ../data/data_SD_VAE/zinc/250k_rndm_zinc_drugs_clean.smi 
+
+
+
+##### Sampling results from prior
+valid: 0.49
+unique@100: 1.0
 unique@1000: 1.0
-unique@10000: 1.0
 IntDiv: 0.92
-IntDiv2: 0.81
-Filters: 0.35
+IntDiv2: 0.82
+Filters: 0.30
+
+##### Reconstruction result
+accuracy: 0.92
+
 
 
 ## Reference
