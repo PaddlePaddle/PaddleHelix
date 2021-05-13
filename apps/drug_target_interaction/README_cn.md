@@ -5,3 +5,5 @@
 我们提供以下药物靶点亲和力预测模型。
 
 * [GraphDTA](./graph_dta/README_cn.md)
+* [MolTrans](./moltrans_dti/README_cn.md)
+* [S-MAN](./sman/README_cn.md)

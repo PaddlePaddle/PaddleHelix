@@ -32,8 +32,8 @@ from pahelix.datasets.inmemory_dataset import InMemoryDataset
 __all__ = ['load_zinc_dataset']
 
 
-def load_zinc_dataset(data_path, featurizer=None, return_smiles=False, indices=None):
-    """Load ZINC dataset,process the input information and the featurizer.
+def load_zinc_dataset(data_path):
+    """Load ZINC dataset,process the input information.
 
     Description:
         
@@ -45,11 +45,6 @@ def load_zinc_dataset(data_path, featurizer=None, return_smiles=False, indices=N
 
     Args:
         data_path(str): the path to the cached npz path.
-        featurizer(pahelix.featurizers.Featurizer): the featurizer to use for 
-            processing the data. If not none, The ``Featurizer.gen_features`` will be 
-            applied to the raw data.
-        return_smiles(bool): directly return the list of all smiles if True.
-        indices(list): the indices of smiles to select.
     
     Returns:
         an InMemoryDataset instance.
@@ -57,7 +52,7 @@ def load_zinc_dataset(data_path, featurizer=None, return_smiles=False, indices=N
     Example:
         .. code-block:: python
 
-            dataset = load_zinc_dataset('./zinc/raw')
+            dataset = load_zinc_dataset('./zinc')
             print(len(dataset))
 
     References:
@@ -66,22 +61,12 @@ def load_zinc_dataset(data_path, featurizer=None, return_smiles=False, indices=N
 
     """
     smiles_list = _load_zinc_dataset(data_path)
-    if return_smiles:
-        return smiles_list
-    
-    if not indices is None:
-        smiles_list = [smiles_list[i] for i in indices]
-    
+        
     data_list = []
     for i in range(len(smiles_list)):
-        raw_data = {}
-        raw_data['smiles'] = smiles_list[i]        
-        if not featurizer is None:
-            data = featurizer.gen_features(raw_data)
-        else:
-            data = raw_data
-        if not data is None:
-            data_list.append(data)
+        data = {}
+        data['smiles'] = smiles_list[i]        
+        data_list.append(data)
     dataset = InMemoryDataset(data_list)
     return dataset
 
@@ -94,8 +79,9 @@ def _load_zinc_dataset(data_path):
     Returns:
         smile_list: the smile list of the input.
     """
-    csv_file = os.listdir(data_path)[0]
+    raw_path = join(data_path, 'raw')
+    csv_file = os.listdir(raw_path)[0]
     input_df = pd.read_csv(
-            join(data_path, csv_file), sep=',', compression='gzip', dtype='str')
+            join(raw_path, csv_file), sep=',', compression='gzip', dtype='str')
     smiles_list = list(input_df['smiles'])
     return smiles_list

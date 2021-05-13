@@ -37,34 +37,46 @@ wget ftp://ftp.ics.uci.edu:21/pub/baldig/learning/ptc/ptc_MR_data.can
 wget ftp://ftp.ics.uci.edu:21/pub/baldig/learning/ptc/ptc_MR_target.txt
 ```
 
-下载完成后，`demos/data`目录看起来是这样的：
+下载完成后，运行下面的脚本进行数据预处理：
+
+```sh
+python scripts/preprocess_data.py
+```
+
+最后，`data`目录看起来是这样的：
 
 ```txt
 data
-|-- mutag
-|   `-- raw
-|       |-- mutag_188_data.can
-|       `-- mutag_188_target.txt
-`-- ptc_mr
-    `-- raw
-        |-- ptc_MR_data.can
-        `-- ptc_MR_target.txt
+├── mutag
+│   ├── processed
+│   │   ├── data.npz
+│   │   └── smiles.txt
+│   └── raw
+│       ├── mutag_188_data.can
+│       └── mutag_188_target.txt
+└── ptc_mr
+    ├── processed
+    │   ├── data.npz
+    │   └── smiles.txt
+    └── raw
+        ├── ptc_MR_data.can
+        └── ptc_MR_target.txt
 ```
 
 ## 使用说明
 
 ### 参数设置
 
-Python脚本`unsupervised_pretrain.py`是InfoGraph模型的入口，它需要的超参数配置请参见`demos/unsupervised_pretrain_config.json`.
+Python脚本`unsupervised_pretrain.py`是InfoGraph模型的入口，它需要的超参数配置请参见`model_configs/unsupervised_pretrain_config.json`.
 
 ### 训练与评估
 
-为了方便实验，我们提供了shell脚本`demos/unsupervised_pretrain.sh`实现一体化的训练以及评估学习到的图表征。在运行该脚本前，需要配置实验重复次数，数据集的根目录，以及超参配置的路径。
+为了方便实验，我们提供了shell脚本`scripts/unsupervised_pretrain.sh`实现一体化的训练以及评估学习到的图表征。在运行该脚本前，需要配置实验重复次数，数据集的根目录，以及超参配置的路径。
 
 ```sh
 runs=3
 root="data"
-config="unsupervised_pretrain_config.json"
+config="model_configs/unsupervised_pretrain_config.json"
 ```
 
 评估结果：

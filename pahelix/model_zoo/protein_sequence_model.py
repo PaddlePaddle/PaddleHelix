@@ -11,178 +11,450 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
 Sequence-based models for protein.
 """
-
 import math
-import numpy
 import paddle
-import paddle.fluid as fluid
+import paddle.nn as nn
+import paddle.nn.functional as F
 from pahelix.utils.protein_tools import ProteinTokenizer
-from pahelix.networks.lstm_block import lstm_encoder
-from pahelix.networks.transformer_block import transformer_encoder
-from pahelix.networks.pre_post_process import pre_process_layer
-from pahelix.networks.resnet_block import resnet_encoder
 
-class ProteinSequenceModel:
+
+class LstmEncoderModel(nn.Layer):
+    """
+    LstmEncoderModel
+    """
+    def __init__(self,
+                vocab_size,
+                emb_dim=128,
+                hidden_size=1024,
+                n_layers=3,
+                padding_idx=0,
+                epsilon=1e-5,
+                dropout_rate=0.1):
+        """
+        __init__
+        """
+        super(LstmEncoderModel, self).__init__()
+        self.padding_idx = padding_idx
+        self.embedding = nn.Embedding(vocab_size,
+                                    emb_dim,
+                                    padding_idx=padding_idx)
+        self.dropout = nn.Dropout(p=dropout_rate)
+        self.lstm_encoder = nn.LSTM(emb_dim,
+                            hidden_size,
+                            num_layers=n_layers,
+                            direction="bidirectional")
+
+    def forward(self, input, pos):
+        """
+        forward
+        """
+        token_embed = self.embedding(input)
+        encoder_output, _ = self.lstm_encoder(token_embed)
+        encoder_output = self.dropout(encoder_output)
+        
+        return encoder_output
+
+
+class ResnetEncoderModel(nn.Layer):
+    """
+    ResnetEncoderModel
+    """
+    def __init__(self,
+                 vocab_size,
+                 emb_dim=256,
+                 hidden_size=512,
+                 kernel_size=9,
+                 n_layers=32,
+                 padding_idx=0,
+                 dropout_rate=0.1,
+                 epsilon=1e-6):
+        super(ResnetEncoderModel, self).__init__()
+
+        self.hidden_size = hidden_size
+        self.n_layers = n_layers
+
+        self.token_embedding = nn.Embedding(vocab_size,
+                                            emb_dim,
+                                            padding_idx=padding_idx)
+        max_pos_len = 3000
+        self.pos_embedding = nn.Embedding(max_pos_len,
+                                          emb_dim,
+                                          padding_idx=padding_idx)
+
+        self.padded_conv = nn.Sequential(
+            nn.BatchNorm1D(emb_dim, data_format="NLC"),
+            nn.ReLU(),
+            nn.Conv1D(in_channels=emb_dim, out_channels=hidden_size, kernel_size=kernel_size, padding="same", \
+                      data_format="NLC", weight_attr=nn.initializer.KaimingNormal()),
+            nn.Dropout(p=dropout_rate)
+        )
+
+        self.residual_block_1 = nn.Sequential(
+            nn.BatchNorm1D(hidden_size, data_format="NLC"),
+            nn.ReLU(),
+            nn.Conv1D(in_channels=hidden_size, out_channels=hidden_size, kernel_size=kernel_size, padding="same", \
+                      data_format="NLC", weight_attr=nn.initializer.KaimingNormal()),
+            nn.Dropout(p=dropout_rate),
+            nn.BatchNorm1D(hidden_size, data_format="NLC"),
+            nn.ReLU(),
+            nn.Conv1D(in_channels=hidden_size, out_channels=hidden_size, kernel_size=kernel_size, padding="same", \
+                      data_format="NLC", weight_attr=nn.initializer.KaimingNormal()),
+            nn.Dropout(p=dropout_rate)
+        )
+
+        self.residual_block_n = nn.Sequential(
+            nn.BatchNorm1D(hidden_size, data_format="NLC"),
+            nn.ReLU(),
+            nn.Conv1D(in_channels=hidden_size, out_channels=hidden_size, kernel_size=kernel_size, dilation=2, \
+                      padding="same", data_format="NLC", weight_attr=nn.initializer.KaimingNormal()),
+            nn.Dropout(p=dropout_rate),
+            nn.BatchNorm1D(hidden_size, data_format="NLC"),
+            nn.ReLU(),
+            nn.Conv1D(in_channels=hidden_size, out_channels=hidden_size, kernel_size=kernel_size, dilation=2, \
+                      padding="same", data_format="NLC", weight_attr=nn.initializer.KaimingNormal()),
+            nn.Dropout(p=dropout_rate)
+        )
+    
+    def forward(self, input, pos):
+        """
+        forward
+        """
+        token_embed = self.token_embedding(input)
+        token_embed = token_embed * math.sqrt(self.hidden_size)
+        pos_embed = self.pos_embedding(pos)
+        embed = token_embed + pos_embed
+
+        inputs = self.padded_conv(embed)
+        inputs = self.residual_block_1(inputs)
+        for i in range(self.n_layers - 1):
+            residual_output = self.residual_block_n(inputs)
+            inputs = residual_output + inputs
+        encoder_output = inputs
+        
+        return encoder_output
+
+
+class TransformerEncoderModel(nn.Layer):
+    """
+    TransformerEncoderModel
+    """
+    def __init__(self,
+                 vocab_size,
+                 emb_dim=512,
+                 hidden_size=512,
+                 n_layers=8,
+                 n_heads=8,
+                 padding_idx=0,
+                 dropout_rate=0.1):
+        """
+        __init__
+        """
+        super(TransformerEncoderModel, self).__init__()
+        self.padding_idx = padding_idx
+        self.token_embedding = nn.Embedding(vocab_size,
+                                            emb_dim,
+                                            padding_idx=padding_idx)
+        max_pos_len = 3000
+        self.pos_embedding = nn.Embedding(max_pos_len,
+                                          emb_dim,
+                                          padding_idx=padding_idx)
+
+        self.dropout = nn.Dropout(p=dropout_rate)
+        self.transformer_encoder_layer = nn.TransformerEncoderLayer(emb_dim, n_heads, dim_feedforward=hidden_size * 4, \
+                                                dropout=0.1, activation='gelu', attn_dropout=0.1, act_dropout=0) 
+        self.transformer_encoder = nn.TransformerEncoder(self.transformer_encoder_layer, n_layers)
+        self.layer_norm = nn.LayerNorm(hidden_size)
+        self.dropout = nn.Dropout(dropout_rate)
+        self.apply(self.init_weights)
+    
+    def forward(self, input, pos):
+        """
+        forward
+        """
+        attention_mask = paddle.unsqueeze(
+            (pos == self.padding_idx).astype("float32") * -1e9,
+            axis=[1, 2])
+        # attention_mask = None
+        token_embed = self.token_embedding(input)
+        pos_embed = self.pos_embedding(pos)
+        embed = token_embed + pos_embed
+        embed = self.layer_norm(embed)
+        embed = self.dropout(embed)
+        encoder_output = self.transformer_encoder(embed, attention_mask)
+
+        return encoder_output
+    
+    def init_weights(self, layer):
+        """ Initialization hook """
+        if isinstance(layer, (nn.Linear, nn.Embedding)):
+            # In the dygraph mode, use the `set_value` to reset the parameter directly,
+            # and reset the `state_dict` to update parameter in static mode.
+            if isinstance(layer.weight, paddle.Tensor):
+                layer.weight.set_value(
+                    paddle.tensor.normal(
+                        mean=0.0,
+                        std=0.02,
+                        shape=layer.weight.shape))
+        elif isinstance(layer, nn.LayerNorm):
+            layer._epsilon = 1e-12
+
+
+class PretrainTaskModel(nn.Layer):
+    """
+    PretrainTaskModel
+    """
+    def __init__(self,
+                 class_num,
+                 model_config,
+                 encoder_model):
+        """
+        __init__
+        """
+        super(PretrainTaskModel, self).__init__()
+
+        model_type = model_config.get('model_type', 'transformer')
+        hidden_size = model_config.get('hidden_size', 512)
+        in_channels = hidden_size * 2 if model_type == 'lstm' else hidden_size
+
+        self.conv_decoder = nn.Sequential(
+            nn.Conv1D(in_channels=in_channels,
+                      out_channels=128,
+                      kernel_size=5,
+                      padding="same",
+                      data_format="NLC"),
+            nn.ReLU(),
+            nn.Conv1D(in_channels=128,
+                      out_channels=class_num,
+                      kernel_size=3,
+                      padding="same",
+                      data_format="NLC"),
+        )
+        self.encoder_model = encoder_model
+    
+    def forward(self, input, pos):
+        """
+        forward
+        """
+        encoder_output = self.encoder_model(input, pos)
+        decoder_output = self.conv_decoder(encoder_output)
+
+        return decoder_output 
+
+
+class SeqClassificationTaskModel(nn.Layer):
+    """
+    SeqClassificationTaskModel
+    """
+    def __init__(self,
+                 class_num,
+                 model_config,
+                 encoder_model):
+        """
+        __init__
+        """
+        super(SeqClassificationTaskModel, self).__init__()
+
+        model_type = model_config.get('model_type', 'transformer')
+        hidden_size = model_config.get('hidden_size', 512)
+        in_channels = hidden_size * 2 if model_type == 'lstm' else hidden_size
+
+        self.conv_decoder = nn.Sequential(
+            nn.Conv1D(in_channels=in_channels,
+                      out_channels=128,
+                      kernel_size=5,
+                      padding="same",
+                      data_format="NLC"),
+            nn.ReLU(),
+            nn.Conv1D(in_channels=128,
+                      out_channels=class_num,
+                      kernel_size=3,
+                      padding="same",
+                      data_format="NLC"),
+        )
+        self.encoder_model = encoder_model
+    
+    def forward(self, input, pos):
+        """
+        forward
+        """
+        encoder_output = self.encoder_model(input, pos)
+        decoder_output = self.conv_decoder(encoder_output)
+
+        return decoder_output 
+
+
+class ClassificationTaskModel(nn.Layer):
+    """
+    ClassificationTaskModel
+    """
+    def __init__(self,
+                 class_num,
+                 model_config,
+                 encoder_model):
+        """
+        __init__
+        """
+        super(ClassificationTaskModel, self).__init__()
+        model_type = model_config.get('model_type', 'transformer')
+        hidden_size = model_config.get('hidden_size', 512)
+        in_channels = hidden_size * 2 if model_type == 'lstm' else hidden_size
+
+        self.fc_decoder = nn.Sequential(
+            nn.Linear(in_features=in_channels,
+                      out_features=512),
+            nn.ReLU(),
+            nn.Linear(in_features=512,
+                      out_features=class_num)
+        )
+        self.encoder_model = encoder_model
+    
+    def forward(self, input, pos):
+        """
+        forward
+        """
+        encoder_output = self.encoder_model(input, pos)
+        encoder_output = encoder_output[:, 0, :]
+        decoder_output = self.fc_decoder(encoder_output)
+    
+        return decoder_output
+
+
+class RegressionTaskModel(nn.Layer):
+    """
+    RegressionTaskModel
+    """
+    def __init__(self,
+                 model_config,
+                 encoder_model):
+        """
+        __init__
+        """
+        super(RegressionTaskModel, self).__init__()
+        model_type = model_config.get('model_type', 'transformer')
+        hidden_size = model_config.get('hidden_size', 512)
+        in_channels = hidden_size * 2 if model_type == 'lstm' else hidden_size
+
+        self.fc_decoder = nn.Sequential(
+            nn.Linear(in_features=in_channels,
+                      out_features=hidden_size),
+            nn.ReLU(),
+            nn.Linear(in_features=hidden_size,
+                      out_features=1)
+        )
+        self.encoder_model = encoder_model
+    
+    def forward(self, input, pos):
+        """
+        forward
+        """
+        encoder_output = self.encoder_model(input, pos)
+        encoder_output = encoder_output[:, 0, :]
+        decoder_output = self.fc_decoder(encoder_output)
+
+        return decoder_output
+
+
+class ProteinEncoderModel(nn.Layer):
     """
     ProteinSequenceModel
     """
     def __init__(self, model_config, name=''):
+        """
+        tbd
+        """
+        super(ProteinEncoderModel, self).__init__()
         self.model_name = name
-        self.model_type = model_config.get('model_type', 'transformer')
-        self.hidden_size = model_config.get('hidden_size', 512)
-        self.param_initializer = fluid.initializer.TruncatedNormal(
-                scale=model_config.get('initializer_range', 0.02))
-        self.dropout_rate = model_config.get('dropout', 0.1)
-        self.epsilon = model_config.get('epsilon', 1e-5)
-        self.pre_encoder_cmd = model_config.get('pre_encoder_cmd', 'nd')
-        self.preprocess_cmd = model_config.get('preprocess_cmd', '')
-        self.postprocess_cmd = model_config.get('postprocess_cmd', 'dan')
-        self.vocab_size = model_config.get('vocab_size', len(ProteinTokenizer.vocab))
-        self.max_len = model_config.get('max_len', 8192)
+        model_type = model_config.get('model_type', 'transformer')
+        emb_dim = model_config.get('emb_dim', 512)
+        hidden_size = model_config.get('hidden_size', 512)
+        n_layers = model_config.get('n_layers', 8)
 
-        if self.model_type == 'transformer':
-            self.layer_num = model_config.get('layer_num', 4)
-            self.head_num = model_config.get('head_num', 4)
-            self.pool_type = model_config.get('pool_type', 'first')
-        elif self.model_type == 'lstm':
-            self.layer_num = model_config.get('layer_num', 3)
-            self.pool_type = model_config.get('pool_type', 'average')
-        elif self.model_type == 'resnet':
-            self.layer_num = model_config.get('layer_num', 5)
-            self.filter_size = model_config.get('filter_size', 3)
-            self.pool_type = model_config.get('pool_type', 'average')
-        else:
-            raise ValueError('%s not supported.' % self.model_type)
-
-    def _prepare_emb(self, inputs, is_test):
-        token = inputs['token']
-        token_emb = fluid.layers.embedding(
-                input=token,
-                param_attr=fluid.ParamAttr(name='%s_token_emb' % self.model_name, initializer=self.param_initializer),
-                size=[self.vocab_size, self.hidden_size],
-                padding_idx=0,
-                is_sparse=False)
-        if self.model_type in ['transformer', 'resnet']:
-            pos = inputs['pos']
-            pos_emb = fluid.layers.embedding(
-                    input=pos,
-                    param_attr=fluid.ParamAttr(name='%s_pos_emb' % self.model_name, initializer=self.param_initializer),
-                    size=[self.max_len, self.hidden_size],
-                    is_sparse=False)
-            features = fluid.layers.elementwise_add(token_emb, pos_emb)
-        else:
-            features = token_emb
-
-        features = pre_process_layer(
-                features,
-                self.pre_encoder_cmd,
-                self.dropout_rate,
-                name='%s_pre_encoder' % self.model_name,
-                epsilon=self.epsilon,
-                is_test=is_test)
-
-        return features
-
-    def _transformer(self, input, is_test):
-        pad_value = fluid.layers.assign(input=numpy.array([0.0], dtype=numpy.float32))
-        input_pad, input_len = fluid.layers.sequence_pad(
-                input, pad_value=pad_value)
-        transformer_in = input_pad
-
-        layer_num = self.layer_num
-        head_num = self.head_num
-        transformer_out, checkpoints = transformer_encoder(
-            enc_input=transformer_in,
-            attn_bias=None,
-            n_layer=layer_num,
-            n_head=head_num,
-            d_key=self.hidden_size // head_num, 
-            d_value=self.hidden_size // head_num,
-            d_model=self.hidden_size,
-            d_inner_hid=self.hidden_size * 4,
-            prepostprocess_dropout=self.dropout_rate,
-            attention_dropout=self.dropout_rate,
-            act_dropout=self.dropout_rate,
-            hidden_act='gelu',
-            preprocess_cmd=self.preprocess_cmd,
-            postprocess_cmd=self.postprocess_cmd,
-            param_initializer=self.param_initializer,
-            epsilon=self.epsilon,
-            name='%s_transformer' % self.model_name,
-            is_test=is_test
-        )
-
-        hidden = fluid.layers.sequence_unpad(transformer_out, length=input_len)
-        pooled_hidden = fluid.layers.fc(
-                input=fluid.layers.sequence_pool(hidden, pool_type='first'),
-                param_attr=fluid.ParamAttr(
-                        name='%s_seq_pool_fc.w_0' % self.model_name,
-                        initializer=self.param_initializer),
-                bias_attr=fluid.ParamAttr(name='%s_seq_pool_fc.b_0' % self.model_name),
-                size=self.hidden_size,
-                act='tanh')
-
-        return hidden, pooled_hidden, checkpoints
-
-    def _lstm(self, input, is_test):
-        hidden, checkpoints = lstm_encoder(
-                input=input,
-                hidden_size=self.hidden_size,
-                n_layer=self.layer_num,
-                is_bidirectory=True,
-                param_initializer=self.param_initializer,
-                name='%s_lstm' % self.model_name)
-        pooled_hidden = fluid.layers.fc(
-                input=fluid.layers.sequence_pool(hidden, pool_type=self.pool_type),
-                param_attr=fluid.ParamAttr(
-                        name='%s_seq_pool_fc.w_0' % self.model_name,
-                        initializer=self.param_initializer),
-                bias_attr=fluid.ParamAttr(name='%s_seq_pool_fc.b_0' % self.model_name),
-                size=self.hidden_size,
-                act='tanh')
-        return hidden, pooled_hidden, checkpoints
-
-    def _resnet(self, input, is_test):
-        hidden, checkpoints = resnet_encoder(
-                input=input,
-                hidden_size=self.hidden_size,
-                n_layer=self.layer_num,
-                filter_size=self.filter_size,
-                act='gelu',
-                epsilon=self.epsilon,
-                param_initializer=self.param_initializer,
-                name='%s_resnet' % self.model_name)
-        pooled_hidden = fluid.layers.fc(
-                input=fluid.layers.sequence_pool(hidden, pool_type=self.pool_type),
-                param_attr=fluid.ParamAttr(
-                        name='%s_seq_pool_fc.w_0' % self.model_name,
-                        initializer=self.param_initializer),
-                bias_attr=fluid.ParamAttr(name='%s_seq_pool_fc.b_0' % self.model_name),
-                size=self.hidden_size,
-                act='tanh')
-        return hidden, pooled_hidden, checkpoints
-
-    def forward(self, inputs, is_test):
+        if model_type == "lstm":
+            self.encoder_model = LstmEncoderModel(vocab_size=len(ProteinTokenizer.vocab),
+                                                  emb_dim=emb_dim,
+                                                  hidden_size=hidden_size,
+                                                  n_layers=n_layers)
+        elif model_type == "transformer":
+            n_heads = model_config.get('n_heads', 8)
+            self.encoder_model = TransformerEncoderModel(vocab_size=len(ProteinTokenizer.vocab),
+                                                         emb_dim=emb_dim,
+                                                         hidden_size=hidden_size,
+                                                         n_layers=n_layers,
+                                                         n_heads=n_heads)
+        elif model_type == "resnet":
+            kernel_size = model_config.get('kernel_size', 9)
+            self.encoder_model = ResnetEncoderModel(vocab_size=len(ProteinTokenizer.vocab),
+                                                    emb_dim=emb_dim,
+                                                    hidden_size=hidden_size,
+                                                    kernel_size=kernel_size,
+                                                    n_layers=n_layers)
+    
+    def forward(self, input, pos):
         """
-        Forward.
+        forward
         """
-        features = self._prepare_emb(inputs, is_test)
-        checkpoints = [features]
+        encoder_output = self.encoder_model(input, pos)
+        return encoder_output
+
+
+class ProteinModel(nn.Layer):
+    """
+    ProteinModel
+    """
+    def __init__(self, encoder_model, model_config):
+        """
+        __init__
+        """
+        super(ProteinModel, self).__init__()
+        task = model_config.get('task', 'pretrain')
+        if task == 'pretrain':
+            self.model = PretrainTaskModel(class_num=len(ProteinTokenizer.vocab), \
+                                           model_config=model_config, encoder_model=encoder_model)
+        elif task == 'seq_classification':
+            class_num = model_config.get('class_num', 3)
+            self.model = SeqClassificationTaskModel(class_num=class_num, \
+                                                    model_config=model_config, encoder_model=encoder_model)
+        elif task == 'classification':
+            class_num = model_config.get('class_num', 3)
+            self.model = ClassificationTaskModel(class_num=class_num, \
+                                                 model_config=model_config, encoder_model=encoder_model)
+        elif task == 'regression':
+            self.model = RegressionTaskModel(model_config=model_config, encoder_model=encoder_model)
+    
+    def forward(self, input, pos):
+        """
+        forward
+        """
+        output = self.model(input, pos)
+        return output
         
-        if self.model_type == 'transformer':
-            hidden, pooled_hidden, temp_checkpoints = self._transformer(features, is_test)
-        elif self.model_type == 'lstm':
-            hidden, pooled_hidden, temp_checkpoints = self._lstm(features, is_test)
-        elif self.model_type == 'resnet':
-            hidden, pooled_hidden, temp_checkpoints = self._resnet(features, is_test)
-        else:
-            print('Invalid model_type')
-            return
 
-        checkpoints.extend(temp_checkpoints)
+class ProteinCriterion(object):
+    """
+    ProteinCriterion
+    """
+    def __init__(self, model_config):
+        """
+        __init__
+        """
+        super(ProteinCriterion, self).__init__()
+        task = model_config.get('task', 'pretrain')
+        if task == 'pretrain':
+            self.criterion = paddle.nn.CrossEntropyLoss(ignore_index=-1)
+        elif task == 'seq_classification':
+            self.criterion = paddle.nn.CrossEntropyLoss(ignore_index=-1)
+        elif task == 'classification':
+            self.criterion = paddle.nn.CrossEntropyLoss(ignore_index=-1)
+        elif task == 'regression':
+            self.criterion = paddle.nn.MSELoss()
+    
+    def cal_loss(self, pred, label):
+        """
+        cal_loss
+        """
+        loss = self.criterion(pred, label)
+        return loss
 
-        return hidden, pooled_hidden, checkpoints

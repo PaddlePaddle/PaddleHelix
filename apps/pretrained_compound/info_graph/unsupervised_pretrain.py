@@ -33,128 +33,87 @@ logging.basicConfig(
         level=logging.INFO)
 
 import paddle
-import paddle.fluid as F
-import paddle.fluid.layers as L
-from paddle.fluid.incubate.fleet.collective import fleet, DistributedStrategy
-from paddle.fluid.incubate.fleet.base import role_maker
+import paddle.nn as nn
 import pgl
-from pgl.utils import paddle_helper
-from pgl.graph_wrapper import GraphWrapper
-from pgl.utils.data.dataloader import Dataloader
-from pahelix.datasets.mutag_dataset import load_mutag_dataset
-from pahelix.datasets.ptc_mr_dataset import load_ptc_mr_dataset
 
-from model import GINEncoder, FF, PriorDiscriminator
-from data_gen import MoleculeCollateFunc
+from pahelix.datasets.inmemory_dataset import InMemoryDataset
+
+from src.model import InfoGraph, InfoGraphCriterion
+from src.featurizer import MoleculeCollateFunc
 from classifier import eval_on_classifiers
-from utils import get_positive_expectation, get_negative_expectation, load_data
 
 
-def create_model(args, config):
-    """Create model for given model configuration."""
-    logging.info('building model')
-    graph_wrapper = GraphWrapper(
-        name="graph",
-        node_feat=[
-            ('atom_type', [None, 1], "int64"),
-            ('chirality_tag', [None, 1], "int64")],
-        edge_feat=[
-            ('bond_type', [None, 1], "int64"),
-            ('bond_direction', [None, 1], "int64")])
-
-    # NOTE: [num_nodes, num_graphs], bs = num_graphs
-    pos_mask = L.data(name='pos_mask', shape=[-1, args.batch_size],
-                      dtype='float32')
-    neg_mask = L.data(name='neg_mask', shape=[-1, args.batch_size],
-                      dtype='float32')
-
-    encoder = GINEncoder(config)
-    global_repr, patch_summary = encoder.forward(graph_wrapper)
-
-    global_D = FF(encoder.embedding_dim)
-    local_D = FF(encoder.embedding_dim)
-    g_enc = global_D.forward(global_repr)
-    l_enc = local_D.forward(patch_summary)
-
-    res = L.matmul(l_enc, g_enc, transpose_y=True)
-    E_pos = get_positive_expectation(res * pos_mask, config['measure'], average=False)
-    E_pos = L.reduce_sum(E_pos) / graph_wrapper.num_nodes
-    E_neg = get_negative_expectation(res * neg_mask, config['measure'], average=False)
-    E_neg = L.reduce_sum(E_neg) / (graph_wrapper.num_nodes * (graph_wrapper.num_graph - 1))
-    local_global_loss = E_neg - E_pos
-
-    if config['prior']:
-        prior_D = PriorDiscriminator(encoder.embedding_dim)
-        prior = L.uniform_random([args.batch_size, encoder.embedding_dim],
-                                 min=0.0, max=1.0)
-        term_1 = L.reduce_mean(L.log(prior_D.forward(prior)))
-        term_2 = L.reduce_mean(L.log(1.0 - prior_D.forward(global_repr)))
-        prior_loss = - (term_1 + term_2) * config['gamma']
-    else:
-        prior_loss = 0
-
-    total_loss = local_global_loss + prior_loss
-
-    keys = ['loss', 'graph_wrapper', 'encoder', 'graph_emb']
-    Agent = namedtuple('Agent', keys)
-    return Agent(
-        loss=total_loss,
-        graph_wrapper=graph_wrapper,
-        encoder=encoder,
-        graph_emb=global_repr)
-
-
-def train(args, exe, train_prog, agent, train_data_list, epoch_id):
+def train(args, model, criterion, optimizer, dataset,
+          collate_fn, epoch_id):
     """Model training for one epoch and log the average loss."""
-    collate_fn = MoleculeCollateFunc(
-        agent.graph_wrapper,
-        task_type='cls',
-        with_graph_label=False,  # for unsupervised learning
-        with_pos_neg_mask=True)
-    data_loader = Dataloader(
-        train_data_list,
+
+    data_gen = dataset.get_data_loader(
         batch_size=args.batch_size,
         num_workers=args.num_workers,
         shuffle=True,
         collate_fn=collate_fn)
+    model.train()
 
-    total_data, trained_data = len(train_data_list), 0
     list_loss = []
-    for batch_id, feed_dict in enumerate(data_loader):
-        train_loss = exe.run(
-            train_prog, feed=feed_dict, fetch_list=[agent.loss])
-        train_loss = np.array(train_loss).mean()
-        list_loss.append(train_loss)
-        trained_data += feed_dict['graph/num_graph'][0]
+    total_data, trained_data, batch_id = len(dataset), 0, 0
+    for graphs, pos_mask, neg_mask in data_gen:
+        graphs = graphs.tensor()
+        pos_mask = paddle.to_tensor(pos_mask, 'float32')
+        neg_mask = paddle.to_tensor(neg_mask, 'float32')
 
+        global_repr, encoding = model(graphs)
+        if criterion.prior:
+            prior = paddle.uniform(
+                [args.batch_size, model.embedding_dim],
+                min=0.0, max=1.0)
+            loss = criterion(graphs, global_repr, encoding,
+                             pos_mask, neg_mask, prior)
+        else:
+            loss = criterion(graphs, global_repr, encoding,
+                             pos_mask, neg_mask)
+
+        loss.backward()
+        optimizer.step()
+        optimizer.clear_grad()
+        list_loss.append(loss.numpy())
+
+        trained_data += graphs.num_graph
         if batch_id % args.log_interval == 0:
             logging.info('Epoch %d [%d/%d] train/loss:%f' % \
-                         (epoch_id, trained_data, total_data, train_loss))
+                         (epoch_id, trained_data, total_data, list_loss[-1]))
 
-    if not args.is_fleet or fleet.worker_index() == 0:
-        logging.info('Epoch %d train/loss:%f'%(epoch_id, np.mean(list_loss)))
-        sys.stdout.flush()
+        batch_id += 1
+
+    return np.mean(list_loss)
 
 
-def save_embedding(args, exe, test_prog, agent, data_list, epoch_id):
+def save_embedding(args, model, dataset, collate_fn, epoch_id):
     """Save the embeddings of all the testing data for multiple classifier evaluation."""
-    collate_fn = MoleculeCollateFunc(
-        agent.graph_wrapper,
-        task_type='cls',
-        with_graph_label=True,  # save emb & label for supervised learning
-        with_pos_neg_mask=True)
-    data_loader = Dataloader(
-        data_list,
+    data_gen = dataset.get_data_loader(
         batch_size=args.batch_size,
         num_workers=1,
         shuffle=False,
         collate_fn=collate_fn)
+    model.eval()
 
-    emb, y = agent.encoder.get_embeddings(
-        data_loader, exe, test_prog, agent.graph_emb)
-    emb, y = emb[:len(data_list)], y[:len(data_list)]
-    merge_data = {'emb': emb, 'y': y}
-    with open('%s/epoch_%s.pkl' % (args.emb_dir, epoch_id), 'wb') as f:
+
+    graph_emb_lst, graph_label_lst = [], []
+    for graphs, labels, valids in data_gen:
+        graphs = graphs.tensor()
+        graphs_emb, _ = model(graphs)
+        graphs_emb = graphs_emb.numpy()
+
+        graph_emb_lst.extend(list(graphs_emb))
+        graph_label_lst.extend(list(labels))
+
+    n = len(dataset)
+    merge_data = {
+        'emb': np.array(graph_emb_lst[:n]),
+        'y': np.array(graph_label_lst[:n])
+    }
+
+    pkl = os.path.join(args.emb_dir, 'epoch_%s.pkl' % epoch_id)
+    with open(pkl, 'wb') as f:
         pickle.dump(merge_data, f)
 
 
@@ -211,88 +170,67 @@ def save_eval_metric(res_collect, emb_dir):
 
 
 def main(args):
-    # Enable static graph mode.
-    paddle.enable_static()
-
     with open(args.config, 'r') as f:
         config = json.load(f)
 
     logging.info('Load data ...')
-    if len(args.dataset.split(',')) > 1:
-        # for large pretraining dataset, ZINC15 and ChEMBL
-        # directly load the processed npz files
-        train_data_list = []
-        for ds in args.dataset.split(','):
-            # use processed data.npz
-            train_data_list.extend(
-                load_data(os.path.join(args.root, ds, 'processed')))
-    else:
-        if args.dataset == 'mutag':
-            train_data_list, _ = load_mutag_dataset(
-                os.path.join(args.root, args.dataset, 'raw'))
-        elif args.dataset == 'ptc_mr':
-            train_data_list, _ = load_ptc_mr_dataset(
-                os.path.join(args.root, args.dataset, 'raw'))
-        else:
-            raise ValueError('Unsupported dataset')
 
-    if args.is_fleet:
-        train_data_list = [x for i, x in enumerate(train_data_list)
-                if i % fleet.worker_num() == fleet.worker_index()]
+    dataset = InMemoryDataset(npz_data_path=os.path.join(
+        args.root, args.dataset, 'processed'))
+    collate_fn = MoleculeCollateFunc(
+        config['atom_names'],
+        config['bond_names'],
+        with_graph_label=False,
+        with_pos_neg_mask=True)
+    eval_collate_fn = MoleculeCollateFunc(
+        config['atom_names'],
+        config['bond_names'],
+        with_graph_label=True,
+        with_pos_neg_mask=False)
+
     logging.info("Data loaded.")
-    logging.info("Train Examples: %s" % len(train_data_list))
+    logging.info("Train Examples: %s" % len(dataset))
     sys.stdout.flush()
 
     if args.emb_dir is not None:
         # pylint: disable=E1123
         os.makedirs(args.emb_dir, exist_ok=True)
 
-    train_prog = F.Program()
-    test_prog = F.Program()
-    startup_prog = F.Program()
-    with F.program_guard(train_prog, startup_prog):
-        with F.unique_name.guard():
-            agent = create_model(args, config)
-            test_prog = train_prog.clone(for_test=True)
+    if args.model_dir is not None:
+        # pylint: disable=E1123
+        os.makedirs(args.model_dir, exist_ok=True)
 
-            opt = F.optimizer.Adam(learning_rate=args.lr)
-            if args.is_fleet:
-                dist_strategy = DistributedStrategy()
-                role = role_maker.PaddleCloudRoleMaker(is_collective=True)
-                fleet.init(role)
-                opt = fleet.distributed_optimizer(opt, strategy=dist_strategy)
-            opt.minimize(agent.loss)
+    model = InfoGraph(config)
+    criterion = InfoGraphCriterion(config)
+    optimizer = paddle.optimizer.Adam(
+        learning_rate=args.lr,
+        parameters=model.parameters())
 
-    place = F.CUDAPlace(0) if args.use_cuda else F.CPUPlace()
-    exe = F.Executor(place)
-    exe.run(startup_prog)
-
-    if (not args.dont_save_emb) and \
-       (not args.is_fleet or fleet.worker_index() == 0):
-        save_embedding(args, exe, test_prog, agent, train_data_list, -1)
-
+    save_embedding(args, model, dataset, eval_collate_fn, -1)
     for epoch_id in range(args.max_epoch):
-        train(args, exe, train_prog, agent, train_data_list, epoch_id)
-        if not args.is_fleet or fleet.worker_index() == 0:
-            F.io.save_params(exe, '%s/epoch%s' % (args.model_dir, epoch_id), train_prog)
-            if not args.dont_save_emb:
-                save_embedding(args, exe, test_prog, agent, train_data_list, epoch_id)
+        train_loss = train(args, model, criterion, optimizer,
+                           dataset, collate_fn, epoch_id)
+        logging.info('Epoch %d, train/loss: %f' % (epoch_id, train_loss))
+
+        pdparams = os.path.join(args.model_dir, 'epoch_%d.pdparams' % epoch_id)
+        paddle.save(model.state_dict(), pdparams)
+
+        save_embedding(args, model, dataset, eval_collate_fn, epoch_id)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='InfoGraph pretrain')
     parser.add_argument("--task_name", type=str, default='train')
-    parser.add_argument("--is_fleet", action='store_true', default=False)
     parser.add_argument("--use_cuda", action='store_true', default=False)
     # parser.add_argument("--data_loader", action='store_true', default=False)
-    parser.add_argument("--config", type=str, default='demos/unsupervised_pretrain_config.json')
+    parser.add_argument("--config", type=str, default='model_configs/unsupervised_pretrain_config.json')
 
     parser.add_argument("--batch_size", type=int, default=256)
     parser.add_argument("--num_workers", type=int, default=4)
     parser.add_argument("--max_epoch", type=int, default=100)
     parser.add_argument("--log_interval", type=int, default=100)
     parser.add_argument("--lr", type=float, default=0.001)
-    parser.add_argument("--root", type=str, default='dataset')
+    parser.add_argument("--root", type=str, default='data')
     parser.add_argument("--dataset", type=str, default='mutag')
     parser.add_argument("--model_dir", type=str, required=True)
     parser.add_argument("--emb_dir", type=str)

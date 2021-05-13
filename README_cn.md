@@ -16,7 +16,7 @@
 
 ## 特色
 
-* **高性能**：提供了 LinearRNA 系列高性能算法助力 RNA 结构预测和分析。例如，LinearFold 和 LinearParition 能够迅速准确定位能量较低 RNA 二级结构，性能相比传统方法提升数百甚至上千倍。
+* **高性能**：提供了 LinearRNA 系列高性能算法助力 RNA 结构预测和分析。例如，LinearFold 和 LinearPartition 能够迅速准确定位能量较低 RNA 二级结构，性能相比传统方法提升数百甚至上千倍。
 <p align="center">
 <img src="./.github/LinearRNA.jpg" align="middle" />
 </p>
@@ -42,6 +42,9 @@
 ### 使用示例
 * [表示学习 - 化合物](./apps/pretrained_compound/README_cn.md)
 * [表示学习 - 蛋白质](./apps/pretrained_protein/README_cn.md)
+* [药物-分子作用预测](./apps/drug_target_interaction/README_cn.md)
+* [分子生成](./apps/molecular_generation/README_cn.md)
+* [药物联用](./apps/drug_drug_synergy/README_cn.md)
 * [药物-分子作用预测](./apps/drug_target_interaction/README_cn.md)
 * [LinearRNA](./c/pahelix/toolkit/linear_rna/README_cn.md)
 

@@ -5,3 +5,5 @@
 We provide the following drug target interaction methods.
 
 * [GraphDTA](./graph_dta/README.md)
+* [MolTrans](./moltrans_dti/README.md)
+* [S-MAN](./sman/README.md)

@@ -17,7 +17,11 @@
 """
 Processing of chembl filtered dataset.
 
-The ChEMBL dataset containing 456K molecules with 1310 kinds of diverse and extensive biochemical assays. The database is unique because of its focus on all aspects of drug discovery and its size, containing information on more than 1.8 million compounds and over 15 million records of their effects on biological systems.
+The ChEMBL dataset containing 456K molecules with 1310 kinds of diverse and 
+extensive biochemical assays. The database is unique because of its focus on 
+all aspects of drug discovery and its size, containing information on more 
+than 1.8 million compounds and over 15 million records of their effects on 
+biological systems.
 
 """
 
@@ -55,7 +59,7 @@ def get_chembl_filtered_task_num():
     return 1310
 
 
-def load_chembl_filtered_dataset(data_path, featurizer=None):
+def load_chembl_filtered_dataset(data_path):
     """Load chembl_filtered dataset ,process the classification labels and the input information.
 
     Introduction:
@@ -75,9 +79,6 @@ def load_chembl_filtered_dataset(data_path, featurizer=None):
 
     Args:
         data_path(str): the path to the cached npz path
-        featurizer(pahelix.featurizers.Featurizer): the featurizer to use for 
-            processing the data. If not none, The ``Featurizer.gen_features`` will be 
-            applied to the raw data.
     
     Returns:
         an InMemoryDataset instance.
@@ -85,7 +86,7 @@ def load_chembl_filtered_dataset(data_path, featurizer=None):
     Example:
         .. code-block:: python
 
-            dataset = load_bbbp_dataset('./bace/raw')
+            dataset = load_bbbp_dataset('./bace')
             print(len(dataset))
 
     References:
@@ -94,17 +95,17 @@ def load_chembl_filtered_dataset(data_path, featurizer=None):
     
     """
     downstream_datasets = [
-        load_bace_dataset(join(dirname(dirname(data_path)), 'bace/raw')),
-        load_bbbp_dataset(join(dirname(dirname(data_path)), 'bbbp/raw')),
-        load_clintox_dataset(join(dirname(dirname(data_path)), 'clintox/raw')),
-        load_esol_dataset(join(dirname(dirname(data_path)), 'esol/raw')),
-        load_freesolv_dataset(join(dirname(dirname(data_path)), 'freesolv/raw')),
-        load_hiv_dataset(join(dirname(dirname(data_path)), 'hiv/raw')),
-        load_lipophilicity_dataset(join(dirname(dirname(data_path)), 'lipophilicity/raw')),
-        load_muv_dataset(join(dirname(dirname(data_path)), 'muv/raw')),
-        load_sider_dataset(join(dirname(dirname(data_path)), 'sider/raw')),
-        load_tox21_dataset(join(dirname(dirname(data_path)), 'tox21/raw')),
-        load_toxcast_dataset(join(dirname(dirname(data_path)), 'toxcast/raw')),
+        load_bace_dataset(join(dirname(data_path), 'bace')),
+        load_bbbp_dataset(join(dirname(data_path), 'bbbp')),
+        load_clintox_dataset(join(dirname(data_path), 'clintox')),
+        load_esol_dataset(join(dirname(data_path), 'esol')),
+        load_freesolv_dataset(join(dirname(data_path), 'freesolv')),
+        load_hiv_dataset(join(dirname(data_path), 'hiv')),
+        load_lipophilicity_dataset(join(dirname(data_path), 'lipophilicity')),
+        load_muv_dataset(join(dirname(data_path), 'muv')),
+        load_sider_dataset(join(dirname(data_path), 'sider')),
+        load_tox21_dataset(join(dirname(data_path), 'tox21')),
+        load_toxcast_dataset(join(dirname(data_path), 'toxcast')),
     ]
     downstream_inchi_set = set()
     splitter = ScaffoldSplitter()
@@ -136,24 +137,17 @@ def load_chembl_filtered_dataset(data_path, featurizer=None):
             if 50 <= mw <= 900:
                 inchi = create_standardized_mol_id(smiles_list[i])
                 if not inchi is None and inchi not in downstream_inchi_set:
-                    raw_data = {
+                    data = {
                         'smiles': smiles_list[i],
                         'label': labels[i].reshape([-1]),
                     }
-                    
-                    if not featurizer is None:
-                        data = featurizer.gen_features(raw_data)
-                    else:
-                        data = raw_data
-
-                    if not data is None:
-                        data_list.append(data)
+                    data_list.append(data)
     
     dataset = InMemoryDataset(data_list)
     return dataset
 
 
-def _load_chembl_filtered_dataset(root_path):
+def _load_chembl_filtered_dataset(data_path):
     """
     Description:
         Data from 'Large-scale comparison of machine learning methods for drug target prediction on ChEMBL'
@@ -169,6 +163,7 @@ def _load_chembl_filtered_dataset(root_path):
     # into the dataPythonReduced directory
     # wget http://bioinf.jku.at/research/lsc/chembl20/dataPythonReduced/chembl20LSTM.pckl
 
+    root_path = join(data_path, 'raw')
     # 1. load folds and labels
     f = open(os.path.join(root_path, 'folds0.pckl'), 'rb')
     folds = pickle.load(f)

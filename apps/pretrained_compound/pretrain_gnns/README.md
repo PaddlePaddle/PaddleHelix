@@ -27,7 +27,7 @@
             *  [Downstream classification datasets](#Downstream-classification-datasets)
             * [Fine-tuning](#Fine-tuning)
         
-   *  [Evaluating results](#Evaluating-results)
+   *  [Evaluation results](#Evaluation-results)
     
    *  [Data](#Data)
     *  [How to get ?](#How-to-get-?)
@@ -35,7 +35,7 @@
   
  * [Reference](#Reference)
       * [Paper-related](#Paper-related)
-          * [Data-related](#Data-related)
+      * [Data-related](#Data-related)
 
 ## Background
  In recent years, deep learning has achieved good results in various fields, but there are still some limitations in the fields of molecular informatics and drug development.  However, drug development is a relatively expensive and time-consuming process. The screening of pharmaceutical compounds in the middle of the process is in need for efficiency improving. In the early days, traditional machine learning methods were used to predict physical and chemical properties, and the graphs have irregular shapes and sizes.  There is no spatial order on the nodes, and the neighbors of the nodes are also related to their positions. Therefore, molecular structure data can be treated as graphs, and the application development of graph networks is gradually being valued.  However, in the actual training process, the model's performance is limited by  missing labels, and different distributions between the training and testing set. Therefore, this article mainly adopts pre-training models on data-rich related tasks, and pre-training at the node level and the entire image level.  , And then fine-tune the downstream tasks.  This pre-training model refers to the paper "Strategies for Pre-training Graph Neural Networks", which provides GIN, GAT, GCN, and other models for implementation.
@@ -60,19 +60,14 @@ You can choose to download the dataset from the [link](http://snap.stanford.edu/
 
 ### Training Models
 
-The training methods of the pre-training strategy we provide are divided into two aspects. The first is the pre-training at the node level. There are two methods. The second is the supervised pre-training strategy for the whole image. You can choose during the specific experiment.  Perform pre-training at the node level first, and then perform the pre-training at the graph level at the entire graph level, as follows:
+The training methods of the pre-training strategy we provide are divided into two aspects. The first is the pre-training at the node level. There are two methods. The second is the supervised pre-training strategy for the whole graph. You can choose during the specific experiment.  Perform pre-training at the node level first, and then perform the pre-training at the graph level at the entire graph level, as follows:
 ![图片](https://agroup-bos-bj.cdn.bcebos.com/bj-136829c31a8edcaa1800c88bdb02038cfb1630e6)
 Following are the examples:
 ```
 pretrain_attrmask.py          # Node-level attribute masking pre-training file
-pretrain_contextpred.py       # Pre-training file for node-level context prediction
 pretrain_supervised.py        # Pre-training files at the entire graph level
 ```
 Using pretrain_attrmask.py as an example to show the usage of the model parameters:
-
-`use_cuda` : Whether to use GPU
-
-`lr` : The base learning rate，here is 0.001
 
 `batch_size` : Batch size of the model, at training phase, the default value will be 256
 
@@ -82,25 +77,31 @@ Using pretrain_attrmask.py as an example to show the usage of the model paramete
 
 `init_model` : init_model referes to the model without using the pre-training strategy,here is the [address](https://baidu-nlp.bj.bcebos.com/PaddleHelix/pretrained_models/compound/pretrain_gnns_attr_super.tgz) of our pretrained model
 
+`compound_encoder_config` : the path of the compound encoder config file, containing the parameters of the gnn model
+
 `model_config` : the path of the model config file, containing the parameters of the gnn model
+
+`dropout_rate` : the dropout rate,here we use 0.2
 
 `model_dir` : the path to save the model
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 python pretrain_attrmask.py \
-        --use_cuda \ 
         --batch_size=256 \ 
+        --num_workers=2 \
         --max_epoch=100 \ 
-        --data_path=../../../data/chem_dataset/zinc_standard_agent/raw \
-        --model_config=gnn_model.json \
-        --model_dir=../../../output/pretrain_gnns/pretrain_attrmask
+        --lr=1e-3 \
+        --dropout_rate=0.2 \
+        --data_path=../../../data/chem_dataset/zinc_standard_agent \
+        --compound_encoder_config=model_configs/pregnn_paper.json \
+        --model_config=model_configs/pre_Attrmask.json \
+        --model_dir=../../../output/pretrain_gnns/pretrain_attrmask    
 ```
 
 We provide the shell scripts to run the python files directly, you can adjust the parameters in the scripts.
 
 ```bash
 sh scripts/pretrain_attrmask.sh       #run pretrain_attrmask.py with given parameters
-sh scripts/pretrain_contextpred.sh    #run pretrain_contextpred.py with given parameters
 sh scripts/pretrain_supervised.sh     #run pretrain_supervised.py with given parameters 
 ```
 
@@ -110,20 +111,23 @@ Fine tuning the model is similar to trainging the model. Parameters' definition 
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 python finetune.py \
-        --use_cuda \
-        --batch_size=128 \ 
+        --batch_size=32 \ 
         --max_epoch=4 \ 
-        --dataset_name=tox21 \ 
-        --data_path=../../../data/chem_dataset/tox21/raw \
-        --model_config=gnn_model.json \  
-        --init_model= ../../pretrain_gnns_attr_super \
-        --model_dir=../../../output/pretrain_gnns/finetune/tox21
+        --dataset_name=tox21 \  
+        --data_path=../../../data/chem_dataset/tox21 \ 
+        --compound_encoder_config=model_configs/pregnn_paper.json \
+        --model_config=model_configs/down_linear.json \  
+        --init_model=../../../output/pretrain_gnns/pregnn_paper-pre_Attrmask-pre_Supervised/epoch40/compound_encoder.pdparams \
+        --model_dir=../../../output/pretrain_gnns/finetune/tox21 \
+        --encoder_lr=1e-3 \
+        --head_lr=1e-3 \
+        --dropout_rate=0.2 
 ```
 
 We proivde the shell script to run the fine tune file, you can adjust the parameters in the script.
 
 ```bash
-sh scripts/local_finetune.sh           #run finetune.py with given parameters 
+sh scripts/finetune.sh           #run finetune.py with given parameters 
 ```
 
 ### GNN Models
@@ -191,47 +195,40 @@ Referring to the paper [Pretrain-gnn](https://openreview.net/pdf?id=HJlWWJSFDH),
 ##### Node-level : Self-supervised pre-training
  We have two methods to pretrain GNN, it will load the pretrained model to`model_dir`, and save the log file.
 
-For the node-level pre-training of GNN, our method is to first use the easily available unlabeled data, and use the natural graph distribution to capture the specific domain knowledge/rules in the graph.  Next, use two more self-supervised methods：context prediction and attribute masking。 
-
- - Context prediction
-   - Use subgraphs to predict the surrounding graph structure, find the neighborhood graph and context graph of each node, use auxiliary GNN to encode the context into a fixed vector, and then use negative sampling to learn the main GNN and context GNN, and then use it to predict  train the model.
-
-```bash
-CUDA_VISIBLE_DEVICES=0 python pretrain_contextpred.py \
-        --use_cuda \ 
-        --batch_size=256 \ 
-        --max_epoch=100 \ 
-        --data_path=../../../data/chem_dataset/zinc_standard_agent/raw \
-        --model_config=gnn_model.json \
-        --model_dir= ../../../output/pretrain_gnns/pretrain_contextpred
-```
+For the node-level pre-training of GNN, our method is to first use the easily available unlabeled data, and use the natural graph distribution to capture the specific domain knowledge/rules in the graph.  Next, use  another self-supervised method：attribute masking。 
 
  - Attribute masking
    - The domain knowledge is captured by learning the regularity of the node/edge attributes distributed on the graph structure, the node/edge attributes are shielded, and the GNN can predict these attributes based on the adjacent structure.
   
 ```bash
 CUDA_VISIBLE_DEVICES=0 python pretrain_attrmask.py \
-        --use_cuda \ 
         --batch_size=256 \ 
+        --num_workers=2 \
         --max_epoch=100 \ 
-        --data_path=../../../data/chem_dataset/zinc_standard_agent/raw \
-        --model_config=gnn_model.json \
-        --model_dir= ../../../output/pretrain_gnns/pretrain_attrmask
+        --lr=1e-3 \
+        --dropout_rate=0.2 \
+        --data_path=../../../data/chem_dataset/zinc_standard_agent \
+        --compound_encoder_config=model_configs/pregnn_paper.json \
+        --model_config=model_configs/pre_Attrmask.json \
+        --model_dir=../../../output/pretrain_gnns/pretrain_attrmask
 ```
 ##### Graph-level ：Supervised pre-training
 
 The pre-training at the graph level is completed on the basis of the pre-training at the node level.
 
  - Graph-level multi-task supervised pre-training
-   - First, the GNN is regularized at the single node level, that is, after the above two strategies are executed, they are added to supervised, and then multi-task supervised pre-training is performed on the entire graph to predict the different supervised label sets of each graph  .
+   - First, the GNN is regularized at the single node level, that is, after the above strategies are executed, they are added to supervised, and then multi-task supervised pre-training is performed on the entire graph to predict the different supervised label sets of each graph.
+
 ```bash
 CUDA_VISIBLE_DEVICES=0 python pretrain_supervised.py \
-        --use_cuda \ 
         --batch_size=256 \ 
         --max_epoch=100 \ 
-        --data_path=../../../data/chem_dataset/chembl_filtered/raw \
-        --model_config=gnn_model.json \
-        --init_model=../../../output/pretrain_gnns/pretrain_attrmask \
+        --lr=1e-3 \
+        --dropout_rate=0.2 \
+        --data_path=../../../data/chem_dataset/chembl_filtered \
+        --compound_encoder_config=model_configs/pregnn_paper.json \
+        --model_config=model_configs/pre_Supervised.json \
+        --init_model=../../../output/pretrain_gnns/pregnn_paper-pre_Attrmask/epoch40/compound_encoder.pdparams \
         --model_dir=../../../output/pretrain_gnns/pretrain_supervised
 ```
 
@@ -254,28 +251,595 @@ In each directory, we provide three methods for training GNN, which will use the
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 python finetune.py \
-        --use_cuda \
-        --batch_size=128 \ 
+        --batch_size=32 \ 
         --max_epoch=4 \ 
         --dataset_name=tox21 \  
-        --data_path=../../../data/chem_dataset/tox21/raw \ 
-        --model_config=gnn_model.json \  
-        --init_model=../../pretrain_gnns_attr_super \
-        --model_dir=../../../output/pretrain_gnns/finetune/tox21
+        --data_path=../../../data/chem_dataset/tox21 \ 
+        --compound_encoder_config=model_configs/pregnn_paper.json \
+        --model_config=model_configs/down_linear.json \  
+        --init_model=../../../output/pretrain_gnns/pregnn_paper-pre_Attrmask-pre_Supervised/epoch40/compound_encoder.pdparams \
+        --model_dir=../../../output/pretrain_gnns/finetune/tox21 \
+        --encoder_lr=1e-3 \
+        --head_lr=1e-3 \
+        --dropout_rate=0.2 
 ```
 
 
 ##### Evaluation Results
-The results of finetuning downstream tasks using the graph-level multi-task supervision pre-training model are as follows, which are eight binary classification tasks:
-![图片](https://agroup-bos-bj.cdn.bcebos.com/bj-65af0e23c7f4a691db22fa2f7ee855ccf2f71087)
+The results of finetuning downstream tasks using the graph-level multi-task supervision pre-training model are as follows, which are six binary classification tasks:
 
+<table class=MsoTableGrid border=1 cellspacing=0 cellpadding=0 width=548
+ style='border-collapse:collapse;mso-table-layout-alt:fixed;border:none;
+ mso-border-alt:solid windowtext .5pt;mso-yfti-tbllook:1184;mso-padding-alt:
+ 0cm 5.4pt 0cm 5.4pt'>
+ <tr style='mso-yfti-irow:0;mso-yfti-firstrow:yes;height:17.95pt'>
+  <td width=160 colspan=3 style='width:120.25pt;border:solid windowtext 1.0pt;
+  mso-border-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:17.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif'>Dataset<o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.55pt;border:solid windowtext 1.0pt;border-left:
+  none;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
+  padding:0cm 5.4pt 0cm 5.4pt;height:17.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>BBBP</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.5pt;border:solid windowtext 1.0pt;border-left:
+  none;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
+  padding:0cm 5.4pt 0cm 5.4pt;height:17.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>Tox21</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.55pt;border:solid windowtext 1.0pt;border-left:
+  none;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
+  padding:0cm 5.4pt 0cm 5.4pt;height:17.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span class=SpellE><span
+  lang=EN-US style='font-size:6.5pt;font-family:"Times New Roman",serif;
+  mso-fareast-font-family:DengXian;color:black'>Toxcast</span></span><span
+  lang=EN-US style='font-size:6.5pt;font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.5pt;border:solid windowtext 1.0pt;border-left:
+  none;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
+  padding:0cm 5.4pt 0cm 5.4pt;height:17.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>Sider</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.55pt;border:solid windowtext 1.0pt;border-left:
+  none;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
+  padding:0cm 5.4pt 0cm 5.4pt;height:17.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span class=SpellE><span
+  lang=EN-US style='font-size:6.5pt;font-family:"Times New Roman",serif;
+  mso-fareast-font-family:DengXian;color:black'>ClinTox</span></span><span
+  lang=EN-US style='font-size:6.5pt;font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.5pt;border:solid windowtext 1.0pt;border-left:
+  none;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
+  padding:0cm 5.4pt 0cm 5.4pt;height:17.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span class=SpellE><span
+  lang=EN-US style='font-size:6.5pt;font-family:"Times New Roman",serif;
+  mso-fareast-font-family:DengXian;color:black'>Bace</span></span><span
+  lang=EN-US style='font-size:6.5pt;font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=47 style='width:35.45pt;border:solid windowtext 1.0pt;border-left:
+  none;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
+  padding:0cm 5.4pt 0cm 5.4pt;height:17.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>Average</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+ </tr>
+ <tr style='mso-yfti-irow:1;height:8.95pt'>
+  <td width=160 colspan=3 style='width:120.25pt;border:solid windowtext 1.0pt;
+  border-top:none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
+  padding:0cm 5.4pt 0cm 5.4pt;height:8.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif'>#Molecules<o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.55pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:8.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>2039</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.5pt;border-top:none;border-left:none;border-bottom:
+  solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;mso-border-top-alt:
+  solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:
+  solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:8.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>7831</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.55pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:8.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>8575</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.5pt;border-top:none;border-left:none;border-bottom:
+  solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;mso-border-top-alt:
+  solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:
+  solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:8.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>1427</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.55pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:8.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>1478</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.5pt;border-top:none;border-left:none;border-bottom:
+  solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;mso-border-top-alt:
+  solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:
+  solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:8.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>1513</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=47 style='width:35.45pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:8.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>/</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+ </tr>
+ <tr style='mso-yfti-irow:2;height:8.95pt'>
+  <td width=160 colspan=3 style='width:120.25pt;border:solid windowtext 1.0pt;
+  border-top:none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
+  padding:0cm 5.4pt 0cm 5.4pt;height:8.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif'>#Binary
+  prediction tasks<o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.55pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:8.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>1</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.5pt;border-top:none;border-left:none;border-bottom:
+  solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;mso-border-top-alt:
+  solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:
+  solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:8.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>12</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.55pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:8.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>617</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.5pt;border-top:none;border-left:none;border-bottom:
+  solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;mso-border-top-alt:
+  solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:
+  solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:8.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>27</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.55pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:8.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>2</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.5pt;border-top:none;border-left:none;border-bottom:
+  solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;mso-border-top-alt:
+  solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:
+  solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:8.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>1</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=47 style='width:35.45pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:8.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>/</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+ </tr>
+ <tr style='mso-yfti-irow:3;height:8.95pt'>
+  <td width=160 colspan=3 style='width:120.25pt;border:solid windowtext 1.0pt;
+  border-top:none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
+  padding:0cm 5.4pt 0cm 5.4pt;height:8.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif'>Pre-training
+  strategy<o:p></o:p></span></p>
+  </td>
+  <td width=387 colspan=7 rowspan=2 style='width:290.6pt;border-top:none;
+  border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:8.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif'>out of
+  distribution <span class=GramE>prediction(</span>scaffold split)<o:p></o:p></span></p>
+  </td>
+ </tr>
+ <tr style='mso-yfti-irow:4;height:18.4pt'>
+  <td width=56 style='width:42.3pt;border:solid windowtext 1.0pt;border-top:
+  none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
+  padding:0cm 5.4pt 0cm 5.4pt;height:18.4pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif'>Graph-level<o:p></o:p></span></p>
+  </td>
+  <td width=66 style='width:49.6pt;border-top:none;border-left:none;border-bottom:
+  solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;mso-border-top-alt:
+  solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:
+  solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:18.4pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif'>Node-level<o:p></o:p></span></p>
+  </td>
+  <td width=38 style='width:1.0cm;border-top:none;border-left:none;border-bottom:
+  solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;mso-border-top-alt:
+  solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:
+  solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:18.4pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif'>/<o:p></o:p></span></p>
+  </td>
+ </tr>
+ <tr style='mso-yfti-irow:5;height:18.95pt'>
+  <td width=56 rowspan=2 style='width:42.3pt;border:solid windowtext 1.0pt;
+  border-top:none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
+  padding:0cm 5.4pt 0cm 5.4pt;height:18.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif'>—<o:p></o:p></span></p>
+  </td>
+  <td width=66 rowspan=2 style='width:49.6pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:18.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif'>—<o:p></o:p></span></p>
+  </td>
+  <td width=38 style='width:1.0cm;border-top:none;border-left:none;border-bottom:
+  solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;mso-border-top-alt:
+  solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:
+  solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:18.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif'>Paper<o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.55pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:18.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>65.8 ±4.5</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.5pt;border-top:none;border-left:none;border-bottom:
+  solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;mso-border-top-alt:
+  solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:
+  solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:18.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>74.0 ±0.8</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.55pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:18.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>63.4 ±0.6</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.5pt;border-top:none;border-left:none;border-bottom:
+  solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;mso-border-top-alt:
+  solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:
+  solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:18.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>57.3 ±1.6</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.55pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:18.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>58.0 ±4.4</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.5pt;border-top:none;border-left:none;border-bottom:
+  solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;mso-border-top-alt:
+  solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:
+  solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:18.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>70.1 ±5.4</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=47 style='width:35.45pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:18.95pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>64.77</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+ </tr>
+ <tr style='mso-yfti-irow:6;height:15.15pt'>
+  <td width=38 style='width:1.0cm;border-top:none;border-left:none;border-bottom:
+  solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;mso-border-top-alt:
+  solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:
+  solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:15.15pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif'>Our<o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.55pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:15.15pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>65.91±2.84</span><span lang=EN-US style='font-size:
+  6.5pt;font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.5pt;border-top:none;border-left:none;border-bottom:
+  solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;mso-border-top-alt:
+  solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:
+  solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:15.15pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>75.70±0.25</span><span lang=EN-US style='font-size:
+  6.5pt;font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.55pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:15.15pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>63.78±0.56</span><span lang=EN-US style='font-size:
+  6.5pt;font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.5pt;border-top:none;border-left:none;border-bottom:
+  solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;mso-border-top-alt:
+  solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:
+  solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:15.15pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>58.29±1.41</span><span lang=EN-US style='font-size:
+  6.5pt;font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.55pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:15.15pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>51.79±3.07</span><span lang=EN-US style='font-size:
+  6.5pt;font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.5pt;border-top:none;border-left:none;border-bottom:
+  solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;mso-border-top-alt:
+  solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:
+  solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:15.15pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>74.93±5.53</span><span lang=EN-US style='font-size:
+  6.5pt;font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=47 style='width:35.45pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:15.15pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>65.07</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+ </tr>
+ <tr style='mso-yfti-irow:7;height:12.25pt'>
+  <td width=56 rowspan=2 style='width:42.3pt;border:solid windowtext 1.0pt;
+  border-top:none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
+  padding:0cm 5.4pt 0cm 5.4pt;height:12.25pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif'>Supervised<o:p></o:p></span></p>
+  </td>
+  <td width=66 rowspan=2 style='width:49.6pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:12.25pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span class=SpellE><span
+  lang=EN-US style='font-size:6.5pt;font-family:"Times New Roman",serif'>AttrMasking</span></span><span
+  lang=EN-US style='font-size:6.5pt;font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=38 style='width:1.0cm;border-top:none;border-left:none;border-bottom:
+  solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;mso-border-top-alt:
+  solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:
+  solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:12.25pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif'>Paper<o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.55pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:12.25pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>66.5 ±2.5</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.5pt;border-top:none;border-left:none;border-bottom:
+  solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;mso-border-top-alt:
+  solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:
+  solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:12.25pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>77.9 ±0.4</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.55pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:12.25pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>65.1 ±0.3</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.5pt;border-top:none;border-left:none;border-bottom:
+  solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;mso-border-top-alt:
+  solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:
+  solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:12.25pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>63.9 ±0.9</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.55pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:12.25pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>73.7 ±2.8</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.5pt;border-top:none;border-left:none;border-bottom:
+  solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;mso-border-top-alt:
+  solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:
+  solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:12.25pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>80.3 ±0.9</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=47 style='width:35.45pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:12.25pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>71.23</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+ </tr>
+ <tr style='mso-yfti-irow:8;mso-yfti-lastrow:yes;height:16.1pt'>
+  <td width=38 style='width:1.0cm;border-top:none;border-left:none;border-bottom:
+  solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;mso-border-top-alt:
+  solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:
+  solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:16.1pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif'>Our<o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.55pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:16.1pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>68.74±0.05</span><span lang=EN-US style='font-size:
+  6.5pt;font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.5pt;border-top:none;border-left:none;border-bottom:
+  solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;mso-border-top-alt:
+  solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:
+  solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:16.1pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>78.20±0.30</span><span lang=EN-US style='font-size:
+  6.5pt;font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.55pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:16.1pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>66.32±0.83</span><span lang=EN-US style='font-size:
+  6.5pt;font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.5pt;border-top:none;border-left:none;border-bottom:
+  solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;mso-border-top-alt:
+  solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:
+  solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:16.1pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>61.50±1.80</span><span lang=EN-US style='font-size:
+  6.5pt;font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.55pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:16.1pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>71.40±5.25</span><span lang=EN-US style='font-size:
+  6.5pt;font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=57 style='width:42.5pt;border-top:none;border-left:none;border-bottom:
+  solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;mso-border-top-alt:
+  solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;mso-border-alt:
+  solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:16.1pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>78.39±1.11</span><span lang=EN-US style='font-size:
+  6.5pt;font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+  <td width=47 style='width:35.45pt;border-top:none;border-left:none;
+  border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;padding:0cm 5.4pt 0cm 5.4pt;height:16.1pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span lang=EN-US
+  style='font-size:6.5pt;font-family:"Times New Roman",serif;mso-fareast-font-family:
+  DengXian;color:black'>70.76</span><span lang=EN-US style='font-size:6.5pt;
+  font-family:"Times New Roman",serif'><o:p></o:p></span></p>
+  </td>
+ </tr>
+</table>
 
 ## Data
 ### How to get?
 
 You can choose to download the dataset from the [link](http://snap.stanford.edu/gnn-pretrain/data/chem_dataset.zip) provided by us and perform the corresponding preprocessing for your use. 
 
-### Data introduction
+### Datasets introduction
 This compound pre-training method uses the data set in the paper [**Pretrain-GNN**](https://openreview.net/pdf?id=HJlWWJSFDH) for further processing.
 
  - BACE

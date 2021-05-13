@@ -1,0 +1,17 @@
+{
+    "atom_names": ["atomic_num", "formal_charge", "degree", 
+        "chiral_tag", "total_numHs", "is_aromatic", 
+        "hybridization"],
+    "bond_names": ["bond_dir", "bond_type", "is_in_ring"],
+    
+    "residual": true,
+    "dropout_rate": 0.5,
+    "gnn_type": "gin",
+    "graph_norm": true,
+
+    "embed_dim": 32,
+    "layer_num": 8,
+    "JK": "last",
+
+    "readout": "average"
+}

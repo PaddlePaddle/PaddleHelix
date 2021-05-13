@@ -1,0 +1,15 @@
+{
+    "atom_names": ["atomic_num", "chiral_tag"],
+    "bond_names": ["bond_dir", "bond_type"],
+    
+    "residual": false,
+    "dropout_rate": 0.5,
+    "gnn_type": "gin",
+    "graph_norm": false,
+
+    "embed_dim": 300,
+    "layer_num": 5,
+    "JK": "last",
+
+    "readout": "mean"
+}

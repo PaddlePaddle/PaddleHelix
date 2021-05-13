@@ -1,12 +1,12 @@
-=================
-Developer's Guide
-=================
+====================
+Guide for developers
+====================
 
 If you need to modify the algorithms/models in **PaddleHelix**, you have to switch to the developer mode. The core algorithms of **PaddleHelix** are mostly implemented in Python, but some also in C++, so you cannot develop **PaddleHelix** simply with ``pip install --editable {pahelix_path}``. To develop on your machine, please do the following:
 
-- Please follow the :doc:`/installation` part to install all dependencies of **PaddleHelix** (``paddlepaddle>=2.0.0rc0``, ``pgl>=1.2.0``).
+- Please follow the :doc:`/installation` part to install all dependencies of **PaddleHelix** (``paddlepaddle >= 2.0.0rc0``, ``pgl >= 1.2.0``).
 
-- If you have installed distributed **PaddleHelix** with ``pip install paddlehelix``, please uninstall it with:
+- If you have already installed distributed **PaddleHelix** with ``pip install paddlehelix``, please uninstall it with:
 
 .. code:: console
 
@@ -45,7 +45,7 @@ If you need to modify the algorithms/models in **PaddleHelix**, you have to swit
 
   **Other algorithms**
 
-  If you want to change these algorithms, just find corresponding files under path `./pahelix`, then add `/path_to_your_repo/` to your Python environment path:
+  If you want to change these algorithms, just find and modify corresponding ``.py`` files under the path `./pahelix`, then add `/path_to_your_repo/` to your Python environment path:
 
 .. code-block:: python
 

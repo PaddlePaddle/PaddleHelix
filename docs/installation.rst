@@ -14,7 +14,7 @@ Prerequisites
 Dependencies
 ------------
 
-(``-`` means that paddlehelix doesn't have a special version requirement for that package)
+(``-`` means no specific version requirement for that package)
 
    +--------------+----------------+
    |     Name     |     Version    |
@@ -39,7 +39,7 @@ Instruction
 
 Since PaddleHelix depends on the ``paddlepaddle`` of version 2.0.0rc0 or above, and ``rdkit`` cannot be installed directly using ``pip``, we suggest using ``conda`` to create a new environment for the installation. Detailed instruction is shown below:
 
-- If you do not have ``conda`` installed, please check this website to `install`_ it:
+- If you do not have ``conda`` installed, please `install`_ it at first:
 
 .. _install: https://docs.conda.io/projects/conda/en/latest/user-guide/install/
 
@@ -61,9 +61,21 @@ Since PaddleHelix depends on the ``paddlepaddle`` of version 2.0.0rc0 or above, 
 
    $ conda install -c conda-forge rdkit
 
-- Install ``paddle`` based on your choice of GPU/CPU version:
+- Install the right version of ``paddlepaddle`` depends on CPU/GPU you want to run PaddleHelix on.
 
-  Check `paddlepaddle official document <https://www.paddlepaddle.org.cn/documentation/docs/en/install/index_en.html>`_ to install **paddle2.0**.
+1) If you want to use the GPU version of ``paddlepaddle``, run this:
+
+.. code:: console
+
+  $ python -m pip install paddlepaddle-gpu==2.0.0rc1.post90 -f https://paddlepaddle.org.cn/whl/stable.html
+
+2) Or if you want to use the CPU version of ``paddlepaddle``, run this:
+
+.. code:: console
+
+  $ python -m pip install paddlepaddle==2.0.0rc1 -i https://mirror.baidu.com/pypi/simple
+
+.. note:: The version of ``paddlepaddle`` should be higher than **2.0**. Check `paddlepaddle official document <https://www.paddlepaddle.org.cn/documentation/docs/en/2.0-rc1/install/index_en.html>`_ for more installation guide.
 
 - Install ``pgl`` using ``pip``:
 

@@ -15,7 +15,7 @@ PaddleHelix is a machine-learning-based bio-computing framework aiming at facili
 > * Precision medicine
 
 ## Features
-* High Efficency: We provide LinearRNA, a highly efficient toolkit for RNA structure prediction and analysis. LinearFold & LinearParitition achieve O(n) complexity in RNA-folding prediction, which is hundreds of times faster than traditional folding techniques.
+* High Efficency: We provide LinearRNA, a highly efficient toolkit for RNA structure prediction and analysis. LinearFold & LinearPartition achieve O(n) complexity in RNA-folding prediction, which is hundreds of times faster than traditional folding techniques.
 <p align="center">
 <img src="./.github/LinearRNA.jpg" align="middle" />
 </p>
@@ -45,6 +45,8 @@ The installation prerequisites and guide can be found [here](./installation_guid
 * [Representation Learning - Compounds](./apps/pretrained_compound)
 * [Representation Learning - Proteins](./apps/pretrained_protein)
 * [Drug-Target Interaction](./apps/drug_target_interaction)
+* [Molecular Generation](./apps/molecular_generation)
+* [Drug drug synergy](./apps/drug_drug_synergy)
 * [LinearRNA](./c/pahelix/toolkit/linear_rna)
 
 ### The API reference

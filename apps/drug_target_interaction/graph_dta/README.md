@@ -16,10 +16,10 @@ Knowing which proteins are targeted by which drugs is very useful for new drug d
 
 ## Datasets
 
-First, let us create a dataset root folder `data` under this `demos` folder.
+First, let us create a dataset root folder `data` under this application folder.
 
 ```sh
-mkdir -p demos/data && cd demos/data
+mkdir -p data && cd data
 ```
 
 ### Davis
@@ -40,9 +40,9 @@ wget "https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fdatasets%2Fdti_datasets%2Fki
 tar -zxvf kiba.tgz
 ```
 
-Then, you can redirect to this `demos` folder and follow instructions to finish next steps.
+Then, you can redirect to this application folder and follow instructions to finish next steps.
 
-After downloaed these datasets, the `demos/data` folder looks like:
+After downloaed these datasets, the `data` folder looks like:
 
 ```txt
 data
@@ -78,37 +78,32 @@ data
 
 ### Configuration
 
-The script `train.py` is the entry for GraphDTA model. It creats `DTAModel` from `model.py`. Since the GraphDTA processes protein sequences into new sequences with fixed length, the model configurations mostly match the original paper are:
+The script `scripts/train.py` is the entry for GraphDTA model. It creats `DTAModel` from `src/model.py`. Since the GraphDTA processes protein sequences into new sequences with fixed length, the model configurations mostly match the original paper are:
 
-* `demos/fix_prot_len_gat_config.json` (GAT)
-* `demos/fix_prot_len_gat_gcn_config.json` (GAT-GCN)
-* `demos/fix_prot_len_gcn_config.json` (GCN)
-* `demos/fix_prot_len_gin_config.json` (GIN)
-
-We also include a configuration `demos/fix_prot_len_pretrain_gnn.json` that utilize pretrained GNN model as the initial weights of the compound encoder.
+* `model_configs/fix_prot_len_gat_config.json` (GAT)
+* `model_configs/fix_prot_len_gat_gcn_config.json` (GAT-GCN)
+* `model_configs/fix_prot_len_gcn_config.json` (GCN)
+* `model_configs/fix_prot_len_gin_config.json` (GIN)
 
 ### Training and Evaluation
 
-For convenience, we provide a shell script `demos/train.sh` for easy experiments.
+For convenience, we provide a shell script `scripts/train.sh` for easy experiments.
 Its usage is:
 
 ```sh
-cd demos
-./train.sh DATASET YOU_CONFIG_JSON [EXTRA-ARGS]
+sh scripts/train.sh DATASET YOU_CONFIG_JSON [EXTRA-ARGS]
 ```
 
 For example, to train the GIN model on Davis dataset, just execute:
 
 ```sh
-cd demos
-./train.sh davis fix_prot_len_gin_config.json
+sh scripts/train.sh davis fix_prot_len_gin_config.json
 ```
 
 Notice that if you want to train the GIN model on Kiba dataset, you need to use KIBA label, instead of default Kd label, so execute:
 
 ```sh
-cd demos
-./train.sh kiba fix_prot_len_gin_config.json --use_kiba_label
+sh scripts/train.sh kiba fix_prot_len_gin_config.json --use_kiba_label
 ```
 
 For evaluation, we use MSE as a standard metric for the regression task. Besides, concordance index (CI) is an another metric. The smaller MSE, the better. While, the larger CI, the better.
