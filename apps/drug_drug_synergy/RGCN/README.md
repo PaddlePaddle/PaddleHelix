@@ -21,7 +21,7 @@ Drug-drug synergy information and drug physi-chemical features can be put under 
 ### ddi
 
 ```sh
-cd data/DDI && wget "http://www.bioinf.jku.at/software/DeepSynergy/labels.csv"
+cd data && mkdir DDI && wget "http://www.bioinf.jku.at/software/DeepSynergy/labels.csv"
 ```
 
 ### dti
