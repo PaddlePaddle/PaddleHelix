@@ -18,6 +18,7 @@
 * [药物-靶点相互作用预测](drug_target_interaction_tutorial_cn.ipynb)
 * [化合物表示学习和性质预测](compound_property_prediction_tutorial_cn.ipynb)
 * [蛋白质表示学习和性质预测](protein_pretrain_and_property_prediction_tutorial_cn.ipynb)
+* [分子生成](molecular_generation_tutorial_cn.ipynb)
 * [RNA二级结构预测](linearrna_tutorial_cn.ipynb)
 
 # 在本地运行
