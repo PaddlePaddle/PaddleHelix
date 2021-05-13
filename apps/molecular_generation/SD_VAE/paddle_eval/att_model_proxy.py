@@ -36,15 +36,16 @@ from cmd_args import cmd_args
 from mol_tree import AnnotatedTree2MolTree, get_smiles_from_tree, Node
 
 sys.path.append('../mol_vae')
-from mol_vae import MolVAE, MolAutoEncoder
+from pahelix.model_zoo.sd_vae_model import MolVAE
 
 sys.path.append('../mol_decoder')
-from attribute_tree_decoder import create_tree_decoder
-from mol_decoder import batch_make_att_masks
+from attribute_tree_decoder import create_tree_decoder, batch_make_att_masks
 from tree_walker import OnehotBuilder, ConditionalDecoder
 
 sys.path.append('../cfg_parser')
 import cfg_parser as parser
+
+import json
 
 
 class AttMolProxy(object):
@@ -52,12 +53,9 @@ class AttMolProxy(object):
     tbd
     """
     def __init__(self, *args, **kwargs):
-        if cmd_args.ae_type == 'vae':
-            self.ae = MolVAE()
-        elif cmd_args.ae_type == 'autoenc':
-            self.ae = MolAutoEncoder()
-        else:
-            raise Exception('unknown ae type %s' % cmd_args.ae_type)
+        # get model config
+        model_config = json.load(open(cmd_args.model_config, 'r'))
+        self.ae = MolVAE(model_config)
             
         # load model weights    
         model_weights = paddle.load(cmd_args.saved_model)
