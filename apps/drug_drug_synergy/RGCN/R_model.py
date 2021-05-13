@@ -32,7 +32,7 @@ import networkx as nx
 import pandas as pd
 import numpy as np
 
-def Decagon_norm(graph, feature, edges):
+def decagon_norm(graph, feature, edges):
     """
     Relation Graph Neural Network degree normalization method
     """
@@ -96,6 +96,7 @@ class RGCNConv(paddle.nn.Layer):
             )
         self.act = act
         self.norm = norm
+
     def forward(self, graph, feat):
         """Forward
         Args:
@@ -221,4 +222,4 @@ def negative_Sampling(label):
     val_neg_idx = np.random.choice(len(neg_pos[0]), num_neg)
     valid[(neg_pos[0][val_neg_idx], neg_pos[1][val_neg_idx])] = -1
 
-    return paddle.to_tensor(valid.astype('float32'))
+    return valid.astype('float32')
