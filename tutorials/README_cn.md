@@ -15,7 +15,7 @@
 </p>
 
 # 教程
-* [药物-靶点相互作用预测](drug_target_interaction_tutorial_cn.ipynb)
+* [药物-靶点相互作用预测]: [GraphDTA](drug_target_interaction_graphdta_tutorial_cn.ipynb), [MolTrans](drug_target_interaction_moltrans_tutorial_cn.ipynb)
 * [化合物表示学习和性质预测](compound_property_prediction_tutorial_cn.ipynb)
 * [蛋白质表示学习和性质预测](protein_pretrain_and_property_prediction_tutorial_cn.ipynb)
 * [分子生成](molecular_generation_tutorial_cn.ipynb)

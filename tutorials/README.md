@@ -15,7 +15,7 @@ In contrast to the powerful ability of DL metrics, a key challenge lying in util
 
 
 # Tutorials
-* [Predicting Drug-Target Interaction](drug_target_interaction_tutorial.ipynb)
+* [Predicting Drug-Target Interaction]: [GraphDTA](drug_target_interaction_graphdta_tutorial.ipynb), [MolTrans](drug_target_interaction_moltrans_tutorial.ipynb)
 * [Compound Representation Learning and Property Prediction](compound_property_prediction_tutorial.ipynb)
 * [Protein Representation Learning and Property Prediction](protein_pretrain_and_property_prediction_tutorial.ipynb)
 * [Molecular Generation](molecular_generation_tutorial.ipynb)
