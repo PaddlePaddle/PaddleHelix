@@ -45,6 +45,8 @@ The installation prerequisites and guide can be found [here](./installation_guid
 * [Representation Learning - Compounds](./apps/pretrained_compound)
 * [Representation Learning - Proteins](./apps/pretrained_protein)
 * [Drug-Target Interaction](./apps/drug_target_interaction)
+* [Molecular Generation](./apps/molecular_generation)
+* [Drug drug synergy](./apps/drug_drug_synergy)
 * [LinearRNA](./c/pahelix/toolkit/linear_rna)
 
 ### The API reference
