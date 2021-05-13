@@ -9,10 +9,10 @@ basic_block
 
 .. automodule:: pahelix.networks.basic_block
 
-.. autoclass:: pahelix.networks.compound_encoder.Activation
+.. autoclass:: pahelix.networks.basic_block.Activation
    :members:
 
-.. autoclass:: pahelix.networks.compound_encoder.MLP
+.. autoclass:: pahelix.networks.basic_block.MLP
    :members:
 
 compound_encoder

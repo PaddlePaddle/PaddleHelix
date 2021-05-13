@@ -4,19 +4,6 @@ pahelix.featurizers
 
 .. contents:: Table of Contents
 
-het_gnn_featurizer
-==================
-
-.. automodule:: pahelix.featurizers.het_gnn_featurizer
-
-.. autoclass:: pahelix.featurizers.het_gnn_featurizer.DDiFeaturizer
-   :members:
-   :inherited-members:
-
-.. autofunction:: pahelix.featurizers.het_gnn_featurizer.num_nodes_stat
-
-.. autofunction:: pahelix.featurizers.het_gnn_featurizer.nx_graph_build
-
 pretrain_gnn_featurizer
 =======================
 
