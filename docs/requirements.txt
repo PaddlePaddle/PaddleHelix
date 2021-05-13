@@ -4,6 +4,3 @@ paddlepaddle>=2.0.0rc0
 pgl>=1.2.0
 numpy
 pandas
-math
-random
-collections
