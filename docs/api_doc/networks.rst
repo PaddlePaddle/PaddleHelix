@@ -8,8 +8,12 @@ basic_block
 ===========
 
 .. automodule:: pahelix.networks.basic_block
-   :members: Activation, MLP
-   :inherited-members:
+
+.. autoclass:: pahelix.networks.compound_encoder.Activation
+   :members:
+
+.. autoclass:: pahelix.networks.compound_encoder.MLP
+   :members:
 
 compound_encoder
 ================
@@ -28,9 +32,8 @@ gnn_block
 involution_block
 ================
 
-.. automodule:: pahelix.networks.involution_block
-   :members: Involution2D
-   :inherited-members:
+.. autoclass:: pahelix.networks.involution_block.Involution2D
+   :members:
 
 lstm_block
 ==========
@@ -42,9 +45,8 @@ lstm_block
 optimizer
 =========
 
-.. automodule:: pahelix.networks.optimizer
-   :members: AdamW
-   :inherited-members:
+.. autoclass:: pahelix.networks.optimizer.AdamW
+   :members:
 
 pre_post_process
 ================

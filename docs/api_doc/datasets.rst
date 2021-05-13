@@ -106,8 +106,8 @@ pdbbind_dataset
 ===============
 
 .. automodule:: pahelix.datasets.pdbbind_dataset
-   :members: load_pdbbind_dataset
-   :inherited-members:
+
+.. autofunction:: pahelix.datasets.pdbbind_dataset.load_pdbbind_dataset
 
 ppi_dataset
 ===========

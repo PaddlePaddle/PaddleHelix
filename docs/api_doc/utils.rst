@@ -15,7 +15,7 @@ compound_tools
 ==============
 
 .. automodule:: pahelix.utils.compound_tools
-   :members: get_gasteiger_partial_charges, create_standardized_mol_id, check_smiles_validity, split_rdkit_mol_obj, get_largest_mol, rdchem_enum_to_list, CompoundKit, Compound3DKit, mol_to_graph_data, mol_to_md_graph_data, mol_to_polar_graph_data
+   :members: get_gasteiger_partial_charges, create_standardized_mol_id, check_smiles_validity, split_rdkit_mol_obj, get_largest_mol, rdchem_enum_to_list, CompoundKit, Compound3DKit, mol_to_graph_data, mol_to_md_graph_data, mol_to_polar_graph_data, mol_to_superedge_graph_data
    :inherited-members:
 
 data_utils
