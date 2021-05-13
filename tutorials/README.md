@@ -18,6 +18,7 @@ In contrast to the powerful ability of DL metrics, a key challenge lying in util
 * [Predicting Drug-Target Interaction](drug_target_interaction_tutorial.ipynb)
 * [Compound Representation Learning and Property Prediction](compound_property_prediction_tutorial.ipynb)
 * [Protein Representation Learning and Property Prediction](protein_pretrain_and_property_prediction_tutorial.ipynb)
+* [Molecular Generation](molecular_generation_tutorial.ipynb)
 * [Predicting RNA Secondary Structure](linearrna_tutorial.ipynb)
 
 # Run tutorials locally
