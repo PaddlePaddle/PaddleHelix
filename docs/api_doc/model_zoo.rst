@@ -15,8 +15,36 @@ protein_sequence_model
 ======================
 
 .. automodule:: pahelix.model_zoo.protein_sequence_model
-   :members: LstmEncoderModel, ResnetEncoderModel, TransformerEncoderModel, PretrainTaskModel, SeqClassificationTaskModel, ClassificationTaskModel, RegressionTaskModel, ProteinEncoderModel, ProteinModel, ProteinCriterion
-   :inherited-members:
+
+.. autoclass:: pahelix.model_zoo.protein_sequence_model.LstmEncoderModel
+   :members:
+
+.. autoclass:: pahelix.model_zoo.protein_sequence_model.ResnetEncoderModel
+   :members:
+
+.. autoclass:: pahelix.model_zoo.protein_sequence_model.TransformerEncoderModel
+   :members:
+
+.. autoclass:: pahelix.model_zoo.protein_sequence_model.PretrainTaskModel
+   :members:
+
+.. autoclass:: pahelix.model_zoo.protein_sequence_model.SeqClassificationTaskModel
+   :members:
+
+.. autoclass:: pahelix.model_zoo.protein_sequence_model.ClassificationTaskModel
+   :members:
+
+.. autoclass:: pahelix.model_zoo.protein_sequence_model.RegressionTaskModel
+   :members:
+
+.. autoclass:: pahelix.model_zoo.protein_sequence_model.ProteinEncoderModel
+   :members:
+
+.. autoclass:: pahelix.model_zoo.protein_sequence_model.ProteinModel
+   :members:
+
+.. autoclass:: pahelix.model_zoo.protein_sequence_model.ProteinCriterion
+   :members:
 
 seq_vae_model
 ============
