@@ -134,6 +134,18 @@ class PriorDiscriminator(nn.Layer):
 
 
 class InfoGraph(nn.Layer):
+    """InfoGraph model.
+
+    Args:
+        config (dict): config dictionary of the GIN encoder.
+
+    Returns:
+        global_repr (Tensor): global-level representation of graph
+        enc (Tensor): path-level representation of nodes
+
+    Reference: InfoGraph: Unsupervised and Semi-supervised Graph-Level
+    Representation Learning via Mutual Information Maximization
+    """
     def __init__(self, config):
         super(InfoGraph, self).__init__()
         self.encoder = GINEncoder(config)
@@ -149,6 +161,9 @@ class InfoGraph(nn.Layer):
 
 
 class InfoGraphCriterion(nn.Layer):
+    """ Criterion of InfoGraph unspervised learning model
+    via maximization of mutual information.
+    """
     def __init__(self, config):
         super(InfoGraphCriterion, self).__init__()
         self.dim = config['hidden_size'] * config['num_layers']
