@@ -44,9 +44,6 @@ def load_ppi_dataset(data_path, task_names=None, featurizer=None):
         data_path(str): the path to the cached npz path.
         task_names(list): a list of header names to specify the columns to fetch from 
             the txt file.
-        featurizer(pahelix.featurizers.Featurizer): the featurizer to use for 
-            processing the data. If not none, The ``Featurizer.gen_features`` will be 
-            applied to the raw data.
     
     Returns:
         an InMemoryDataset instance.
@@ -68,10 +65,7 @@ def load_ppi_dataset(data_path, task_names=None, featurizer=None):
         raw_data = {}
         raw_data['pair'] = input_df.loc[i, 'protein1'], input_df.loc[i, 'protein2']
         
-        if not featurizer is None:
-            data = featurizer.gen_features(raw_data)
-        else:
-            data = raw_data
+        data = raw_data
         if not data is None:
             data_list.append(data)
     dataset = InMemoryDataset(data_list)
