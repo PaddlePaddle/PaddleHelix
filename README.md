@@ -25,7 +25,7 @@ PaddleHelix is a machine-learning-based bio-computing framework aiming at facili
 <img src="./.github/paddlehelix_features.jpg" align="middle" />
 </p>
 
-* Rich examples and applications: PaddleHelix provides frequently used components such as networks, datasets, and pre-trained models. Researchers can easily use those components to build up their models and systems. PaddleHelix also provides multiple applications, such as compound property prediction, drug-target interaction, and so on.
+* Rich examples and applications: PaddleHelix provides frequently used components such as networks, datasets, and pre-trained models. Users can easily use those components to build up their models and systems. PaddleHelix also provides multiple applications, such as compound property prediction, drug-target interaction, and so on.
 
 ----
 
