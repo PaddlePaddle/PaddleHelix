@@ -41,8 +41,7 @@ from pahelix.datasets import ppi_dataset
 from pahelix.featurizers import het_gnn_featurizer
 
 
-
-def Train(num_subgraph, graph, label_idx, epochs, sub_neighbours=[10, 10], init=True):
+def train(num_subgraph, graph, label_idx, epochs, sub_neighbours=[10, 10], init=True):
     """
     Model training for one epoch and return training loss and validation loss.
     """
@@ -105,6 +104,7 @@ def eval(model, graph, label, sub_neighbours, criterion):
     loss = criterion(pred, label)
     return pred, loss
 
+
 def train_val_plot(training_loss, val_loss, figure_name='loss_figure.pdf'):
     """
     Plot the training loss figure.
@@ -114,6 +114,7 @@ def train_val_plot(training_loss, val_loss, figure_name='loss_figure.pdf'):
     axx.plot(val_loss)
     axx.legend(['training loss', 'val loss']) 
     fig.savefig(figure_name)
+
 
 def main(ddi, dti, ppi, d_feat, epochs=10, num_subgraph=20, sub_neighbours=[10, 10], cuda=False):
     """
@@ -141,7 +142,7 @@ def main(ddi, dti, ppi, d_feat, epochs=10, num_subgraph=20, sub_neighbours=[10, 
     value = drug_feat.collate_fn(ddi, dti, ppi, d_feat)
     hg, nodes_dict, label, label_idx = value['rt'] 
     
-    trained_model = Train(num_subgraph, hg, label_idx, epochs, [25, 25])
+    trained_model = train(num_subgraph, hg, label_idx, epochs, args.sub_neighbours)
 
     return trained_model
 
