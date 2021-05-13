@@ -4,6 +4,6 @@
 
 We provide the following molecular generation methods.
 
-* [JT-VAE](./JT_VAE/README_cn.md)
-* [SD-VAE](./SD_VAE/README_cn.md)
-* [seq-VAE](./seq_VAE/README_cn.md)
+* [JT-VAE](./JT_VAE/README.md)
+* [SD-VAE](./SD_VAE/README.md)
+* [seq-VAE](./seq_VAE/README.md)
