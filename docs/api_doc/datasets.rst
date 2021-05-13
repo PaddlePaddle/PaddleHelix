@@ -32,18 +32,39 @@ clintox_dataset
    :members: get_default_clintox_task_names, load_clintox_dataset
    :inherited-members:
 
+davis_dataset
+===============
+
+.. automodule:: pahelix.datasets.davis_dataset
+   :members: load_davis_dataset
+   :inherited-members:
+
+ddi_dataset
+===============
+
+.. automodule:: pahelix.datasets.ddi_dataset
+   :members: get_default_ddi_task_names, load_ddi_dataset
+   :inherited-members:
+
+dti_dataset
+===============
+
+.. automodule:: pahelix.datasets.dti_dataset
+   :members: get_default_dti_task_names, load_dti_dataset
+   :inherited-members:
+
 esol_dataset
 ============
 
 .. automodule:: pahelix.datasets.esol_dataset
-   :members: get_default_esol_task_names, load_esol_dataset
+   :members: get_default_esol_task_names, get_default_esol_range, load_esol_dataset
    :inherited-members:
 
 freesolv_dataset
 ================
 
 .. automodule:: pahelix.datasets.freesolv_dataset
-   :members: get_default_freesolv_task_names, load_freesolv_dataset
+   :members: get_default_freesolv_task_names, get_default_freesolv_range, load_freesolv_dataset
    :inherited-members:
 
 hiv_dataset
@@ -60,18 +81,18 @@ inmemory_dataset
    :members: InMemoryDataset
    :inherited-members:
 
+kiba_dataset
+===============
+
+.. automodule:: pahelix.datasets.kiba_dataset
+   :members: load_kiba_dataset
+   :inherited-members:
+
 lipophilicity_dataset
 =====================
 
 .. automodule:: pahelix.datasets.lipophilicity_dataset
-   :members: get_default_lipophilicity_task_names, load_lipophilicity_dataset
-   :inherited-members:
-
-mutag_dataset
-=============
-
-.. automodule:: pahelix.datasets.mutag_dataset
-   :members: load_mutag_dataset
+   :members: get_default_lipophilicity_task_names, get_default_lipophilicity_range, load_lipophilicity_dataset
    :inherited-members:
 
 muv_dataset
@@ -81,11 +102,18 @@ muv_dataset
    :members: get_default_muv_task_names, load_muv_dataset
    :inherited-members:
 
-ptc_mr_dataset
-==============
+pdbbind_dataset
+===============
 
-.. automodule:: pahelix.datasets.ptc_mr_dataset
-   :members: load_ptc_mr_dataset
+.. automodule:: pahelix.datasets.pdbbind_dataset
+   :members: load_pdbbind_dataset
+   :inherited-members:
+
+ppi_dataset
+===========
+
+.. automodule:: pahelix.datasets.ppi_dataset
+   :members: get_default_ppi_task_names, load_ppi_dataset
    :inherited-members:
 
 sider_dataset

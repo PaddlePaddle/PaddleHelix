@@ -25,17 +25,17 @@ PaddleHelix is a machine-learning-based bio-computing framework aiming at facili
 Features
 ========
 
-- High Efficency: We provide LinearRNA, a highly efficient toolkit for RNA structure prediction and analysis. LinearFold & LinearPartition achieve O(n) complexity in RNA-folding prediction, which is hundreds of times faster than traditional folding techniques.
+- High Efficiency: We provide LinearRNA, a highly efficient toolkit for RNA structure prediction and analysis. LinearFold & LinearPartition achieve O(n) complexity in RNA-folding prediction, which is hundreds of times faster than traditional folding techniques.
 
 .. image:: ../.github/LinearRNA.jpg
    :align: center
 
-- Large-scale Representation Learning and Transfer Learning: Self-supervised learning for molecule representations offers prospects of a breakthrough in tasks with limited annotation, including drug profiling, drug-target interaction, protein-protein interaction, RNA-RNA interaction, protein folding, RNA folding, and molecule design. PaddleHelix implements a variety of representation learning algorithms and state-of-the-art large-scale pre-trained models to help developers to start from "the shoulders of giants" quickly.
+- Large-scale Representation Learning: Self-supervised learning for molecule representations offers prospects of a breakthrough in tasks with limited annotation, including drug profiling, drug-target interaction, protein-protein interaction, RNA-RNA interaction, protein folding, RNA folding, and molecule design. PaddleHelix implements various representation learning algorithms and state-of-the-art large-scale pre-trained models to help developers start from "the shoulders of giants" quickly.
 
 .. image:: ../.github/paddlehelix_features.jpg
    :align: center
 
-- Easy-to-use APIs: PaddleHelix provides frequently used structures and pre-trained models. You can easily use those components to build up your models and systems.
+- Rich examples and applications: PaddleHelix provides frequently used components such as networks, datasets, and pre-trained models. Users can easily use those components to build up their models and systems. PaddleHelix also provides multiple applications, such as compound property prediction, drug-target interaction, and so on.
 
 
 Installation
@@ -78,22 +78,25 @@ Quick Start
 Tutorials
 =========
 
-- We provide abundant `tutorials`_ to navigate the repository and start quickly.
+- We provide abundant :doc:`/tutorials` to help you navigate the repository and start quickly.
 
 - PaddleHelix is based on `PaddlePaddle`_, a high-performance Parallelized Deep Learning Platform.
 
-.. _tutorials: https://github.com/PaddlePaddle/PaddleHelix/tree/dev/tutorials
 .. _PaddlePaddle: https://github.com/paddlepaddle/paddle
 
 
 Examples
 ========
 
-- `Representation Learning_Compounds <https://github.com/PaddlePaddle/PaddleHelix/tree/dev/apps/pretrained_compound>`_
+- `Compound Representation Learning and Property Prediction <https://github.com/PaddlePaddle/PaddleHelix/tree/dev/apps/pretrained_compound>`_
 
-- `Representation Learning_Proteins <https://github.com/PaddlePaddle/PaddleHelix/tree/dev/apps/pretrained_protein>`_
+- `Protein Representation Learning and Property Prediction <https://github.com/PaddlePaddle/PaddleHelix/tree/dev/apps/pretrained_protein>`_
 
 - `Drug Target Interaction <https://github.com/PaddlePaddle/PaddleHelix/tree/dev/apps/drug_target_interaction>`_
+
+- `Molecular Generation <https://github.com/PaddlePaddle/PaddleHelix/tree/dev/apps/molecular_generation>`_
+
+- `Drug Drug Synergy <https://github.com/PaddlePaddle/PaddleHelix/tree/dev/apps/drug_drug_synergy>`_
 
 - `LinearRNA <https://github.com/PaddlePaddle/PaddleHelix/tree/dev/c/pahelix/toolkit/linear_rna>`_
 

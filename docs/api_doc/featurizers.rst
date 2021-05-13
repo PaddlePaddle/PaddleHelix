@@ -7,14 +7,16 @@ pahelix.featurizers
 featurizer
 ==========
 
-.. automodule:: pahelix.featurizers.featurizer
-   :members: Featurizer
+.. automodule:: pahelix.featurizers.het_gnn_featurizer
+   :members: DDiFeaturizer, num_nodes_stat, nx_graph_build
+   :inherited-members:
 
 pretrain_gnn_featurizer
 =======================
 
 .. automodule:: pahelix.featurizers.pretrain_gnn_featurizer
-   :members: PreGNNAttrMaskFeaturizer, PreGNNSupervisedFeaturizer, reset_idxes, graph_data_obj_to_nx_simple, nx_to_graph_data_obj_simple, transform_contextpred, PreGNNContextPredFeaturizer
+   :members: AttrmaskTransformFn, AttrmaskCollateFn, SupervisedTransformFn, SupervisedCollateFn
+   :inherited-members:
 
 Helpful Link
 ============

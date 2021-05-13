@@ -8,14 +8,28 @@ pretrain_gnns_model
 ===================
 
 .. automodule:: pahelix.model_zoo.pretrain_gnns_model
-   :members: PretrainGNNModel, PreGNNAttrmaskModel, PreGNNContextpredModel, PreGNNSupervisedModel
+   :members: PretrainGNNModel, AttrmaskModel, SupervisedModel
    :inherited-members:
 
 protein_sequence_model
 ======================
 
-.. autoclass:: pahelix.model_zoo.protein_sequence_model.ProteinSequenceModel
-   :members: _prepare_emb, _transformer, _lstm, _resnet, forward
+.. autoclass:: pahelix.model_zoo.protein_sequence_model
+   :members: LstmEncoderModel, ResnetEncoderModel, TransformerEncoderModel, PretrainTaskModel, SeqClassificationTaskModel, ClassificationTaskModel, RegressionTaskModel, ProteinEncoderModel, ProteinModel, ProteinCriterion
+   :inherited-members:
+
+sd_vae_model
+============
+
+.. autoclass:: pahelix.model_zoo.sd_vae_model
+   :members: StateDecoder, PerpCalculator, MyPerpLoss, CNNEncoder, MolVAE
+   :inherited-members:
+
+seq_vae_model
+============
+
+.. autoclass:: pahelix.model_zoo.seq_vae_model
+   :members: VAE
    :inherited-members:
 
 Helpful Link

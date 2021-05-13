@@ -33,59 +33,59 @@ After downloading the datasets, the `dataset` folder looks like:
 
 ```txt
 dataset
-|-- classification
-|   |-- BindingDB
-|   |   |-- test.csv
-|   |   |-- train.csv
-|   |   `-- val.csv
-|   |-- BIOSNAP
-|   |   |-- full_data
-|   |   |   |-- test.csv
-|   |   |   |-- train.csv
-|   |   |   `-- val.csv
-|   |   |-- missing_data
-|   |   |   |-- 70
-|   |   |   |-- 80
-|   |   |   |-- 90
-|   |   |   `-- 95
-|   |   |-- unseen_drug
-|   |   |   |-- test.csv
-|   |   |   |-- train.csv
-|   |   |   `-- val.csv
-|   |   `-- unseen_protein
-|   |       |-- test.csv
-|   |       |-- train.csv
-|   |       `-- val.csv
-|   `-- DAVIS
-|       |-- test.csv
-|       |-- train.csv
-|       `-- val.csv
-`-- regression
-    |-- benchmark
-    |   |-- DAVIStest
-    |   `-- KIBAtest
-    |-- BindingDB
-    |   |-- bindingDB cleanup.R
-    |   |-- BindingDB_Kd.txt
-    |   |-- BindingDB_SMILES_new.txt
-    |   |-- BindingDB_SMILES.txt
-    |   |-- BindingDB_Target_Sequence_new.txt
-    |   `-- BindingDB_Target_Sequence.txt
-    |-- ChEMBL
-    |   |-- Chem_Affinity.txt
-    |   |-- Chem_Kd_nM.txt
-    |   |-- Chem_SMILES_only.txt
-    |   |-- Chem_SMILES.txt
-    |   |-- ChEMBL cleanup.R
-    |   `-- ChEMBL_Target_Sequence.txt
-    |-- DAVIS
-    |   |-- affinity.txt
-    |   |-- SMILES.txt
-    |   `-- target_seq.txt
-    `-- KIBA
-        |-- affinity.txt
-        |-- SMILES.txt
-        `-- target_seq.txt
+├── classification
+│   ├── BindingDB
+│   │   ├── test.csv
+│   │   ├── train.csv
+│   │   └── val.csv
+│   ├── BIOSNAP
+│   │   ├── full_data
+│   │   │   ├── test.csv
+│   │   │   ├── train.csv
+│   │   │   └── val.csv
+│   │   ├── missing_data
+│   │   │   ├── 70
+│   │   │   ├── 80
+│   │   │   ├── 90
+│   │   │   └── 95
+│   │   ├── unseen_drug
+│   │   │   ├── test.csv
+│   │   │   ├── train.csv
+│   │   │   └── val.csv
+│   │   └── unseen_protein
+│   │       ├── test.csv
+│   │       ├── train.csv
+│   │       └── val.csv
+│   └── DAVIS
+│       ├── test.csv
+│       ├── train.csv
+│       └── val.csv
+└── regression
+    ├── benchmark
+    │   ├── DAVIStest
+    │   └── KIBAtest
+    ├── BindingDB
+    │   ├── bindingDB cleanup.R
+    │   ├── BindingDB_Kd.txt
+    │   ├── BindingDB_SMILES_new.txt
+    │   ├── BindingDB_SMILES.txt
+    │   ├── BindingDB_Target_Sequence_new.txt
+    │   └── BindingDB_Target_Sequence.txt
+    ├── ChEMBL
+    │   ├── Chem_Affinity.txt
+    │   ├── Chem_Kd_nM.txt
+    │   ├── Chem_SMILES_only.txt
+    │   ├── Chem_SMILES.txt
+    │   ├── ChEMBL cleanup.R
+    │   └── ChEMBL_Target_Sequence.txt
+    ├── DAVIS
+    │   ├── affinity.txt
+    │   ├── SMILES.txt
+    │   └── target_seq.txt
+    └── KIBA
+        ├── affinity.txt
+        ├── SMILES.txt
+        └── target_seq.txt
 ```
 
 In the original work of MolTrans, it only contains classification task. Here we provide datasets for both classification and regression tasks of DTI.

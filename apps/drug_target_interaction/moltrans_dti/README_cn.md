@@ -33,59 +33,59 @@ tar -zxvf "dti_dataset.tgz"
 
 ```txt
 dataset
-|-- classification
-|   |-- BindingDB
-|   |   |-- test.csv
-|   |   |-- train.csv
-|   |   `-- val.csv
-|   |-- BIOSNAP
-|   |   |-- full_data
-|   |   |   |-- test.csv
-|   |   |   |-- train.csv
-|   |   |   `-- val.csv
-|   |   |-- missing_data
-|   |   |   |-- 70
-|   |   |   |-- 80
-|   |   |   |-- 90
-|   |   |   `-- 95
-|   |   |-- unseen_drug
-|   |   |   |-- test.csv
-|   |   |   |-- train.csv
-|   |   |   `-- val.csv
-|   |   `-- unseen_protein
-|   |       |-- test.csv
-|   |       |-- train.csv
-|   |       `-- val.csv
-|   `-- DAVIS
-|       |-- test.csv
-|       |-- train.csv
-|       `-- val.csv
-`-- regression
-    |-- benchmark
-    |   |-- DAVIStest
-    |   `-- KIBAtest
-    |-- BindingDB
-    |   |-- bindingDB cleanup.R
-    |   |-- BindingDB_Kd.txt
-    |   |-- BindingDB_SMILES_new.txt
-    |   |-- BindingDB_SMILES.txt
-    |   |-- BindingDB_Target_Sequence_new.txt
-    |   `-- BindingDB_Target_Sequence.txt
-    |-- ChEMBL
-    |   |-- Chem_Affinity.txt
-    |   |-- Chem_Kd_nM.txt
-    |   |-- Chem_SMILES_only.txt
-    |   |-- Chem_SMILES.txt
-    |   |-- ChEMBL cleanup.R
-    |   `-- ChEMBL_Target_Sequence.txt
-    |-- DAVIS
-    |   |-- affinity.txt
-    |   |-- SMILES.txt
-    |   `-- target_seq.txt
-    `-- KIBA
-        |-- affinity.txt
-        |-- SMILES.txt
-        `-- target_seq.txt
+├── classification
+│   ├── BindingDB
+│   │   ├── test.csv
+│   │   ├── train.csv
+│   │   └── val.csv
+│   ├── BIOSNAP
+│   │   ├── full_data
+│   │   │   ├── test.csv
+│   │   │   ├── train.csv
+│   │   │   └── val.csv
+│   │   ├── missing_data
+│   │   │   ├── 70
+│   │   │   ├── 80
+│   │   │   ├── 90
+│   │   │   └── 95
+│   │   ├── unseen_drug
+│   │   │   ├── test.csv
+│   │   │   ├── train.csv
+│   │   │   └── val.csv
+│   │   └── unseen_protein
+│   │       ├── test.csv
+│   │       ├── train.csv
+│   │       └── val.csv
+│   └── DAVIS
+│       ├── test.csv
+│       ├── train.csv
+│       └── val.csv
+└── regression
+    ├── benchmark
+    │   ├── DAVIStest
+    │   └── KIBAtest
+    ├── BindingDB
+    │   ├── bindingDB cleanup.R
+    │   ├── BindingDB_Kd.txt
+    │   ├── BindingDB_SMILES_new.txt
+    │   ├── BindingDB_SMILES.txt
+    │   ├── BindingDB_Target_Sequence_new.txt
+    │   └── BindingDB_Target_Sequence.txt
+    ├── ChEMBL
+    │   ├── Chem_Affinity.txt
+    │   ├── Chem_Kd_nM.txt
+    │   ├── Chem_SMILES_only.txt
+    │   ├── Chem_SMILES.txt
+    │   ├── ChEMBL cleanup.R
+    │   └── ChEMBL_Target_Sequence.txt
+    ├── DAVIS
+    │   ├── affinity.txt
+    │   ├── SMILES.txt
+    │   └── target_seq.txt
+    └── KIBA
+        ├── affinity.txt
+        ├── SMILES.txt
+        └── target_seq.txt
 ```
 
 在MolTrans原工作中，只包含了分类任务。我们提供了DTI分类和回归任务的数据集与代码。
