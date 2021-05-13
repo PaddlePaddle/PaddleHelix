@@ -1,6 +1,6 @@
 #!/usr/bin/python3                                                                                                
 #-*-coding:utf-8-*- 
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ from functools import partial
 import numpy as np
 import pandas as pd
 import scipy.sparse
-import torch
 from rdkit import Chem
 from rdkit.Chem import AllChem
 from rdkit.Chem import MACCSkeys
@@ -206,13 +205,13 @@ def average_agg_tanimoto(stock_vecs, gen_vecs,
     agg_tanimoto = np.zeros(len(gen_vecs))
     total = np.zeros(len(gen_vecs))
     for j in range(0, stock_vecs.shape[0], batch_size):
-        x_stock = torch.tensor(stock_vecs[j:j + batch_size]).to(device).float()
+        x_stock = stock_vecs[j:j + batch_size].astype(float)
         for i in range(0, gen_vecs.shape[0], batch_size):
-            y_gen = torch.tensor(gen_vecs[i:i + batch_size]).to(device).float()
-            y_gen = y_gen.transpose(0, 1)
-            tp = torch.mm(x_stock, y_gen)
-            jac = (tp / (x_stock.sum(1, keepdim=True) +
-                         y_gen.sum(0, keepdim=True) - tp)).cpu().numpy()
+            y_gen = gen_vecs[i:i + batch_size].astype(float)
+            y_gen = y_gen.T
+            tp = np.matmul(x_stock, y_gen)
+            jac = (tp / (x_stock.sum(1, keepdims=True) +
+                         y_gen.sum(0, keepdims=True) - tp))
             jac[np.isnan(jac)] = 1
             if p != 1:
                 jac = jac ** p
@@ -227,6 +226,7 @@ def average_agg_tanimoto(stock_vecs, gen_vecs,
     if p != 1:
         agg_tanimoto = (agg_tanimoto) ** (1 / p)
     return np.mean(agg_tanimoto)
+
 
 
 def fingerprint(smiles_or_mol, fp_type='maccs', dtype=None, morgan__r=2,
