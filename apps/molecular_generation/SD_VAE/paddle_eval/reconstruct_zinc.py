@@ -23,6 +23,7 @@ from joblib import Parallel, delayed
 import numpy as np
 from tqdm import tqdm
 from att_model_proxy import cmd_args
+np.random.seed(1)
 
 
 # 0. Constants
@@ -33,7 +34,7 @@ decode_times = 5
 
 
 # 1. load the test smiles
-smiles_file = '../../dropbox/data/zinc/250k_rndm_zinc_drugs_clean.smi'
+smiles_file = cmd_args.smiles_file
 smiles = [line.strip() for index, line in zip(range(nb_smiles), open(smiles_file).readlines())]
 
 
@@ -120,6 +121,6 @@ def main():
 
 
 if __name__ == '__main__':
-    cmd_args.saved_model = '../../dropbox/results/zinc/train_model_epoch240'
+    cmd_args.saved_model = '../model/train_model_epoch499'
     main()
     
