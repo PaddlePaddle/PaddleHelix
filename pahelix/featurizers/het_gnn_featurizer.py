@@ -20,13 +20,12 @@ import pandas as pd
 import networkx as nx
 import pgl
 
-from pahelix.featurizers.featurizer import Featurizer
 
 from sklearn.preprocessing import StandardScaler
 
 __all__ = ['DDiFeaturizer']
 
-class DDiFeaturizer(Featurizer):
+class DDiFeaturizer(object):
     """Featurizer for drugs"""
     def __init__(self):
         super(DDiFeaturizer, self).__init__()
