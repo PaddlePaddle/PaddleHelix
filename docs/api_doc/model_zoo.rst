@@ -16,14 +16,6 @@ protein_sequence_model
 
 .. automodule:: pahelix.model_zoo.protein_sequence_model
    :members: LstmEncoderModel, ResnetEncoderModel, TransformerEncoderModel, PretrainTaskModel, SeqClassificationTaskModel, ClassificationTaskModel, RegressionTaskModel, ProteinEncoderModel, ProteinModel, ProteinCriterion
-   :inherited-members:
-
-sd_vae_model
-============
-
-.. automodule:: pahelix.model_zoo.sd_vae_model
-   :members: StateDecoder, PerpCalculator, MyPerpLoss, CNNEncoder, MolVAE
-   :inherited-members:
 
 seq_vae_model
 ============

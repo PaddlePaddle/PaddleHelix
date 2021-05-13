@@ -102,13 +102,6 @@ muv_dataset
    :members: get_default_muv_task_names, load_muv_dataset
    :inherited-members:
 
-pdbbind_dataset
-===============
-
-.. automodule:: pahelix.datasets.pdbbind_dataset
-
-.. autofunction:: pahelix.datasets.pdbbind_dataset.load_pdbbind_dataset
-
 ppi_dataset
 ===========
 
