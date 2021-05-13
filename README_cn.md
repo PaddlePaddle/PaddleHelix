@@ -43,6 +43,9 @@
 * [表示学习 - 化合物](./apps/pretrained_compound/README_cn.md)
 * [表示学习 - 蛋白质](./apps/pretrained_protein/README_cn.md)
 * [药物-分子作用预测](./apps/drug_target_interaction/README_cn.md)
+* [分子生成](./apps/molecular_generation/README_cn.md)
+* [药物联用](./apps/drug_drug_synergy/README_cn.md)
+* [药物-分子作用预测](./apps/drug_target_interaction/README_cn.md)
 * [LinearRNA](./c/pahelix/toolkit/linear_rna/README_cn.md)
 
 ### API 文档
