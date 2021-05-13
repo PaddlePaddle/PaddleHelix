@@ -71,7 +71,7 @@ Testing:
 python sample.py \
         --nsample 10000 \
         --vocab data/zinc/vocab.txt \
-        --model vae_models/model.iter-422000 \
+        --model vae_models/model.iter-441000 \
         --config configs/config.json \
         --output sampling_output.txt
 ```
@@ -98,7 +98,7 @@ CUDA_VISIBLE_DEVICES=0 python vae_train.py \
         --epoch 50 \
         --batch_size 32 \
         --use_gpu True \
-        --load_epoch 422000
+        --load_epoch 441000
 ```
 
 
