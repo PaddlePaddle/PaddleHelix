@@ -142,7 +142,7 @@ def main(ddi, dti, ppi, d_feat, epochs=10, num_subgraph=20, sub_neighbours=[10, 
     value = drug_feat.collate_fn(ddi, dti, ppi, d_feat)
     hg, nodes_dict, label, label_idx = value['rt'] 
     
-    trained_model = train(num_subgraph, hg, label_idx, epochs, args.sub_neighbours)
+    trained_model = train(args.num_subgraph, hg, label_idx, epochs, args.sub_neighbours)
 
     return trained_model
 
@@ -153,7 +153,7 @@ if __name__ == "__main__":
     parser.add_argument('--ppi', type=str, default='./data/PPI')
     parser.add_argument('--d_feat', type=str, default='./data/all_drugs_name.fet')
     parser.add_argument('--epochs', type=int, default=10)
-    parser.add_argument('--num_graph', type=int, default=10)
+    parser.add_argument('--num_subgraph', type=int, default=10)
     parser.add_argument('--sub_neighbours', nargs='+', type=int, default=[10, 10])
     parser.add_argument('--cuda', action='store_true', default=False)
 
@@ -163,6 +163,6 @@ if __name__ == "__main__":
         args.ppi,
         args.d_feat,
         args.epochs,
-        args.num_graph,
+        args.num_subgraph,
         args.sub_neighbours,
         args.cuda)
