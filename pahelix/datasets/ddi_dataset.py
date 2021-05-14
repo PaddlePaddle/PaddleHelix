@@ -32,35 +32,39 @@ def get_default_ddi_task_names():
     
 def load_ddi_dataset(data_path, task_names=None, cellline=None):
     """Load ddi dataset,process the input information.
+
     Description:
-        
+
         The data file contains a csv table, in which columns below are used:
             
-            drug_a_name: drug name;
+            drug_a_name: drug name
             
-            drug_b_name: drug name;
+            drug_b_name: drug name
             
-            cell_line: cell line which the drug pairs were tested on;
+            cell_line: cell line which the drug pairs were tested on
 
             synergy: continuous values represent the synergy effect, we use 30 as threshold to binarize the data into binary labels.
-            1 as positive and 0 as negative.
+            1 as positive and 0 as negative
+
     Args:
         data_path(str): the path to the cached npz path.
         task_names(list): a list of header names to specify the columns to fetch from 
             the csv file.
         cellline: the exact cellline model you want to test on.
-        
     
     Returns:
         an InMemoryDataset instance.
     
     Example:
         .. code-block:: python
+
             dataset = load_hddi_dataset('./ddi/raw')
             print(len(dataset))
+    
     References:
     
     [1] Drug-Drug Dynergy Data. https://academic.oup.com/bioinformatics/advance-article/doi/10.1093/bioinformatics/btx806/4747884
+    
     """
     if task_names is None:
         task_names = get_default_ddi_task_names()

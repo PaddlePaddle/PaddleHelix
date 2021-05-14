@@ -32,27 +32,29 @@ def get_default_dti_task_names():
 
 def load_dti_dataset(data_path, task_names=None, featurizer=None):
     """Load dti dataset,process the input information and the featurizer.
+
     Description:
-        
+
         The data file contains a tsv table, in which columns below are used:
             
-            chemical: drug name;
+            chemical: drug name
             
-            protein: targeted protein name.
+            protein: targeted protein name
             
     Args:
         data_path(str): the path to the cached npz path.
         task_names(list): a list of header names to specify the columns to fetch from 
             the csv file.
         
-    
     Returns:
         an InMemoryDataset instance.
     
     Example:
         .. code-block:: python
+
             dataset = load_hddi_dataset('./dti/raw')
             print(len(dataset))
+
     """
     if task_names is None:
         task_names = get_default_dti_task_names()

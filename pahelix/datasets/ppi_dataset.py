@@ -32,13 +32,14 @@ def get_default_ppi_task_names():
 
 def load_ppi_dataset(data_path, task_names=None, featurizer=None):
     """Load ppi dataset,process the input information and the featurizer.
+
     Description:
-        
+
         The data file contains a txt file, in which columns below are used:
             
-            protein1: protein1 name;
+            protein1: protein1 name
             
-            protein2: protein2 name.
+            protein2: protein2 name
         
     Args:
         data_path(str): the path to the cached npz path.
@@ -50,8 +51,10 @@ def load_ppi_dataset(data_path, task_names=None, featurizer=None):
     
     Example:
         .. code-block:: python
+
             dataset = load_ppi_dataset('./ppi/raw')
             print(len(dataset))
+
     """
     if task_names is None:
         task_names = get_default_ppi_task_names()
