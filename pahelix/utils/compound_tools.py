@@ -115,9 +115,7 @@ def get_largest_mol(mol_list):
     return mol_list[largest_mol_idx]
 
 def rdchem_enum_to_list(values):
-    """
-    Examples:
-        values = {0: rdkit.Chem.rdchem.ChiralType.CHI_UNSPECIFIED, 
+    """values = {0: rdkit.Chem.rdchem.ChiralType.CHI_UNSPECIFIED, 
             1: rdkit.Chem.rdchem.ChiralType.CHI_TETRAHEDRAL_CW, 
             2: rdkit.Chem.rdchem.ChiralType.CHI_TETRAHEDRAL_CCW, 
             3: rdkit.Chem.rdchem.ChiralType.CHI_OTHER}
@@ -538,7 +536,10 @@ def mol_to_graph_data(mol):
     mol_to_graph_data
 
     Args:
-        atom_features, edge_features, morgan_fingerprint, functional_groups
+        atom_features: Atom features.
+        edge_features: Edge features.
+        morgan_fingerprint: Morgan fingerprint.
+        functional_groups: Functional groups.
     """
     if len(mol.GetAtoms()) == 0:
         return None
@@ -620,7 +621,8 @@ def mol_to_md_graph_data(mol, add_3dpos=True, numConfs=10):
     mol_to_md_graph_data
 
     Args:
-        atom_pos, energy    
+        atom_pos: Atom position.
+        energy: Energy.
     """
     if len(mol.GetAtoms()) == 0:
         return None
@@ -646,7 +648,10 @@ def mol_to_superedge_graph_data(mol, numConfs=10, cal3d_atom_num_thres=100):
     mol_to_superedge_graph_data
 
     Args:
-        atom_pos, bond_length, superedge_edges, superedge_bond_angle_id
+        atom_pos: Atom position.
+        bond_length: Bond length.
+        superedge_edges: Superedge edges.
+        superedge_bond_angle_id: Superedge bond angle id.
     """
     if len(mol.GetAtoms()) == 0:
         return None
@@ -689,7 +694,10 @@ def mol_to_polar_graph_data(mol):
     mol_to_polar_graph_data
 
     Args:
-        atom_pos, atom_polar, polar_edge_angle, polar_polar_angle
+        atom_pos: Atom position.
+        atom_polar: Atom polar.
+        polar_edge_angle: Polar edge angle.
+        polar_polar_angle: Polar polar angle.
     """
     if len(mol.GetAtoms()) == 0:
         return None

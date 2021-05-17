@@ -42,7 +42,7 @@ class AtomEmbedding(nn.Layer):
     def forward(self, node_features):
         """
         Args: 
-            node_features(dict of tensor).
+            node_features(dict of tensor): node features.
         """
         out_embed = 0
         for i, name in enumerate(self.atom_names):
@@ -69,7 +69,7 @@ class BondEmbedding(nn.Layer):
     def forward(self, edge_features):
         """
         Args: 
-            edge_features(dict of tensor).
+            edge_features(dict of tensor): edge features.
         """
         out_embed = 0
         for i, name in enumerate(self.bond_names):
