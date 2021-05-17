@@ -28,9 +28,7 @@ import pdb
 
 
 class VAE(nn.Layer):
-    """
-    Description:
-        The sequence VAE model
+    """The sequence VAE model
 
     Args:
         vocab: the vocab object.
@@ -148,15 +146,13 @@ class VAE(nn.Layer):
         return recon_loss
 
     def sample_z_prior(self, n_batch):
-        """
-        Description:
-            Sampling z ~ p(z) = N(0, I)
+        """Sampling z ~ p(z) = N(0, I)
 
         Args:
             n_batch: number of batches
-        
-        Returns:
-            (n_batch, d_z) of floats, sample of latent z.
+
+        Returns: 
+        (n_batch, d_z) of floats, sample of latent z
         """
         return paddle.randn([n_batch, self.q_mu.weight.shape[1]])
     
@@ -170,9 +166,7 @@ class VAE(nn.Layer):
         return string
             
     def sample(self, n_batch, max_len=100, z=None, temp=1.0):
-        """
-        Description:
-            Generating n_batch samples in eval mode (`z` could be
+        """Generating n_batch samples in eval mode (`z` could be
             not on same device)
 
         Args:

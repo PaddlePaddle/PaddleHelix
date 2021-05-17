@@ -47,10 +47,10 @@ def get_all_metrics(gen, k=None, n_jobs=1,
                     test=None, test_scaffolds=None,
                     ptest=None, ptest_scaffolds=None,
                     train=None):
-    """
-    Description:
-        Computes all available metrics between test (scaffold test)
+    """Computes all available metrics between test (scaffold test)
         and generated sets of SMILES.
+
+    Description:
         Available metrics:
             * %valid
             * %unique@k
@@ -167,9 +167,7 @@ def get_all_metrics(gen, k=None, n_jobs=1,
 
 def compute_intermediate_statistics(smiles, n_jobs=1, device='cpu',
                                     batch_size=512, pool=None):
-    """
-    Description:
-        The function precomputes statistics such as mean and variance for FCD, etc.
+    """ The function precomputes statistics such as mean and variance for FCD, etc.
         It is useful to compute the statistics for test and scaffold test sets to
             speedup metrics calculation.
     """
@@ -198,9 +196,7 @@ def compute_intermediate_statistics(smiles, n_jobs=1, device='cpu',
 
 
 def fraction_passes_filters(gen, n_jobs=1):
-    """
-    Description:
-        Computes the fraction of molecules that pass filters:
+    """Computes the fraction of molecules that pass filters:
         * MCF
         * PAINS
         * Only allowed atoms ('C','N','S','O','F','Cl','Br','H')
@@ -212,9 +208,7 @@ def fraction_passes_filters(gen, n_jobs=1):
 
 def internal_diversity(gen, n_jobs=1, device='cpu', fp_type='morgan',
                        gen_fps=None, p=1):
-    """
-    Description:
-        Computes internal diversity as:
+    """Computes internal diversity as:
         1/|A|^2 sum_{x, y in AxA} (1-tanimoto(x, y))
     """
     if gen_fps is None:
@@ -224,9 +218,7 @@ def internal_diversity(gen, n_jobs=1, device='cpu', fp_type='morgan',
 
 
 def fraction_unique(gen, k=None, n_jobs=1, check_validity=True):
-    """
-    Description:
-        Computes a number of unique molecules
+    """Computes a number of unique molecules
 
     Args:
         gen: list of SMILES
@@ -248,9 +240,7 @@ def fraction_unique(gen, k=None, n_jobs=1, check_validity=True):
 
 
 def fraction_valid(gen, n_jobs=1):
-    """
-    Description:
-        Computes a number of valid molecules
+    """Computes a number of valid molecules
 
     Args:
         gen: list of SMILES
