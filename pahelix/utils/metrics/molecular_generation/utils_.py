@@ -228,7 +228,6 @@ def average_agg_tanimoto(stock_vecs, gen_vecs,
     return np.mean(agg_tanimoto)
 
 
-
 def fingerprint(smiles_or_mol, fp_type='maccs', dtype=None, morgan__r=2,
                 morgan__n=1024, *args, **kwargs):
     """
