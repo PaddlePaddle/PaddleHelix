@@ -93,19 +93,19 @@ Python脚本`scripts/train.py`是GraphDTA模型的入口，它创建了`src/mode
 为了方便实验，我们提供了shell脚本`scripts/train.sh`来运行实验，它的使用方法是：
 
 ```sh
-sh scripts/train.sh DATASET YOU_CONFIG_JSON [EXTRA-ARGS]
+./scripts/train.sh DATASET YOU_CONFIG_JSON [EXTRA-ARGS]
 ```
 
 例如，要在Davis数据集上训练GIN模型，只需要执行：
 
 ```sh
-sh scripts/train.sh davis fix_prot_len_gin_config.json
+./scripts/train.sh davis model_configs/fix_prot_len_gin_config.json
 ```
 
 需要注意的是，在Kiba数据集上训练GIN模型时，由于数据集使用了KIBA分数作为指标，而非默认的Kd指标，运行脚本时需要加上额外参数：
 
 ```sh
-sh scripts/train.sh kiba fix_prot_len_gin_config.json --use_kiba_label
+./scripts/train.sh kiba model_configs/fix_prot_len_gin_config.json --use_kiba_label
 ```
 
 进行评估时，我们使用回归任务中标准的均方误差MSE作为指标，除此之外，引入一致性指数CI作为新指标。均方误差越小，一致性指数越大，模型的预测性能越好。

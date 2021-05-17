@@ -91,19 +91,19 @@ For convenience, we provide a shell script `scripts/train.sh` for easy experimen
 Its usage is:
 
 ```sh
-sh scripts/train.sh DATASET YOU_CONFIG_JSON [EXTRA-ARGS]
+./scripts/train.sh DATASET YOU_CONFIG_JSON [EXTRA-ARGS]
 ```
 
 For example, to train the GIN model on Davis dataset, just execute:
 
 ```sh
-sh scripts/train.sh davis fix_prot_len_gin_config.json
+./scripts/train.sh davis model_configs/fix_prot_len_gin_config.json
 ```
 
 Notice that if you want to train the GIN model on Kiba dataset, you need to use KIBA label, instead of default Kd label, so execute:
 
 ```sh
-sh scripts/train.sh kiba fix_prot_len_gin_config.json --use_kiba_label
+./scripts/train.sh kiba model_configs/fix_prot_len_gin_config.json --use_kiba_label
 ```
 
 For evaluation, we use MSE as a standard metric for the regression task. Besides, concordance index (CI) is an another metric. The smaller MSE, the better. While, the larger CI, the better.
