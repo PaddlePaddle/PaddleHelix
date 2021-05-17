@@ -23,7 +23,12 @@ Implementation of Junction Tree Variational Autoencoder (https://arxiv.org/abs/1
 You can download our pretrained [model](https://baidu-nlp.bj.bcebos.com/PaddleHelix/datasets/molecular_generation/vae_models.tgz) or train it by yourself.
 
 #### Data link
-You can download the dataset from the [link](https://baidu-nlp.bj.bcebos.com/PaddleHelix/datasets/molecular_generation/zinc.tgz) we provided and perform the corresponding preprocessing for your use. It is recommended to unzip the dataset and put it in the data/directory. 
+First, create a dataset root folder `data` under this application folder.
+
+```bash
+mkdir -p data 
+```
+You can download the dataset from the [link](https://baidu-nlp.bj.bcebos.com/PaddleHelix/datasets/molecular_generation/zinc.tgz) we provided and perform the corresponding preprocessing for your use. It is recommended to unzip the dataset and put it in the `data` directory. 
 If you need to train on your own dataset, execute the following commands to generate the dictionary file of the dataset :    
 
 ```bash 

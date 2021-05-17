@@ -23,7 +23,11 @@ Junction Tree Variational Autoencoder的实现 https://arxiv.org/abs/1802.04364
 您可以使用我们已经预训练好的[模型](https://baidu-nlp.bj.bcebos.com/PaddleHelix/datasets/molecular_generation/vae_models.tgz)，也可以选择自己训练。
 
 #### 数据地址
-我们提供[训练数据集](https://baidu-nlp.bj.bcebos.com/PaddleHelix/datasets/molecular_generation/zinc.tgz)。建议解压数据集并将其放入data/目录下。
+首先，请在该应用目录下创建一个`data`子目录：
+```bash
+mkdir -p data 
+```
+我们提供[训练数据集](https://baidu-nlp.bj.bcebos.com/PaddleHelix/datasets/molecular_generation/zinc.tgz)。建议解压数据集并将其放入`data`目录下。
 若您需要在自己的数据集上训练，请执行以下命令，以生成该数据集的字典文件：
 ```bash 
 python -m src.mol_tree \
