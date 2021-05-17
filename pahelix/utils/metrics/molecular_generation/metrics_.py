@@ -15,7 +15,7 @@
 # limitations under the License.
 
 """
-tbd
+metrics
 """
 
 
@@ -48,9 +48,24 @@ def get_all_metrics(gen, k=None, n_jobs=1,
                     ptest=None, ptest_scaffolds=None,
                     train=None):
     """
-    Computes all available metrics between test (scaffold test)
-    and generated sets of SMILES.
-    Parameters:
+    Description:
+        Computes all available metrics between test (scaffold test)
+        and generated sets of SMILES.
+        Available metrics:
+            * %valid
+            * %unique@k
+            * Frechet ChemNet Distance (FCD)
+            * Fragment similarity (Frag)
+            * Scaffold similarity (Scaf)
+            * Similarity to nearest neighbour (SNN)
+            * Internal diversity (IntDiv)
+            * Internal diversity 2: using square root of mean squared
+                Tanimoto similarity (IntDiv2)
+            * %passes filters (Filters)
+            * Distribution difference for logP, SA, QED, weight
+            * Novelty (molecules not present in train)
+    
+    Args:
         gen: list of generated SMILES
         k: int or list with values for unique@k. Will calculate number of
             unique molecules in the first k molecules. Default [1000, 10000]
@@ -72,40 +87,7 @@ def get_all_metrics(gen, k=None, n_jobs=1,
             statistics will be ignored
         train (None or list): train SMILES. If None, will load a default
             train set
-    Available metrics:
-        * %valid
-        * %unique@k
-        * Frechet ChemNet Distance (FCD)
-        * Fragment similarity (Frag)
-        * Scaffold similarity (Scaf)
-        * Similarity to nearest neighbour (SNN)
-        * Internal diversity (IntDiv)
-        * Internal diversity 2: using square root of mean squared
-            Tanimoto similarity (IntDiv2)
-        * %passes filters (Filters)
-        * Distribution difference for logP, SA, QED, weight
-        * Novelty (molecules not present in train)
     """
-    # if test is None:
-    #     if ptest is not None:
-    #         raise ValueError(
-    #             "You cannot specify custom test "
-    #             "statistics for default test set")
-    #     test = get_dataset('test')
-    #     ptest = get_statistics('test')
-    #
-    # if test_scaffolds is None:
-    #     if ptest_scaffolds is not None:
-    #         raise ValueError(
-    #             "You cannot specify custom scaffold test "
-    #             "statistics for default scaffold test set")
-    #     test_scaffolds = get_dataset('test_scaffolds')
-    #     ptest_scaffolds = get_statistics('test_scaffolds')
-    #
-    # train = train or get_dataset('train')
-
-
-
     if k is None:
         k = [1000, 10000]
     disable_rdkit_log()
@@ -186,9 +168,10 @@ def get_all_metrics(gen, k=None, n_jobs=1,
 def compute_intermediate_statistics(smiles, n_jobs=1, device='cpu',
                                     batch_size=512, pool=None):
     """
-    The function precomputes statistics such as mean and variance for FCD, etc.
-    It is useful to compute the statistics for test and scaffold test sets to
-        speedup metrics calculation.
+    Description:
+        The function precomputes statistics such as mean and variance for FCD, etc.
+        It is useful to compute the statistics for test and scaffold test sets to
+            speedup metrics calculation.
     """
     close_pool = False
     if pool is None:
@@ -216,11 +199,12 @@ def compute_intermediate_statistics(smiles, n_jobs=1, device='cpu',
 
 def fraction_passes_filters(gen, n_jobs=1):
     """
-    Computes the fraction of molecules that pass filters:
-    * MCF
-    * PAINS
-    * Only allowed atoms ('C','N','S','O','F','Cl','Br','H')
-    * No charges
+    Description:
+        Computes the fraction of molecules that pass filters:
+        * MCF
+        * PAINS
+        * Only allowed atoms ('C','N','S','O','F','Cl','Br','H')
+        * No charges
     """
     passes = mapper(n_jobs)(mol_passes_filters, gen)
     return np.mean(passes)
@@ -229,8 +213,9 @@ def fraction_passes_filters(gen, n_jobs=1):
 def internal_diversity(gen, n_jobs=1, device='cpu', fp_type='morgan',
                        gen_fps=None, p=1):
     """
-    Computes internal diversity as:
-    1/|A|^2 sum_{x, y in AxA} (1-tanimoto(x, y))
+    Description:
+        Computes internal diversity as:
+        1/|A|^2 sum_{x, y in AxA} (1-tanimoto(x, y))
     """
     if gen_fps is None:
         gen_fps = fingerprints(gen, fp_type=fp_type, n_jobs=n_jobs)
@@ -240,8 +225,10 @@ def internal_diversity(gen, n_jobs=1, device='cpu', fp_type='morgan',
 
 def fraction_unique(gen, k=None, n_jobs=1, check_validity=True):
     """
-    Computes a number of unique molecules
-    Parameters:
+    Description:
+        Computes a number of unique molecules
+
+    Args:
         gen: list of SMILES
         k: compute unique@k
         n_jobs: number of threads for calculation
@@ -262,8 +249,10 @@ def fraction_unique(gen, k=None, n_jobs=1, check_validity=True):
 
 def fraction_valid(gen, n_jobs=1):
     """
-    Computes a number of valid molecules
-    Parameters:
+    Description:
+        Computes a number of valid molecules
+
+    Args:
         gen: list of SMILES
         n_jobs: number of threads for calculation
     """
