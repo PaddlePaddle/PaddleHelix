@@ -25,9 +25,11 @@ from rdkit.Chem import rdchem
 def get_gasteiger_partial_charges(mol, n_iter=12):
     """
     Calculates list of gasteiger partial charges for each atom in mol object.
+
     Args: 
-        mol: rdkit mol object
-        n_iter(int): number of iterations. Default 12
+        mol: rdkit mol object.
+        n_iter(int): number of iterations. Default 12.
+
     Returns: 
         list of computed partial charges for each atom.
     """
@@ -41,8 +43,10 @@ def get_gasteiger_partial_charges(mol, n_iter=12):
 def create_standardized_mol_id(smiles):
     """
     Args:
-        smiles: smiles sequence
-    Returns: inchi
+        smiles: smiles sequence.
+
+    Returns: 
+        inchi.
     """
     if check_smiles_validity(smiles):
         # remove stereochemistry
@@ -81,6 +85,7 @@ def split_rdkit_mol_obj(mol):
     """
     Split rdkit mol object containing multiple species or one species into a
     list of mol objects or a list containing a single object respectively.
+
     Args:
         mol: rdkit mol object.
     """
@@ -98,8 +103,10 @@ def get_largest_mol(mol_list):
     Given a list of rdkit mol objects, returns mol object containing the
     largest num of atoms. If multiple containing largest num of atoms,
     picks the first one.
+
     Args: 
         mol_list(list): a list of rdkit mol object.
+
     Returns:
         the largest mol.
     """
@@ -109,7 +116,7 @@ def get_largest_mol(mol_list):
 
 def rdchem_enum_to_list(values):
     """
-    For example:
+    Examples:
         values = {0: rdkit.Chem.rdchem.ChiralType.CHI_UNSPECIFIED, 
             1: rdkit.Chem.rdchem.ChiralType.CHI_TETRAHEDRAL_CW, 
             2: rdkit.Chem.rdchem.ChiralType.CHI_TETRAHEDRAL_CCW, 
@@ -529,8 +536,9 @@ class Compound3DKit(object):
 def mol_to_graph_data(mol):
     """
     mol_to_graph_data
+
     Args:
-        atom_features,edge_features,morgan_fingerprint,functional_groups
+        atom_features, edge_features, morgan_fingerprint, functional_groups
     """
     if len(mol.GetAtoms()) == 0:
         return None
@@ -610,8 +618,9 @@ def mol_to_graph_data(mol):
 def mol_to_md_graph_data(mol, add_3dpos=True, numConfs=10):
     """
     mol_to_md_graph_data
+
     Args:
-        atom_pos,energy    
+        atom_pos, energy    
     """
     if len(mol.GetAtoms()) == 0:
         return None
@@ -635,8 +644,9 @@ SUPEREDGE_BOND_LENGTH_NUM = 100
 def mol_to_superedge_graph_data(mol, numConfs=10, cal3d_atom_num_thres=100):
     """
     mol_to_superedge_graph_data
+
     Args:
-        atom_pos,bond_length,superedge_edges,superedge_bond_angle_id
+        atom_pos, bond_length, superedge_edges, superedge_bond_angle_id
     """
     if len(mol.GetAtoms()) == 0:
         return None
@@ -677,8 +687,9 @@ POLAR_ANGLE_NUM = int(os.environ.get('POLAR_ANGLE_NUM', 10))
 def mol_to_polar_graph_data(mol):
     """
     mol_to_polar_graph_data
+
     Args:
-        atom_pos,atom_polar,polar_edge_angle,polar_polar_angle
+        atom_pos, atom_polar, polar_edge_angle, polar_polar_angle
     """
     if len(mol.GetAtoms()) == 0:
         return None

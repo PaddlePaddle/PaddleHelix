@@ -24,7 +24,26 @@ import math
 
 class Involution2D(nn.Layer):
     """
-    Involution module
+    Involution module.
+
+    Args:
+        in_channel: The channel size of input.
+        out_channel: The channel size of output.
+        sigma_mapping: Sigma mapping.
+        kernel_size: Kernel size.
+        stride: Stride size.
+        groups: Group size.
+        reduce_ratio: The ratio of reduce.
+        dilation: The dilation size.
+        padding: The padding size.
+
+    Returns:
+        output: Tbe output of Involution2D block.
+
+    References:
+
+    [1] Involution: Inverting the Inherence of Convolution for Visual Recognition. https://arxiv.org/abs/2103.06255
+
     """
     def __init__(self, in_channel, out_channel, sigma_mapping=None, kernel_size=7, stride=1, 
                  groups=1, reduce_ratio=1, dilation=1, padding=3):

@@ -24,15 +24,19 @@ import pgl
 
 
 class GraphNorm(nn.Layer):
-    """
-    Implementation of graph normalization.
-    Reference Paper: BENCHMARKING GRAPH NEURAL NETWORKS.
-    Each node features is divied by sqrt(num_nodes) per graphs.
+    """Implementation of graph normalization. Each node features is divied by sqrt(num_nodes) per graphs.
+    
     Args:
         graph: the graph object from (:code:`Graph`)
         feature: A tensor with shape (num_nodes, feature_size).
+
     Return:
         A tensor with shape (num_nodes, hidden_size)
+
+    References:
+
+    [1] BENCHMARKING GRAPH NEURAL NETWORKS. https://arxiv.org/abs/2003.00982
+
     """
 
     def __init__(self):

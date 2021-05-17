@@ -107,6 +107,8 @@ class DDiFeaturizer(object):
 
 def num_nodes_stat(data):
     """count the number of nodes from data
+        
+    Examples:
         data: {'pair': (a, b)}
     """
     nodes = set()

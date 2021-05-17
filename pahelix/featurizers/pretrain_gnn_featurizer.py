@@ -39,9 +39,11 @@ class AttrmaskTransformFn(object):
     def __call__(self, raw_data):
         """
         Gen features according to raw data and return a single graph data.
+
         Args:
             raw_data: It contains smiles and label,we convert smiles to mol
             by rdkit,then convert mol to graph data.
+        
         Returns:
             data: It contains reshape label and smiles.
         """
@@ -64,10 +66,12 @@ class AttrmaskCollateFn(object):
         """
         Collate features about a sublist of graph data and return join_graph, 
         masked_node_indice and masked_node_labels.
+
         Args:
             data_list : the graph data in AttrmaskCollateFn.for data in data_list,
             create node features and edge features according to pgl graph,and then 
             use graph wrapper to feed join graph, then the label can be arrayed to batch label.
+
         Returns:
             The batch data contains finetune label and valid,which are 
             collected from batch_label and batch_valid.
@@ -105,9 +109,11 @@ class SupervisedTransformFn(object):
     def __call__(self, raw_data):
         """
         Gen features according to raw data and return a single graph data.
+
         Args:
             raw_data: It contains smiles and label,we convert smiles 
             to mol by rdkit,then convert mol to graph data.
+
         Returns:
             data: It contains reshape label and smiles.
         """
@@ -129,10 +135,12 @@ class SupervisedCollateFn(object):
     def __call__(self, data_list):
         """
         Collate features about a sublist of graph data and return a big batch feed dictionary.
+
         Args:
             data_list : the graph data in SupervisedTransformFn for data in data_list,
             create node features and edge features according to pgl graph,and then 
             use graph wrapper to feed join graph, then the label can be arrayed to batch label.
+
         Returns:
             The batch data contains finetune label and valid,which are 
             collected from batch_label and batch_valid.      

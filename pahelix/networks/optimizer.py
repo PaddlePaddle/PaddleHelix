@@ -22,7 +22,7 @@ import paddle.fluid.layers as layers
 
 
 class AdamW(fluid.optimizer.AdamaxOptimizer):
-    """AdamW object for dygraph"""
+    """AdamW object for dygraph."""
     def __init__(self, *args, **kwargs):
         weight_decay = kwargs.pop('weight_decay', None) 
         var_name_to_exclude = kwargs.pop('var_name_to_exclude', '.*layer_norm_scale|.*layer_norm_bias|.*b_0')

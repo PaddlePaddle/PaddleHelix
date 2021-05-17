@@ -31,6 +31,7 @@ from pahelix.networks.gnn_block import MeanPool, GraphNorm
 class PretrainGNNModel(nn.Layer):
     """
     The basic GNN Model used in pretrain gnns.
+
     Args:
         model_config(dict): a dict of model configurations.
         name(str): the prefix of model params.
@@ -144,6 +145,7 @@ class PretrainGNNModel(nn.Layer):
 class AttrmaskModel(nn.Layer):
     """
     This is a pretraning model used by pretrain gnns for attribute mask training.
+
     Returns:
         loss: the loss variance of the model.
     """
@@ -170,6 +172,7 @@ class AttrmaskModel(nn.Layer):
 class SupervisedModel(nn.Layer):
     """
     This is a pretraning model used by pretrain gnns for supervised training.
+    
     Returns:
         self.loss: the loss variance of the model.
     """
