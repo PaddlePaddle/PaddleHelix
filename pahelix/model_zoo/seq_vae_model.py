@@ -29,7 +29,12 @@ import pdb
 
 class VAE(nn.Layer):
     """
-    The sequence VAE model
+    Description:
+        The sequence VAE model
+
+    Args:
+        vocab: the vocab object.
+        model_config: the json files of model parameters.
     """
     def __init__(self, vocab, model_config):
         super(VAE, self).__init__()
@@ -143,11 +148,12 @@ class VAE(nn.Layer):
         return recon_loss
 
     def sample_z_prior(self, n_batch):
-
-        """Sampling z ~ p(z) = N(0, I)
+        """
+        Description:
+            Sampling z ~ p(z) = N(0, I)
 
         Args:
-            n_batch: number of batches.
+            n_batch: number of batches
         
         Returns:
             (n_batch, d_z) of floats, sample of latent z.
@@ -164,17 +170,19 @@ class VAE(nn.Layer):
         return string
             
     def sample(self, n_batch, max_len=100, z=None, temp=1.0):
-        """Generating n_batch samples in eval mode (`z` could be
-        not on same device)
+        """
+        Description:
+            Generating n_batch samples in eval mode (`z` could be
+            not on same device)
 
         Args:
-            n_batch: number of sentences to generate.
-            max_len: max len of samples.
-            z: (n_batch, d_z) of floats, latent vector z or None.
-            temp: temperature of softmax.
+            n_batch: number of sentences to generate
+            max_len: max len of samples
+            z: (n_batch, d_z) of floats, latent vector z or None
+            temp: temperature of softmax
 
         Returns: 
-            list of tensors of strings, samples sequence x.
+            list of tensors of strings, samples sequence x
         """
         
         if z is None:

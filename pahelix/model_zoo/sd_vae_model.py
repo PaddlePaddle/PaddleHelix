@@ -36,7 +36,13 @@ from paddle_initializer import weights_init
 
 class StateDecoder(nn.Layer):
     """
-    tbd
+    Description:
+        encoder
+
+    Args:
+        max_len: the maximun length of input sequemce
+        latent_dim: the dimension of latent space of encoder
+        rnn_type: the rnn type
     """
     def __init__(self, max_len, latent_dim, rnn_type):
         super(StateDecoder, self).__init__()
@@ -54,7 +60,7 @@ class StateDecoder(nn.Layer):
 
     def forward(self, z, n_steps=None):
         """
-        tbd
+        encoder forward
         """
         if n_steps is None:
             n_steps = self.max_len
@@ -74,7 +80,10 @@ class StateDecoder(nn.Layer):
 
 class PerpCalculator(nn.Layer):
     """
-    input:
+    Description:
+        loss type
+
+    Args:
         true_binary: one-hot, with size=time_steps x bsize x DECISION_DIM
         rule_masks: binary tensor, with size=time_steps x bsize x DECISION_DIM
         raw_logits: real tensor, with size=time_steps x bsize x DECISION_DIM
@@ -116,7 +125,8 @@ class PerpCalculator(nn.Layer):
 
 class MyPerpLoss(nn.Layer):
     """
-    tbd
+    Description:
+        perplexity loss
     """
     def __init__(self):
         super(MyPerpLoss, self).__init__()
@@ -145,7 +155,12 @@ class MyPerpLoss(nn.Layer):
 
 class CNNEncoder(nn.Layer):
     """
-    tbd
+    Description:
+        the encoder
+
+    Args:
+        max_len: the maximum length of input 
+        latent_dim: the dimension of latent space of encoder
     """
     def __init__(self, max_len, latent_dim):
         super(CNNEncoder, self).__init__()
@@ -166,7 +181,7 @@ class CNNEncoder(nn.Layer):
         
     def forward(self, x):
         """
-        tbd
+        encoder forward
         """
 
         batch_input = x
@@ -178,7 +193,6 @@ class CNNEncoder(nn.Layer):
         h3 = self.conv3(h2)
         h3 = F.relu(h3)
 
-        # h3 = torch.transpose(h3, 1, 2).contiguous()
         flatten = paddle.reshape(h3, shape=[batch_input.shape[0], -1])
         
         h = self.w1(flatten)
@@ -192,7 +206,7 @@ class CNNEncoder(nn.Layer):
 
 def get_encoder(model_config):
     """
-    tbd
+    get the encoder
     """
     if model_config['encoder_type'] == 'cnn':
         return CNNEncoder(max_len=model_config['max_decode_steps'], latent_dim=model_config['latent_dim'])
@@ -202,7 +216,11 @@ def get_encoder(model_config):
 
 class MolVAE(nn.Layer):
     """
-    tbd
+    Description:
+        The Mol VAE model
+
+    Args:
+        model_config: the model parameters
     """
     def __init__(self, model_config):
         super(MolVAE, self).__init__()
@@ -216,14 +234,14 @@ class MolVAE(nn.Layer):
 
     def reparameterize(self, mu, logvar):
         """
-        tbd
+        reparameterize trick
         """
         eps = paddle.normal(mean=0, std=self.model_config['eps_std'], shape=mu.shape)            
         return mu + (logvar / 2).exp() * eps   
 
     def forward(self, x_inputs, true_binary, rule_masks):    
         """
-        tbd
+        MOL VAE forward
         """    
         z_mean, z_log_var = self.encoder(x_inputs)
 
