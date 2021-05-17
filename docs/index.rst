@@ -8,8 +8,8 @@
    :maxdepth: 2
 
    installation
-   developer
    tutorials
+   developer
    contactus
 
 .. toctree::

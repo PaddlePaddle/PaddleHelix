@@ -4,12 +4,36 @@ pahelix.networks
 
 .. contents:: Table of Contents
 
+basic_block
+===========
+
+.. automodule:: pahelix.networks.basic_block
+
+.. autoclass:: pahelix.networks.basic_block.Activation
+   :members:
+
+.. autoclass:: pahelix.networks.basic_block.MLP
+   :members:
+
+compound_encoder
+================
+
+.. automodule:: pahelix.networks.compound_encoder
+   :members: AtomEmbedding, BondEmbedding
+   :inherited-members:
+
 gnn_block
 =========
 
 .. automodule:: pahelix.networks.gnn_block
-   :members: gcn_layer, get_layer, gin_layer, mean_recv, sum_recv, max_recv
+   :members: GraphNorm, MeanPool, GIN
    :inherited-members:
+
+involution_block
+================
+
+.. autoclass:: pahelix.networks.involution_block.Involution2D
+   :members:
 
 lstm_block
 ==========
@@ -22,8 +46,7 @@ optimizer
 =========
 
 .. autoclass:: pahelix.networks.optimizer.AdamW
-   :members: 
-   :inherited-members:
+   :members:
 
 pre_post_process
 ================

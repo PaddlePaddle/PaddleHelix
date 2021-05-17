@@ -4,17 +4,39 @@ pahelix.featurizers
 
 .. contents:: Table of Contents
 
-featurizer
-==========
+het_gnn_featurizer
+==================
 
-.. automodule:: pahelix.featurizers.featurizer
-   :members: Featurizer
+.. automodule:: pahelix.featurizers.het_gnn_featurizer
+
+.. autoclass:: pahelix.featurizers.het_gnn_featurizer.DDiFeaturizer
+   :members:
+   :inherited-members:
+
+.. autofunction:: pahelix.featurizers.het_gnn_featurizer.num_nodes_stat
+
+.. autofunction:: pahelix.featurizers.het_gnn_featurizer.nx_graph_build
 
 pretrain_gnn_featurizer
 =======================
 
 .. automodule:: pahelix.featurizers.pretrain_gnn_featurizer
-   :members: PreGNNAttrMaskFeaturizer, PreGNNSupervisedFeaturizer, reset_idxes, graph_data_obj_to_nx_simple, nx_to_graph_data_obj_simple, transform_contextpred, PreGNNContextPredFeaturizer
+
+.. autoclass:: pahelix.featurizers.pretrain_gnn_featurizer.AttrmaskTransformFn
+   :members:
+   :inherited-members:
+
+.. autoclass:: pahelix.featurizers.pretrain_gnn_featurizer.AttrmaskCollateFn
+   :members:
+   :inherited-members:
+
+.. autoclass:: pahelix.featurizers.pretrain_gnn_featurizer.SupervisedTransformFn
+   :members:
+   :inherited-members:
+
+.. autoclass:: pahelix.featurizers.pretrain_gnn_featurizer.SupervisedCollateFn
+   :members:
+   :inherited-members:
 
 Helpful Link
 ============

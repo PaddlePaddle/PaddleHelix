@@ -1,4 +1,4 @@
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ from pgl.nn import GraphPool
 
 from pahelix.networks.gnn_block import GIN
 from pahelix.networks.compound_encoder import AtomEmbedding, BondEmbedding
-#from pahelix.utils.internal_compound_tools import CompoundKit
 from pahelix.utils.compound_tools import CompoundKit
 from pahelix.networks.gnn_block import MeanPool, GraphNorm
 
@@ -32,7 +31,6 @@ from pahelix.networks.gnn_block import MeanPool, GraphNorm
 class PretrainGNNModel(nn.Layer):
     """
     The basic GNN Model used in pretrain gnns.
-    
 
     Args:
         model_config(dict): a dict of model configurations.
@@ -145,7 +143,12 @@ class PretrainGNNModel(nn.Layer):
 
 
 class AttrmaskModel(nn.Layer):
-    """tbd"""
+    """
+    This is a pretraning model used by pretrain gnns for attribute mask training.
+
+    Returns:
+        loss: the loss variance of the model.
+    """
     def __init__(self, model_config, compound_encoder):
         super(AttrmaskModel, self).__init__()
 
@@ -157,7 +160,7 @@ class AttrmaskModel(nn.Layer):
 
     def forward(self, graphs, masked_node_indice, masked_node_labels):
         """
-        tbd
+        Build the network.
         """
         node_repr, graph_repr = self.compound_encoder(graphs)
         masked_node_repr = paddle.gather(node_repr, masked_node_indice)
@@ -169,9 +172,8 @@ class AttrmaskModel(nn.Layer):
 class SupervisedModel(nn.Layer):
     """
     This is a pretraning model used by pretrain gnns for supervised training.
-
+    
     Returns:
-        self.graph_wrapper: pgl graph_wrapper object for the input compound graph.
         self.loss: the loss variance of the model.
     """
     def __init__(self, model_config, compound_encoder):

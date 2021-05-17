@@ -30,7 +30,7 @@ Davis数据集包含了72种药物和442种靶标蛋白任意之间的Kd值（�
 执行下面的命令即可下载并解压Davis数据集：
 
 ```sh
-wget "https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fdatasets%2Fdti_datasets%2Fdavis.tgz" -O davis.tgz
+wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/datasets/dti_datasets/davis_v1.tgz -O davis.tgz
 tar -zxvf davis.tgz
 ```
 
@@ -41,7 +41,7 @@ Kiba数据集包含了2,116种药物和229种靶标蛋白，不同于Davis数据
 执行下面的命令即可下载并解压Kiba数据集：
 
 ```sh
-wget "https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fdatasets%2Fdti_datasets%2Fkiba.tgz" -O kiba.tgz
+wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/datasets/dti_datasets/kiba_v1.tgz -O kiba.tgz
 tar -zxvf kiba.tgz
 ```
 
@@ -49,32 +49,32 @@ tar -zxvf kiba.tgz
 
 ```txt
 data
-|-- davis
-|   |-- folds
-|   |   |-- test_fold_setting1.txt
-|   |   `-- train_fold_setting1.txt
-|   |-- ligands_can.txt
-|   |-- processed
-|   |   |-- test
-|   |   |   `-- davis_test_0.npz
-|   |   `-- train
-|   |       `-- davis_train_0.npz
-|   |-- proteins.txt
-|   `-- Y
-|-- davis.tgz
-|-- kiba
-|   |-- folds
-|   |   |-- test_fold_setting1.txt
-|   |   `-- train_fold_setting1.txt
-|   |-- ligands_can.txt
-|   |-- processed
-|   |   |-- test
-|   |   |   `-- kiba_test_0.npz
-|   |   `-- train
-|   |       `-- kiba_train_0.npz
-|   |-- proteins.txt
-|   `-- Y
-`-- kiba.tgz
+├── davis
+│   ├── folds
+│   │   ├── test_fold_setting1.txt
+│   │   └── train_fold_setting1.txt
+│   ├── ligands_can.txt
+│   ├── processed
+│   │   ├── test
+│   │   │   └── davis_test.npz
+│   │   └── train
+│   │       └── davis_train.npz
+│   ├── proteins.txt
+│   └── Y
+├── davis.tgz
+├── kiba
+│   ├── folds
+│   │   ├── test_fold_setting1.txt
+│   │   └── train_fold_setting1.txt
+│   ├── ligands_can.txt
+│   ├── processed
+│   │   ├── test
+│   │   │   └── kiba_test.npz
+│   │   └── train
+│   │       └── kiba_train.npz
+│   ├── proteins.txt
+│   └── Y
+└── kiba.tgz
 ```
 
 ## 使用说明
@@ -93,19 +93,19 @@ Python脚本`scripts/train.py`是GraphDTA模型的入口，它创建了`src/mode
 为了方便实验，我们提供了shell脚本`scripts/train.sh`来运行实验，它的使用方法是：
 
 ```sh
-sh scripts/train.sh DATASET YOU_CONFIG_JSON [EXTRA-ARGS]
+./scripts/train.sh DATASET YOU_CONFIG_JSON [EXTRA-ARGS]
 ```
 
 例如，要在Davis数据集上训练GIN模型，只需要执行：
 
 ```sh
-sh scripts/train.sh davis fix_prot_len_gin_config.json
+./scripts/train.sh davis model_configs/fix_prot_len_gin_config.json
 ```
 
 需要注意的是，在Kiba数据集上训练GIN模型时，由于数据集使用了KIBA分数作为指标，而非默认的Kd指标，运行脚本时需要加上额外参数：
 
 ```sh
-sh scripts/train.sh kiba fix_prot_len_gin_config.json --use_kiba_label
+./scripts/train.sh kiba model_configs/fix_prot_len_gin_config.json --use_kiba_label
 ```
 
 进行评估时，我们使用回归任务中标准的均方误差MSE作为指标，除此之外，引入一致性指数CI作为新指标。均方误差越小，一致性指数越大，模型的预测性能越好。

@@ -21,11 +21,12 @@ from src.vocab import Vocab
 
 class MolTreeNode(object):
     """MolTreeNode"""
+
     def __init__(self, smiles, clique=[]):
         self.smiles = smiles
         self.mol = get_mol(self.smiles)
 
-        self.clique = [x for x in clique]  
+        self.clique = [x for x in clique]
         self.neighbors = []
 
     def add_neighbor(self, nei_node):
@@ -42,7 +43,7 @@ class MolTreeNode(object):
 
         for nei_node in self.neighbors:
             clique.extend(nei_node.clique)
-            if nei_node.is_leaf:  
+            if nei_node.is_leaf:
                 continue
             for cidx in nei_node.clique:
                 if cidx not in self.clique or len(nei_node.clique) == 1:
@@ -59,7 +60,7 @@ class MolTreeNode(object):
         return self.label
 
     def assemble(self):
-        """assembel neighbor info"""
+        """get candidate subgraph info"""
         neighbors = [nei for nei in self.neighbors if nei.mol.GetNumAtoms() > 1]
         neighbors = sorted(neighbors, key=lambda x: x.mol.GetNumAtoms(), reverse=True)
         singletons = [nei for nei in self.neighbors if nei.mol.GetNumAtoms() == 1]
@@ -79,6 +80,7 @@ class MolTreeNode(object):
 
 class MolTree(object):
     """MolTree"""
+
     def __init__(self, smiles):
         self.smiles = smiles
         self.mol = get_mol(smiles)
@@ -100,7 +102,7 @@ class MolTree(object):
 
         for i, node in enumerate(self.nodes):
             node.nid = i + 1
-            if len(node.neighbors) > 1:  
+            if len(node.neighbors) > 1:
                 set_atommap(node.mol, node.nid)
             node.is_leaf = (len(node.neighbors) == 1)
 
@@ -129,8 +131,8 @@ def dfs(node, fa_idx):
 
 
 if __name__ == "__main__":
-    import sys
     import argparse
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--train_path', required=True)
     parser.add_argument('--vocab_path', required=True)
@@ -147,7 +149,7 @@ if __name__ == "__main__":
         mol = MolTree(smiles)
         for c in mol.nodes:
             cset.add(c.smiles)
-            
+
     with open(args.vocab_path, 'w') as f:
         for c in cset:
             f.write(c + '\n')

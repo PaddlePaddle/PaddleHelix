@@ -20,12 +20,12 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'PaddleHelix'
-author = u'2020, Baidu Inc.'
+author = u'2021, Baidu Inc.'
 copyright = author
 language = 'en'
 
 # Import mock dependencies packages
-autodoc_mock_imports = ['paddle', 'pgl', 'rdkit', 'numpy', 'random', 'pandas', 'sklearn', 'networkx']
+autodoc_mock_imports = ['paddle', 'pgl', 'rdkit', 'numpy', 'random', 'pandas', 'sklearn', 'networkx', 'pdb', 'math', 'enum', 'collections', 'json', 'pickle', 'argparse', 're']
 
 
 # -- General configuration ---------------------------------------------------

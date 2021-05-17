@@ -26,6 +26,7 @@ MAX_DECODE_LEN = 100
 
 class JTNNDecoder(nn.Layer):
     """Tree decoder layer"""
+
     def __init__(self, vocab, hidden_size, latent_size, embedding):
         super(JTNNDecoder, self).__init__()
         self.hidden_size = hidden_size
@@ -64,7 +65,16 @@ class JTNNDecoder(nn.Layer):
         return V_o(output_vec)
 
     def forward(self, mol_batch, x_tree_vecs):
-        """Forward"""
+        """Tree decoding in training
+        Args:
+            mol_batch(list): mol objects in a batch.
+            x_tree_vecs(tensor): tree latent representation.
+        Returns:
+            pred_loss: label prediction loss.
+            stop_loss: topological prediction loss.
+            pred_acc: label prediction accuracy.
+            stop_acc: topological prediction accuracy.
+        """
         pred_hiddens, pred_contexts, pred_targets = [], [], []
         stop_hiddens, stop_contexts, stop_targets = [], [], []
         traces = []
@@ -138,7 +148,6 @@ class JTNNDecoder(nn.Layer):
             stop_contexts.append(cur_batch)
             stop_targets.extend(stop_target)
 
-
             if len(pred_list) > 0:
                 batch_list = [batch_list[i] for i in pred_list]
                 cur_batch = paddle.to_tensor(batch_list)
@@ -147,7 +156,7 @@ class JTNNDecoder(nn.Layer):
                 cur_pred = paddle.to_tensor(pred_list)
                 pred_hiddens.append(paddle.index_select(axis=0, index=cur_pred, x=new_h))
                 pred_targets.extend(pred_target)
-  
+
         cur_x, cur_o_nei = [], []
         for mol_tree in mol_batch:
             node_x = mol_tree.nodes[0]
@@ -176,7 +185,7 @@ class JTNNDecoder(nn.Layer):
         preds = paddle.argmax(pred_scores, axis=1)
         pred_acc = paddle.equal(preds, pred_targets).astype('float32')
         pred_acc = paddle.sum(pred_acc) / pred_targets.size
-    
+
         stop_contexts = paddle.concat(stop_contexts, axis=0)
         stop_hiddens = paddle.concat(stop_hiddens, axis=0)
         stop_hiddens = F.relu(self.U_i(stop_hiddens))
@@ -188,13 +197,13 @@ class JTNNDecoder(nn.Layer):
         stops = paddle.greater_equal(stop_scores, paddle.ones(shape=[1])).astype('float32')
         stop_acc = paddle.equal(stops, stop_targets).astype('float32')
         stop_acc = paddle.sum(stop_acc) / stop_targets.size
-        return {'pred_loss': pred_loss, 
-                'stop_loss': stop_loss, 
-                'pred_acc': float(pred_acc.numpy()), 
-                'stop_acc':float(stop_acc.numpy())}
+        return {'pred_loss': pred_loss,
+                'stop_loss': stop_loss,
+                'pred_acc': float(pred_acc.numpy()),
+                'stop_acc': float(stop_acc.numpy())}
 
     def decode(self, x_tree_vecs, prob_decode):
-        """        
+        """
         Decode tree structre from tree latent space.
         Args:
             x_tree_mess(tensor): tree latent represenation.
@@ -208,7 +217,6 @@ class JTNNDecoder(nn.Layer):
         zero_pad = paddle.zeros([1, 1, self.hidden_size])
         contexts = paddle.zeros([1]).astype('int64')
 
- 
         root_score = self.aggregate(init_hiddens, contexts, x_tree_vecs, 'word')
         root_wid = paddle.argmax(root_score, axis=1)
         root_wid = int(root_wid.numpy())
@@ -240,7 +248,7 @@ class JTNNDecoder(nn.Layer):
             else:
                 backtrack = (float(stop_score.numpy()) < 0)
 
-            if not backtrack:  
+            if not backtrack:
                 new_h = GRU(cur_x, cur_h_nei, self.W_z, self.W_r, self.U_r, self.W_h)
                 pred_score = self.aggregate(new_h, contexts, x_tree_vecs, 'word')
 
@@ -261,7 +269,7 @@ class JTNNDecoder(nn.Layer):
                         break
 
                 if next_wid is None:
-                    backtrack = True  
+                    backtrack = True
                 else:
                     node_y = MolTreeNode(self.vocab.get_smiles(next_wid))
                     node_y.wid = int(next_wid.numpy())
@@ -271,9 +279,9 @@ class JTNNDecoder(nn.Layer):
                     stack.append((node_y, next_slots))
                     all_nodes.append(node_y)
 
-            if backtrack:  
+            if backtrack:
                 if len(stack) == 1:
-                    break  
+                    break
 
                 node_fa, _ = stack[-2]
                 cur_h_nei = [h[(node_y.idx, node_x.idx)] for node_y in node_x.neighbors if node_y.idx != node_fa.idx]
@@ -290,11 +298,10 @@ class JTNNDecoder(nn.Layer):
         return root, all_nodes
 
 
-
 def dfs(stack, x, fa_idx):
-    """tbd"""
+    """dfs"""
     for y in x.neighbors:
-        if y.idx == fa_idx: 
+        if y.idx == fa_idx:
             continue
         stack.append((x, y, 1))
         dfs(stack, y, x.idx)
@@ -302,7 +309,7 @@ def dfs(stack, x, fa_idx):
 
 
 def have_slots(fa_slots, ch_slots):
-    """tbd"""
+    """have slots"""
     if len(fa_slots) > 2 and len(ch_slots) > 2:
         return True
     matches = []
@@ -316,16 +323,16 @@ def have_slots(fa_slots, ch_slots):
     if len(matches) == 0: return False
 
     fa_match, ch_match = zip(*matches)
-    if len(set(fa_match)) == 1 and 1 < len(fa_slots) <= 2: 
+    if len(set(fa_match)) == 1 and 1 < len(fa_slots) <= 2:
         fa_slots.pop(fa_match[0])
-    if len(set(ch_match)) == 1 and 1 < len(ch_slots) <= 2:  
+    if len(set(ch_match)) == 1 and 1 < len(ch_slots) <= 2:
         ch_slots.pop(ch_match[0])
 
     return True
 
 
 def can_assemble(node_x, node_y):
-    """tbd"""
+    """assemble candidate node """
     node_x.nid = 1
     node_x.is_leaf = False
     set_atommap(node_x.mol, node_x.nid)

@@ -154,9 +154,9 @@ class VAE(nn.Layer):
 
         Args:
             n_batch: number of batches
-
-        Returns: 
-        (n_batch, d_z) of floats, sample of latent z
+        
+        Returns:
+            (n_batch, d_z) of floats, sample of latent z.
         """
         return paddle.randn([n_batch, self.q_mu.weight.shape[1]])
     

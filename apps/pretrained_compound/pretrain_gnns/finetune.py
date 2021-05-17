@@ -1,6 +1,6 @@
 #!/usr/bin/python                                                                                                                                  
 #-*-coding:utf-8-*- 
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ def train(args, model, train_dataset, collate_fn, criterion, encoder_opt, head_o
     """
     Define the train function 
     Args:
-        args,exe,train_prog,model,train_dataset,featurizer;
+        args,model,train_dataset,collate_fn,criterion,encoder_opt,head_opt;
     Returns:
         the average of the list loss
     """
@@ -69,10 +69,8 @@ def train(args, model, train_dataset, collate_fn, criterion, encoder_opt, head_o
 def evaluate(args, model, test_dataset, collate_fn):
     """
     Define the evaluate function
-
     In the dataset, a proportion of labels are blank. So we use a `valid` tensor 
     to help eliminate these blank labels in both training and evaluation phase.
-
     """
     data_gen = test_dataset.get_data_loader(
             batch_size=args.batch_size, 
@@ -100,16 +98,12 @@ def evaluate(args, model, test_dataset, collate_fn):
 def main(args):
     """
     Call the configuration function of the model, build the model and load data, then start training.
-
     model_config:
         a json file  with the hyperparameters,such as dropout rate ,learning rate,num tasks and so on;
-
     num_tasks:
         it means the number of task that each dataset contains, it's related to the dataset;
-    
     DownstreamModel:
         It means the PretrainGNNModel for different strategies and it is an supervised GNN model which predicts the tasks.
-
     """
     compound_encoder_config = load_json_config(args.compound_encoder_config)
     model_config = load_json_config(args.model_config)

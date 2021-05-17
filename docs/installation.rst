@@ -1,6 +1,6 @@
-============
-Installation
-============
+==================
+Installation guide
+==================
 
 .. contents:: Table of Contents
 
@@ -61,7 +61,7 @@ Since PaddleHelix depends on the ``paddlepaddle`` of version 2.0.0rc0 or above, 
 
    $ conda install -c conda-forge rdkit
 
-- Install the right version of ``paddlepaddle`` depends on CPU/GPU you want to run PaddleHelix on.
+- Install the right version of ``paddlepaddle`` according to the device (CPU/GPU) you want to run PaddleHelix on.
 
 1) If you want to use the GPU version of ``paddlepaddle``, run this:
 
@@ -81,7 +81,7 @@ Since PaddleHelix depends on the ``paddlepaddle`` of version 2.0.0rc0 or above, 
 
 .. code:: console
 
-   $ pip install pgl
+   $ pip install pgl==1.2.1
 
 - Install **PaddleHelix** using ``pip``:
 

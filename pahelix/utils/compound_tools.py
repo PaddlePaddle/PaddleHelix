@@ -1,4 +1,4 @@
-#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,11 +25,11 @@ from rdkit.Chem import rdchem
 def get_gasteiger_partial_charges(mol, n_iter=12):
     """
     Calculates list of gasteiger partial charges for each atom in mol object.
-    
+
     Args: 
-        mol: rdkit mol object
-        n_iter(int): number of iterations. Default 12
-    
+        mol: rdkit mol object.
+        n_iter(int): number of iterations. Default 12.
+
     Returns: 
         list of computed partial charges for each atom.
     """
@@ -42,12 +42,11 @@ def get_gasteiger_partial_charges(mol, n_iter=12):
 
 def create_standardized_mol_id(smiles):
     """
-
     Args:
-        smiles: smiles sequence
-    
+        smiles: smiles sequence.
+
     Returns: 
-        inchi
+        inchi.
     """
     if check_smiles_validity(smiles):
         # remove stereochemistry
@@ -85,8 +84,8 @@ def check_smiles_validity(smiles):
 def split_rdkit_mol_obj(mol):
     """
     Split rdkit mol object containing multiple species or one species into a
-    list of mol objects or a list containing a single object respectively
-    
+    list of mol objects or a list containing a single object respectively.
+
     Args:
         mol: rdkit mol object.
     """
@@ -103,11 +102,11 @@ def get_largest_mol(mol_list):
     """
     Given a list of rdkit mol objects, returns mol object containing the
     largest num of atoms. If multiple containing largest num of atoms,
-    picks the first one
+    picks the first one.
 
     Args: 
         mol_list(list): a list of rdkit mol object.
-    
+
     Returns:
         the largest mol.
     """
@@ -116,9 +115,7 @@ def get_largest_mol(mol_list):
     return mol_list[largest_mol_idx]
 
 def rdchem_enum_to_list(values):
-    """
-    For example:
-        values = {0: rdkit.Chem.rdchem.ChiralType.CHI_UNSPECIFIED, 
+    """values = {0: rdkit.Chem.rdchem.ChiralType.CHI_UNSPECIFIED, 
             1: rdkit.Chem.rdchem.ChiralType.CHI_TETRAHEDRAL_CW, 
             2: rdkit.Chem.rdchem.ChiralType.CHI_TETRAHEDRAL_CCW, 
             3: rdkit.Chem.rdchem.ChiralType.CHI_OTHER}
@@ -536,10 +533,13 @@ class Compound3DKit(object):
 
 def mol_to_graph_data(mol):
     """
-    atom_features:
-    edge_features:
-    morgan_fingerprint:
-    functional_groups:
+    mol_to_graph_data
+
+    Args:
+        atom_features: Atom features.
+        edge_features: Edge features.
+        morgan_fingerprint: Morgan fingerprint.
+        functional_groups: Functional groups.
     """
     if len(mol.GetAtoms()) == 0:
         return None
@@ -618,7 +618,11 @@ def mol_to_graph_data(mol):
 
 def mol_to_md_graph_data(mol, add_3dpos=True, numConfs=10):
     """
-    atom_poses:
+    mol_to_md_graph_data
+
+    Args:
+        atom_pos: Atom position.
+        energy: Energy.
     """
     if len(mol.GetAtoms()) == 0:
         return None
@@ -641,9 +645,13 @@ SUPEREDGE_BOND_ANGLE_NUM = 10
 SUPEREDGE_BOND_LENGTH_NUM = 100
 def mol_to_superedge_graph_data(mol, numConfs=10, cal3d_atom_num_thres=100):
     """
-    atom_pos:
-    bond_length:
-    superedge_edges:
+    mol_to_superedge_graph_data
+
+    Args:
+        atom_pos: Atom position.
+        bond_length: Bond length.
+        superedge_edges: Superedge edges.
+        superedge_bond_angle_id: Superedge bond angle id.
     """
     if len(mol.GetAtoms()) == 0:
         return None
@@ -683,7 +691,13 @@ POLAR_ANGLE_NUM = int(os.environ.get('POLAR_ANGLE_NUM', 10))
 # print('[GLOBAL] POLAR_ANGLE_NUM:%s' % POLAR_ANGLE_NUM)
 def mol_to_polar_graph_data(mol):
     """
-    atom_poses:
+    mol_to_polar_graph_data
+
+    Args:
+        atom_pos: Atom position.
+        atom_polar: Atom polar.
+        polar_edge_angle: Polar edge angle.
+        polar_polar_angle: Polar polar angle.
     """
     if len(mol.GetAtoms()) == 0:
         return None

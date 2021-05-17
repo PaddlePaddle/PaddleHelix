@@ -27,7 +27,7 @@ mkdir -p data && cd data
 Davis contains the binding affinities for all pairs of 72 drugs and 442 targets, measured as Kd constant (equilibrium dissociation constant). The smaller the Kd value, the greater the binding affinity of the drug for its target. You can download and uncompress this dataset using following command:
 
 ```sh
-wget "https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fdatasets%2Fdti_datasets%2Fdavis.tgz" -O davis.tgz
+wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/datasets/dti_datasets/davis_v1.tgz -O davis.tgz
 tar -zxvf davis.tgz
 ```
 
@@ -36,7 +36,7 @@ tar -zxvf davis.tgz
 Kiba contains the binding affinity for 2,116 drugs and 229 targets. Comparing to Davis, some drug-target pairs do not have affinity labels. Moreover, the affinity in Kiba is measured as KIBA scores, which were constructed to optimize the consistency between Ki, Kd, and IC50 by utilizing the statistical information they contained. You can download and uncompress this dataset using following command:
 
 ```sh
-wget "https://baidu-nlp.bj.bcebos.com/PaddleHelix%2Fdatasets%2Fdti_datasets%2Fkiba.tgz" -O kiba.tgz
+wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/datasets/dti_datasets/kiba_v1.tgz -O kiba.tgz
 tar -zxvf kiba.tgz
 ```
 
@@ -46,32 +46,32 @@ After downloaed these datasets, the `data` folder looks like:
 
 ```txt
 data
-|-- davis
-|   |-- folds
-|   |   |-- test_fold_setting1.txt
-|   |   `-- train_fold_setting1.txt
-|   |-- ligands_can.txt
-|   |-- processed
-|   |   |-- test
-|   |   |   `-- davis_test_0.npz
-|   |   `-- train
-|   |       `-- davis_train_0.npz
-|   |-- proteins.txt
-|   `-- Y
-|-- davis.tgz
-|-- kiba
-|   |-- folds
-|   |   |-- test_fold_setting1.txt
-|   |   `-- train_fold_setting1.txt
-|   |-- ligands_can.txt
-|   |-- processed
-|   |   |-- test
-|   |   |   `-- kiba_test_0.npz
-|   |   `-- train
-|   |       `-- kiba_train_0.npz
-|   |-- proteins.txt
-|   `-- Y
-`-- kiba.tgz
+├── davis
+│   ├── folds
+│   │   ├── test_fold_setting1.txt
+│   │   └── train_fold_setting1.txt
+│   ├── ligands_can.txt
+│   ├── processed
+│   │   ├── test
+│   │   │   └── davis_test.npz
+│   │   └── train
+│   │       └── davis_train.npz
+│   ├── proteins.txt
+│   └── Y
+├── davis.tgz
+├── kiba
+│   ├── folds
+│   │   ├── test_fold_setting1.txt
+│   │   └── train_fold_setting1.txt
+│   ├── ligands_can.txt
+│   ├── processed
+│   │   ├── test
+│   │   │   └── kiba_test.npz
+│   │   └── train
+│   │       └── kiba_train.npz
+│   ├── proteins.txt
+│   └── Y
+└── kiba.tgz
 ```
 
 ## Instructions
@@ -91,19 +91,19 @@ For convenience, we provide a shell script `scripts/train.sh` for easy experimen
 Its usage is:
 
 ```sh
-sh scripts/train.sh DATASET YOU_CONFIG_JSON [EXTRA-ARGS]
+./scripts/train.sh DATASET YOU_CONFIG_JSON [EXTRA-ARGS]
 ```
 
 For example, to train the GIN model on Davis dataset, just execute:
 
 ```sh
-sh scripts/train.sh davis fix_prot_len_gin_config.json
+./scripts/train.sh davis model_configs/fix_prot_len_gin_config.json
 ```
 
 Notice that if you want to train the GIN model on Kiba dataset, you need to use KIBA label, instead of default Kd label, so execute:
 
 ```sh
-sh scripts/train.sh kiba fix_prot_len_gin_config.json --use_kiba_label
+./scripts/train.sh kiba model_configs/fix_prot_len_gin_config.json --use_kiba_label
 ```
 
 For evaluation, we use MSE as a standard metric for the regression task. Besides, concordance index (CI) is an another metric. The smaller MSE, the better. While, the larger CI, the better.

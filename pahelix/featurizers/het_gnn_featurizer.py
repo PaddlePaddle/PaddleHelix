@@ -20,13 +20,12 @@ import pandas as pd
 import networkx as nx
 import pgl
 
-from pahelix.featurizers.featurizer import Featurizer
 
 from sklearn.preprocessing import StandardScaler
 
 __all__ = ['DDiFeaturizer']
 
-class DDiFeaturizer(Featurizer):
+class DDiFeaturizer(object):
     """Featurizer for drugs"""
     def __init__(self):
         super(DDiFeaturizer, self).__init__()
@@ -108,6 +107,8 @@ class DDiFeaturizer(Featurizer):
 
 def num_nodes_stat(data):
     """count the number of nodes from data
+        
+    Examples:
         data: {'pair': (a, b)}
     """
     nodes = set()

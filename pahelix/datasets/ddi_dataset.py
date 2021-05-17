@@ -28,39 +28,43 @@ __all__ = ['get_default_ddi_task_names', 'load_ddi_dataset']
 def get_default_ddi_task_names():
     """Get that default ddi task names and return class label"""
     return ['drug_a_name', 'drug_b_name', 'cell_line', 'synergy']
-def load_ddi_dataset(data_path, task_names=None, cellline=None, featurizer=None):
-    """Load ddi dataset,process the input information and the featurizer.
+
+    
+def load_ddi_dataset(data_path, task_names=None, cellline=None):
+    """Load ddi dataset,process the input information.
+
     Description:
-        
+
         The data file contains a csv table, in which columns below are used:
             
-            drug_a_name: drug name;
+            drug_a_name: drug name
             
-            drug_b_name: drug name;
+            drug_b_name: drug name
             
-            cell_line: cell line which the drug pairs were tested on;
+            cell_line: cell line which the drug pairs were tested on
 
             synergy: continuous values represent the synergy effect, we use 30 as threshold to binarize the data into binary labels.
-            1 as positive and 0 as negative.
+            1 as positive and 0 as negative
+
     Args:
         data_path(str): the path to the cached npz path.
         task_names(list): a list of header names to specify the columns to fetch from 
             the csv file.
         cellline: the exact cellline model you want to test on.
-        featurizer(pahelix.featurizers.Featurizer): the featurizer to use for 
-            processing the data. If not none, The ``Featurizer.gen_features`` will be 
-            applied to the raw data.
     
     Returns:
         an InMemoryDataset instance.
     
     Example:
         .. code-block:: python
+
             dataset = load_hddi_dataset('./ddi/raw')
             print(len(dataset))
+    
     References:
     
     [1] Drug-Drug Dynergy Data. https://academic.oup.com/bioinformatics/advance-article/doi/10.1093/bioinformatics/btx806/4747884
+    
     """
     if task_names is None:
         task_names = get_default_ddi_task_names()
@@ -81,10 +85,8 @@ def load_ddi_dataset(data_path, task_names=None, cellline=None, featurizer=None)
         raw_data = {}
         raw_data['pair'] = input_df.loc[i, 'drug_a_name'], input_df.loc[i, 'drug_b_name']
         raw_data['label'] = labels.values[i]
-        if not featurizer is None:
-            data = featurizer.gen_features(raw_data)
-        else:
-            data = raw_data
+        
+        data = raw_data
         if not data is None:
             data_list.append(data)
     dataset = InMemoryDataset(data_list)

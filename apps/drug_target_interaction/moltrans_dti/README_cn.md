@@ -2,26 +2,26 @@
 
 [中文版本](./README_cn.md) [English Version](./README.md)
 
-* [Background](#background)
-* [Datasets](#datasets)
+* [背景介绍](#背景介绍)
+* [数据集](#数据集)
     * [DAVIS](#davis)
     * [KIBA](#kiba)
     * [BioSNAP](#biosnap)
     * [BindingDB](#bindingdb)
     * [ChEMBL](#chembl)
-* [Instructions](#instructions)
-    * [Dependencies installation](#dependencies-installation)
-    * [Model configuration](#model-configuration)
-    * [Training and evaluation](#training-and-evaluation)
-* [Reference](#reference)
+* [使用说明](#使用说明)
+    * [环境安装](#环境安装)
+    * [参数设置](#参数设置)
+    * [训练与评估](#训练与评估)
+* [引用](#引用)
 
-## Background
+## 背景介绍
 
-In the process of in-silico drug discovery, drug target interaction(DTI) prediction plays a fundamental role. However, it is not an easy task due to time-consuming and costly experimental search over large drug compound space. Recent years have witnessed rapid progress for deep learning in DTI predictions. Among all of the methods, MolTrans shows impressive performance on both classification and regression tasks in DTI compared to state-of-the-art baselines. It leverages an augmented Transformer encoder to capture abundant semantic relations among substructures extracted from massive unlabeled biomedical data. Besides, it makes use of knowledge inspired substructural pattern mining algorithm and interaction modeling module for more accurate and interpretable DTI prediction.
+在计算药物发现的进程中，药物和靶点蛋白亲和性（DTI）的预测是至关重要的一环。然而，由于在大量的药理化合物中进行实验搜索非常耗时且十分昂贵，这并不是一件轻而易举的事情。近年来，深度学习在DTI预测任务中取得了快速发展。在所有这些方法中，与SOTA基准相比，MolTrans在DTI分类和回归任务上均表现出令人印象深刻的性能。它利用增强型Transformer编码器来捕获从海量未标注的生物医学数据中提取的子结构之间的丰富语义关系。此外，它利用受知识启发的子结构模式挖掘算法和交互建模模块来进行更精确和具解释性的DTI预测任务。
 
-## Datasets
+## 数据集
 
-In order to run the experiments, you need to download all related datasets and put them under `/apps/drug_target_interaction/moltrans_dti/`. If you don't have `wget`, you could also copy the url below into your web browser to download them.
+为了能顺利进行后续实验，首先需要下载所有相关的数据集并放置在`/apps/drug_target_interaction/moltrans_dti/`路径下。如果电脑上没有安装`wget`，可以将下面链接复制到浏览器直接下载。
 
 ```sh
 cd /apps/drug_target_interaction/moltrans_dti/
@@ -29,7 +29,7 @@ wget "https://baidu-nlp.bj.bcebos.com/PaddleHelix/datasets/dti_datasets/dti_data
 tar -zxvf "dti_dataset.tgz"
 ```
 
-After downloading the datasets, the `dataset` folder looks like:
+数据集下载完成后，`dataset`目录如下所示：
 
 ```txt
 dataset
@@ -88,35 +88,35 @@ dataset
         └── target_seq.txt
 ```
 
-In the original work of MolTrans, it only contains classification task. Here we provide datasets for both classification and regression tasks of DTI.
+在MolTrans原工作中，只包含了分类任务。我们提供了DTI分类和回归任务的数据集与代码。
 
 ### DAVIS
 
-DAVIS contains the binding affinities of 72 kinase inhibitors with 442 kinases covering >80% of the human catalytic protein kinome, measured as Kd constant (equilibrium dissociation constant). The smaller the Kd value, the greater the binding affinity of the drug for its target.
+DAVIS包含72种激酶抑制剂与442种激酶的亲和性数据，以Kd常数（平衡解离常数）衡量，该数据集覆盖了人类催化蛋白激酶组的80％以上。 Kd值越小，药物和其靶标蛋白之间的亲和性越大。
 
 ### KIBA
 
-KIBA contains the binding affinities for 2,116 drugs and 229 targets. Comparing to DAVIS, some drug-target pairs do not have affinity labels. Moreover, the affinity in KIBA is measured as KIBA scores, which were constructed to optimize the consistency among Ki, Kd, and IC50 by utilizing the statistical information they contained.
+KIBA包含2,116种药物和229种靶标蛋白及其亲和性数据。不同于DAVIS，部分药物和靶标蛋白没有亲和性指标。另外，KIBA中使用KIBA分数作为亲和性的评估指标。KIBA分数提供了一种基于统计分析的归一化不同亲和性指标（Ki、Kd、IC50）的方法。
 
 ### BioSNAP
 
-BioSNAP contains many large biomedical networks that are ready-to-use for method development, algorithm evaluation, benchmarking, and network science analyses. It is a collection diverse biomedical networks, including protein-protein interaction networks, single-cell similarity networks, drug-drug interaction networks.
+BioSNAP包含许多现成的大型生物医学网络，可用于方法开发，算法评估，基准测试和网络分析。 它是一个多样化的生物医学网络集合，包括蛋白质-蛋白质相互作用网络，单细胞相似性网络，药物-药物相互作用网络等。
 
 ### BindingDB
 
-BindingDB is a publicly accessible database containing approximately 20,000 experimentally determined binding affinities of protein-ligand complexes, for 110 protein targets including isoforms and mutational variants, and approximately 11,000 small molecule ligands.
+BindingDB是一个开源的数据库，其中包含约20,000种通过实验得到的蛋白质-配体复合物及其亲和性数据，其中包含110个靶标蛋白质（包括同工型和突变变体）和约11,000个小分子配体。
 
 ### ChEMBL
 
-ChEMBL is an open large-scale bioactivity database. In total, there are >1.6 million distinct compound structures represented in the database, with 14 million activity values from >1.2 million assays. These assays are mapped to ∼11,000 targets, including 9,052 proteins (of which 4,255 are human).
+ChEMBL是一个开源的大规模生物活性数据库。该数据库中包含超过160万种不同的化合物结构，以及用超过120万种测定方法得到的约1,400万个亲和性数据。这些测定方法定位到约11,000个靶标蛋白，其中包括9,052种蛋白质（其中4,255种属于人类）。
 
-## Instructions
+## 使用说明
 
-### Dependencies installation
+### 环境安装
 
-Before playing, you need to install all dependencies and packages indicated in `/apps/drug_target_interaction/moltrans_dti/requirement.txt/`.
+在运行实验之前，还需要安装所有在`/apps/drug_target_interaction/moltrans_dti/requirement.txt/`文件中需求的包和工具。
 
-| name         | version |
+| 名字         | 版本 |
 | ------------ | ---- |
 | numpy        | - |
 | pandas       | - |
@@ -127,11 +127,11 @@ Before playing, you need to install all dependencies and packages indicated in `
 | visualdl     | - |
 | PyYAML       | - |
 
-('-' means no specific version requirement for that package)
+('-' 代表没有版本要求)
 
-### Model configuration
+### 参数设置
 
-The script `double_towers.py` under `/apps/drug_target_interaction/moltrans_dti/` describes the detailed structure of MolTrans model. The model configurations, which is in `config.json`, mostly match the original paper are following:
+在`/apps/drug_target_interaction/moltrans_dti/`目录下的Python脚本`double_towers.py`描述了MolTrans模型的详细结构。模型参数存储在`config.json`文件内，参数设置上最接近原论文的是：
 
 ```txt
     "drug_max_seq": 50,               # Max length of drug sequence
@@ -148,15 +148,15 @@ The script `double_towers.py` under `/apps/drug_target_interaction/moltrans_dti/
     "hidden_dropout_ratio": 0.1       # Dropout rate within hidden states
 ```
 
-### Training and evaluation
+### 训练与评估
 
-For **classification** task, you can just run the script `train_cls.py`. If you want to try other datasets, just select one from `cls_davis`, `cls_biosnap`, `cls_bindingdb`. The basic usage with default settings is following:
+对于**分类**任务，可以直接运行`train_cls.py`。如果想尝试其他分类任务的数据集，可以直接在`cls_davis`、`cls_biosnap`、`cls_bindingdb`中选择一个。带默认参数的基本用法如下：
 
 ```sh
 CUDA_VISIBLE_DEVICES=0 python train_cls.py --batchsize 64 --epochs 200 --lr 5e-4 --dataset cls_davis
 ```
 
-For evaluation, we use AUROC as a standard metric for the classification task. The larger AUROC, the better. The comparisons of different methods on DAVIS are following:
+进行评估时，我们使用AUROC作为分类任务的指标。AUROC越大，模型的预测性能越好。在DAVIS上不同方法的实验结果如下：
 
 | Methods        |  AUROC      |
 | :--:           |  :--:       |
@@ -169,15 +169,15 @@ For evaluation, we use AUROC as a standard metric for the classification task. T
 | MolTrans       | 0.907±0.002 |
 | Ours(MolTrans) | 0.912±0.002 |
 
-For **regression** task, you can just run the script `train_reg.py`. If you want to try other datasets, just select one from `raw_chembl_pkd`, `raw_chembl_kd`, `raw_bindingdb_kd`, `raw_davis`, `raw_kiba`, `benchmark_davis`, `benchmark_kiba`. The basic usage with default settings is following:
+对于**回归**任务，可以直接运行`train_reg.py`。如果想尝试其他回归任务的数据集，可以直接在`raw_chembl_pkd`、`raw_chembl_kd`、`raw_bindingdb_kd`、`raw_davis`、`raw_kiba`、`benchmark_davis`、`benchmark_kiba`中选择一个。带默认参数的基本用法如下：
 
 ```sh
 CUDA_VISIBLE_DEVICES=0 python train_reg.py --batchsize 64 --epochs 200 --lr 5e-4 --dataset benchmark_davis
 ```
 
-For evaluation, we use MSE and concordance index(CI) as standard metrics for the regression task. The smaller MSE, the better. While the larger CI, the better. 
+进行评估时，我们使用MSE和一致性指数（CI）作为回归任务的指标。MSE越小，CI越大，模型的预测性能越好。
 
-The comparisons of different methods on DAVIS are following:
+在DAVIS上不同方法的实验结果如下：
 
 | Methods           | MSE        | CI        |
 | :--:              | :--:       | :--:      |
@@ -187,7 +187,7 @@ The comparisons of different methods on DAVIS are following:
 | DGraphDTA         | 0.202      | 0.904     |
 | Ours(MolTrans)    | 0.199      | 0.901     |
 
-The comparisons of different methods on KIBA are following:
+在KIBA上不同方法的实验结果如下：
 
 | Methods           | MSE        | CI        |
 | :--:              | :--:       | :--:      |
@@ -197,7 +197,7 @@ The comparisons of different methods on KIBA are following:
 | DGraphDTA         | 0.126      | 0.904     |
 | Ours(MolTrans)    | 0.132      | 0.898     |
 
-## Reference
+## 引用
 
 **MolTrans**
 ```

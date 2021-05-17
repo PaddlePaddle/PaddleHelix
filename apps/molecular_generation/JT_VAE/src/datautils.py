@@ -24,8 +24,10 @@ from src.mol_tree import MolTree
 from src.utils import load_json_config
 from pgl.utils.data.dataset import StreamDataset
 
+
 class JtnnDataSet(StreamDataset):
     """JtnnDataSet"""
+
     def __init__(self, data_dir, shuffle=True):
         self.file_list = os.listdir(data_dir)
         self.data_dir = data_dir
@@ -40,7 +42,7 @@ class JtnnDataSet(StreamDataset):
                 data_list = pickle.load(f)
             for data in data_list:
                 yield data
-              
+
     def __len__(self):
         if self.cached_len is not None:
             return self.cached_len
@@ -51,10 +53,11 @@ class JtnnDataSet(StreamDataset):
                 n += len(data_list)
             self.cached_len = n
             return n
-    
+
 
 class JtnnCollateFn(object):
     """JtnnCollateFn"""
+
     def __init__(self, vocab, assm):
         self.vocab = vocab
         self.assm = assm
@@ -93,9 +96,9 @@ class JtnnCollateFn(object):
 
         jtmpn_holder = JTMPN.tensorize(cands, mess_dict)
         batch_idx = np.array(batch_idx)
-        return {'tree_batch': tree_batch, 
-                'jtenc_holder': jtenc_holder, 
-                'mpn_holder': mpn_holder, 
+        return {'tree_batch': tree_batch,
+                'jtenc_holder': jtenc_holder,
+                'mpn_holder': mpn_holder,
                 'jtmpn_holder': (jtmpn_holder, batch_idx)}
 
 

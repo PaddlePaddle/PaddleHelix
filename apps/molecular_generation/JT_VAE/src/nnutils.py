@@ -81,3 +81,5 @@ def GRU(x, h_nei, W_z, W_r, U_r, W_h):
     new_h = (1.0 - z) * sum_h + z * pre_h
     return new_h
 
+
+
