@@ -35,9 +35,7 @@ from paddle_initializer import weights_init
 
 
 class StateDecoder(nn.Layer):
-    """
-    Description:
-        encoder
+    """encoder
 
     Args:
         max_len: the maximun length of input sequemce
@@ -79,9 +77,7 @@ class StateDecoder(nn.Layer):
 
 
 class PerpCalculator(nn.Layer):
-    """
-    Description:
-        loss type
+    """loss type
 
     Args:
         true_binary: one-hot, with size=time_steps x bsize x DECISION_DIM
@@ -93,7 +89,7 @@ class PerpCalculator(nn.Layer):
 
     def forward(self, true_binary, rule_masks, raw_logits):
         """
-        tbd
+        forward
         """
         if cmd_args.loss_type == 'binary':
             exp_pred = paddle.exp(raw_logits) * rule_masks
@@ -124,9 +120,7 @@ class PerpCalculator(nn.Layer):
 
 
 class MyPerpLoss(nn.Layer):
-    """
-    Description:
-        perplexity loss
+    """perplexity loss
     """
     def __init__(self):
         super(MyPerpLoss, self).__init__()
@@ -154,9 +148,7 @@ class MyPerpLoss(nn.Layer):
 
 
 class CNNEncoder(nn.Layer):
-    """
-    Description:
-        the encoder
+    """the encoder
 
     Args:
         max_len: the maximum length of input 
@@ -215,9 +207,7 @@ def get_encoder(model_config):
 
 
 class MolVAE(nn.Layer):
-    """
-    Description:
-        The Mol VAE model
+    """The Mol VAE model
 
     Args:
         model_config: the model parameters
