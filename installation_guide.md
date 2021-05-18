@@ -13,7 +13,7 @@
 | pandas       | - |
 | networkx     | - |
 | paddlepaddle | \>=2.0.0rc0 |
-| pgl          | ==1.2.0 or 1.2.1|
+| pgl          | \>=2.1 |
 | rdkit        | - |
 |sklearn|-|
 
@@ -48,13 +48,13 @@ conda install -c conda-forge rdkit
     If you want to use the GPU version of `paddlepaddle`, run this:
 
     ```bash
-    python -m pip install paddlepaddle-gpu==2.0.0rc1.post90 -f https://paddlepaddle.org.cn/whl/stable.html
+    python -m pip install paddlepaddle-gpu -f https://paddlepaddle.org.cn/whl/stable.html
     ```
 
     Or if you want to use the CPU version of `paddlepaddle`, run this:
 
     ```bash
-    python -m pip install paddlepaddle==2.0.0rc1 -i https://mirror.baidu.com/pypi/simple
+    python -m pip install paddlepaddle -i https://mirror.baidu.com/pypi/simple
     ```
 
     Noting that the version of `paddlepaddle` should be higher than **2.0**.
@@ -64,7 +64,7 @@ conda install -c conda-forge rdkit
 6. Install `PGL` using pip:
    
 ```bash
-pip install pgl==1.2.1
+pip install pgl
 ```
 
 7. Install PaddleHelix using pip:
