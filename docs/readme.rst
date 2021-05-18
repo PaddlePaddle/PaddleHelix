@@ -55,7 +55,7 @@ Dependencies
 -------------------
 
 - PaddlePaddle **>= 2.0.0rc0**
-- pgl **>= 1.2.0**
+- pgl **>= 2.1**
 
 Quick Start
 -------------

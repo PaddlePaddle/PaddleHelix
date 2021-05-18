@@ -27,7 +27,7 @@ Dependencies
    +--------------+----------------+
    | paddlepaddle | ``>=2.0.0rc0`` |
    +--------------+----------------+
-   |     pgl      |  ``>=1.2.0``   |
+   |     pgl      |    ``>=2.1``   |
    +--------------+----------------+
    |     rdkit    |      ``-``     |
    +--------------+----------------+
@@ -67,21 +67,21 @@ Since PaddleHelix depends on the ``paddlepaddle`` of version 2.0.0rc0 or above, 
 
 .. code:: console
 
-  $ python -m pip install paddlepaddle-gpu==2.0.0rc1.post90 -f https://paddlepaddle.org.cn/whl/stable.html
+  $ python -m pip install paddlepaddle-gpu -f https://paddlepaddle.org.cn/whl/stable.html
 
 2) Or if you want to use the CPU version of ``paddlepaddle``, run this:
 
 .. code:: console
 
-  $ python -m pip install paddlepaddle==2.0.0rc1 -i https://mirror.baidu.com/pypi/simple
+  $ python -m pip install paddlepaddle -i https://mirror.baidu.com/pypi/simple
 
 .. note:: The version of ``paddlepaddle`` should be higher than **2.0**. Check `paddlepaddle official document <https://www.paddlepaddle.org.cn/documentation/docs/en/2.0-rc1/install/index_en.html>`_ for more installation guide.
 
-- Install ``pgl`` using ``pip``:
+- Install **pgl** using ``pip``:
 
 .. code:: console
 
-   $ pip install pgl==1.2.1
+   $ pip install pgl
 
 - Install **PaddleHelix** using ``pip``:
 
