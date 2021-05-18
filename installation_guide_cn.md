@@ -13,7 +13,7 @@
 | pandas | - |
 | networkx | - |
 | paddlepaddle | \>=2.0.0rc0 |
-| pgl | ==1.2.0 or 1.2.1 |
+| pgl | \>=2.1 |
 | rdkit | - |
 
 （“-” 代表没有版本要求）
@@ -47,20 +47,20 @@ conda install -c conda-forge rdkit
    比如，你想使用 `paddlepaddle` 的 GPU 版本，你可以运行以下命令：
 
    ```bash
-   python -m pip install paddlepaddle-gpu==2.0.0rc1.post90 -f https://paddlepaddle.org.cn/whl/stable.html
+   python -m pip install paddlepaddle-gpu -f https://paddlepaddle.org.cn/whl/stable.html
    ```
 
    或者你想使用 `paddlepaddle` 的 CPU 版本，你可以运行以下命令：
 
    ```bash
-   python -m pip install paddlepaddle==2.0.0rc1 -i https://mirror.baidu.com/pypi/simple
+   python -m pip install paddlepaddle -i https://mirror.baidu.com/pypi/simple
    ```
 
    请注意安装 `paddlepaddle` **2.0** 以上版本，其他安装方法参见 `paddlepaddle` [官方文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/2.0-rc1/install/index_cn.html)。
 
 6. 使用 pip 命令安装`PGL`:
 ```bash
-pip install pgl==1.2.1
+pip install pgl
 ```
 
 7. 使用 pip 命令安装 PaddleHelix
