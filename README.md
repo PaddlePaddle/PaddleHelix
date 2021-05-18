@@ -54,3 +54,8 @@ The installation prerequisites and guide can be found [here](./installation_guid
 
 ### Guide for developers
 * If you need help in modifying the source code of PaddleHelix, please see our [Guide for developers](./developer_guide.md).
+
+### Welcome to join us
+We are looking for machine learning researchers/engineers or bioinformatics researchers interested in AI-driven drug design.
+We base in Shenzhen or Shanghai, China.
+Please send the resumes to wangfan04@baidu.com or fangxiaomin01@baidu.com.
