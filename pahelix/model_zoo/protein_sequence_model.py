@@ -57,6 +57,44 @@ class LstmEncoderModel(nn.Layer):
         
         return encoder_output
 
+class ResnetBasicBlock(nn.Layer):
+    """
+    ResnetBasicBlock
+    """
+    def __init__(self,
+                 inplanes=256,
+                 planes=256,
+                 kernel_size=9,
+                 dilation=1,
+                 dropout_rate=0.1):
+        super(ResnetBasicBlock, self).__init__()
+        self.conv1 = nn.Conv1D(in_channels=inplanes, out_channels=planes, kernel_size=kernel_size, dilation=dilation, \
+                               padding="same", data_format="NLC", weight_attr=nn.initializer.KaimingNormal())
+        self.bn1 = nn.BatchNorm1D(planes, data_format="NLC")
+        self.gelu1 = nn.GELU()
+        self.dropout1 = nn.Dropout(p=dropout_rate)
+        self.conv2 = nn.Conv1D(in_channels=planes, out_channels=planes, kernel_size=kernel_size, dilation=dilation, \
+                               padding="same", data_format="NLC", weight_attr=nn.initializer.KaimingNormal())
+        self.bn2 = nn.BatchNorm1D(planes, data_format="NLC")
+        self.gelu2 = nn.GELU()
+        self.dropout2 = nn.Dropout(p=dropout_rate)
+    
+    def forward(self, x):
+        """
+        forward
+        """
+        identity = x
+        out = self.conv1(x)
+        out = self.bn1(out)
+        out = self.gelu1(out)
+        out = self.dropout1(out)
+        out = self.conv2(out)
+        out = self.bn2(out)
+        out = self.gelu2(out)
+        out = self.dropout2(out)
+        out += identity
+        return out
+
 
 class ResnetEncoderModel(nn.Layer):
     """
@@ -64,10 +102,10 @@ class ResnetEncoderModel(nn.Layer):
     """
     def __init__(self,
                  vocab_size,
-                 emb_dim=256,
-                 hidden_size=512,
+                 emb_dim=128,
+                 hidden_size=256,
                  kernel_size=9,
-                 n_layers=32,
+                 n_layers=35,
                  padding_idx=0,
                  dropout_rate=0.1,
                  epsilon=1e-6):
@@ -84,39 +122,23 @@ class ResnetEncoderModel(nn.Layer):
                                           emb_dim,
                                           padding_idx=padding_idx)
 
+        self.layer_norm = nn.BatchNorm1D(emb_dim, data_format="NLC")
+        self.dropout = nn.Dropout(dropout_rate)
+
         self.padded_conv = nn.Sequential(
-            nn.BatchNorm1D(emb_dim, data_format="NLC"),
-            nn.ReLU(),
             nn.Conv1D(in_channels=emb_dim, out_channels=hidden_size, kernel_size=kernel_size, padding="same", \
                       data_format="NLC", weight_attr=nn.initializer.KaimingNormal()),
+            nn.BatchNorm1D(hidden_size, data_format="NLC"),
+            nn.GELU(),
             nn.Dropout(p=dropout_rate)
         )
-
-        self.residual_block_1 = nn.Sequential(
-            nn.BatchNorm1D(hidden_size, data_format="NLC"),
-            nn.ReLU(),
-            nn.Conv1D(in_channels=hidden_size, out_channels=hidden_size, kernel_size=kernel_size, padding="same", \
-                      data_format="NLC", weight_attr=nn.initializer.KaimingNormal()),
-            nn.Dropout(p=dropout_rate),
-            nn.BatchNorm1D(hidden_size, data_format="NLC"),
-            nn.ReLU(),
-            nn.Conv1D(in_channels=hidden_size, out_channels=hidden_size, kernel_size=kernel_size, padding="same", \
-                      data_format="NLC", weight_attr=nn.initializer.KaimingNormal()),
-            nn.Dropout(p=dropout_rate)
-        )
-
-        self.residual_block_n = nn.Sequential(
-            nn.BatchNorm1D(hidden_size, data_format="NLC"),
-            nn.ReLU(),
-            nn.Conv1D(in_channels=hidden_size, out_channels=hidden_size, kernel_size=kernel_size, dilation=2, \
-                      padding="same", data_format="NLC", weight_attr=nn.initializer.KaimingNormal()),
-            nn.Dropout(p=dropout_rate),
-            nn.BatchNorm1D(hidden_size, data_format="NLC"),
-            nn.ReLU(),
-            nn.Conv1D(in_channels=hidden_size, out_channels=hidden_size, kernel_size=kernel_size, dilation=2, \
-                      padding="same", data_format="NLC", weight_attr=nn.initializer.KaimingNormal()),
-            nn.Dropout(p=dropout_rate)
-        )
+        self.residual_block_1 = ResnetBasicBlock(inplanes=hidden_size, planes=hidden_size, kernel_size=kernel_size, dropout_rate=dropout_rate)
+        self.residual_block_n = nn.Sequential()
+        for i in range(1, n_layers):
+            self.residual_block_n.add_sublayer("residual_block_%d" % i, \
+                ResnetBasicBlock(inplanes=hidden_size, planes=hidden_size, kernel_size=kernel_size, dilation=2, dropout_rate=dropout_rate))
+        
+        self.apply(self.init_weights)
     
     def forward(self, input, pos):
         """
@@ -126,15 +148,26 @@ class ResnetEncoderModel(nn.Layer):
         token_embed = token_embed * math.sqrt(self.hidden_size)
         pos_embed = self.pos_embedding(pos)
         embed = token_embed + pos_embed
+        embed = self.layer_norm(embed)
+        embed = self.dropout(embed)
 
         inputs = self.padded_conv(embed)
         inputs = self.residual_block_1(inputs)
-        for i in range(self.n_layers - 1):
-            residual_output = self.residual_block_n(inputs)
-            inputs = residual_output + inputs
-        encoder_output = inputs
+        encoder_output = self.residual_block_n(inputs)
         
         return encoder_output
+    
+    def init_weights(self, layer):
+        """ Initialization hook """
+        if isinstance(layer, (nn.Linear, nn.Embedding, nn.BatchNorm1D)):
+            # In the dygraph mode, use the `set_value` to reset the parameter directly,
+            # and reset the `state_dict` to update parameter in static mode.
+            if isinstance(layer.weight, paddle.Tensor):
+                layer.weight.set_value(
+                    paddle.tensor.normal(
+                        mean=0.0,
+                        std=0.02,
+                        shape=layer.weight.shape))
 
 
 class TransformerEncoderModel(nn.Layer):
