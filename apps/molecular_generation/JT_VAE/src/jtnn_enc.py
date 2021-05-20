@@ -127,7 +127,7 @@ class JTNNEncoder(nn.Layer):
 
 
 class GraphGRU(nn.Layer):
-    """tbd"""
+    """GraphGRU"""
 
     def __init__(self, input_size, hidden_size, depth):
         super(GraphGRU, self).__init__()
@@ -141,7 +141,7 @@ class GraphGRU(nn.Layer):
         self.W_h = nn.Linear(input_size + hidden_size, hidden_size)
 
     def forward(self, h, x, mess_graph):
-        """tbd"""
+        """forward"""
         mask = paddle.ones([h.shape[0], 1])
         mask[0] = 0
         for it in range(self.depth):
