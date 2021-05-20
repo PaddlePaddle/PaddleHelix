@@ -80,7 +80,7 @@ python sample.py \
         --config configs/config.json \
         --output sampling_output.txt
 ```
-The sampling result of model.iter-422000 is as follows:
+The sampling result of model.iter-441000 is as follows:
 ```bash
 valid,1.0
 unique@1000,1.0

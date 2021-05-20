@@ -75,7 +75,7 @@ python sample.py \
         --config configs/config.json \
         --output sampling_output.txt
 ```
-从model.iter-422000的采样结果如下：
+从model.iter-441000的采样结果如下：
 ```bash
 valid,1.0
 unique@1000,1.0

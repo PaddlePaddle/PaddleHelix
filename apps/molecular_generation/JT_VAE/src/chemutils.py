@@ -192,7 +192,7 @@ def atom_equal(a1, a2):
 
 
 def ring_bond_equal(b1, b2, reverse=False):
-    """tbd"""
+    """ring bond equal"""
     b1 = (b1.GetBeginAtom(), b1.GetEndAtom())
     if reverse:
         b2 = (b2.GetEndAtom(), b2.GetBeginAtom())
@@ -202,7 +202,7 @@ def ring_bond_equal(b1, b2, reverse=False):
 
 
 def attach_mols(ctr_mol, neighbors, prev_nodes, nei_amap):
-    """tbd"""
+    """attach mols"""
     prev_nids = [node.nid for node in prev_nodes]
     for nei_node in prev_nodes + neighbors:
         nei_id, nei_mol = nei_node.nid, nei_node.mol
@@ -229,7 +229,7 @@ def attach_mols(ctr_mol, neighbors, prev_nodes, nei_amap):
 
 
 def local_attach(ctr_mol, neighbors, prev_nodes, amap_list):
-    """tbd"""
+    """local attach"""
     ctr_mol = copy_edit_mol(ctr_mol)
     nei_amap = {nei.nid: {} for nei in prev_nodes + neighbors}
 
@@ -241,7 +241,7 @@ def local_attach(ctr_mol, neighbors, prev_nodes, amap_list):
 
 
 def enum_attach(ctr_mol, nei_node, amap, singletons):
-    """tbd"""
+    """enum attach"""
     nei_mol, nei_idx = nei_node.mol, nei_node.nid
     att_confs = []
     black_list = [atom_idx for nei_id, atom_idx, _ in amap if nei_id in singletons]
@@ -295,12 +295,12 @@ def enum_attach(ctr_mol, nei_node, amap, singletons):
 
 
 def enum_assemble(node, neighbors, prev_nodes, prev_amap):
-    """tbd"""
+    """enum assemble"""
     all_attach_confs = []
     singletons = [nei_node.nid for nei_node in neighbors + prev_nodes if nei_node.mol.GetNumAtoms() == 1]
 
     def search(cur_amap, depth):
-        """tbd"""
+        """search"""
         if len(all_attach_confs) > MAX_NCAND:
             return
         if depth == len(neighbors):
@@ -346,7 +346,7 @@ def enum_assemble(node, neighbors, prev_nodes, prev_amap):
 
 
 def check_singleton(cand_mol, ctr_node, nei_nodes):
-    """tbd"""
+    """check singleton"""
     rings = [node for node in nei_nodes + [ctr_node] if node.mol.GetNumAtoms() > 2]
     singletons = [node for node in nei_nodes + [ctr_node] if node.mol.GetNumAtoms() == 1]
     if len(singletons) > 0 or len(rings) == 0: return True
@@ -361,7 +361,7 @@ def check_singleton(cand_mol, ctr_node, nei_nodes):
 
 
 def check_aroma(cand_mol, ctr_node, nei_nodes):
-    """tbd"""
+    """check aroma"""
     rings = [node for node in nei_nodes + [ctr_node] if node.mol.GetNumAtoms() >= 3]
     if len(rings) < 2: return 0  
 
@@ -383,7 +383,7 @@ def check_aroma(cand_mol, ctr_node, nei_nodes):
 
 
 def dfs_assemble(cur_mol, global_amap, fa_amap, cur_node, fa_node):
-    """tbd"""
+    """dfs assemble"""
     fa_nid = fa_node.nid if fa_node is not None else -1
     prev_nodes = [fa_node] if fa_node is not None else []
 
