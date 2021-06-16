@@ -1,4 +1,4 @@
-# LiteGEM: Solution to PCQM4M-LSC of KDD Cup 2021
+# LiteGEM: Solution to PCQM4M-LSC of KDD Cup 2021 (Team: SuperHelix)
 
 * Please refer to our **[techical report](./SuperHelix_PCQM4M.pdf)** for the details of implementation and performance.
 
