@@ -17,6 +17,9 @@ Under the root directory, please run following command to downlaod the pretrain 
 mkdir dataset && cd dataset
 wget http://ogb-data.stanford.edu/data/lsc/pcqm4m_kddcup2021.zip
 unzip pcqm4m_kddcup2021.zip
+wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/datasets/PCQM_pretrain/sdf.tar.gz
+mv sdf.tar.gz pcqm_pyscf_sdf.tar.gz
+tar -xzvf pcqm_pyscf_sdf.tar.gz
 cd ..
 ```
 
