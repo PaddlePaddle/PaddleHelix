@@ -6,6 +6,7 @@
 ```
 ogb==1.3.0
 rdkit>=2019.03.1
+obabel>=3.1.0
 torch>=1.7.0
 paddlepaddle-gpu>=2.1.0
 pgl>=2.1.4
@@ -41,21 +42,64 @@ cd ..
 
 Model hyper-parameters and other arguments are all defined in `./src/config.yaml`.
 
-## Model training
+## How to run
 
-The whole training/ensemble pipeline is defined in `./src/main.sh`. Start default training with 2-fold cross validation:
+Our pipeline consists of 4 steps:
+
+1. Data preprocessing
+
+    ````
+    cd ./features
+    python mol_tree.py          # takes about 30 min
+    ````
+
+2. Model training
+
+    Train the model with 2-fold cross validation:
+
+    ````
+    cd ./src
+    . ./cross_run.sh 0 1        # training on the whole dataset will take about 10 days
+                                # "0 1" defines the CUDA devices
+    ````
+
+    Or barely train the model with original validation set:
+
+    ```
+    cd ./src
+    export CUDA_VISIBLE_DEVICES=0
+    python main.py --config config.yaml
+    ```
+
+3. Test inference (optional)
+
+    There is no need to call the inference program separately since it is included in the training program. If is needed, please set the model saved path on the `infer_from` hyper-parameter in `./src/config.yaml` after training, then run the following commands:
+
+    ```
+    cd ./src
+    python test.py --config config.yaml --output_path ./test_result
+    ```
+
+    The test result will be saved in `./src/test_result`.
+
+4. Ensemble
+
+    Copy model predictions and do the ensemble:
+
+    ````
+    cd ../outputs
+    rsync -av * ../ensemble/model_pred/new_run
+
+    cd ../ensemble
+    python ensemble.py
+    ````
+
+
+The whole training/ensemble pipeline is collectly defined in `./src/main.sh`. The shortcut to start default training with 2-fold cross validation:
 
 ```
 cd ./src
-sh main.sh 0 1     # "0 1" defines the CUDA devices
-```
-
-Barely train the model with original validation set:
-
-```
-cd ./src
-export CUDA_VISIBLE_DEVICES=0
-python main.py --config config.yaml
+sh main.sh
 ```
 
 ## Performance
@@ -70,3 +114,14 @@ python main.py --config config.yaml
 | MLP+Fingerprint* |  0.2068  |     16.1M    | GeForce RTX 2080 (11GB GPU) |
 
 \* Results copied from the [baseline performance for PCQM4M-LSC](https://github.com/snap-stanford/ogb/blob/master/examples/lsc/pcqm4m/README.md#performance).
+
+## Citation
+
+    @misc{fang2021chemrlgem,
+        title={ChemRL-GEM: Geometry Enhanced Molecular Representation Learning for Property Prediction}, 
+        author={Xiaomin Fang and Lihang Liu and Jieqiong Lei and Donglong He and Shanzhuo Zhang and Jingbo Zhou and Fan Wang and Hua Wu and Haifeng Wang},
+        year={2021},
+        eprint={2106.06130},
+        archivePrefix={arXiv},
+        primaryClass={cs.LG}
+    }
