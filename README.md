@@ -10,7 +10,7 @@ English | [简体中文](README_cn.md)
 ![support os](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
 
 ## Latest News
-`2021.06.17` PaddleHelix team won the 2nd place in the [OGB-LCS KDD Cup 2021 PCQM4M-LSC track](https://ogb.stanford.edu/kddcup2021/results/), predicting DFT-calculated HOMO-LUMO energy gap of molecules. Please refer to [the solution](https://github.com/PaddlePaddle/PaddleHelix/tree/dev/competition/kddcup2021-PCQM4M-LSC) for more details.
+`2021.06.17` PaddleHelix team won the 2nd place in the [OGB-LCS KDD Cup 2021 PCQM4M-LSC track](https://ogb.stanford.edu/kddcup2021/results/), predicting DFT-calculated HOMO-LUMO energy gap of molecules. Please refer to [the solution](./competition/kddcup2021-PCQM4M-LSC) for more details.
 
 `2021.05.20` PaddleHelix v1.0 released. 1) Update from static framework to dynamic framework; 2) Add new applications: molecular generation and drug-drug synergy.
 
@@ -44,7 +44,7 @@ We provide abundant [tutorials](./tutorials) to help you navigate the repository
   - [Predicting RNA Secondary Structure](./tutorials/linearrna_tutorial.ipynb)
 
 ### Examples
-We also provide examples that implement various algorithms and show the methods running the algorithms:
+We also provide [examples](./apps) that implement various algorithms and show the methods running the algorithms:
 * **Pretraining**
   - [Representation Learning - Compounds](./apps/pretrained_compound)
   - [Representation Learning - Proteins](./apps/pretrained_protein)
@@ -54,6 +54,9 @@ We also provide examples that implement various algorithms and show the methods 
   - [Drug Drug Synergy](./apps/drug_drug_synergy)
 * **Vaccine Design**
   - [LinearRNA](./c/pahelix/toolkit/linear_rna)
+
+### Competition Solutions
+PaddleHelix team participated in multiple competitions related to bio-computing. The solutions can be fined [here](./competition).
 
 ### Guide for developers
 * To develope new functions based on the source code of PaddleHelix, please refer to [guide for developers](./developer_guide.md).
