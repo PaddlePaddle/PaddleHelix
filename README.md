@@ -56,8 +56,8 @@ We also provide examples that implement various algorithms and show the methods 
   - [LinearRNA](./c/pahelix/toolkit/linear_rna)
 
 ### Guide for developers
-* If you need help in developing new functions based on the source code of PaddleHelix, please see our [Guide for developers](./developer_guide.md).
-* Detailed API reference of PaddleHelix can be found [here](https://paddlehelix.readthedocs.io/en/dev/).
+* To develope new functions based on the source code of PaddleHelix, please refer to [guide for developers](./developer_guide.md).
+* For more details of the APIs, please refer to the [documents](https://paddlehelix.readthedocs.io/en/dev/).
 
 ### Welcome to join us
 We are looking for machine learning researchers / engineers or bioinformatics / computational chemistry researchers interested in AI-driven drug design.
