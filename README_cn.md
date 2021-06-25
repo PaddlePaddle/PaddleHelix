@@ -30,13 +30,15 @@
 </p>
 
 ---
-## 资源
-### 安装
-详细的安装指引和环境配置请查阅[这里](./installation_guide_cn.md)。
+## 项目资源
+### 计算平台
+[PaddleHelix平台](https://paddlehelix.baidu.com/)提供AI+生物计算能力，满足新药研发、疫苗设计、精准医疗场景的AI需求。
+
+### 安装指南
+螺旋桨是一个基于高性能机器学习工具[PaddlePaddle飞桨](https://github.com/paddlepaddle/paddle)的生物计算开源工具库。详细的安装和环境配置指引请查阅[这里](./installation_guide_cn.md)。
 
 ### 教学示例
 * 我们提供了大量的[教学示例](./tutorials)以方便开发者快速了解和使用该框架
-* PaddleHelix基于[飞桨（PaddlePaddle）](https://github.com/paddlepaddle/paddle)开源深度学习框架实现，该框架在性能表现上尤其出色。
 
 ### 使用示例
 * [表示学习 - 化合物](./apps/pretrained_compound/README_cn.md)
