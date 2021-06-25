@@ -40,12 +40,12 @@
 ### 教学示例
 我们提供了大量的[教学示例](./tutorials)以方便开发者快速了解和使用该框架：
 * **Drug Discovery**
-  - [Compound Representation Learning and Property Prediction](./tutorials/compound_property_prediction_tutorial.ipynb)
-  - [Protein Representation Learning and Property Prediction](./tutorials/protein_pretrain_and_property_prediction_tutorial.ipynb)
-  - Predicting Drug-Target Interaction: [GraphDTA](./tutorials/drug_target_interaction_graphdta_tutorial.ipynb), [MolTrans](./tutorials/drug_target_interaction_moltrans_tutorial.ipynb)
-  - [Molecular Generation](./tutorials/molecular_generation_tutorial.ipynb)
+  - [化合物表示和属性预测](./tutorials/compound_property_prediction_tutorial_cn.ipynb)
+  - [蛋白质表示和属性预测](./tutorials/protein_pretrain_and_property_prediction_tutorial_cn.ipynb)
+  - Predicting Drug-Target Interaction: [GraphDTA](./tutorials/drug_target_interaction_graphdta_tutorial_cn.ipynb), [MolTrans](./tutorials/drug_target_interaction_moltrans_tutorial_cn.ipynb)
+  - [分子生成](./tutorials/molecular_generation_tutorial_cn.ipynb)
 * **Vaccine Design**
-  - [Predicting RNA Secondary Structure](./tutorials/linearrna_tutorial.ipynb)
+  - [RNA结构预测](./tutorials/linearrna_tutorial_cn.ipynb)
 
 ### 使用示例
 * [表示学习 - 化合物](./apps/pretrained_compound/README_cn.md)
