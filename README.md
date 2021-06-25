@@ -14,7 +14,7 @@ English | [简体中文](README_cn.md)
 
 `2021.05.20` PaddleHelix v1.0 released. 1) Update from static framework to dynamic framework; 2) Add new applications: molecular generation and drug-drug synergy.
 
-`2021.05.18` Paper "Structure-aware Interactive Graph Neural Networks for the Prediction of Protein-Ligand Binding Affinity" is accepted by KDD 2021. The code is available at [here](./apps/drug_target_interaction/sman).
+`2021.05.18` Paper "Structure-aware Interactive Graph Neural Networks for the Prediction of Protein-Ligand Binding Affinity" is accepted by [KDD 2021](https://kdd.org/kdd2021/accepted-papers/index). The code is available at [here](./apps/drug_target_interaction/sman).
 
 `2021.03.15` PaddleHelix team rank 1st in the ogbg-molhiv and ogbg-molpcba of [OGB](https://ogb.stanford.edu/docs/leader_graphprop/), predicting the molecular properties.
 
