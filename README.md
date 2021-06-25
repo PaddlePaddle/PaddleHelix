@@ -62,13 +62,13 @@ We also provide [examples](./apps) that implement various algorithms and show th
 ### Competition Solutions
 PaddleHelix team participated in multiple competitions related to bio-computing. The solutions can be found [here](./competition).
 
-### Guide for developers
+### Guide for Developers
 * To develope new functions based on the source code of PaddleHelix, please refer to [guide for developers](./developer_guide.md).
 * For more details of the APIs, please refer to the [documents](https://paddlehelix.readthedocs.io/en/dev/).
 
 ------
 
-## Welcome to join us
+## Welcome to Join Us
 We are looking for machine learning researchers / engineers or bioinformatics / computational chemistry researchers interested in AI-driven drug design.
 We base in Shenzhen or Shanghai, China.
 Please send the resumes to wangfan04@baidu.com or fangxiaomin01@baidu.com.
