@@ -21,9 +21,9 @@
 ## 简介
 螺旋桨（PaddleHelix）是一个生物计算工具集，是用机器学习的方法，特别是深度神经网络，致力于促进以下领域的发展：
 
-* **新药发现**. Provide 1) Large-scale pre-training models: compounds and proteins; 2) Various applications: molecular property prediction, drug-target affinity prediction, and molecular generation.
-* **苗设计**. Provide RNA design algorithms, including LinearFold and LinearPartition.
-* **精准医疗**. Provide application of drug-drug synergy.
+* **新药发现**。提供1)大规模预训练模型:化合物和蛋白质; 2)多种应用:分子属性预测,药物靶点亲和力预测,和分子生成。
+* **疫苗设计**。提供RNA设计算法,包括LinearFold和LinearPartition。
+* **精准医疗**。提供药物联用的应用。
 
 <p align="center">
 <img src=".github/PaddleHelix_Structure.png" align="middle" heigh="80%" width="80%" />
