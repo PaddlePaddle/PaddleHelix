@@ -31,11 +31,17 @@ PaddleHelix is a bio-computing platform, taking advantage of machine learning ap
 [PaddleHelix platform](https://paddlehelix.baidu.com/) provides the AI + biochemistry abilities for the scenarios of drug discovery, vaccine design and precision medicine.
 
 ### Installation Guide
-The installation prerequisites and guide can be found [here](./installation_guide.md).
+PaddleHelix is a bio-computing repository based on [PaddlePaddle](https://github.com/paddlepaddle/paddle), a high-performance Parallelized Deep Learning Platform. The installation prerequisites and guide can be found [here](./installation_guide.md).
 
 ### Tutorials
-* We provide abundant [tutorials](./tutorials) to help you navigate the repository and start quickly.
-* PaddleHelix is based on [PaddlePaddle](https://github.com/paddlepaddle/paddle), a high-performance Parallelized Deep Learning Platform.
+We provide abundant [tutorials](./tutorials) to help you navigate the repository and start quickly.
+* **Drug Discovery**
+  - [Compound Representation Learning and Property Prediction](./tutorials/compound_property_prediction_tutorial.ipynb)
+  - [Protein Representation Learning and Property Prediction](./tutorials/protein_pretrain_and_property_prediction_tutorial.ipynb)
+  - [Predicting Drug-Target Interaction: GraphDTA](./tutorials/drug_target_interaction_graphdta_tutorial.ipynb), [MolTrans](./tutorials/drug_target_interaction_moltrans_tutorial.ipynb)
+  - [Molecular Generation](./tutorials/molecular_generation_tutorial.ipynb)
+* **Vaccine Design**
+  - [Predicting RNA Secondary Structure](./tutorials/linearrna_tutorial.ipynb)
 
 ### Examples
 * [Representation Learning - Compounds](./apps/pretrained_compound)
