@@ -26,21 +26,14 @@ PaddleHelix is a bio-computing platform, taking advantage of machine learning ap
 <img src=".github/PaddleHelix_Structure.png" align="middle" heigh="80%" width="80%" />
 </p>
 
-### Resources:
+## Resources
 * [Application Platform](https://paddlehelix.baidu.com/) PaddleHelix platform, providing the AI + biochemistry abilities.
 * [Tutorials](./tutorials) Guiding how to use various applications of PaddleHelix.
 * [Examples](./apps) 
 * [Developer Guide](./developer_guide.md)
 
-----
-
-## Installation Guide
-
+### Installation Guide
 The installation prerequisites and guide can be found [here](./installation_guide.md).
-
-----
-
-## Documentation
 
 ### Tutorials
 * We provide abundant [tutorials](./tutorials) to help you navigate the repository and start quickly.
@@ -54,11 +47,9 @@ The installation prerequisites and guide can be found [here](./installation_guid
 * [Drug Drug Synergy](./apps/drug_drug_synergy)
 * [LinearRNA](./c/pahelix/toolkit/linear_rna)
 
-### The API reference
-* Detailed API reference of PaddleHelix can be found [here](https://paddlehelix.readthedocs.io/en/dev/).
-
 ### Guide for developers
 * If you need help in developing new functions based on the source code of PaddleHelix, please see our [Guide for developers](./developer_guide.md).
+* Detailed API reference of PaddleHelix can be found [here](https://paddlehelix.readthedocs.io/en/dev/).
 
 ### Welcome to join us
 We are looking for machine learning researchers / engineers or bioinformatics / computational chemistry researchers interested in AI-driven drug design.
