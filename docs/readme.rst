@@ -16,8 +16,6 @@ Welcome to PaddleHelix Helper
    :target: https://paddlehelix.readthedocs.io/en/dev/
    :alt: Documentation Status
 
-Features
-========
 
 Installation
 ============
