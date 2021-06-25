@@ -38,26 +38,26 @@
 螺旋桨是一个基于高性能机器学习工具[PaddlePaddle飞桨](https://github.com/paddlepaddle/paddle)的生物计算开源工具库。详细的安装和环境配置指引请查阅[这里](./installation_guide_cn.md)。
 
 ### 教学示例
-我们提供了大量的[教学示例](./tutorials)以方便开发者快速了解和使用该框架：
+我们提供了大量的[教学示例](./tutorials/README_cn.md)以方便开发者快速了解和使用该框架：
 * **Drug Discovery**
   - [化合物表示和属性预测](./tutorials/compound_property_prediction_tutorial_cn.ipynb)
   - [蛋白质表示和属性预测](./tutorials/protein_pretrain_and_property_prediction_tutorial_cn.ipynb)
-  - Predicting Drug-Target Interaction: [GraphDTA](./tutorials/drug_target_interaction_graphdta_tutorial_cn.ipynb), [MolTrans](./tutorials/drug_target_interaction_moltrans_tutorial_cn.ipynb)
+  - [药物-分子作用预测: GraphDTA](./tutorials/drug_target_interaction_graphdta_tutorial_cn.ipynb), [MolTrans](./tutorials/drug_target_interaction_moltrans_tutorial_cn.ipynb)
   - [分子生成](./tutorials/molecular_generation_tutorial_cn.ipynb)
 * **Vaccine Design**
   - [RNA结构预测](./tutorials/linearrna_tutorial_cn.ipynb)
 
 ### 使用示例
-我们也提供了多个算法的[代码和使用示例](./apps):
+我们也提供了多个算法的[代码和使用示例](./apps/README_cn.md):
 * **预训练**
-  - [表示学习 - 化合物](./apps/pretrained_compound)
-  - [表示学习 - 蛋白质](./apps/pretrained_protein)
+  - [表示学习 - 化合物](./apps/pretrained_compound/README_cn.md)
+  - [表示学习 - 蛋白质](./apps/pretrained_protein/README_cn.md)
 * **新药发现和精准医疗**
-  - [药物-分子作用预测](./apps/drug_target_interaction)
-  - [分子生成](./apps/molecular_generation)
-  - [药物联用](./apps/drug_drug_synergy)
+  - [药物-分子作用预测](./apps/drug_target_interaction/README_cn.md)
+  - [分子生成](./apps/molecular_generation/README_cn.md)
+  - [药物联用](./apps/drug_drug_synergy/README_cn.md)
 * **疫苗设计**
-  - [LinearRNA](./c/pahelix/toolkit/linear_rna)
+  - [LinearRNA](./c/pahelix/toolkit/linear_rna/README_cn.md)
 
 ### 比赛解决方案
 螺旋桨团队参加了多项生物计算相关的赛事，相关解决方案可以参阅[这里](./competition).
