@@ -9,51 +9,60 @@ English | [简体中文](README_cn.md)
 ![python version](https://img.shields.io/badge/python-3.6+-orange.svg)
 ![support os](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
 
-PaddleHelix is a machine-learning-based bio-computing framework aiming at facilitating the development of the following areas:
-> * Vaccine design
-> * Drug discovery
-> * Precision medicine
+## Latest News
+`2021.06.17` PaddleHelix team won the 2nd place in the [OGB-LCS KDD Cup 2021 PCQM4M-LSC track](https://ogb.stanford.edu/kddcup2021/results/), predicting DFT-calculated HOMO-LUMO energy gap of molecules. Please refer to [the solution](./competition/kddcup2021-PCQM4M-LSC) for more details.
 
-## Features
-* High Efficiency: We provide LinearRNA, a highly efficient toolkit for RNA structure prediction and analysis. LinearFold & LinearPartition achieve O(n) complexity in RNA-folding prediction, which is hundreds of times faster than traditional folding techniques.
+`2021.05.20` PaddleHelix v1.0 released. 1) Update from static framework to dynamic framework; 2) Add new applications: molecular generation and drug-drug synergy.
+
+`2021.03.15` PaddleHelix team rank 1st in the ogbg-molhiv and ogbg-molpcba of [OGB](https://ogb.stanford.edu/docs/leader_graphprop/), predicting the molecular properties.
+
+---
+
+## Introduction
+PaddleHelix is a bio-computing tools, taking advantage of machine learning approach, especially deep neural networks, for facilitating the development of the following areas:
+* **Drug Discovery**. Provide 1) Large-scale pre-training models: compounds and proteins; 2) Various applications: molecular property prediction, drug-target affinity prediction, and molecular generation.
+* **Vaccine Design**. Provide RNA design algorithms, including LinearFold and LinearPartition.
+* **Precision Medicine**. Provide application of drug-drug synergy.
+
 <p align="center">
-<img src="./.github/LinearRNA.jpg" align="middle" />
+<img src=".github/PaddleHelix_Structure.png" align="middle" heigh="80%" width="80%" />
 </p>
 
-* Large-scale Representation Learning: Self-supervised learning for molecule representations offers prospects of a breakthrough in tasks with limited annotation, including drug profiling, drug-target interaction, protein-protein interaction, RNA-RNA interaction, protein folding, RNA folding, and molecule design. PaddleHelix implements various representation learning algorithms and state-of-the-art large-scale pre-trained models to help developers start from "the shoulders of giants" quickly.
-<p align="center">
-<img src="./.github/paddlehelix_features.jpg" align="middle" />
-</p>
+## Resources
+### Application Platform
+[PaddleHelix platform](https://paddlehelix.baidu.com/) provides the AI + biochemistry abilities for the scenarios of drug discovery, vaccine design and precision medicine.
 
-* Rich examples and applications: PaddleHelix provides frequently used components such as networks, datasets, and pre-trained models. Users can easily use those components to build up their models and systems. PaddleHelix also provides multiple applications, such as compound property prediction, drug-target interaction, and so on.
-
-----
-
-## Installation
-
-The installation prerequisites and guide can be found [here](./installation_guide.md).
-
-----
-
-## Documentation
+### Installation Guide
+PaddleHelix is a bio-computing repository based on [PaddlePaddle](https://github.com/paddlepaddle/paddle), a high-performance Parallelized Deep Learning Platform. The installation prerequisites and guide can be found [here](./installation_guide.md).
 
 ### Tutorials
-* We provide abundant [tutorials](./tutorials) to help you navigate the repository and start quickly.
-* PaddleHelix is based on [PaddlePaddle](https://github.com/paddlepaddle/paddle), a high-performance Parallelized Deep Learning Platform.
+We provide abundant [tutorials](./tutorials) to help you navigate the repository and start quickly.
+* **Drug Discovery**
+  - [Compound Representation Learning and Property Prediction](./tutorials/compound_property_prediction_tutorial.ipynb)
+  - [Protein Representation Learning and Property Prediction](./tutorials/protein_pretrain_and_property_prediction_tutorial.ipynb)
+  - Predicting Drug-Target Interaction: [GraphDTA](./tutorials/drug_target_interaction_graphdta_tutorial.ipynb), [MolTrans](./tutorials/drug_target_interaction_moltrans_tutorial.ipynb)
+  - [Molecular Generation](./tutorials/molecular_generation_tutorial.ipynb)
+* **Vaccine Design**
+  - [Predicting RNA Secondary Structure](./tutorials/linearrna_tutorial.ipynb)
 
 ### Examples
-* [Representation Learning - Compounds](./apps/pretrained_compound)
-* [Representation Learning - Proteins](./apps/pretrained_protein)
-* [Drug-Target Interaction](./apps/drug_target_interaction)
-* [Molecular Generation](./apps/molecular_generation)
-* [Drug Drug Synergy](./apps/drug_drug_synergy)
-* [LinearRNA](./c/pahelix/toolkit/linear_rna)
+We also provide [examples](./apps) that implement various algorithms and show the methods running the algorithms:
+* **Pretraining**
+  - [Representation Learning - Compounds](./apps/pretrained_compound)
+  - [Representation Learning - Proteins](./apps/pretrained_protein)
+* **Drug discovery and Precision Medicine**
+  - [Drug-Target Interaction](./apps/drug_target_interaction)
+  - [Molecular Generation](./apps/molecular_generation)
+  - [Drug Drug Synergy](./apps/drug_drug_synergy)
+* **Vaccine Design**
+  - [LinearRNA](./c/pahelix/toolkit/linear_rna)
 
-### The API reference
-* Detailed API reference of PaddleHelix can be found [here](https://paddlehelix.readthedocs.io/en/dev/).
+### Competition Solutions
+PaddleHelix team participated in multiple competitions related to bio-computing. The solutions can be found [here](./competition).
 
 ### Guide for developers
-* If you need help in modifying the source code of PaddleHelix, please see our [Guide for developers](./developer_guide.md).
+* To develope new functions based on the source code of PaddleHelix, please refer to [guide for developers](./developer_guide.md).
+* For more details of the APIs, please refer to the [documents](https://paddlehelix.readthedocs.io/en/dev/).
 
 ### Welcome to join us
 We are looking for machine learning researchers / engineers or bioinformatics / computational chemistry researchers interested in AI-driven drug design.

@@ -9,49 +9,62 @@
 ![python version](https://img.shields.io/badge/python-3.6+-orange.svg)
 ![support os](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
 
-螺旋桨（PaddleHelix）是一个基于机器学习的生物计算工具集，致力于加速如下领域的进展：
-> * 疫苗设计
-> * 新药发现
-> * 精准医疗
+## 最新消息
+`2021.06.17` 螺旋桨团队在[OGB-LCS KDD Cup 2021 PCQM4M-LSC track](https://ogb.stanford.edu/kddcup2021/results/)比赛中赢得了亚军。该项比赛预测使用DFT计算的分子HOMO-LUMO的能量差。请参阅[解决方案](./competition/kddcup2021-PCQM4M-LSC)获得更多的细节。.
 
-## 特色
+`2021.05.20` 螺旋桨v1.0正式版发布。 1)将模型全面从静态图升级到动态图; 2) 添加更多应用: 分子生成和药物联用.
 
-* **高性能**：提供了LinearRNA系列高性能算法助力 RNA 结构预测和分析。例如，LinearFold 和 LinearPartition 能够迅速准确定位能量较低 RNA 二级结构，性能相比传统方法提升数百甚至上千倍。
+`2021.03.15` 螺旋桨团队在权威图榜单[OGB](https://ogb.stanford.edu/docs/leader_graphprop/)的ogbg-molhiv和ogbg-molpcba任务上取得第一名。这两项任务均是预测小分子的属性。
+
+---
+
+## 简介
+螺旋桨（PaddleHelix）是一个生物计算工具集，是用机器学习的方法，特别是深度神经网络，致力于促进以下领域的发展：
+
+* **新药发现**。提供1)大规模预训练模型:化合物和蛋白质; 2)多种应用:分子属性预测,药物靶点亲和力预测,和分子生成。
+* **疫苗设计**。提供RNA设计算法,包括LinearFold和LinearPartition。
+* **精准医疗**。提供药物联用的应用。
+
 <p align="center">
-<img src="./.github/LinearRNA.jpg" align="middle" />
+<img src=".github/PaddleHelix_Structure.png" align="middle" heigh="80%" width="80%" />
 </p>
 
-* 由大规模**表示预训练**支撑的生物计算工具：随着自监督学习用于分子表示训练的进展，为样本量非常稀少的很多生物计算任务带来了全新的突破，这些任务包括分子性质预测，药物-靶点相互作用，蛋白质-蛋白质相互作用，RNA-RNA 相互作用，蛋白质折叠，RNA 折叠等等领域。螺旋桨广泛提供了业界最领先的表示学习方法和模型，使得开发者可以基于大规模模型快速切入需求的任务，站在巨人的肩膀上。
-<p align="center">
-<img src="./.github/paddlehelix_features.jpg" align="middle" />
-</p>
+---
+## 项目资源
+### 计算平台
+[PaddleHelix平台](https://paddlehelix.baidu.com/)提供AI+生物计算能力，满足新药研发、疫苗设计、精准医疗场景的AI需求。
 
-* 丰富的样例和应用：螺旋桨提供了生物计算中常用的模块，如模型结构，数据集，和预训练模型。用户可以用非常简单的接口模块，快速组建自己的网络和系统。罗湘江还提供多种应用，例如化合物属性预测，药物靶点亲和力预测等等。
-----
+### 安装指南
+螺旋桨是一个基于高性能机器学习工具[PaddlePaddle飞桨](https://github.com/paddlepaddle/paddle)的生物计算开源工具库。详细的安装和环境配置指引请查阅[这里](./installation_guide_cn.md)。
 
-## 安装
-详细的安装指引和环境配置请查阅[这里](./installation_guide_cn.md)。
-
-----
-## 文档
-
-### 教学
-* 我们提供了大量的[教学实例](./tutorials)以方便开发者快速了解和使用该框架
-* PaddleHelix基于[飞桨（PaddlePaddle）](https://github.com/paddlepaddle/paddle)开源深度学习框架实现，该框架在性能表现上尤其出色。
+### 教学示例
+我们提供了大量的[教学示例](./tutorials)以方便开发者快速了解和使用该框架：
+* **Drug Discovery**
+  - [化合物表示和属性预测](./tutorials/compound_property_prediction_tutorial_cn.ipynb)
+  - [蛋白质表示和属性预测](./tutorials/protein_pretrain_and_property_prediction_tutorial_cn.ipynb)
+  - Predicting Drug-Target Interaction: [GraphDTA](./tutorials/drug_target_interaction_graphdta_tutorial_cn.ipynb), [MolTrans](./tutorials/drug_target_interaction_moltrans_tutorial_cn.ipynb)
+  - [分子生成](./tutorials/molecular_generation_tutorial_cn.ipynb)
+* **Vaccine Design**
+  - [RNA结构预测](./tutorials/linearrna_tutorial_cn.ipynb)
 
 ### 使用示例
-* [表示学习 - 化合物](./apps/pretrained_compound/README_cn.md)
-* [表示学习 - 蛋白质](./apps/pretrained_protein/README_cn.md)
-* [药物-分子作用预测](./apps/drug_target_interaction/README_cn.md)
-* [分子生成](./apps/molecular_generation/README_cn.md)
-* [药物联用](./apps/drug_drug_synergy/README_cn.md)
-* [LinearRNA](./c/pahelix/toolkit/linear_rna/README_cn.md)
+我们也提供了多个算法的[代码和使用示例](./apps):
+* **预训练**
+  - [表示学习 - 化合物](./apps/pretrained_compound)
+  - [表示学习 - 蛋白质](./apps/pretrained_protein)
+* **新药发现和精准医疗**
+  - [药物-分子作用预测](./apps/drug_target_interaction)
+  - [分子生成](./apps/molecular_generation)
+  - [药物联用](./apps/drug_drug_synergy)
+* **疫苗设计**
+  - [LinearRNA](./c/pahelix/toolkit/linear_rna)
 
-### API 文档
-* 如果你对PaddleHelix的详细接口感兴趣，请查阅[API 文档](https://paddlehelix.readthedocs.io/en/dev/)。
+### 比赛解决方案
+螺旋桨团队参加了多项生物计算相关的赛事，相关解决方案可以参阅[这里](./competition).
 
 ### 开发者指南
-* 如果你需要修改PaddleHelix的源代码，请查阅我们提供的[开发者指南](./developer_guide_cn.md)。
+* 如果你需要基于螺旋桨的源代码进行新功能的开发，请查阅我们提供的[开发者指南](./developer_guide_cn.md)。
+* 如果你想知道螺旋桨各种接口的详情，请查阅[API文档](https://paddlehelix.readthedocs.io/en/dev/)。
 
 ### 欢迎加入我们
 我们正在招聘对人工智能驱动的药物设计感兴趣的机器学习研究人员/工程师或生物信息/计算化学相关研究人员。
