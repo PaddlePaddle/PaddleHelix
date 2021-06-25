@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 We provide [examples](./apps) that implement various algorithms and show the methods running the algorithms:
 * **Pretraining**
   - [Representation Learning - Compounds](./apps/pretrained_compound)
