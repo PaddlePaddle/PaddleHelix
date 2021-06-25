@@ -10,9 +10,9 @@ English | [简体中文](README_cn.md)
 ![support os](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
 
 PaddleHelix is a bio-computing platform, taking advantage of machine learning approach, especially deep neural networks, for facilitating the development of the following areas:
-* Drug discovery
-* Vaccine design
-* Precision medicine
+* **Drug Discovery** Provide 1) Large-scale pre-training models: compounds and proteins; 2) Various applications: molecular property prediction, drug-target affinity prediction, and molecular generation.
+* **Vaccine Design** Drug Discovery. Provide 1) Large-scale pre-training models: compounds and proteins; 2) Various applications: molecular property prediction, drug-target affinity prediction, and molecular generation.
+* **Precision Medicine** Provide application of drug-drug synergy.
 
 ----
 
