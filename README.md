@@ -25,7 +25,7 @@ PaddleHelix is a bio-computing tools, taking advantage of machine learning appro
 * **Precision Medicine**. Provide application of drug-drug synergy.
 
 <p align="center">
-<img src=".github/PaddleHelix_Structure.png" align="middle" heigh="80%" width="80%" />
+<img src=".github/PaddleHelix_Structure.pdf" align="middle" heigh="80%" width="80%" />
 </p>
 
 ## Resources
