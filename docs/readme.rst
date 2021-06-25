@@ -16,12 +16,6 @@ Welcome to PaddleHelix Helper
    :target: https://paddlehelix.readthedocs.io/en/dev/
    :alt: Documentation Status
 
-
-PaddleHelix is a machine-learning-based bio-computing framework aiming at facilitating the development of the following areas:
-  * Vaccine design
-  * Drug discovery
-  * Precision medicine
-
 Features
 ========
 
