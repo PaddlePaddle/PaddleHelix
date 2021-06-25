@@ -6,7 +6,7 @@
 * **Drug Discovery**
   - [化合物表示和属性预测](./compound_property_prediction_tutorial_cn.ipynb)
   - [蛋白质表示和属性预测](./protein_pretrain_and_property_prediction_tutorial_cn.ipynb)
-  - Predicting Drug-Target Interaction: [GraphDTA](./drug_target_interaction_graphdta_tutorial_cn.ipynb), [MolTrans](./drug_target_interaction_moltrans_tutorial_cn.ipynb)
+  - [药物-分子作用预测: GraphDTA](./drug_target_interaction_graphdta_tutorial_cn.ipynb), [MolTrans](./drug_target_interaction_moltrans_tutorial_cn.ipynb)
   - [分子生成](./molecular_generation_tutorial_cn.ipynb)
 * **Vaccine Design**
   - [RNA结构预测](./linearrna_tutorial_cn.ipynb)
