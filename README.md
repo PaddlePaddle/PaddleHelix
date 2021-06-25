@@ -44,12 +44,16 @@ We provide abundant [tutorials](./tutorials) to help you navigate the repository
   - [Predicting RNA Secondary Structure](./tutorials/linearrna_tutorial.ipynb)
 
 ### Examples
-* [Representation Learning - Compounds](./apps/pretrained_compound)
-* [Representation Learning - Proteins](./apps/pretrained_protein)
-* [Drug-Target Interaction](./apps/drug_target_interaction)
-* [Molecular Generation](./apps/molecular_generation)
-* [Drug Drug Synergy](./apps/drug_drug_synergy)
-* [LinearRNA](./c/pahelix/toolkit/linear_rna)
+We also provide examples that implement various algorithms and show the methods running the algorithms:
+* **Pretraining**
+  - [Representation Learning - Compounds](./apps/pretrained_compound)
+  - [Representation Learning - Proteins](./apps/pretrained_protein)
+* **Drug discovery and Precision Medicine**
+  - [Drug-Target Interaction](./apps/drug_target_interaction)
+  - [Molecular Generation](./apps/molecular_generation)
+  - [Drug Drug Synergy](./apps/drug_drug_synergy)
+* **Vaccine Design**
+  - [LinearRNA](./c/pahelix/toolkit/linear_rna)
 
 ### Guide for developers
 * If you need help in developing new functions based on the source code of PaddleHelix, please see our [Guide for developers](./developer_guide.md).
