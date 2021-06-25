@@ -27,10 +27,8 @@ PaddleHelix is a bio-computing platform, taking advantage of machine learning ap
 </p>
 
 ## Resources
-* [Application Platform](https://paddlehelix.baidu.com/) PaddleHelix platform, providing the AI + biochemistry abilities.
-* [Tutorials](./tutorials) Guiding how to use various applications of PaddleHelix.
-* [Examples](./apps) 
-* [Developer Guide](./developer_guide.md)
+### Application Platform
+* [PaddleHelix platform](https://paddlehelix.baidu.com/) provides the AI + biochemistry abilities.
 
 ### Installation Guide
 The installation prerequisites and guide can be found [here](./installation_guide.md).
