@@ -1,12 +1,12 @@
 English | [简体中文](README_cn.md)
 
-We provide [examples](./apps) that implement various algorithms and show the methods running the algorithms:
+We provide examples that implement various algorithms and show the methods running the algorithms:
 * **Pretraining**
-  - [Representation Learning - Compounds](./apps/pretrained_compound)
-  - [Representation Learning - Proteins](./apps/pretrained_protein)
+  - [Representation Learning - Compounds](./pretrained_compound)
+  - [Representation Learning - Proteins](./pretrained_protein)
 * **Drug discovery and Precision Medicine**
-  - [Drug-Target Interaction](./apps/drug_target_interaction)
-  - [Molecular Generation](./apps/molecular_generation)
-  - [Drug Drug Synergy](./apps/drug_drug_synergy)
+  - [Drug-Target Interaction](./drug_target_interaction)
+  - [Molecular Generation](./molecular_generation)
+  - [Drug Drug Synergy](./drug_drug_synergy)
 * **Vaccine Design**
-  - [LinearRNA](./c/pahelix/toolkit/linear_rna)
+  - [LinearRNA](../c/pahelix/toolkit/linear_rna)
