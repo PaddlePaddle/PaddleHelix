@@ -16,7 +16,7 @@ English | [简体中文](README_cn.md)
 
 `2021.03.15` PaddleHelix team rank 1st in the ogbg-molhiv and ogbg-molpcba of [OGB](https://ogb.stanford.edu/docs/leader_graphprop/), predicting the molecular properties.
 
------
+------
 
 ## Introduction
 PaddleHelix is a bio-computing tools, taking advantage of machine learning approach, especially deep neural networks, for facilitating the development of the following areas:
