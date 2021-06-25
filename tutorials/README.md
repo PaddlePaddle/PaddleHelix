@@ -8,11 +8,6 @@ In contrast to the powerful ability of DL metrics, a key challenge lying in util
 
 **PaddleHelix** is a high-performance ML-based bio-computing framework. It features large-scale representation learning and easy-to-use APIs, providing pharmaceutical and biological researchers and engineers convenient access to the most up-to-date and state-of-the-art AI tools.
 
-# Navigating PaddleHelix
-<p align="center">
-<img src="../.github/PaddleHelix_Structure.png" align="middle" heigh="80%" width="80%" />
-</p>
-
 
 # Tutorials
 * [Predicting Drug-Target Interaction: GraphDTA](drug_target_interaction_graphdta_tutorial.ipynb), [MolTrans](drug_target_interaction_moltrans_tutorial.ipynb)
