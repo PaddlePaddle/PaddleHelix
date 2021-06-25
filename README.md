@@ -58,7 +58,7 @@ We also provide [examples](./apps) that implement various algorithms and show th
   - [LinearRNA](./c/pahelix/toolkit/linear_rna)
 
 ### Competition Solutions
-PaddleHelix team participated in multiple competitions related to bio-computing. The solutions can be fined [here](./competition).
+PaddleHelix team participated in multiple competitions related to bio-computing. The solutions can be found [here](./competition).
 
 ### Guide for developers
 * To develope new functions based on the source code of PaddleHelix, please refer to [guide for developers](./developer_guide.md).
