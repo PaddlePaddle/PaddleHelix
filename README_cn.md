@@ -26,7 +26,7 @@
 * **精准医疗**。提供药物联用的应用。
 
 <p align="center">
-<img src=".github/PaddleHelix_Structure.png" align="middle" heigh="80%" width="80%" />
+<img src=".github/PaddleHelix_Structure.png" align="middle" heigh="70%" width="70%" />
 </p>
 
 ---
