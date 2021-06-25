@@ -40,7 +40,7 @@ We provide abundant [tutorials](./tutorials) to help you navigate the repository
 * **Drug Discovery**
   - [Compound Representation Learning and Property Prediction](./tutorials/compound_property_prediction_tutorial.ipynb)
   - [Protein Representation Learning and Property Prediction](./tutorials/protein_pretrain_and_property_prediction_tutorial.ipynb)
-  - Predicting Drug-Target Interaction: [GraphDTA](./tutorials/drug_target_interaction_graphdta_tutorial.ipynb), [MolTrans](./tutorials/drug_target_interaction_moltrans_tutorial.ipynb)
+  - [Predicting Drug-Target Interaction: GraphDTA](./tutorials/drug_target_interaction_graphdta_tutorial.ipynb), [MolTrans](./tutorials/drug_target_interaction_moltrans_tutorial.ipynb)
   - [Molecular Generation](./tutorials/molecular_generation_tutorial.ipynb)
 * **Vaccine Design**
   - [Predicting RNA Secondary Structure](./tutorials/linearrna_tutorial.ipynb)
