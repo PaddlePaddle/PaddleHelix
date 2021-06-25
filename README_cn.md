@@ -48,16 +48,23 @@
   - [RNA结构预测](./tutorials/linearrna_tutorial_cn.ipynb)
 
 ### 使用示例
-* [表示学习 - 化合物](./apps/pretrained_compound/README_cn.md)
-* [表示学习 - 蛋白质](./apps/pretrained_protein/README_cn.md)
-* [药物-分子作用预测](./apps/drug_target_interaction/README_cn.md)
-* [分子生成](./apps/molecular_generation/README_cn.md)
-* [药物联用](./apps/drug_drug_synergy/README_cn.md)
-* [LinearRNA](./c/pahelix/toolkit/linear_rna/README_cn.md)
+我们也提供了多个算法的[代码和使用示例](./apps):
+* **预训练**
+  - [表示学习 - 化合物](./apps/pretrained_compound)
+  - [表示学习 - 蛋白质](./apps/pretrained_protein)
+* **新药发现和精准医疗**
+  - [药物-分子作用预测](./apps/drug_target_interaction)
+  - [分子生成](./apps/molecular_generation)
+  - [药物联用](./apps/drug_drug_synergy)
+* **疫苗设计**
+  - [LinearRNA](./c/pahelix/toolkit/linear_rna)
+
+### 比赛解决方案
+螺旋桨团队参加了多项生物计算相关的赛事，相关解决方案可以参阅[这里](./competition).
 
 ### 开发者指南
-* 如果你需要修改PaddleHelix的源代码，请查阅我们提供的[开发者指南](./developer_guide_cn.md)。
-* 如果你对PaddleHelix的详细接口感兴趣，请查阅[API 文档](https://paddlehelix.readthedocs.io/en/dev/)。
+* 如果你需要基于螺旋桨的源代码进行新功能的开发，请查阅我们提供的[开发者指南](./developer_guide_cn.md)。
+* 如果你想知道螺旋桨各种接口的详情，请查阅[API文档](https://paddlehelix.readthedocs.io/en/dev/)。
 
 ### 欢迎加入我们
 我们正在招聘对人工智能驱动的药物设计感兴趣的机器学习研究人员/工程师或生物信息/计算化学相关研究人员。
