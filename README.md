@@ -20,9 +20,9 @@ English | [简体中文](README_cn.md)
 
 ## Introduction
 PaddleHelix is a bio-computing platform, taking advantage of machine learning approach, especially deep neural networks, for facilitating the development of the following areas:
-* **Drug Discovery** Provide 1) Large-scale pre-training models: compounds and proteins; 2) Various applications: molecular property prediction, drug-target affinity prediction, and molecular generation.
-* **Vaccine Design** Provide RNA design algorithms, including LinearFold and LinearPartition.
-* **Precision Medicine** Provide application of drug-drug synergy.
+* **Drug Discovery**. Provide 1) Large-scale pre-training models: compounds and proteins; 2) Various applications: molecular property prediction, drug-target affinity prediction, and molecular generation.
+* **Vaccine Design**. Provide RNA design algorithms, including LinearFold and LinearPartition.
+* **Precision Medicine**. Provide application of drug-drug synergy.
 
 <p align="center">
 <img src=".github/PaddleHelix_Structure.png" align="middle" heigh="80%" width="80%" />
