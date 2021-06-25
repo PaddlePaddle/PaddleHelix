@@ -22,6 +22,10 @@ PaddleHelix is a bio-computing platform, taking advantage of machine learning ap
 * **Vaccine Design** Provide RNA design algorithms, including LinearFold and LinearPartition.
 * **Precision Medicine** Provide application of drug-drug synergy.
 
+<p align="center">
+<img src=".github/PaddleHelix_Structure.png" align="middle" heigh="80%" width="80%" />
+</p>
+
 ----
 
 ## Installation
