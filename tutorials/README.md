@@ -1,6 +1,6 @@
 English | [简体中文](README_cn.md)
 
-# Introduction
+# Background
 Recently, increasing studies employ machine learning methods, especially deep neural networks, for DTA drug discovery due to their time efficiency compared with biological experiments and huge advances in various domains. We provide abundant tutorials to help you navigate the repository and start quickly.
 
 * **Drug Discovery**
