@@ -14,6 +14,8 @@ English | [简体中文](README_cn.md)
 
 `2021.05.20` PaddleHelix v1.0 released. 1) Update from static framework to dynamic framework; 2) Add new applications: molecular generation and drug-drug synergy.
 
+`2021.03.15` PaddleHelix team rank 1st in the ogbg-molhiv and ogbg-molpcba of [OGB](https://ogb.stanford.edu/docs/leader_graphprop/), predicting the molecular properties.
+
 ---
 
 ## Introduction
