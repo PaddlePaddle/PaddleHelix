@@ -9,23 +9,10 @@ English | [简体中文](README_cn.md)
 ![python version](https://img.shields.io/badge/python-3.6+-orange.svg)
 ![support os](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
 
-PaddleHelix is a machine-learning-based bio-computing framework aiming at facilitating the development of the following areas:
+PaddleHelix is a bio-computing platform, taking advantage of machine learning approach, especially deep neural networks, for facilitating the development of the following areas:
 > * Vaccine design
 > * Drug discovery
 > * Precision medicine
-
-## Features
-* High Efficiency: We provide LinearRNA, a highly efficient toolkit for RNA structure prediction and analysis. LinearFold & LinearPartition achieve O(n) complexity in RNA-folding prediction, which is hundreds of times faster than traditional folding techniques.
-<p align="center">
-<img src="./.github/LinearRNA.jpg" align="middle" />
-</p>
-
-* Large-scale Representation Learning: Self-supervised learning for molecule representations offers prospects of a breakthrough in tasks with limited annotation, including drug profiling, drug-target interaction, protein-protein interaction, RNA-RNA interaction, protein folding, RNA folding, and molecule design. PaddleHelix implements various representation learning algorithms and state-of-the-art large-scale pre-trained models to help developers start from "the shoulders of giants" quickly.
-<p align="center">
-<img src="./.github/paddlehelix_features.jpg" align="middle" />
-</p>
-
-* Rich examples and applications: PaddleHelix provides frequently used components such as networks, datasets, and pre-trained models. Users can easily use those components to build up their models and systems. PaddleHelix also provides multiple applications, such as compound property prediction, drug-target interaction, and so on.
 
 ----
 
