@@ -10,9 +10,9 @@ English | [简体中文](README_cn.md)
 ![support os](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
 
 PaddleHelix is a bio-computing platform, taking advantage of machine learning approach, especially deep neural networks, for facilitating the development of the following areas:
-> * Vaccine design
-> * Drug discovery
-> * Precision medicine
+* Drug discovery
+* Vaccine design
+* Precision medicine
 
 ----
 
