@@ -1,15 +1,15 @@
 English | [简体中文](README_cn.md)
 
-# Backgrounds
-Recently, increasing studies employ machine learning methods, especially deep neural networks, for DTA drug discovery due to their time efficiency compared with biological experiments and huge advances in various domains.
+# Introduction
+Recently, increasing studies employ machine learning methods, especially deep neural networks, for DTA drug discovery due to their time efficiency compared with biological experiments and huge advances in various domains. We provide abundant tutorials to help you navigate the repository and start quickly.
 
-
-# Tutorials
-* [Predicting Drug-Target Interaction: GraphDTA](drug_target_interaction_graphdta_tutorial.ipynb), [MolTrans](drug_target_interaction_moltrans_tutorial.ipynb)
-* [Compound Representation Learning and Property Prediction](compound_property_prediction_tutorial.ipynb)
-* [Protein Representation Learning and Property Prediction](protein_pretrain_and_property_prediction_tutorial.ipynb)
-* [Molecular Generation](molecular_generation_tutorial.ipynb)
-* [Predicting RNA Secondary Structure](linearrna_tutorial.ipynb)
+* **Drug Discovery**
+  - [Compound Representation Learning and Property Prediction](./compound_property_prediction_tutorial.ipynb)
+  - [Protein Representation Learning and Property Prediction](./protein_pretrain_and_property_prediction_tutorial.ipynb)
+  - Predicting Drug-Target Interaction: [GraphDTA](./drug_target_interaction_graphdta_tutorial.ipynb), [MolTrans](./drug_target_interaction_moltrans_tutorial.ipynb)
+  - [Molecular Generation](./molecular_generation_tutorial.ipynb)
+* **Vaccine Design**
+  - [Predicting RNA Secondary Structure](./linearrna_tutorial.ipynb)
 
 # Run tutorials locally
 
