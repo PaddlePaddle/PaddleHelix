@@ -6,7 +6,7 @@ Recently, increasing studies employ machine learning methods, especially deep ne
 * **Drug Discovery**
   - [Compound Representation Learning and Property Prediction](./compound_property_prediction_tutorial.ipynb)
   - [Protein Representation Learning and Property Prediction](./protein_pretrain_and_property_prediction_tutorial.ipynb)
-  - Predicting Drug-Target Interaction: [GraphDTA](./drug_target_interaction_graphdta_tutorial.ipynb), [MolTrans](./drug_target_interaction_moltrans_tutorial.ipynb)
+  - [Predicting Drug-Target Interaction: GraphDTA](./drug_target_interaction_graphdta_tutorial.ipynb), [MolTrans](./drug_target_interaction_moltrans_tutorial.ipynb)
   - [Molecular Generation](./molecular_generation_tutorial.ipynb)
 * **Vaccine Design**
   - [Predicting RNA Secondary Structure](./linearrna_tutorial.ipynb)
