@@ -118,6 +118,15 @@ sh main.sh
 
 ## Citation
 
+    @misc{zhang2021litegem,
+          title={LiteGEM: Lite Geometry Enhanced Molecular Representation Learning for Quantum Property Prediction}, 
+          author={Shanzhuo Zhang and Lihang Liu and Sheng Gao and Donglong He and Xiaomin Fang and Weibin Li and Zhengjie Huang and Weiyue Su and Wenjin Wang},
+          year={2021},
+          eprint={2106.14494},
+          archivePrefix={arXiv},
+          primaryClass={physics.chem-ph}
+    }
+
     @misc{fang2021chemrlgem,
         title={ChemRL-GEM: Geometry Enhanced Molecular Representation Learning for Property Prediction}, 
         author={Xiaomin Fang and Lihang Liu and Jieqiong Lei and Donglong He and Shanzhuo Zhang and Jingbo Zhou and Fan Wang and Hua Wu and Haifeng Wang},
