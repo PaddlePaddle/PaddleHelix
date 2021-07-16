@@ -315,8 +315,8 @@ def process_dataset(core_path, refined_path, dataset_name, output_path, cutoff):
         v['pk'] = pk_dict[k]
         data_dict[k] = v
 
-    refined_id, refined_data, refined_pk = [], [], [], []
-    core_id, core_data, core_pk = [], [], [], []
+    refined_id, refined_data, refined_pk = [], [], []
+    core_id, core_data, core_pk = [], [], []
 
     for k, v in tqdm(data_dict.items()):
         ligand = (v['lig_fea'], v['lig_co'], v['lig_atoms'], v['lig_eg'])
