@@ -22,7 +22,7 @@ for dataset in $datasets; do
 	cached_data_path="./cached_data/$dataset"
 	if [ ! -f "$cached_data_path.done" ]; then
 		rm -r $cached_data_path
-		paddle2.0 finetune_regr.py \
+		python finetune_regr.py \
 				--task=data \
 				--num_workers=10 \
 				--dataset_name=$dataset \
@@ -53,7 +53,7 @@ for dataset in $datasets; do
 		head_lr=${array[1]}
 		for dropout_rate in $drop_list; do
 			for time in $(seq 1 $run_times); do
-				CUDA_VISIBLE_DEVICES=0 paddle2.0 finetune_regr.py \
+				CUDA_VISIBLE_DEVICES=0 python finetune_regr.py \
 						--batch_size=$batch_size \
 						--max_epoch=100 \
 						--dataset_name=$dataset \

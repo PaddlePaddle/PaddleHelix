@@ -15,8 +15,7 @@ model_config="model_configs/pretrain_gem.json"
 dataset="zinc"
 data_path="$root_path/data/chem_dataset/zinc_standard_agent/smiles"
 
-CUDA_VISIBLE_DEVICES=5,6 paddle2.0 -m paddle.distributed.launch pretrain.py \
-			--DEBUG \
+CUDA_VISIBLE_DEVICES=0,1 python -m paddle.distributed.launch pretrain.py \
 			--distributed \
 			--use_cuda \
 			--batch_size=256 \
