@@ -34,7 +34,6 @@ class PretrainGNNModel(nn.Layer):
 
     Args:
         model_config(dict): a dict of model configurations.
-        name(str): the prefix of model params.
     """
     def __init__(self, model_config={}):
         super(PretrainGNNModel, self).__init__()
@@ -194,4 +193,3 @@ class SupervisedModel(nn.Layer):
         loss = self.criterion(logits, labels)
         loss = paddle.sum(loss * valids) / paddle.sum(valids)
         return loss
-

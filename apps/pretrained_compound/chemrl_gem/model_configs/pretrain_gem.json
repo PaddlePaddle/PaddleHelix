@@ -1,0 +1,12 @@
+{
+    "hidden_size": 256,
+    "act": "leaky_relu",
+
+    "pretrain_tasks": ["Cm", "Fg", "Bar", "Blr", "Adc"],
+    "Cm_vocab": 2400,
+    "Bar_vocab": 30,
+    "Blr_vocab": 30,
+    "Adc_vocab": 30,
+    "mask_ratio": 0.15,
+    "Fg_size": 494
+}

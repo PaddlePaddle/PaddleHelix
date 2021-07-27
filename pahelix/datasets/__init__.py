@@ -27,12 +27,13 @@ from pahelix.datasets.freesolv_dataset import *
 from pahelix.datasets.hiv_dataset import *
 from pahelix.datasets.lipophilicity_dataset import *
 from pahelix.datasets.muv_dataset import *
-from pahelix.datasets.ogbg_molhiv_dataset import *
-from pahelix.datasets.ogbg_molpcba_dataset import *
 from pahelix.datasets.sider_dataset import *
 from pahelix.datasets.tox21_dataset import *
 from pahelix.datasets.toxcast_dataset import *
 from pahelix.datasets.mutag_dataset import *
 from pahelix.datasets.ptc_mr_dataset import *
+from pahelix.datasets.qm7_dataset import *
+from pahelix.datasets.qm8_dataset import *
+from pahelix.datasets.qm9_dataset import *
 from pahelix.datasets.davis_dataset import *
 from pahelix.datasets.kiba_dataset import *

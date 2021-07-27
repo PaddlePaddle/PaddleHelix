@@ -23,12 +23,7 @@ import networkx as nx
 import pgl
 from rdkit.Chem import AllChem
 
-from pahelix.utils.compound_tools import mol_to_md_graph_data
-
-__all__ = [
-    'AttrmaskTransformFn',
-    'AttrmaskCollateFn',
-]
+from pahelix.utils.compound_tools import mol_to_graph_data
 
 
 class AttrmaskTransformFn(object):
@@ -51,7 +46,7 @@ class AttrmaskTransformFn(object):
         mol = AllChem.MolFromSmiles(smiles)
         if mol is None:
             return None
-        data = mol_to_md_graph_data(mol, add_3dpos=False)
+        data = mol_to_graph_data(mol)
         return data
 
 
@@ -121,7 +116,7 @@ class SupervisedTransformFn(object):
         mol = AllChem.MolFromSmiles(smiles)
         if mol is None:
             return None
-        data = mol_to_md_graph_data(mol, add_3dpos=False)
+        data = mol_to_graph_data(mol)
         data['label'] = label.reshape([-1])
         return data
 
