@@ -29,7 +29,7 @@ from collections import OrderedDict
 
 import json
 from pahelix.datasets import InMemoryDataset
-from pahelix.utils.compound_tools import mol_to_md_graph_data
+from pahelix.utils.compound_tools import mol_to_graph_data
 # from pahelix.utils.compound_tools import smiles_to_graph_data
 from pahelix.utils.protein_tools import ProteinTokenizer
 from pahelix.utils.data_utils import save_data_list_to_npz
@@ -97,7 +97,7 @@ def load_davis_dataset(data_path, featurizer):
                 # mol_graph = smiles_to_graph_data(smiles_lst[rows[idx]])
                 # if idx >= 1000:
                 #     break
-                mol_graph = mol_to_md_graph_data(Chem.MolFromSmiles(smiles_lst[rows[idx]]), add_3dpos=False)
+                mol_graph = mol_to_graph_data(Chem.MolFromSmiles(smiles_lst[rows[idx]]))
                 data = {k: v for k, v in mol_graph.items()}
 
                 seqs = []

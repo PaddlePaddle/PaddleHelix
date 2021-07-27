@@ -52,7 +52,7 @@ class MLP(nn.Layer):
                 layers.append(nn.Linear(in_size, hidden_size))
                 layers.append(nn.Dropout(dropout_rate))
                 layers.append(Activation(act))
-            if layer_id < layer_num - 1:
+            elif layer_id < layer_num - 1:
                 layers.append(nn.Linear(hidden_size, hidden_size))
                 layers.append(nn.Dropout(dropout_rate))
                 layers.append(Activation(act))
@@ -63,7 +63,29 @@ class MLP(nn.Layer):
     def forward(self, x):
         """
         Args:
-            node_feat(tensor): node features with shape (num_nodes, feature_size).
-            edge_feat(tensor): edges features with shape (num_edges, feature_size).
+            x(tensor): (-1, dim).
         """
         return self.mlp(x)
+
+
+class RBF(nn.Layer):
+    """
+    Radial Basis Function
+    """
+    def __init__(self, centers, gamma, dtype='float32'):
+        super(RBF, self).__init__()
+        self.centers = paddle.reshape(paddle.to_tensor(centers, dtype=dtype), [1, -1])
+        self.gamma = gamma
+    
+    def forward(self, x):
+        """
+        Args:
+            x(tensor): (-1, 1).
+        Returns:
+            y(tensor): (-1, n_centers)
+        """
+        x = paddle.reshape(x, [-1, 1])
+        return paddle.exp(-self.gamma * paddle.square(x - self.centers))
+        
+    
+

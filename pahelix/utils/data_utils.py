@@ -33,10 +33,17 @@ def save_data_list_to_npz(data_list, npz_file):
     keys = data_list[0].keys()
     merged_data = {}
     for key in keys:
-        lens = np.array([len(data[key]) for data in data_list])
-        values = np.concatenate([data[key] for data in data_list], 0)
+        if len(np.array(data_list[0][key]).shape) == 0:
+            lens = np.ones(len(data_list)).astype('int')
+            values = np.array([data[key] for data in data_list])
+            singular = 1
+        else:
+            lens = np.array([len(data[key]) for data in data_list])
+            values = np.concatenate([data[key] for data in data_list], 0)
+            singular = 0
         merged_data[key] = values
         merged_data[key + '.seq_len'] = lens
+        merged_data[key + '.singular'] = singular
     np.savez_compressed(npz_file, **merged_data)
 
 
@@ -50,19 +57,26 @@ def load_npz_to_data_list(npz_file):
     Returns:
         a list of data where each data is a dict of numpy ndarray.
     """
-    def _split_data(values, seq_lens):
+    def _split_data(values, seq_lens, singular):
         res = []
         s = 0
         for l in seq_lens:
-            res.append(values[s: s + l])
+            if singular == 0:
+                res.append(values[s: s + l])
+            else:
+                res.append(values[s])
             s += l
         return res
 
-    merged_data = np.load(npz_file)
-    names = [name for name in merged_data.keys() if not name.endswith('.seq_len')]
+    merged_data = np.load(npz_file, allow_pickle=True)
+    names = [name for name in merged_data.keys() 
+            if not name.endswith('.seq_len') and not name.endswith('.singular')]
     data_dict = {}
     for name in names:
-        data_dict[name] = _split_data(merged_data[name], merged_data[name + '.seq_len'])
+        data_dict[name] = _split_data(
+                merged_data[name], 
+                merged_data[name + '.seq_len'],
+                merged_data[name + '.singular'])
 
     data_list = []
     n = len(data_dict[names[0]])

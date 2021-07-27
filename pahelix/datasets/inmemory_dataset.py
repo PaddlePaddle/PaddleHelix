@@ -18,6 +18,7 @@ In-memory dataset.
 
 import os
 from os.path import join, exists
+
 import numpy as np
 
 from pgl.utils.data import Dataloader

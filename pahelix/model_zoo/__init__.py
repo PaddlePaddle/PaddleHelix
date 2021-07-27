@@ -17,3 +17,4 @@ model zoo.
 """
 
 from pahelix.model_zoo.pretrain_gnns_model import *
+from pahelix.model_zoo.light_gem_model import *

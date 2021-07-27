@@ -32,17 +32,9 @@ import numpy as np
 from pahelix.datasets.inmemory_dataset import InMemoryDataset
 
 
-__all__ = ['get_default_lipophilicity_task_names', 'get_default_lipophilicity_range', 'load_lipophilicity_dataset']
-
-
 def get_default_lipophilicity_task_names():
     """Get that default lipophilicity task names and return measured expt"""
     return ['exp']
-
-
-def get_default_lipophilicity_range():
-    """Return [min, max]"""
-    return -10, 10
 
 
 def load_lipophilicity_dataset(data_path, task_names=None):
@@ -85,10 +77,24 @@ def load_lipophilicity_dataset(data_path, task_names=None):
     labels = input_df[task_names]
 
     data_list = []
-    for i in range(len(smiles_list)):
-        data = {}
-        data['smiles'] = smiles_list[i]        
-        data['label'] = labels.values[i]
+    for i in range(len(labels)):
+        data = {
+            'smiles': smiles_list[i],
+            'label': labels.values[i],
+        }
         data_list.append(data)
     dataset = InMemoryDataset(data_list)
     return dataset
+
+
+def get_lipophilicity_stat(data_path, task_names):
+    """Return mean and std of labels"""
+    raw_path = join(data_path, 'raw')
+    csv_file = os.listdir(raw_path)[0]
+    input_df = pd.read_csv(join(raw_path, csv_file), sep=',')
+    labels = input_df[task_names].values
+    return {
+        'mean': np.mean(labels, 0),
+        'std': np.std(labels, 0),
+        'N': len(labels),
+    }

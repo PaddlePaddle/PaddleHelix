@@ -17,10 +17,15 @@
 | Adapted from https://github.com/snap-stanford/pretrain-gnns/blob/master/chem/loader.py
 """
 import os
+from collections import OrderedDict
+
 import numpy as np
 from rdkit import Chem
 from rdkit.Chem import AllChem
 from rdkit.Chem import rdchem
+
+from pahelix.utils.compound_constants import DAY_LIGHT_FG_SMARTS_LIST
+
 
 def get_gasteiger_partial_charges(mol, n_iter=12):
     """
@@ -123,175 +128,75 @@ def rdchem_enum_to_list(values):
     return [values[i] for i in range(len(values))]
 
 
+def safe_index(alist, elem):
+    """
+    Return index of element e in list l. If e is not present, return the last index
+    """
+    try:
+        return alist.index(elem)
+    except ValueError:
+        return len(alist) - 1
+
+
+def get_atom_feature_dims(list_acquired_feature_names):
+    """ tbd
+    """
+    return list(map(len, [CompoundKit.atom_vocab_dict[name] for name in list_acquired_feature_names]))
+
+
+def get_bond_feature_dims(list_acquired_feature_names):
+    """ tbd
+    """
+    list_bond_feat_dim = list(map(len, [CompoundKit.bond_vocab_dict[name] for name in list_acquired_feature_names]))
+    # +1 for self loop edges
+    return [_l + 1 for _l in list_bond_feat_dim]
+
+
 class CompoundKit(object):
     """
     CompoundKit
     """
     atom_vocab_dict = {
-        "atomic_num": list(range(1, 119)),
+        "atomic_num": list(range(1, 119)) + ['misc'],
         "chiral_tag": rdchem_enum_to_list(rdchem.ChiralType.values),
-        "degree": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-        "explicit_valence": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-        "formal_charge": [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        "degree": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 'misc'],
+        "explicit_valence": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 'misc'],
+        "formal_charge": [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 'misc'],
         "hybridization": rdchem_enum_to_list(rdchem.HybridizationType.values),
-        "implicit_valence": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+        "implicit_valence": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 'misc'],
         "is_aromatic": [0, 1],
-        "total_numHs": [0, 1, 2, 3, 4, 5, 6, 7, 8],
+        "total_numHs": [0, 1, 2, 3, 4, 5, 6, 7, 8, 'misc'],
+        'num_radical_e': [0, 1, 2, 3, 4, 'misc'],
+        'atom_is_in_ring': [0, 1],
+        'valence_out_shell': [0, 1, 2, 3, 4, 5, 6, 7, 8, 'misc'],
+        'in_num_ring_with_size3': [0, 1, 2, 3, 4, 5, 6, 7, 8, 'misc'],
+        'in_num_ring_with_size4': [0, 1, 2, 3, 4, 5, 6, 7, 8, 'misc'],
+        'in_num_ring_with_size5': [0, 1, 2, 3, 4, 5, 6, 7, 8, 'misc'],
+        'in_num_ring_with_size6': [0, 1, 2, 3, 4, 5, 6, 7, 8, 'misc'],
+        'in_num_ring_with_size7': [0, 1, 2, 3, 4, 5, 6, 7, 8, 'misc'],
+        'in_num_ring_with_size8': [0, 1, 2, 3, 4, 5, 6, 7, 8, 'misc'],
     }
     bond_vocab_dict = {
         "bond_dir": rdchem_enum_to_list(rdchem.BondDir.values),
         "bond_type": rdchem_enum_to_list(rdchem.BondType.values),
         "is_in_ring": [0, 1],
+
+        'bond_stereo': rdchem_enum_to_list(rdchem.BondStereo.values),
+        'is_conjugated': [0, 1],
     }
+    # float features
+    atom_float_names = ["van_der_waals_radis", "partial_charge", 'mass']
+    # bond_float_feats= ["bond_length", "bond_angle"]     # optional
 
     ### functional groups
-    day_light_fg_smarts_list = [
-        # C
-        "[CX4]",
-        "[$([CX2](=C)=C)]",
-        "[$([CX3]=[CX3])]",
-        "[$([CX2]#C)]",
-        # C & O
-        "[CX3]=[OX1]",
-        "[$([CX3]=[OX1]),$([CX3+]-[OX1-])]",
-        "[CX3](=[OX1])C",
-        "[OX1]=CN",
-        "[CX3](=[OX1])O",
-        "[CX3](=[OX1])[F,Cl,Br,I]",
-        "[CX3H1](=O)[#6]",
-        "[CX3](=[OX1])[OX2][CX3](=[OX1])",
-        "[NX3][CX3](=[OX1])[#6]",
-        "[NX3][CX3]=[NX3+]",
-        "[NX3,NX4+][CX3](=[OX1])[OX2,OX1-]",
-        "[NX3][CX3](=[OX1])[OX2H0]",
-        "[NX3,NX4+][CX3](=[OX1])[OX2H,OX1-]",
-        "[CX3](=O)[O-]",
-        "[CX3](=[OX1])(O)O",
-        "[CX3](=[OX1])([OX2])[OX2H,OX1H0-1]",
-        "C[OX2][CX3](=[OX1])[OX2]C",
-        "[CX3](=O)[OX2H1]",
-        "[CX3](=O)[OX1H0-,OX2H1]",
-        "[NX3][CX2]#[NX1]",
-        "[#6][CX3](=O)[OX2H0][#6]",
-        "[#6][CX3](=O)[#6]",
-        "[OD2]([#6])[#6]",
-        # H
-        "[H]",
-        "[!#1]",
-        "[H+]",
-        "[+H]",
-        "[!H]",
-        # N
-        "[NX3;H2,H1;!$(NC=O)]",
-        "[NX3][CX3]=[CX3]",
-        "[NX3;H2;!$(NC=[!#6]);!$(NC#[!#6])][#6]",
-        "[NX3;H2,H1;!$(NC=O)].[NX3;H2,H1;!$(NC=O)]",
-        "[NX3][$(C=C),$(cc)]",
-        "[NX3,NX4+][CX4H]([*])[CX3](=[OX1])[O,N]",
-        "[NX3H2,NH3X4+][CX4H]([*])[CX3](=[OX1])[NX3,NX4+][CX4H]([*])[CX3](=[OX1])[OX2H,OX1-]",
-        "[$([NX3H2,NX4H3+]),$([NX3H](C)(C))][CX4H]([*])[CX3](=[OX1])[OX2H,OX1-,N]",
-        "[CH3X4]",
-        "[CH2X4][CH2X4][CH2X4][NHX3][CH0X3](=[NH2X3+,NHX2+0])[NH2X3]",
-        "[CH2X4][CX3](=[OX1])[NX3H2]",
-        "[CH2X4][CX3](=[OX1])[OH0-,OH]",
-        "[CH2X4][SX2H,SX1H0-]",
-        "[CH2X4][CH2X4][CX3](=[OX1])[OH0-,OH]",
-        "[$([$([NX3H2,NX4H3+]),$([NX3H](C)(C))][CX4H2][CX3](=[OX1])[OX2H,OX1-,N])]",
-        "[CH2X4][#6X3]1:[$([#7X3H+,#7X2H0+0]:[#6X3H]:[#7X3H]),$([#7X3H])]:[#6X3H]:\
-[$([#7X3H+,#7X2H0+0]:[#6X3H]:[#7X3H]),$([#7X3H])]:[#6X3H]1",
-        "[CHX4]([CH3X4])[CH2X4][CH3X4]",
-        "[CH2X4][CHX4]([CH3X4])[CH3X4]",
-        "[CH2X4][CH2X4][CH2X4][CH2X4][NX4+,NX3+0]",
-        "[CH2X4][CH2X4][SX2][CH3X4]",
-        "[CH2X4][cX3]1[cX3H][cX3H][cX3H][cX3H][cX3H]1",
-        "[$([NX3H,NX4H2+]),$([NX3](C)(C)(C))]1[CX4H]([CH2][CH2][CH2]1)[CX3](=[OX1])[OX2H,OX1-,N]",
-        "[CH2X4][OX2H]",
-        "[NX3][CX3]=[SX1]",
-        "[CHX4]([CH3X4])[OX2H]",
-        "[CH2X4][cX3]1[cX3H][nX3H][cX3]2[cX3H][cX3H][cX3H][cX3H][cX3]12",
-        "[CH2X4][cX3]1[cX3H][cX3H][cX3]([OHX2,OH0X1-])[cX3H][cX3H]1",
-        "[CHX4]([CH3X4])[CH3X4]",
-        "N[CX4H2][CX3](=[OX1])[O,N]",
-        "N1[CX4H]([CH2][CH2][CH2]1)[CX3](=[OX1])[O,N]",
-        "[$(*-[NX2-]-[NX2+]#[NX1]),$(*-[NX2]=[NX2+]=[NX1-])]",
-        "[$([NX1-]=[NX2+]=[NX1-]),$([NX1]#[NX2+]-[NX1-2])]",
-        "[#7]",
-        "[NX2]=N",
-        "[NX2]=[NX2]",
-        "[$([NX2]=[NX3+]([O-])[#6]),$([NX2]=[NX3+0](=[O])[#6])]",
-        "[$([#6]=[N+]=[N-]),$([#6-]-[N+]#[N])]",
-        "[$([nr5]:[nr5,or5,sr5]),$([nr5]:[cr5]:[nr5,or5,sr5])]",
-        "[NX3][NX3]",
-        "[NX3][NX2]=[*]",
-        "[CX3;$([C]([#6])[#6]),$([CH][#6])]=[NX2][#6]",
-        "[$([CX3]([#6])[#6]),$([CX3H][#6])]=[$([NX2][#6]),$([NX2H])]",
-        "[NX3+]=[CX3]",
-        "[CX3](=[OX1])[NX3H][CX3](=[OX1])",
-        "[CX3](=[OX1])[NX3H0]([#6])[CX3](=[OX1])",
-        "[CX3](=[OX1])[NX3H0]([NX3H0]([CX3](=[OX1]))[CX3](=[OX1]))[CX3](=[OX1])",
-        "[$([NX3](=[OX1])(=[OX1])O),$([NX3+]([OX1-])(=[OX1])O)]",
-        "[$([OX1]=[NX3](=[OX1])[OX1-]),$([OX1]=[NX3+]([OX1-])[OX1-])]",
-        "[NX1]#[CX2]",
-        "[CX1-]#[NX2+]",
-        "[$([NX3](=O)=O),$([NX3+](=O)[O-])][!#8]",
-        "[$([NX3](=O)=O),$([NX3+](=O)[O-])][!#8].[$([NX3](=O)=O),$([NX3+](=O)[O-])][!#8]",
-        "[NX2]=[OX1]",
-        "[$([#7+][OX1-]),$([#7v5]=[OX1]);!$([#7](~[O])~[O]);!$([#7]=[#7])]",
-        # O
-        "[OX2H]",
-        "[#6][OX2H]",
-        "[OX2H][CX3]=[OX1]",
-        "[OX2H]P",
-        "[OX2H][#6X3]=[#6]",
-        "[OX2H][cX3]:[c]",
-        "[OX2H][$(C=C),$(cc)]",
-        "[$([OH]-*=[!#6])]",
-        "[OX2,OX1-][OX2,OX1-]",
-        # P
-        "[$(P(=[OX1])([$([OX2H]),$([OX1-]),$([OX2]P)])([$([OX2H]),$([OX1-]),\
-$([OX2]P)])[$([OX2H]),$([OX1-]),$([OX2]P)]),$([P+]([OX1-])([$([OX2H]),$([OX1-])\
-,$([OX2]P)])([$([OX2H]),$([OX1-]),$([OX2]P)])[$([OX2H]),$([OX1-]),$([OX2]P)])]",
-        "[$(P(=[OX1])([OX2][#6])([$([OX2H]),$([OX1-]),$([OX2][#6])])[$([OX2H]),\
-$([OX1-]),$([OX2][#6]),$([OX2]P)]),$([P+]([OX1-])([OX2][#6])([$([OX2H]),$([OX1-]),\
-$([OX2][#6])])[$([OX2H]),$([OX1-]),$([OX2][#6]),$([OX2]P)])]",
-        # S
-        "[S-][CX3](=S)[#6]",
-        "[#6X3](=[SX1])([!N])[!N]",
-        "[SX2]",
-        "[#16X2H]",
-        "[#16!H0]",
-        "[#16X2H0]",
-        "[#16X2H0][!#16]",
-        "[#16X2H0][#16X2H0]",
-        "[#16X2H0][!#16].[#16X2H0][!#16]",
-        "[$([#16X3](=[OX1])[OX2H0]),$([#16X3+]([OX1-])[OX2H0])]",
-        "[$([#16X3](=[OX1])[OX2H,OX1H0-]),$([#16X3+]([OX1-])[OX2H,OX1H0-])]",
-        "[$([#16X4](=[OX1])=[OX1]),$([#16X4+2]([OX1-])[OX1-])]",
-        "[$([#16X4](=[OX1])(=[OX1])([#6])[#6]),$([#16X4+2]([OX1-])([OX1-])([#6])[#6])]",
-        "[$([#16X4](=[OX1])(=[OX1])([#6])[OX2H,OX1H0-]),$([#16X4+2]([OX1-])([OX1-])([#6])[OX2H,OX1H0-])]",
-        "[$([#16X4](=[OX1])(=[OX1])([#6])[OX2H0]),$([#16X4+2]([OX1-])([OX1-])([#6])[OX2H0])]",
-        "[$([#16X4]([NX3])(=[OX1])(=[OX1])[#6]),$([#16X4+2]([NX3])([OX1-])([OX1-])[#6])]",
-        "[SX4](C)(C)(=O)=N",
-        "[$([SX4](=[OX1])(=[OX1])([!O])[NX3]),$([SX4+2]([OX1-])([OX1-])([!O])[NX3])]",
-        "[$([#16X3]=[OX1]),$([#16X3+][OX1-])]",
-        "[$([#16X3](=[OX1])([#6])[#6]),$([#16X3+]([OX1-])([#6])[#6])]",
-        "[$([#16X4](=[OX1])(=[OX1])([OX2H,OX1H0-])[OX2][#6]),$([#16X4+2]([OX1-])([OX1-])([OX2H,OX1H0-])[OX2][#6])]",
-        "[$([SX4](=O)(=O)(O)O),$([SX4+2]([O-])([O-])(O)O)]",
-        "[$([#16X4](=[OX1])(=[OX1])([OX2][#6])[OX2][#6]),$([#16X4](=[OX1])(=[OX1])([OX2][#6])[OX2][#6])]",
-        "[$([#16X4]([NX3])(=[OX1])(=[OX1])[OX2][#6]),$([#16X4+2]([NX3])([OX1-])([OX1-])[OX2][#6])]",
-        "[$([#16X4]([NX3])(=[OX1])(=[OX1])[OX2H,OX1H0-]),$([#16X4+2]([NX3])([OX1-])([OX1-])[OX2H,OX1H0-])]",
-        "[#16X2][OX2H,OX1H0-]",
-        "[#16X2][OX2H0]",
-        # X
-        "[#6][F,Cl,Br,I]",
-        "[F,Cl,Br,I]",
-        "[F,Cl,Br,I].[F,Cl,Br,I].[F,Cl,Br,I]",
-    ]
+    day_light_fg_smarts_list = DAY_LIGHT_FG_SMARTS_LIST
     day_light_fg_mo_list = [Chem.MolFromSmarts(smarts) for smarts in day_light_fg_smarts_list]
 
     morgan_fp_N = 200
     morgan2048_fp_N = 2048
     maccs_fp_N = 167
+
+    period_table = Chem.GetPeriodicTable()
 
     ### atom
 
@@ -318,6 +223,12 @@ $([OX2][#6])])[$([OX2H]),$([OX1-]),$([OX2][#6]),$([OX2]P)])]",
             return int(atom.GetMass())
         elif name == 'total_numHs':
             return atom.GetTotalNumHs()
+        elif name == 'num_radical_e':
+            return atom.GetNumRadicalElectrons()
+        elif name == 'atom_is_in_ring':
+            return int(atom.IsInRing())
+        elif name == 'valence_out_shell':
+            return CompoundKit.period_table.GetNOuterElecs(atom.GetAtomicNum())
         else:
             raise ValueError(name)
 
@@ -325,7 +236,7 @@ $([OX2][#6])])[$([OX2H]),$([OX1-]),$([OX2][#6]),$([OX2]P)])]",
     def get_atom_feature_id(atom, name):
         """get atom features id"""
         assert name in CompoundKit.atom_vocab_dict, "%s not found in atom_vocab_dict" % name
-        return CompoundKit.atom_vocab_dict[name].index(CompoundKit.get_atom_value(atom, name))
+        return safe_index(CompoundKit.atom_vocab_dict[name], CompoundKit.get_atom_value(atom, name))
 
     @staticmethod
     def get_atom_feature_size(name):
@@ -344,6 +255,10 @@ $([OX2][#6])])[$([OX2H]),$([OX1-]),$([OX2][#6]),$([OX2]P)])]",
             return bond.GetBondType()
         elif name == 'is_in_ring':
             return int(bond.IsInRing())
+        elif name == 'is_conjugated':
+            return int(bond.GetIsConjugated())
+        elif name == 'bond_stereo':
+            return bond.GetStereo()
         else:
             raise ValueError(name)
 
@@ -351,7 +266,7 @@ $([OX2][#6])])[$([OX2H]),$([OX1-]),$([OX2][#6]),$([OX2]P)])]",
     def get_bond_feature_id(bond, name):
         """get bond features id"""
         assert name in CompoundKit.bond_vocab_dict, "%s not found in bond_vocab_dict" % name
-        return CompoundKit.bond_vocab_dict[name].index(CompoundKit.get_bond_value(bond, name))
+        return safe_index(CompoundKit.bond_vocab_dict[name], CompoundKit.get_bond_value(bond, name))
 
     @staticmethod
     def get_bond_feature_size(name):
@@ -392,11 +307,106 @@ $([OX2][#6])])[$([OX2H]),$([OX1-]),$([OX2][#6]),$([OX2]P)])]",
             fg_counts.append(len(sub_structs))
         return fg_counts
 
+    @staticmethod
+    def get_ring_size(mol):
+        """return (N,6) list"""
+        rings = mol.GetRingInfo()
+        rings_info = []
+        for r in rings.AtomRings():
+            rings_info.append(r)
+        ring_list = []
+        for atom in mol.GetAtoms():
+            atom_result = []
+            for ringsize in range(3, 9):
+                num_of_ring_at_ringsize = 0
+                for r in rings_info:
+                    if len(r) == ringsize and atom.GetIdx() in r:
+                        num_of_ring_at_ringsize += 1
+                if num_of_ring_at_ringsize > 8:
+                    num_of_ring_at_ringsize = 9
+                atom_result.append(num_of_ring_at_ringsize)
+            
+            ring_list.append(atom_result)
+        return ring_list
+
+    @staticmethod
+    def atom_to_feat_vector(atom):
+        """ tbd """
+        atom_names = {
+            "atomic_num": safe_index(CompoundKit.atom_vocab_dict["atomic_num"], atom.GetAtomicNum()),
+            "chiral_tag": safe_index(CompoundKit.atom_vocab_dict["chiral_tag"], atom.GetChiralTag()),
+            "degree": safe_index(CompoundKit.atom_vocab_dict["degree"], atom.GetTotalDegree()),
+            "explicit_valence": safe_index(CompoundKit.atom_vocab_dict["explicit_valence"], atom.GetExplicitValence()),
+            "formal_charge": safe_index(CompoundKit.atom_vocab_dict["formal_charge"], atom.GetFormalCharge()),
+            "hybridization": safe_index(CompoundKit.atom_vocab_dict["hybridization"], atom.GetHybridization()),
+            "implicit_valence": safe_index(CompoundKit.atom_vocab_dict["implicit_valence"], atom.GetImplicitValence()),
+            "is_aromatic": safe_index(CompoundKit.atom_vocab_dict["is_aromatic"], int(atom.GetIsAromatic())),
+            "total_numHs": safe_index(CompoundKit.atom_vocab_dict["total_numHs"], atom.GetTotalNumHs()),
+            'num_radical_e': safe_index(CompoundKit.atom_vocab_dict['num_radical_e'], atom.GetNumRadicalElectrons()),
+            'atom_is_in_ring': safe_index(CompoundKit.atom_vocab_dict['atom_is_in_ring'], int(atom.IsInRing())),
+            'valence_out_shell': safe_index(CompoundKit.atom_vocab_dict['valence_out_shell'],
+                                            CompoundKit.period_table.GetNOuterElecs(atom.GetAtomicNum())),
+            'van_der_waals_radis': CompoundKit.period_table.GetRvdw(atom.GetAtomicNum()),
+            'partial_charge': CompoundKit.check_partial_charge(atom),
+            'mass': atom.GetMass(),
+        }
+        return atom_names
+
+    @staticmethod
+    def get_atom_names(mol):
+        """get atom name list
+        TODO: to be remove in the future
+        """
+        atom_features_dicts = []
+        Chem.rdPartialCharges.ComputeGasteigerCharges(mol)
+        for i, atom in enumerate(mol.GetAtoms()):
+            atom_features_dicts.append(CompoundKit.atom_to_feat_vector(atom))
+
+        ring_list = CompoundKit.get_ring_size(mol)
+        for i, atom in enumerate(mol.GetAtoms()):
+            atom_features_dicts[i]['in_num_ring_with_size3'] = safe_index(
+                    CompoundKit.atom_vocab_dict['in_num_ring_with_size3'], ring_list[i][0])
+            atom_features_dicts[i]['in_num_ring_with_size4'] = safe_index(
+                    CompoundKit.atom_vocab_dict['in_num_ring_with_size4'], ring_list[i][1])
+            atom_features_dicts[i]['in_num_ring_with_size5'] = safe_index(
+                    CompoundKit.atom_vocab_dict['in_num_ring_with_size5'], ring_list[i][2])
+            atom_features_dicts[i]['in_num_ring_with_size6'] = safe_index(
+                    CompoundKit.atom_vocab_dict['in_num_ring_with_size6'], ring_list[i][3])
+            atom_features_dicts[i]['in_num_ring_with_size7'] = safe_index(
+                    CompoundKit.atom_vocab_dict['in_num_ring_with_size7'], ring_list[i][4])
+            atom_features_dicts[i]['in_num_ring_with_size8'] = safe_index(
+                    CompoundKit.atom_vocab_dict['in_num_ring_with_size8'], ring_list[i][5])
+
+        return atom_features_dicts
+        
+    @staticmethod
+    def check_partial_charge(atom):
+        """tbd"""
+        pc = atom.GetDoubleProp('_GasteigerCharge')
+        if pc != pc:
+            # unsupported atom, replace nan with 0
+            pc = 0
+        if pc == float('inf'):
+            # max 4 for other atoms, set to 10 here if inf is get
+            pc = 10
+        return pc
+
 
 class Compound3DKit(object):
     """the 3Dkit of Compound"""
     @staticmethod
-    def get_atom_poses(mol, numConfs=None):
+    def get_atom_poses(mol, conf):
+        """tbd"""
+        atom_poses = []
+        for i, atom in enumerate(mol.GetAtoms()):
+            if atom.GetAtomicNum() == 0:
+                return [[0.0, 0.0, 0.0]] * len(mol.GetAtoms())
+            pos = conf.GetAtomPosition(i)
+            atom_poses.append([pos.x, pos.y, pos.z])
+        return atom_poses
+
+    @staticmethod
+    def get_MMFF_atom_poses(mol, numConfs=None, return_energy=False):
         """the atoms of mol will be changed in some cases."""
         try:
             new_mol = Chem.AddHs(mol)
@@ -413,28 +423,19 @@ class Compound3DKit(object):
             energy = 0
             conf = new_mol.GetConformer()
 
-        atom_poses = []
-        for i, atom in enumerate(new_mol.GetAtoms()):
-            if atom.GetAtomicNum() == 0:
-                return [[0.0, 0.0, 0.0]] * len(new_mol.GetAtoms())
-            pos = conf.GetAtomPosition(i)
-            atom_poses.append([pos.x, pos.y, pos.z])
-        return new_mol, atom_poses, energy
+        atom_poses = Compound3DKit.get_atom_poses(new_mol, conf)
+        if return_energy:
+            return new_mol, atom_poses, energy
+        else:
+            return new_mol, atom_poses
 
     @staticmethod
     def get_2d_atom_poses(mol):
         """get 2d atom poses"""
         AllChem.Compute2DCoords(mol)
-        energy = 0
         conf = mol.GetConformer()
-
-        atom_poses = []
-        for i, atom in enumerate(mol.GetAtoms()):
-            if atom.GetAtomicNum() == 0:
-                return [[0.0, 0.0, 0.0]] * len(mol.GetAtoms())
-            pos = conf.GetAtomPosition(i)
-            atom_poses.append([pos.x, pos.y, pos.z])
-        return mol, atom_poses, energy
+        atom_poses = Compound3DKit.get_atom_poses(mol, conf)
+        return atom_poses
 
     @staticmethod
     def get_bond_lengths(edges, atom_poses):
@@ -446,59 +447,10 @@ class Compound3DKit(object):
         return bond_lengths
 
     @staticmethod
-    def get_superedge_angles(edges, atom_poses):
+    def get_superedge_angles(edges, atom_poses, dir_type='HT'):
         """get superedge angles"""
-        def _get_angle(vec1, vec2):
-            norm1 = np.linalg.norm(vec1)
-            norm2 = np.linalg.norm(vec2)
-            if norm1 == 0 or norm2 == 0:
-                return 0, False
-            vec1 = vec1 / (norm1 + 1e-5)    # 1e-5: prevent numerical errors
-            vec2 = vec2 / (norm2 + 1e-5)
-            angle = np.arccos(np.dot(vec1, vec2))
-            return angle, True
-
-        E = len(edges)
-        edge_indices = np.arange(E)
-        super_edges = []
-        super_edge_angles = []
-        super_real_angle = []
-        for tar_edge_i in range(E):
-            tar_edge = edges[tar_edge_i]
-            src_edge_indices = edge_indices[edges[:, 1] == tar_edge[0]]
-            for src_edge_i in src_edge_indices:
-                if src_edge_i == tar_edge_i:
-                    continue
-                src_edge = edges[src_edge_i]
-                src_vec = atom_poses[src_edge[1]] - atom_poses[src_edge[0]]
-                tar_vec = atom_poses[tar_edge[1]] - atom_poses[tar_edge[0]]
-                super_edges.append([src_edge_i, tar_edge_i])
-                angle, real_angle = _get_angle(src_vec, tar_vec)
-                super_edge_angles.append(angle)
-                super_real_angle.append(real_angle)
-        if len(super_edges) == 0:
-            super_edges = np.zeros([0, 2], 'int64')
-            super_edge_angles = np.zeros([0,], 'float32')
-            super_real_angle = np.zeros([0,], 'int64')
-        else:
-            super_edges = np.array(super_edges, 'int64')
-            super_edge_angles = np.array(super_edge_angles, 'float32')
-            super_real_angle = np.array(super_real_angle, 'int64')
-        return super_edges, super_edge_angles, super_real_angle
-
-    @staticmethod
-    def get_polar_angles(edges, atom_poses):
-        """get polar angles"""
-        def _get_polar(src_atom_poses, tar_atom_pos):
-            tar_atom_pos = tar_atom_pos.reshape([1, -1])
-            vecs = tar_atom_pos - src_atom_poses
-            polar = np.sum(vecs, 0)
-            norm = np.linalg.norm(polar)
-            if norm == 0:
-                polar = np.ones(polar.shape)
-                norm = np.linalg.norm(polar)
-            polar /= norm
-            return polar
+        def _get_vec(atom_poses, edge):
+            return atom_poses[edge[1]] - atom_poses[edge[0]]
         def _get_angle(vec1, vec2):
             norm1 = np.linalg.norm(vec1)
             norm2 = np.linalg.norm(vec2)
@@ -509,26 +461,114 @@ class Compound3DKit(object):
             angle = np.arccos(np.dot(vec1, vec2))
             return angle
 
-        atom_polars = []
-        for atom_id in range(len(atom_poses)):
-            src_atom_ids = edges[:, 0][edges[:, 1] == atom_id]
-            src_atom_poses = atom_poses[src_atom_ids]
-            tar_atom_pos = atom_poses[atom_id]
-            atom_polar = _get_polar(src_atom_poses, tar_atom_pos)
-            atom_polars.append(atom_polar)
-        atom_polars = np.array(atom_polars)
+        E = len(edges)
+        edge_indices = np.arange(E)
+        super_edges = []
+        bond_angles = []
+        bond_angle_dirs = []
+        for tar_edge_i in range(E):
+            tar_edge = edges[tar_edge_i]
+            if dir_type == 'HT':
+                src_edge_indices = edge_indices[edges[:, 1] == tar_edge[0]]
+            elif dir_type == 'HH':
+                src_edge_indices = edge_indices[edges[:, 1] == tar_edge[1]]
+            else:
+                raise ValueError(dir_type)
+            for src_edge_i in src_edge_indices:
+                if src_edge_i == tar_edge_i:
+                    continue
+                src_edge = edges[src_edge_i]
+                src_vec = _get_vec(atom_poses, src_edge)
+                tar_vec = _get_vec(atom_poses, tar_edge)
+                super_edges.append([src_edge_i, tar_edge_i])
+                angle = _get_angle(src_vec, tar_vec)
+                bond_angles.append(angle)
+                bond_angle_dirs.append(src_edge[1] == tar_edge[0])  # H -> H or H -> T
 
-        polar_edge_angles = []
-        polar_polar_angles = []
-        for src_atom_id, tar_atom_id in edges:
-            src_polar = atom_polars[src_atom_id]
-            tar_polar = atom_polars[tar_atom_id]
-            edge_vec = atom_poses[tar_atom_id] - atom_poses[src_atom_id]
-            polar_edge_angles.append(_get_angle(tar_polar, edge_vec))
-            polar_polar_angles.append(_get_angle(tar_polar, src_polar))
-        polar_edge_angles = np.array(polar_edge_angles)
-        polar_polar_angles = np.array(polar_polar_angles)
-        return atom_polars, polar_edge_angles, polar_polar_angles
+        if len(super_edges) == 0:
+            super_edges = np.zeros([0, 2], 'int64')
+            bond_angles = np.zeros([0,], 'float32')
+        else:
+            super_edges = np.array(super_edges, 'int64')
+            bond_angles = np.array(bond_angles, 'float32')
+        return super_edges, bond_angles, bond_angle_dirs
+
+
+
+def new_smiles_to_graph_data(smiles, **kwargs):
+    """
+    Convert smiles to graph data.
+    """
+    mol = AllChem.MolFromSmiles(smiles)
+    if mol is None:
+        return None
+    data = new_mol_to_graph_data(mol)
+    return data
+
+
+def new_mol_to_graph_data(mol):
+    """
+    mol_to_graph_data
+
+    Args:
+        atom_features: Atom features.
+        edge_features: Edge features.
+        morgan_fingerprint: Morgan fingerprint.
+        functional_groups: Functional groups.
+    """
+    if len(mol.GetAtoms()) == 0:
+        return None
+
+    atom_id_names = list(CompoundKit.atom_vocab_dict.keys()) + CompoundKit.atom_float_names
+    bond_id_names = list(CompoundKit.bond_vocab_dict.keys())
+
+    data = {}
+
+    ### atom features
+    data = {name: [] for name in atom_id_names}
+
+    raw_atom_feat_dicts = CompoundKit.get_atom_names(mol)
+    for atom_feat in raw_atom_feat_dicts:
+        for name in atom_id_names:
+            data[name].append(atom_feat[name])
+
+    ### bond and bond features
+    for name in bond_id_names:
+        data[name] = []
+    data['edges'] = []
+
+    for bond in mol.GetBonds():
+        i = bond.GetBeginAtomIdx()
+        j = bond.GetEndAtomIdx()
+        # i->j and j->i
+        data['edges'] += [(i, j), (j, i)]
+        for name in bond_id_names:
+            bond_feature_id = CompoundKit.get_bond_feature_id(bond, name)
+            data[name] += [bond_feature_id] * 2
+
+    #### self loop
+    N = len(data[atom_id_names[0]])
+    for i in range(N):
+        data['edges'] += [(i, i)]
+    for name in bond_id_names:
+        bond_feature_id = get_bond_feature_dims([name])[0] - 1   # self loop: value = len - 1
+        data[name] += [bond_feature_id] * N
+
+    ### make ndarray and check length
+    for name in list(CompoundKit.atom_vocab_dict.keys()):
+        data[name] = np.array(data[name], 'int64')
+    for name in CompoundKit.atom_float_names:
+        data[name] = np.array(data[name], 'float32')
+    for name in bond_id_names:
+        data[name] = np.array(data[name], 'int64')
+    data['edges'] = np.array(data['edges'], 'int64')
+
+    ### morgan fingerprint
+    data['morgan_fp'] = np.array(CompoundKit.get_morgan_fingerprint(mol), 'int64')
+    # data['morgan2048_fp'] = np.array(CompoundKit.get_morgan2048_fingerprint(mol), 'int64')
+    data['maccs_fp'] = np.array(CompoundKit.get_maccs_fingerprint(mol), 'int64')
+    data['daylight_fg_counts'] = np.array(CompoundKit.get_daylight_functional_group_counts(mol), 'int64')
+    return data
 
 
 def mol_to_graph_data(mol):
@@ -594,137 +634,57 @@ def mol_to_graph_data(mol):
         data['edges'] = np.zeros((0, 2), dtype="int64")
 
     ### make ndarray and check length
-    N = len(data[atom_id_names[0]])
-    E = len(data[bond_id_names[0]])
     for name in atom_id_names:
         data[name] = np.array(data[name], 'int64')
-        assert len(data[name]) == N, '%s != %s' % (len(data[name]), N)
     data['mass'] = np.array(data['mass'], 'float32')
-    assert len(data['mass']) == N, '%s != %s' % (len(data['mass']), N)
     for name in bond_id_names:
         data[name] = np.array(data[name], 'int64')
-        assert len(data[name]) == E, '%s != %s' % (len(data[name]), E)
     data['edges'] = np.array(data['edges'], 'int64')
-    assert len(data['edges']) == E, '%s != %s' % (len(data['edges']), E)
 
     ### morgan fingerprint
     data['morgan_fp'] = np.array(CompoundKit.get_morgan_fingerprint(mol), 'int64')
-    data['morgan2048_fp'] = np.array(CompoundKit.get_morgan2048_fingerprint(mol), 'int64')
+    # data['morgan2048_fp'] = np.array(CompoundKit.get_morgan2048_fingerprint(mol), 'int64')
     data['maccs_fp'] = np.array(CompoundKit.get_maccs_fingerprint(mol), 'int64')
     data['daylight_fg_counts'] = np.array(CompoundKit.get_daylight_functional_group_counts(mol), 'int64')
     return data
 
 
-
-def mol_to_md_graph_data(mol, add_3dpos=True, numConfs=10):
+def mol_to_geognn_graph_data(mol, atom_poses, dir_type):
     """
-    mol_to_md_graph_data
-
-    Args:
-        atom_pos: Atom position.
-        energy: Energy.
-    """
-    if len(mol.GetAtoms()) == 0:
-        return None
-    
-    data = {}
-    if add_3dpos:
-        mol, atom_poses, energy = Compound3DKit.get_atom_poses(mol, numConfs=numConfs)
-        data['atom_pos'] = np.array(atom_poses, 'float32')
-        data['energy'] = np.array([energy])
-    data.update(mol_to_graph_data(mol))
-
-    ### check length
-    if add_3dpos:
-        N = len(data['atomic_num'])
-        assert len(data['atom_pos']) == N, '%s != %s' % (len(data['atom_pos']), N)
-    return data
-
-
-SUPEREDGE_BOND_ANGLE_NUM = 10
-SUPEREDGE_BOND_LENGTH_NUM = 100
-def mol_to_superedge_graph_data(mol, numConfs=10, cal3d_atom_num_thres=100):
-    """
-    mol_to_superedge_graph_data
-
-    Args:
-        atom_pos: Atom position.
-        bond_length: Bond length.
-        superedge_edges: Superedge edges.
-        superedge_bond_angle_id: Superedge bond angle id.
+    mol: rdkit molecule
+    dir_type: direction type for bond_angle grpah
     """
     if len(mol.GetAtoms()) == 0:
         return None
 
-    data = {}
-    if len(mol.GetAtoms()) <= cal3d_atom_num_thres:
-        mol, atom_poses, energy = Compound3DKit.get_atom_poses(mol, numConfs=numConfs)
-    else:
-        mol, atom_poses, energy = Compound3DKit.get_2d_atom_poses(mol)
+    data = mol_to_graph_data(mol)
+
     data['atom_pos'] = np.array(atom_poses, 'float32')
-    data['energy'] = np.array([energy])
-    data.update(mol_to_graph_data(mol))
-
-    bond_lengths = Compound3DKit.get_bond_lengths(data['edges'], data['atom_pos'])
-    data['bond_length'] = bond_lengths
-    data['bond_length_id'] = np.array(
-            1.0 / (1.0 + bond_lengths) * SUPEREDGE_BOND_LENGTH_NUM, 'int64')
-    super_edges, super_edge_angles, super_real_angle = \
+    data['bond_length'] = Compound3DKit.get_bond_lengths(data['edges'], data['atom_pos'])
+    BondAngleGraph_edges, bond_angles, bond_angle_dirs = \
             Compound3DKit.get_superedge_angles(data['edges'], data['atom_pos'])
-    data['superedge_edges'] = super_edges
-    data['superedge_bond_angle'] = np.array(super_edge_angles, 'float32')
-    data['superedge_bond_angle_id'] = np.array(         # 0: fake angle, >=1: real angle
-            super_edge_angles / np.pi * SUPEREDGE_BOND_ANGLE_NUM + 1, 'int64') * super_real_angle
-
-    N = len(data['atomic_num'])
-    E = len(data['edges'])
-    SE = len(data['superedge_edges'])
-    assert len(data['atom_pos']) == N, '%s != %s' % (len(data['atom_pos']), N)
-    assert len(data['bond_length']) == E, '%s != %s' % (len(data['bond_length']), E)
-    assert len(data['bond_length_id']) == E, '%s != %s' % (len(data['bond_length_id']), E)
-    assert len(data['superedge_bond_angle']) == SE, '%s != %s' % (len(data['superedge_bond_angle']), SE)
-    assert len(data['superedge_bond_angle_id']) == SE, '%s != %s' % (len(data['superedge_bond_angle_id']), SE)
+    data['BondAngleGraph_edges'] = BondAngleGraph_edges
+    data['bond_angle'] = np.array(bond_angles, 'float32')
     return data
 
 
-POLAR_ANGLE_NUM = int(os.environ.get('POLAR_ANGLE_NUM', 10))
-# print('[GLOBAL] POLAR_ANGLE_NUM:%s' % POLAR_ANGLE_NUM)
-def mol_to_polar_graph_data(mol):
-    """
-    mol_to_polar_graph_data
+def mol_to_geognn_graph_data_MMFF3d(mol):
+    """tbd"""
+    if len(mol.GetAtoms()) <= 400:
+        mol, atom_poses = Compound3DKit.get_MMFF_atom_poses(mol, numConfs=10)
+    else:
+        atom_poses = Compound3DKit.get_2d_atom_poses(mol)
+    return mol_to_geognn_graph_data(mol, atom_poses, dir_type='HT')
 
-    Args:
-        atom_pos: Atom position.
-        atom_polar: Atom polar.
-        polar_edge_angle: Polar edge angle.
-        polar_polar_angle: Polar polar angle.
-    """
-    if len(mol.GetAtoms()) == 0:
-        return None
-    
-    data = {}
-    mol, atom_poses, energy = Compound3DKit.get_2d_atom_poses(mol)
-    data['atom_pos'] = np.array(atom_poses, 'float32')
-    data['energy'] = np.array([energy])
 
-    data.update(mol_to_graph_data(mol))
+def mol_to_geognn_graph_data_raw3d(mol):
+    """tbd"""
+    atom_poses = Compound3DKit.get_atom_poses(mol, mol.GetConformer())
+    return mol_to_geognn_graph_data(mol, atom_poses, dir_type='HT')
 
-    atom_polars, polar_edge_angles, polar_polar_angles = \
-            Compound3DKit.get_polar_angles(data['edges'], data['atom_pos'])
-    data['atom_polar'] = np.array(atom_polars, 'float32')
-    data['polar_edge_angle'] = np.array(polar_edge_angles, 'float32')
-    data['polar_edge_angle_id'] = np.array(polar_edge_angles / np.pi * POLAR_ANGLE_NUM, 'int64')
-    data['polar_polar_angle'] = np.array(polar_polar_angles, 'float32')
-    data['polar_polar_angle_id'] = np.array(polar_polar_angles / np.pi * POLAR_ANGLE_NUM, 'int64')
 
-    ### check length
-    N = len(data['atomic_num'])
-    E = len(data['edges'])
-    assert len(data['atom_pos']) == N, '%s != %s' % (len(data['atom_pos']), N)
-    assert len(data['atom_polar']) == N, '%s != %s' % (len(data['atom_polar']), N)
-    assert len(data['polar_edge_angle']) == E, '%s != %s' % (len(data['polar_edge_angle']), E)
-    assert len(data['polar_polar_angle']) == E, '%s != %s' % (len(data['polar_polar_angle']), E)
-    return data
+
+
 
 
 if __name__ == "__main__":
@@ -733,11 +693,5 @@ if __name__ == "__main__":
     mol = AllChem.MolFromSmiles(smiles)
     print(len(smiles))
     print(mol)
-    # data = mol_to_md_graph_data(mol)
-    data = mol_to_polar_graph_data(mol)
-    print('atom_polar\n', data['atom_polar'])
-    print('polar_edge_angle\n', data['polar_edge_angle'])
-    print('polar_edge_angle_id\n', data['polar_edge_angle_id'])
-    print('polar_polar_angle\n', data['polar_polar_angle'])
-    print('polar_polar_angle_id\n', data['polar_polar_angle_id'])
+    data = mol_to_geognn_graph_data_MMFF3d(mol)
     
