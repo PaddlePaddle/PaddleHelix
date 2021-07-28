@@ -190,7 +190,6 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--DEBUG", action='store_true', default=False)
-    parser.add_argument("--use_cuda", action='store_true', default=False)
     parser.add_argument("--distributed", action='store_true', default=False)
 
     parser.add_argument("--batch_size", type=int, default=256)
