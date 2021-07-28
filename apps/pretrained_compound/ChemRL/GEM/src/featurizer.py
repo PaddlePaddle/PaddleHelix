@@ -39,6 +39,7 @@ class DownstreamTransformFn(object):
             data: It contains reshape label and smiles.
         """
         smiles = raw_data['smiles']
+        print(smiles)
         mol = AllChem.MolFromSmiles(smiles)
         if mol is None:
             return None
