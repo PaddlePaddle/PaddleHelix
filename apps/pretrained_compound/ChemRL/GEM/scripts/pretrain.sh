@@ -28,4 +28,4 @@ python pretrain.py \
 		--data_path=$data_path \
 		--compound_encoder_config=$compound_encoder_config \
 		--model_config=$model_config \
-		--model_dir=$root_path/output/chemrl_gem/pretrain_models/$dataset
+		--model_dir=./pretrain_models/$dataset
