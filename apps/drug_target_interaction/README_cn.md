@@ -7,4 +7,4 @@
 * [GraphDTA](./graph_dta/README_cn.md)
 * [MolTrans](./moltrans_dti/README_cn.md)
 * [S-MAN](./sman/README_cn.md)
-* [SIGN](./sign/README_cn.md)
+* [SIGN](./sign/README.md)
