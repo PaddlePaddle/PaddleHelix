@@ -64,7 +64,7 @@ for dataset in $datasets; do
 								--compound_encoder_config=$compound_encoder_config \
 								--model_config=$model_config \
 								--init_model=$init_model \
-								--model_dir=$root_path/output/chemrl_gem/finetune/$dataset \
+								--model_dir=./finetune_models/$dataset \
 								--encoder_lr=$lr \
 								--head_lr=$head_lr \
 								--dropout_rate=$dropout_rate >> $log_file 2>&1

@@ -12,7 +12,7 @@ To this end, we propose a novel **G**eometry **E**nhanced **M**olecular represen
 # Installation guide
 ## Prerequisites
 
-* OS support: Windows, Linux and OSX
+* OS support: Linux
 * Python version: 3.6, 3.7, 3.8
 
 ## Dependencies
@@ -42,9 +42,9 @@ Use the following command to download the demo data which is a tiny subset [Zinc
 
     sh scripts/pretrain.sh
 
-Note that the data preprocessing step will be time-consuming since it requires running MMFF optimization for all molecules.
+Note that the data preprocessing step will be time-consuming since it requires running MMFF optimization for all molecules. The demo data will take several hours to finish in a single V100 GPU card. The pretrained model will be save under `./pretrain_models`.
 
-We also provide the pretrained model [here](https://baidu-nlp.bj.bcebos.com/PaddleHelix/pretrained_models/compound/pretrain_models-chemrl_gem.tgz) if you want to run the downstream tasks directly.
+We also provide our pretrained model [here](https://baidu-nlp.bj.bcebos.com/PaddleHelix/pretrained_models/compound/pretrain_models-chemrl_gem.tgz) for reproducing the downstream finetuning results. Also, the pretrained model can be used for other molecular property prediction tasks.
 
 ## Downstream finetuning
 After the pretraining, the downstream tasks can use the pretrained model as initialization. 
@@ -54,7 +54,7 @@ Firstly, download the pretrained model from the previous step:
     wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/pretrained_models/compound/pretrain_models-chemrl_gem.tgz
     tar xzf pretrain_models-chemrl_gem.tgz
 
-Download the downstream datasets, including classification tasks and regression tasks:
+Download the downstream molecular property prediction datasets from [MoleculeNet](http://moleculenet.ai/), including classification tasks and regression tasks:
 
     wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/datasets/compound_datasets/chemrl_downstream_datasets.tgz
     tar xzf chemrl_downstream_datasets.tgz
