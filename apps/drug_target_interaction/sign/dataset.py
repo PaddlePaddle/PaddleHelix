@@ -24,7 +24,7 @@ from pgl.utils.data import Dataset as BaseDataset
 from pgl.utils.data import Dataloader
 from scipy.spatial import distance
 from scipy.sparse import coo_matrix
-from utils import cos_formula, setxor
+from utils import cos_formula
 from tqdm import tqdm
 
 prot_atom_ids = [6, 7, 8, 16]
@@ -138,6 +138,7 @@ class ComplexDataset(BaseDataset):
         ############################
         bond_graph_base = assignment_b2a @ assignment_a2b
         np.fill_diagonal(bond_graph_base, 0) # eliminate self connections
+        bond_graph_base[range(num_bonds), [indices.index([x[1],x[0]]) for x in indices]] = 0 
         x, y = np.where(bond_graph_base > 0)
         num_edges = len(x)
 
@@ -146,10 +147,9 @@ class ComplexDataset(BaseDataset):
         for i in range(num_edges):
             body1 = indices[x[i]]
             body2 = indices[y[i]]
-            bodyxor, link = setxor(body1, body2)
             a = dist_mat[body1[0], body1[1]]
             b = dist_mat[body2[0], body2[1]]
-            c = dist_mat[bodyxor[0], bodyxor[1]]
+            c = dist_mat[body1[0], body2[1]]
             if a == 0 or b == 0:
                 print(body1, body2)
                 print('One distance is zero.')
