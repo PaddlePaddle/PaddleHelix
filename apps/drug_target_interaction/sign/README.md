@@ -35,7 +35,9 @@ If you find our work is helpful in your research, please consider citing our pap
 @inproceedings{li2021structure,
   title={Structure-aware Interactive Graph Neural Networks for the Prediction of Protein-Ligand Binding Affinity},
   author={Li, Shuangli and Zhou, Jingbo and Xu, Tong and Huang, Liang and Wang, Fan and Xiong, Haoyi and Huang, Weili and Dou, Dejing and Xiong, Hui},
-  booktitle={Proceedings of the 27th ACM SIGKDD International Conference on Knowledge Discovery \& Data Mining},
+  booktitle={Proceedings of the 27th ACM SIGKDD Conference on Knowledge Discovery \& Data Mining},
+  pages={975--985},
   year={2021}
 }
 ```
+If you have any question, please contact Shuangli Li by email: lsl1997@mail.ustc.edu.cn.

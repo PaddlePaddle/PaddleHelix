@@ -13,33 +13,6 @@ def cos_formula(a, b, c):
     res = 1. if res > 1. else res
     return np.arccos(res)
 
-def setxor(a, b):
-    n = len(a)
-    
-    res = []
-    link = []
-    i, j = 0, 0
-    while i < n and j < n:
-        if a[i] == b[j]:
-            link.append(a[i])
-            i += 1
-            j += 1
-        elif a[i] < b[j]:
-            res.append(a[i])
-            i += 1
-        else:
-            res.append(b[j])
-            j += 1
-    
-    if i < j:
-        res.append(a[-1])
-    elif i > j:
-        res.append(b[-1])
-    else:
-        link.append(a[-1])
-    
-    return res, link
-
 def rmse(y,f):
     rmse = sqrt(((y - f)**2).mean(axis=0))
     return rmse
