@@ -17,16 +17,16 @@ Here, we demonstrate the following performance on the ogbg-molhiv dataset from S
 1. Create `conda` environment and install `rdkit` >= 2018.09.1 by:
 
     ```bash
-    conda create -n ogbg_hiv python=3.6
+    conda create -n ogbg_hiv python=3.6 --yes
     conda activate ogbg_hiv
-    conda install -c conda-forge rdkit
+    conda install -c conda-forge rdkit --yes
     ```
 
-2. Install GPU or CPU version of `paddlepaddle` == 1.8.4:
+2. Install GPU or CPU version of `paddlepaddle` == 1.8.4:  - visit: https://www.paddlepaddle.org.cn/ for more options
 
     ```bash
     pip install paddlepaddle==1.8.4             # cpu or
-    pip install paddlpaddle-gpu == 1.8.4        # gpu
+    pip install paddlpaddle-gpu==1.8.4.post97   # gpu: cuda_10.2
     ```
 
 3. Install `pgl` == 1.2.1:
