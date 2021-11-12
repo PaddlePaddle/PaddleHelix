@@ -18,7 +18,7 @@ We provide the benchmark dataset Davis and KIBA with the 5-fold cross-validation
 
 We provide the BindingDB dataset with the four subsets of indicators KD, KI, IC50 and EC50. Each subset is splitted as training/validation/test sets with ratio 8:1:1.
 
-The processed datasets can be downloaded from [here](https://baidu-nlp.bj.bcebos.com/PaddleHelix/datasets/dti_datasets/HybridDTA_data.zip). Before running the scripts, please uncompress and put the downloaded directory with data files under `.apps/drug_target_interaction/hybriddta/`.
+The processed datasets can be downloaded from [here](https://baidu-nlp.bj.bcebos.com/PaddleHelix/datasets/dti_datasets/HybridDTA_data.zip). Before running the scripts, please uncompress and put the downloaded directory with data files under `/apps/drug_target_interaction/hybriddta/`.
 
 
 ## How to run
