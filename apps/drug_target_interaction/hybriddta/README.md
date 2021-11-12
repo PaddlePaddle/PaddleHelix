@@ -2,6 +2,13 @@
 
 Source code for paper: "HybridDTA: Hybrid Data Fusion through Pairwise Training for Drug-Target Affinity Prediction".
 
+## Backgrounds
+
+Estimating drug-target binding affinity (DTA) is crucial for various tasks, including drug design, drug repurposing, and lead optimization. Advanced works adopt machine learning techniques, especially deep learning, to DTA estimation by utilizing the existing assay data. These powerful techniques make it possible to screen a massive amount of potential drugs with limited computation cost. 
+
+However, a typical DNN-based training paradigm directly minimizes the distances between the estimated scores and the ground truths, suffering from the issue of data inconsistency. The data inconsistency caused by various measurements, e.g., Kd, Ki, and IC50, as well as experimental conditions, e.g., reactant concentration and temperature, severely hinders the effective utilization of existing data, thus deteriorating the performance of DTA prediction.
+
+In our work, we propose a novel paradigm for effective training on hybrid DTA data to alleviate two critical questions in the DTA domain: (1) the lack of data sources; (2) the data inconsistency from the different experimental indicators. We compared our method with the previous pointwise training paradigm for four commonly used DTA backbone models (DeepDTA, GraphDTA_GCN, GraphDTA_GATGCN, MolTrans) on three datasets. The extensive results show that our proposed framework performs excellently on all the datasets.
 
 ## Dependencies
 
@@ -14,60 +21,15 @@ Source code for paper: "HybridDTA: Hybrid Data Fusion through Pairwise Training 
 
 ## Datasets
 
-We provide the benchmark dataset Davis and KIBA with the 5-fold cross-validation of training set and the independant test set. We split based on the unseen proten sequence.
-
-We provide the BindingDB dataset with the four subsets of indicators KD, KI, IC50 and EC50. Each subset is splitted as training/validation/test sets with ratio 8:1:1.
+We provide the benchmark dataset Davis and KIBA with the 5-fold cross-validation of training set and the independant test set. We split based on the unseen proten sequence. We also provide the BindingDB dataset with the four subsets of indicators KD, KI, IC50 and EC50. Each subset is splitted as training/validation/test sets with ratio 8:1:1.
 
 The processed datasets can be downloaded from [here](https://baidu-nlp.bj.bcebos.com/PaddleHelix/datasets/dti_datasets/HybridDTA_data.zip). Before running the scripts, please uncompress and put the downloaded directory with data files under `/apps/drug_target_interaction/hybriddta/`.
 
 
 ## How to run
 
-### Pointwise
-We reimplement and provide all the baseline backbone models as following.
-
-#### DeepDTA
-```bash
-cd ./pointwise/DeepDTA
-```
-##### run the training script for Davis with cross-validation
-```bash
-python train_davis.py --batchsize 256 --epochs 100 --rounds 1 --lr 1e-3
-```
-##### run the training script for KIBA with cross-validation
-```bash
-python train_kiba.py --batchsize 256 --epochs 200 --rounds 1 --lr 1e-3
-```
-##### run the training script for BindingDB 
-```bash
-python train_bindingdb.py --batchsize 256 --epochs 50 --rounds 1 --lr 1e-3
-```
-
-#### GraphDTA
-```bash
-cd ./pointwise/GraphDTA
-```
-
-#### Moltrans
-```bash
-cd ./pointwise/Moltrans
-```
-##### run the training script for Davis with cross-validation
-```bash
-python train_davis.py --batchsize 64 --epochs 100 --rounds 1 --lr 5e-4
-```
-##### run the training script for KIBA with cross-validation
-```bash
-python train_kiba.py --batchsize 64 --epochs 200 --rounds 1 --lr 5e-4
-```
-##### run the training script for BindingDB 
-```bash
-python train_bindingdb.py --batchsize 64 --epochs 50 --rounds 1 --lr 5e-4
-```
-
-
-### Pairwise
-Considering the size of training set after making the pairs, we speed up the training process using multiple GPUs distributively.
+### HybridDTA
+Considering the size of training set after making the pairs, we speed up the training process by using multiple GPUs distributively.
 
 #### DeepDTA
 ```bash
@@ -106,6 +68,49 @@ python run_pairwise_Moltrans_CV.py --data_path '../../Data/'  --dataset 'DAVIS' 
 ##### run the training script for BindingDB 
 ```bash
 python run_pairwise_Moltrans_bindingDB.py --data_path '../../Data/'  "--is_mixed" False
+```
+
+
+### Baseline
+We reimplement and provide all the baseline backbone models as following.
+
+#### DeepDTA
+```bash
+cd ./pointwise/DeepDTA
+```
+##### run the training script for Davis with cross-validation
+```bash
+CUDA_VISIBLE_DEVICES=0 python train_davis.py --batchsize 256 --epochs 100 --rounds 1 --lr 1e-3
+```
+##### run the training script for KIBA with cross-validation
+```bash
+CUDA_VISIBLE_DEVICES=0 python train_kiba.py --batchsize 256 --epochs 200 --rounds 1 --lr 1e-3
+```
+##### run the training script for BindingDB 
+```bash
+CUDA_VISIBLE_DEVICES=0 python train_bindingdb.py --batchsize 256 --epochs 50 --rounds 1 --lr 1e-3
+```
+
+#### GraphDTA
+```bash
+cd ./pointwise/GraphDTA
+```
+
+#### Moltrans
+```bash
+cd ./pointwise/Moltrans
+```
+##### run the training script for Davis with cross-validation
+```bash
+CUDA_VISIBLE_DEVICES=0 python train_davis.py --batchsize 64 --epochs 100 --rounds 1 --lr 5e-4
+```
+##### run the training script for KIBA with cross-validation
+```bash
+CUDA_VISIBLE_DEVICES=0 python train_kiba.py --batchsize 64 --epochs 200 --rounds 1 --lr 5e-4
+```
+##### run the training script for BindingDB 
+```bash
+CUDA_VISIBLE_DEVICES=0 python train_bindingdb.py --batchsize 64 --epochs 50 --rounds 1 --lr 5e-4
 ```
 
 
