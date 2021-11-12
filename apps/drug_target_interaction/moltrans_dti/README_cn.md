@@ -201,18 +201,15 @@ CUDA_VISIBLE_DEVICES=0 python train_reg.py --batchsize 64 --epochs 200 --lr 5e-4
 
 **MolTrans**
 ```
-@article{10.1093/bioinformatics/btaa880,
-    author = {Huang, Kexin and Xiao, Cao and Glass, Lucas M and Sun, Jimeng},
-    title = {MolTrans: Molecular Interaction Transformer for drug–target interaction prediction},
-    journal = {Bioinformatics},
-    volume = {37},
-    number = {6},
-    pages = {830-836},
-    year = {2020},
-    month = {10},
-    issn = {1367-4803},
-    doi = {10.1093/bioinformatics/btaa880},
-    url = {https://doi.org/10.1093/bioinformatics/btaa880}
+@article{huang2021moltrans,
+  title={MolTrans: Molecular Interaction Transformer for drug--target interaction prediction},
+  author={Huang, Kexin and Xiao, Cao and Glass, Lucas M and Sun, Jimeng},
+  journal={Bioinformatics},
+  volume={37},
+  number={6},
+  pages={830--836},
+  year={2021},
+  publisher={Oxford University Press}
 }
 ```
 

@@ -1,0 +1,14 @@
+{
+    "drug_max_seq": 50,
+    "target_max_seq": 545,
+    "emb_size": 384,
+    "input_drug_dim": 23532,
+    "input_target_dim": 16693,
+    "interm_size": 1536,
+    "num_attention_heads": 12,
+    "flatten_dim": 81750,
+    "layer_size": 2,
+    "dropout_ratio": 0.1,
+    "attention_dropout_ratio": 0.1,
+    "hidden_dropout_ratio": 0.1
+}

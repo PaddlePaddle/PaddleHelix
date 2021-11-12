@@ -200,24 +200,21 @@ The comparisons of different methods on KIBA are following:
 ## Reference
 
 **MolTrans**
-```
-@article{10.1093/bioinformatics/btaa880,
-    author = {Huang, Kexin and Xiao, Cao and Glass, Lucas M and Sun, Jimeng},
-    title = {MolTrans: Molecular Interaction Transformer for drug–target interaction prediction},
-    journal = {Bioinformatics},
-    volume = {37},
-    number = {6},
-    pages = {830-836},
-    year = {2020},
-    month = {10},
-    issn = {1367-4803},
-    doi = {10.1093/bioinformatics/btaa880},
-    url = {https://doi.org/10.1093/bioinformatics/btaa880}
+```bibtex
+@article{huang2021moltrans,
+  title={MolTrans: Molecular Interaction Transformer for drug--target interaction prediction},
+  author={Huang, Kexin and Xiao, Cao and Glass, Lucas M and Sun, Jimeng},
+  journal={Bioinformatics},
+  volume={37},
+  number={6},
+  pages={830--836},
+  year={2021},
+  publisher={Oxford University Press}
 }
 ```
 
 **DAVIS**
-```
+```bibtex
 @article{10.1038/nbt.1990,
     author = {Mindy I Davis, Jeremy P Hunt, Sanna Herrgard, Pietro Ciceri, Lisa M Wodicka, Gabriel Pallares, Michael Hocker, Daniel K Treiber and Patrick P Zarrinkar},
     title = {Comprehensive analysis of kinase inhibitor selectivity},
@@ -228,7 +225,7 @@ The comparisons of different methods on KIBA are following:
 ```
 
 **KIBA**
-```
+```bibtex
 @article{doi:10.1021/ci400709d,
     author = {Tang, Jing and Szwajda, Agnieszka and Shakyawar, Sushil and Xu, Tao and Hintsanen, Petteri and Wennerberg, Krister and Aittokallio, Tero},
     title = {Making Sense of Large-Scale Kinase Inhibitor Bioactivity Data Sets: A Comparative and Integrative Analysis},
@@ -244,7 +241,7 @@ The comparisons of different methods on KIBA are following:
 ```
 
 **BioSNAP**
-```
+```bibtex
 @misc{biosnapnets,
     author = {Marinka Zitnik, Rok Sosi\v{c}, Sagar Maheshwari, and Jure Leskovec},
     title = {BioSNAP Datasets: Stanford Biomedical Network Dataset Collection},
@@ -255,7 +252,7 @@ The comparisons of different methods on KIBA are following:
 ```
 
 **BindingDB**
-```
+```bibtex
 @article{10.1093/nar/gkv1072,
     author = {Gilson, Michael K. and Liu, Tiqing and Baitaluk, Michael and Nicola, George and Hwang, Linda and Chong, Jenny},
     title = {BindingDB in 2015: A public database for medicinal chemistry, computational chemistry and systems pharmacology},
@@ -272,7 +269,7 @@ The comparisons of different methods on KIBA are following:
 ```
 
 **ChEMBL**
-```
+```bibtex
 @article{10.1093/nar/gkw1074,
     author = {Gaulton, Anna and Hersey, Anne and Nowotka, Michał and Bento, A. Patrícia and Chambers, Jon and Mendez, David and Mutowo, Prudence and Atkinson, Francis and Bellis, Louisa J. and Cibrián-Uhalte, Elena and Davies, Mark and Dedman, Nathan and Karlsson, Anneli and Magariños, María Paula and Overington, John P. and Papadatos, George and Smit, Ines and Leach, Andrew R.},
     title = {The ChEMBL database in 2017},
