@@ -10,6 +10,8 @@
 ![support os](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
 
 ## 最新消息
+`2021.07.29` 螺旋桨团队基于3D空间结构的化合物预训练模型，充分利用海量的无标注的化合物3D信息。请参阅[GEM](./apps/pretrained_compound/ChemRL/GEM)获取更多的细节。
+
 `2021.06.17` 螺旋桨团队在[OGB-LCS KDD Cup 2021 PCQM4M-LSC track](https://ogb.stanford.edu/kddcup2021/results/)比赛中赢得了亚军。该项比赛预测使用DFT计算的分子HOMO-LUMO的能量差。请参阅[解决方案](./competition/kddcup2021-PCQM4M-LSC)获得更多的细节。.
 
 `2021.05.20` 螺旋桨v1.0正式版发布。 1)将模型全面从静态图升级到动态图; 2) 添加更多应用: 分子生成和药物联用.
