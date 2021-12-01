@@ -1,6 +1,6 @@
 # HybridDTA
 
-Source code for paper: "HybridDTA: Hybrid Data Fusion through Pairwise Training for Drug-Target Affinity Prediction".
+Source code for paper: "HybridDTA: Hybrid Data Fusion through Pairwise Training for Drug-Target Affinity Prediction". The preprint version is currently released on [bioRxiv](https://www.biorxiv.org/content/10.1101/2021.11.23.469641v1).
 
 ## Backgrounds
 
@@ -72,7 +72,7 @@ python run_pairwise_Moltrans_bindingDB.py --data_path '../../Data/'  "--is_mixed
 
 
 ### Baseline
-We reimplement and provide all the baseline backbone models as following.
+We reproduce and provide all the baseline backbone models as following.
 
 #### DeepDTA
 ```bash
@@ -95,6 +95,18 @@ CUDA_VISIBLE_DEVICES=0 python train_bindingdb.py --batchsize 256 --epochs 50 --r
 ```bash
 cd ./pointwise/GraphDTA
 ```
+##### run the training script for Davis with cross-validation
+```bash
+python train_davis.py --batchsize 512 --epochs 100 --rounds 1 --lr 5e-4 --cudanum 0 --model 2
+```
+##### run the training script for KIBA with cross-validation
+```bash
+python train_kiba.py --batchsize 512 --epochs 200 --rounds 1 --lr 5e-4 --cudanum 0 --model 2
+```
+##### run the training script for BindingDB 
+```bash
+python train_bindingdb.py --batchsize 512 --epochs 50 --rounds 1 --lr 5e-4 --cudanum 0 --model 2
+```
 
 #### Moltrans
 ```bash
@@ -111,6 +123,24 @@ CUDA_VISIBLE_DEVICES=0 python train_kiba.py --batchsize 64 --epochs 200 --rounds
 ##### run the training script for BindingDB 
 ```bash
 CUDA_VISIBLE_DEVICES=0 python train_bindingdb.py --batchsize 64 --epochs 50 --rounds 1 --lr 5e-4
+```
+
+
+## Citation
+
+If you find our work is helpful in your research, please cite:
+```bibtex
+@article {Luo2021.11.23.469641,
+  author = {Luo, Hongyu and Xiang, Yingfei and Fang, Xiaomin and Lin, Wei and Wang, Fan and Wu, Hua and Wang, Haifeng},
+  title = {HybridDTA: Hybrid Data Fusion through Pairwise Training for Drug-Target Affinity Prediction},
+  elocation-id = {2021.11.23.469641},
+  year = {2021},
+  doi = {10.1101/2021.11.23.469641},
+  publisher = {Cold Spring Harbor Laboratory},
+  URL = {https://www.biorxiv.org/content/early/2021/11/23/2021.11.23.469641},
+  eprint = {https://www.biorxiv.org/content/early/2021/11/23/2021.11.23.469641.full.pdf},
+  journal = {bioRxiv}
+}
 ```
 
 

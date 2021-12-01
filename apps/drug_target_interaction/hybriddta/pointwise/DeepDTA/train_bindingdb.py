@@ -106,9 +106,9 @@ def main(args):
     optim = paddle.optimizer.Adam(parameters = model.parameters(), learning_rate = args.lr) # Adam
 
     # Load raw data
-    train_data = pd.read_csv("../Data/BindingDB/BindingDB_values_mixed_train_ki_filter.csv")
-    val_data = pd.read_csv("../Data/BindingDB/BindingDB_values_mixed_val_ki_filter.csv")
-    test_data = pd.read_csv("../Data/BindingDB/BindingDB_values_mixed_test_ki_filter.csv")
+    train_data = pd.read_csv("../../Data/BindingDB/BindingDB_values_mixed_train_ki_filter.csv")
+    val_data = pd.read_csv("../../Data/BindingDB/BindingDB_values_mixed_val_ki_filter.csv")
+    test_data = pd.read_csv("../../Data/BindingDB/BindingDB_values_mixed_test_ki_filter.csv")
 
     train_set = BindingDB_Encoder(train_data.index.values, train_data)
     val_set = BindingDB_Encoder(val_data.index.values, val_data)
@@ -176,8 +176,8 @@ def main(args):
         model_name = "bestModel/DeepDTA_BindingDB_ki_"+str(rounds)+".model"
 
         # Save the best result
-        if weight_ci > best_ci:
-            best_ci = weight_ci
+        if average_ci > best_ci:
+            best_ci = average_ci
             best_epoch = epoch
             best_train_loss = train_loss
             # Save best model

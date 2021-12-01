@@ -103,9 +103,9 @@ def main(args):
     optim = paddle.optimizer.Adam(parameters = model.parameters(), learning_rate = args.lr) # Adam
 
     # Load raw data
-    train_data = pd.read_csv("../Data/DAVIS/CV"+str(rounds)+"/CV"+str(rounds)+"_DAVIS_unseenP_seenD_train.csv")
-    val_data = pd.read_csv("../Data/DAVIS/CV"+str(rounds)+"/CV"+str(rounds)+"_DAVIS_unseenP_seenD_val.csv")
-    test_data = pd.read_csv("../Data/DAVIS/test_DAVIS_unseenP_seenD.csv")
+    train_data = pd.read_csv("../../Data/DAVIS/CV"+str(rounds)+"/CV"+str(rounds)+"_DAVIS_unseenP_seenD_train.csv")
+    val_data = pd.read_csv("../../Data/DAVIS/CV"+str(rounds)+"/CV"+str(rounds)+"_DAVIS_unseenP_seenD_val.csv")
+    test_data = pd.read_csv("../../Data/DAVIS/test_DAVIS_unseenP_seenD.csv")
 
     train_set = Basic_Encoder(train_data.index.values, train_data)
     val_set = Basic_Encoder(val_data.index.values, val_data)

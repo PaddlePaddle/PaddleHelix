@@ -116,9 +116,9 @@ def main(args):
     optim = paddle.optimizer.Adam(parameters = model.parameters(), learning_rate = args.lr) # Adam
 
     # Load raw data
-    train_data = pd.read_csv("../Data/KIBA/CV"+str(rounds)+"/CV"+str(rounds)+"_KIBA_unseenP_seenD_train.csv")
-    val_data = pd.read_csv("../Data/KIBA/CV"+str(rounds)+"/CV"+str(rounds)+"_KIBA_unseenP_seenD_val.csv")
-    test_data = pd.read_csv("../Data/KIBA/test_KIBA_unseenP_seenD.csv")
+    train_data = pd.read_csv("../../Data/KIBA/CV"+str(rounds)+"/CV"+str(rounds)+"_KIBA_unseenP_seenD_train.csv")
+    val_data = pd.read_csv("../../Data/KIBA/CV"+str(rounds)+"/CV"+str(rounds)+"_KIBA_unseenP_seenD_val.csv")
+    test_data = pd.read_csv("../../Data/KIBA/test_KIBA_unseenP_seenD.csv")
 
     train_set = Basic_Encoder(train_data.index.values, train_data)
     val_set = Basic_Encoder(val_data.index.values, val_data)
@@ -138,18 +138,21 @@ def main(args):
         G, P = predicting(model, val_loader)
         val_ci = concordance_index(G,P)
 
-        val_path = "../Data/KIBA/CV"+str(rounds)+"/CV"+str(rounds)+"_val.txt"
+        val_path = "../../Data/KIBA/CV"+str(rounds)+"/CV"+str(rounds)+"_val.txt"
         # Check if kiba len file exists
         if(path.exists(val_path) == False):
             get_kiba_len()
         
         # Calculate Weighted CI, Average CI of validation set
-        li ,lens = cal_len(val_path)
+        li, lens = cal_len(val_path)
         s = 0
         w_ci,a_ci = [],[]
         for l in li:
-            w_ci.append(l*concordance_index(G[s:s+l],P[s:s+l]))
-            a_ci.append(concordance_index(G[s:s+l],P[s:s+l]))
+            try:
+                w_ci.append(l*concordance_index(G[s:s+l],P[s:s+l]))
+                a_ci.append(concordance_index(G[s:s+l],P[s:s+l]))
+            except:
+                pass
             s += l
         weight_ci, average_ci = np.sum(w_ci)/lens, np.mean(a_ci)
         
@@ -163,8 +166,8 @@ def main(args):
         model_name = "bestModel/MolTrans_kiba_"+str(rounds)+".model"
         
         # Save the best result
-        if weight_ci > best_ci:
-            best_ci = weight_ci
+        if average_ci > best_ci:
+            best_ci = average_ci
             best_epoch = epoch
             best_train_loss = train_loss
             # Save best model
@@ -180,17 +183,20 @@ def main(args):
     test_G, test_P = predicting(model, test_loader)
     test_CI,test_MSE = concordance_index(test_G,test_P), mse(test_G,test_P)
 
-    test_path = "../Data/KIBA/kiba_len.txt"
+    test_path = "../../Data/KIBA/kiba_len.txt"
     # Check if kiba len file exists
     if(path.exists(test_path) == False):
         get_kiba_len()
     # Calculate Weighted CI, Average CI of testing set
     t_li ,t_lens = cal_len(test_path)
     s = 0
-    w_ci,a_ci = [],[]
+    w_ci, a_ci = [], []
     for l in t_li:
-        w_ci.append(l*concordance_index(G[s:s+l],P[s:s+l]))
-        a_ci.append(concordance_index(G[s:s+l],P[s:s+l]))
+        try:
+            w_ci.append(l*concordance_index(G[s:s+l],P[s:s+l]))
+            a_ci.append(concordance_index(G[s:s+l],P[s:s+l]))
+        except:
+            pass
         s += l
     test_weight_ci, test_average_ci = np.sum(w_ci)/t_lens, np.mean(a_ci)
 

@@ -20,16 +20,16 @@ import pandas as pd
 def get_kiba_len():
     # Get length of validation set
     for cv in ["CV1", "CV2", "CV3", "CV4", "CV5"]:
-        df = pd.read_csv("../Data/KIBA/"+cv+"/"+cv+"_KIBA_unseenP_seenD_val.csv")
+        df = pd.read_csv("../../Data/KIBA/"+cv+"/"+cv+"_KIBA_unseenP_seenD_val.csv")
         df = df.groupby(['Target ID']).size().reset_index(name = 'counts')
-        f = open("../Data/KIBA/"+cv+"/"+cv+"_val.txt",'a')
+        f = open("../../Data/KIBA/"+cv+"/"+cv+"_val.txt",'a')
         for i in df['counts'].values:
             f.write(str(i) + "\n")
 
 
     # Get length of testing set
-    df = pd.read_csv("../Data/KIBA/test_KIBA_unseenP_seenD.csv")
+    df = pd.read_csv("../../Data/KIBA/test_KIBA_unseenP_seenD.csv")
     df = df.groupby(['Target ID']).size().reset_index(name = 'counts')
-    f = open("../Data/KIBA/kiba_len.txt",'a')
+    f = open("../../Data/KIBA/kiba_len.txt",'a')
     for i in df['counts'].values:
         f.write(str(i) + "\n")
