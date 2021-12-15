@@ -8,6 +8,8 @@ English | [简体中文](README_cn.md)
 [![Version](https://img.shields.io/github/release/PaddlePaddle/PaddleHelix.svg)](https://github.com/PaddlePaddle/PaddleHelix/releases)
 ![python version](https://img.shields.io/badge/python-3.6+-orange.svg)
 ![support os](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
+[![DOI](https://zenodo.org/badge/314704349.svg)](https://zenodo.org/badge/latestdoi/314704349)
+
 
 ## Latest News
 `2021.10.25` Paper "Docking-based Virtual Screening with Multi-Task Learning" is accepted by [BIBM 2021](https://ieeebibm.org/BIBM2021/).
