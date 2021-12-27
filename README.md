@@ -12,6 +12,8 @@ English | [简体中文](README_cn.md)
 
 
 ## Latest News
+`2021.11.23` Paper "Multimodal Pre-Training Model for Sequence-based Prediction of Protein-Protein Interaction" is accepted by [MLCB 2021](https://sites.google.com/cs.washington.edu/mlcb2021/home). Please refer to [paper](https://arxiv.org/abs/2112.04814) and [code](https://github.com/PaddlePaddle/PaddleHelix/tree/dev/apps/protein_protein_interaction) for more details.
+
 `2021.10.25` Paper "Docking-based Virtual Screening with Multi-Task Learning" is accepted by [BIBM 2021](https://ieeebibm.org/BIBM2021/).
 
 `2021.07.29` PaddleHelix released a novel geometry-level molecular pre-training model, taking advantage of the 3D spatial structures of the molecules. Please refer to [GEM](./apps/pretrained_compound/ChemRL/GEM) for more details.

@@ -10,6 +10,8 @@
 ![support os](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
 
 ## 最新消息
+`2021.11.23` 论文"Multimodal Pre-Training Model for Sequence-based Prediction of Protein-Protein Interaction"被[MLCB 2021](https://sites.google.com/cs.washington.edu/mlcb2021/home)接收. 详细信息请参见[论文](https://arxiv.org/abs/2112.04814)和[代码](https://github.com/PaddlePaddle/PaddleHelix/tree/dev/apps/protein_protein_interaction).
+
 `2021.10.25` 论文"Docking-based Virtual Screening with Multi-Task Learning"被[BIBM 2021](https://ieeebibm.org/BIBM2021/)接收.
 
 `2021.07.29` 螺旋桨团队基于3D空间结构的化合物预训练模型，充分利用海量的无标注的化合物3D信息。请参阅[GEM](./apps/pretrained_compound/ChemRL/GEM)获取更多的细节。
