@@ -14,6 +14,8 @@
 
 `2021.10.25` 论文"Docking-based Virtual Screening with Multi-Task Learning"被[BIBM 2021](https://ieeebibm.org/BIBM2021/)接收.
 
+`2021.09.29` 论文"Property-Aware Relation Networks for Few-shot Molecular Property Prediction"被[NeurIPS 2021](https://papers.nips.cc/paper/2021/hash/91bc333f6967019ac47b49ca0f2fa757-Abstract.html)接收为Spotlight Paper。代码细节请参见[PAR](./apps/fewshot_molecular_property).
+
 `2021.07.29` 螺旋桨团队基于3D空间结构的化合物预训练模型，充分利用海量的无标注的化合物3D信息。请参阅[GEM](./apps/pretrained_compound/ChemRL/GEM)获取更多的细节。
 
 `2021.06.17` 螺旋桨团队在[OGB-LCS KDD Cup 2021 PCQM4M-LSC track](https://ogb.stanford.edu/kddcup2021/results/)比赛中赢得了亚军。该项比赛预测使用DFT计算的分子HOMO-LUMO的能量差。请参阅[解决方案](./competition/kddcup2021-PCQM4M-LSC)获得更多的细节。.
@@ -64,6 +66,7 @@
   - [药物-分子作用预测](./apps/drug_target_interaction/README_cn.md)
   - [分子生成](./apps/molecular_generation/README_cn.md)
   - [药物联用](./apps/drug_drug_synergy/README_cn.md)
+  - [小样本分子性质预测](./apps/fewshot_molecular_property.md)
 * **疫苗设计**
   - [LinearRNA](./c/pahelix/toolkit/linear_rna/README_cn.md)
 

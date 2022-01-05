@@ -8,5 +8,6 @@
   - [药物-分子作用预测](./drug_target_interaction)
   - [分子生成](./molecular_generation)
   - [药物联用](./drug_drug_synergy)
+  - [小样本分子性质预测](./fewshot_molecular_property)
 * **疫苗设计**
   - [LinearRNA](../c/pahelix/toolkit/linear_rna)
