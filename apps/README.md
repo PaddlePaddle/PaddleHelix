@@ -11,3 +11,5 @@ We provide examples that implement various algorithms and show the methods runni
   - [Few-shot Molecular Property Prediction](./fewshot_molecular_property)
 * **Vaccine Design**
   - [LinearRNA](../c/pahelix/toolkit/linear_rna)
+* **Protein Structure Prediction**
+  - [PaddleFold](./paddlefold)

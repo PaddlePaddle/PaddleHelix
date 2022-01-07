@@ -11,3 +11,5 @@
   - [小样本分子性质预测](./fewshot_molecular_property)
 * **疫苗设计**
   - [LinearRNA](../c/pahelix/toolkit/linear_rna)
+* **蛋白质结构预测**
+  - [PaddleFold](./paddlefold)

@@ -69,6 +69,8 @@
   - [小样本分子性质预测](./apps/fewshot_molecular_property.md)
 * **疫苗设计**
   - [LinearRNA](./c/pahelix/toolkit/linear_rna/README_cn.md)
+* **蛋白质结构预测**
+  - [PaddleFold](./apps/paddlefold)
 
 ### 比赛解决方案
 螺旋桨团队参加了多项生物计算相关的赛事，相关解决方案可以参阅[这里](./competition).
