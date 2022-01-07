@@ -16,6 +16,8 @@ English | [简体中文](README_cn.md)
 
 `2021.10.25` Paper "Docking-based Virtual Screening with Multi-Task Learning" is accepted by [BIBM 2021](https://ieeebibm.org/BIBM2021/).
 
+`2021.09.29` Paper "Property-Aware Relation Networks for Few-shot Molecular Property Prediction" is accepted by [NeurIPS 2021](https://papers.nips.cc/paper/2021/hash/91bc333f6967019ac47b49ca0f2fa757-Abstract.html) as a Spotlight Paper. Please refer to [PAR](./apps/fewshot_molecular_property) for more details.
+
 `2021.07.29` PaddleHelix released a novel geometry-level molecular pre-training model, taking advantage of the 3D spatial structures of the molecules. Please refer to [GEM](./apps/pretrained_compound/ChemRL/GEM) for more details.
 
 `2021.06.17` PaddleHelix team won the 2nd place in the [OGB-LCS KDD Cup 2021 PCQM4M-LSC track](https://ogb.stanford.edu/kddcup2021/results/), predicting DFT-calculated HOMO-LUMO energy gap of molecules. Please refer to [the solution](./competition/kddcup2021-PCQM4M-LSC) for more details.
@@ -64,6 +66,7 @@ We also provide [examples](./apps) that implement various algorithms and show th
   - [Drug-Target Interaction](./apps/drug_target_interaction)
   - [Molecular Generation](./apps/molecular_generation)
   - [Drug Drug Synergy](./apps/drug_drug_synergy)
+  - [Few-shot Molecular Property Prediction](./apps/fewshot_molecular_property)
 * **Vaccine Design**
   - [LinearRNA](./c/pahelix/toolkit/linear_rna)
 
