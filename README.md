@@ -62,13 +62,15 @@ We also provide [examples](./apps) that implement various algorithms and show th
 * **Pretraining**
   - [Representation Learning - Compounds](./apps/pretrained_compound)
   - [Representation Learning - Proteins](./apps/pretrained_protein)
-* **Drug discovery and Precision Medicine**
+* **Drug Discovery and Precision Medicine**
   - [Drug-Target Interaction](./apps/drug_target_interaction)
   - [Molecular Generation](./apps/molecular_generation)
   - [Drug Drug Synergy](./apps/drug_drug_synergy)
   - [Few-shot Molecular Property Prediction](./apps/fewshot_molecular_property)
 * **Vaccine Design**
   - [LinearRNA](./c/pahelix/toolkit/linear_rna)
+* **Protein Structure Prediction**
+  - [PaddleFold](./apps/paddlefold)
 
 ### Competition Solutions
 PaddleHelix team participated in multiple competitions related to bio-computing. The solutions can be found [here](./competition).
