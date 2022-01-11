@@ -1,8 +1,8 @@
 # PaddleFold 
 
-Reproduction of [Alphafold 2](https://doi.org/10.1038/s41586-021-03819-2) with [PaddlePaddle](https://github.com/paddlepaddle/paddle).
+Reproduction of [AlphaFold 2](https://doi.org/10.1038/s41586-021-03819-2) with [PaddlePaddle](https://github.com/paddlepaddle/paddle).
 
-PaddleFold currently provides a PaddlePaddle implementation of the Alphafold inference pipeline, and reproduces all of the features of the original open source inference code (v2.0.1) including recycle and ensembling.
+PaddleFold currently provides a PaddlePaddle implementation of the AlphaFold inference pipeline, and reproduces all of the features of the original open source inference code (v2.0.1) including recycle and ensembling.
 
 Trainable PaddleFold is coming soon.
 
@@ -21,7 +21,7 @@ You can change the name of the environment and CUDA version in `setup_env`.
 
 In order to run PaddleFold, the genetic databases and model parameters are required.
 
-You can use a script `scripts/download_all_data.sh`, which is the same as the original Alphafold that can be used to download and set up all databases and model parameters:
+You can use a script `scripts/download_all_data.sh`, which is the same as the original AlphaFold that can be used to download and set up all databases and model parameters:
 
 *   Default:
 
@@ -62,10 +62,10 @@ python3 run_paddlefold.py \
   --model_names=${model_name} \
   --output_dir=${OUTPUT_DIR} \
   --preset='reduced_dbs' \
-  --jackhmmer_binary_path opt/conda/envs/paddlefold/bin/jackhmmer \
-  --hhblits_binary_path opt/conda/envs/paddlefold/bin/hhblits \
-  --hhsearch_binary_path opt/conda/envs/paddlefold/bin/hhsearch \
-  --kalign_binary_path opt/conda/envs/paddlefold/bin/kalign \
+  --jackhmmer_binary_path /opt/conda/envs/paddlefold/bin/jackhmmer \
+  --hhblits_binary_path /opt/conda/envs/paddlefold/bin/hhblits \
+  --hhsearch_binary_path /opt/conda/envs/paddlefold/bin/hhsearch \
+  --kalign_binary_path /opt/conda/envs/paddlefold/bin/kalign \
   --random_seed=0
 ```
 You can use `python3 run_paddlefold.py -h` to find the description of the arguments.
@@ -144,4 +144,4 @@ when using for tasks such as molecular replacement).
 
 ## Copyright
 
-PaddleFold code is licensed under the Apache 2.0 License, which is same as Alphafold. However, we use the AlphaFold parameters pretrained by DeepMind, which are made available for non-commercial use only under the terms of the CC BY-NC 4.0 license.
+PaddleFold code is licensed under the Apache 2.0 License, which is same as AlphaFold. However, we use the AlphaFold parameters pretrained by DeepMind, which are made available for non-commercial use only under the terms of the CC BY-NC 4.0 license.
