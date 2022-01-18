@@ -217,7 +217,7 @@ def main(args):
         except:
             pass
         s += l
-    test_weight_ci, test_average_ci = np.sum(w_ci)/np.sum(t_li), np.mean(a_ci)
+    test_weight_ci, test_average_ci = np.sum(w_ci)/t_lens, np.mean(a_ci)
 
     # Save the testing result
     files.write("test_MSE:" + str(test_MSE) + ", test_averageCI:" + str(test_average_ci) + 

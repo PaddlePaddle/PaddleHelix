@@ -161,9 +161,9 @@ def main(args):
         print("Average CI:",average_ci)
         print("Overall CI:",val_ci)
 
-        files = open("bestResult/MolTrans_kiba_result"+str(rounds)+".txt",'a')
+        files = open("bestResult/DeepDTA_kiba_result"+str(rounds)+".txt",'a')
         files.write("val_averageCI: "+str(average_ci)+", val_weightedCI: "+str(weight_ci)+", val_overallCI: "+str(val_ci)+", train_loss: "+str(train_loss)+'\n')
-        model_name = "bestModel/MolTrans_kiba_"+str(rounds)+".model"
+        model_name = "bestModel/DeepDTA_kiba_"+str(rounds)+".model"
         
         # Save the best result
         if average_ci > best_ci:
