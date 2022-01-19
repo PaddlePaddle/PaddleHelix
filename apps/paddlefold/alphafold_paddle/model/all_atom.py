@@ -357,9 +357,9 @@ def torsion_angles_to_frames(
     # Gather the default frames for all rigid groups.
     # # r3.Rigids with shape (B, N, 8)
     restype_rigid_group_default_frame = paddle.to_tensor(
-        residue_constants.restype_rigid_group_default_frame)[None, ...]
-    m = utils.batched_gather(restype_rigid_group_default_frame,
-                           aatype, batch_dims=1)
+        residue_constants.restype_rigid_group_default_frame)  # (21, 8, 4, 4)
+    # (B, N, 8, 4, 4)
+    m = utils.batched_gather(restype_rigid_group_default_frame, aatype)
 
     default_frames = r3.rigids_from_tensor4x4(m)
 
