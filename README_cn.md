@@ -11,7 +11,7 @@
 
 ## 最新消息
 
-`2022.01.07` PaddleHelix团队开源[PaddleFold](./apps/paddlefold)项目，基于PaddlePaddle深度学习框架复现蛋白质结构预测模型[AlphaFold 2](https://doi.org/10.1038/s41586-021-03819-2).
+`2022.01.07` 螺旋桨团队开源基于PaddlePaddle深度学习框架复现蛋白质结构预测模型[AlphaFold 2](https://doi.org/10.1038/s41586-021-03819-2)，详见 [PaddleFold](./apps/paddlefold)。
 
 `2021.11.23` 论文"Multimodal Pre-Training Model for Sequence-based Prediction of Protein-Protein Interaction"被[MLCB 2021](https://sites.google.com/cs.washington.edu/mlcb2021/home)接收. 详细信息请参见[论文](https://arxiv.org/abs/2112.04814)和[代码](https://github.com/PaddlePaddle/PaddleHelix/tree/dev/apps/protein_protein_interaction).
 

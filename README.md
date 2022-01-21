@@ -13,7 +13,7 @@ English | [简体中文](README_cn.md)
 
 ## Latest News
 
-`2022.01.07` PaddleHelix team released [PaddleFold](./apps/paddlefold), a reproduction of [AlphaFold 2](https://doi.org/10.1038/s41586-021-03819-2) using PaddlePaddle.
+`2022.01.07` PaddleHelix released the reproduction of [AlphaFold 2](https://doi.org/10.1038/s41586-021-03819-2) using PaddlePaddle in [PaddleFold](./apps/paddlefold).
 
 `2021.11.23` Paper "Multimodal Pre-Training Model for Sequence-based Prediction of Protein-Protein Interaction" is accepted by [MLCB 2021](https://sites.google.com/cs.washington.edu/mlcb2021/home). Please refer to [paper](https://arxiv.org/abs/2112.04814) and [code](https://github.com/PaddlePaddle/PaddleHelix/tree/dev/apps/protein_protein_interaction) for more details.
 
