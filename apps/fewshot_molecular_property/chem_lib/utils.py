@@ -16,7 +16,7 @@ def init_trial_path(args,is_save=True):
     args : dict
         Settings with the trial path updated
     """
-    prename = args.dataset + '_' + str(args.test_dataset)+ '_' +str(args.n_shot_test) + '_' +args.setting + '_' + args.enc_gnn + '_' + args.rel_type
+    prename = args.dataset + '_' + str(args.test_dataset)+ '_' +str(args.n_shot_test) + '_' + args.enc_gnn
     result_path = os.path.join(args.result_path, prename)
     os.makedirs(result_path, exist_ok=True)
     trial_id = 0

@@ -7,13 +7,12 @@ import os
 from chem_lib.models import ContextAwareRelationNet, Meta_Trainer
 from chem_lib.utils import count_model_params
 
-# set device
-paddle.set_device('gpu:0')
 print('pid:', os.getpid())
 
 def main():
     root_dir = '.'
     args = get_args(root_dir)
+    paddle.set_device('gpu:'+str(args.gpu_id))
     
     model = ContextAwareRelationNet(args)
     count_model_params(model)

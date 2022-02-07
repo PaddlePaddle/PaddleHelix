@@ -50,7 +50,6 @@ class All_Embedding(nn.Layer):
 class ContextAwareRelationNet(nn.Layer):
     def __init__(self, args):
         super(ContextAwareRelationNet, self).__init__()
-        self.mol_relation_type = args.rel_type
         self.rel_layer = args.rel_layer
         self.edge_type = args.rel_adj
         self.edge_dim = args.rel_edge
@@ -83,24 +82,19 @@ class ContextAwareRelationNet(nn.Layer):
                 params[i] = paddle.to_tensor(params[i])
             self.mol_encoder.load_dict(params)
 
-        if self.mol_relation_type not in ['par', 'no_rel','no_rel_no_w']:
-            self.encode_projection = MLP(inp_dim=args.emb_dim, hidden_dim=args.map_dim, num_layers=args.map_layer,
-                                     batch_norm=args.batch_norm,dropout=args.map_dropout)
-        else:
-            self.encode_projection = ContextMLP(inp_dim=args.emb_dim, hidden_dim=args.map_dim, num_layers=args.map_layer,
-                                     batch_norm=args.batch_norm,dropout=args.map_dropout,
-                                     pre_fc=args.map_pre_fc,ctx_head=args.ctx_head)
+        self.encode_projection = ContextMLP(inp_dim=args.emb_dim, hidden_dim=args.map_dim, num_layers=args.map_layer,
+                                    batch_norm=args.batch_norm,dropout=args.map_dropout,
+                                    pre_fc=args.map_pre_fc,ctx_head=args.ctx_head)
 
-        if self.mol_relation_type == 'par':
-            inp_dim = args.map_dim
-            self.adapt_relation = TaskAwareRelation(inp_dim=inp_dim, hidden_dim=args.rel_hidden_dim,
-                                                    num_layers=args.rel_layer, edge_n_layer=args.rel_edge_layer,
-                                                    top_k=args.rel_k, res_alpha=args.rel_res,
-                                                    batch_norm=args.batch_norm,edge_dim=args.rel_edge, adj_type=args.rel_adj,
-                                                    activation=args.rel_act, node_concat=args.rel_node_concat,dropout=args.rel_dropout,
-                                                    pre_dropout=args.rel_dropout2)
-        else:
-            self.adapt_relation = MLP(inp_dim=args.map_dim, hidden_dim=2, num_layers=1)
+
+        inp_dim = args.map_dim
+        self.adapt_relation = TaskAwareRelation(inp_dim=inp_dim, hidden_dim=args.rel_hidden_dim,
+                                                num_layers=args.rel_layer, edge_n_layer=args.rel_edge_layer,
+                                                top_k=args.rel_k, res_alpha=args.rel_res,
+                                                batch_norm=args.batch_norm,edge_dim=args.rel_edge, adj_type=args.rel_adj,
+                                                activation=args.rel_act, node_concat=args.rel_node_concat,dropout=args.rel_dropout,
+                                                pre_dropout=args.rel_dropout2)
+
 
     def to_one_hot(self,class_idx, num_classes=2):
         return paddle.eye(num_classes)[class_idx]
@@ -129,18 +123,15 @@ class ContextAwareRelationNet(nn.Layer):
         return edge
 
     def relation_forward(self, s_emb, q_emb, s_label=None, q_pred_adj=False,return_adj=False,return_emb=False):
-        if self.mol_relation_type == 'par':
-            if not return_emb:
-                s_logits, q_logits, adj = self.adapt_relation(s_emb, q_emb,return_adj=return_adj,return_emb=return_emb)
-            else:
-                s_logits, q_logits, adj, s_rel_emb, q_rel_emb = self.adapt_relation(s_emb, q_emb,return_adj=return_adj,return_emb=return_emb)
-            if q_pred_adj:
-                q_sim = adj[-1][:, 0, -1, :-1]
-                q_logits = q_sim @ self.to_one_hot(s_label)
+
+        if not return_emb:
+            s_logits, q_logits, adj = self.adapt_relation(s_emb, q_emb,return_adj=return_adj,return_emb=return_emb)
         else:
-            s_logits = self.adapt_relation(s_emb)
-            q_logits = self.adapt_relation(q_emb)
-            adj = None
+            s_logits, q_logits, adj, s_rel_emb, q_rel_emb = self.adapt_relation(s_emb, q_emb,return_adj=return_adj,return_emb=return_emb)
+        if q_pred_adj:
+            q_sim = adj[-1][:, 0, -1, :-1]
+            q_logits = q_sim @ self.to_one_hot(s_label)
+
         if not return_emb:
             return s_logits, q_logits, adj
         else:
@@ -151,11 +142,8 @@ class ContextAwareRelationNet(nn.Layer):
         q_data.tensor()
         s_node_emb, s_emb = self.mol_encoder(s_data)
         q_node_emb, q_emb = self.mol_encoder(q_data)
-        if self.mol_relation_type!='par':
-            s_emb_map = self.encode_projection(s_emb)
-            q_emb_map = self.encode_projection(q_emb)
-        else:
-            s_emb_map,q_emb_map = self.encode_projection(s_emb,q_emb)
+
+        s_emb_map,q_emb_map = self.encode_projection(s_emb,q_emb)
 
         s_logits, q_logits, adj = self.relation_forward(s_emb_map, q_emb_map, s_label, q_pred_adj=q_pred_adj)
 
@@ -171,17 +159,9 @@ class ContextAwareRelationNet(nn.Layer):
         q_emb_list = [self.mol_encoder(q_data.x, q_data.edge_index, q_data.edge_attr, q_data.batch)[0] for q_data in
                       q_data_list]
 
-        if self.mol_relation_type!='par':
-            s_emb_map = self.encode_projection(s_emb)
-        else:
-            s_emb_map = None
-
         q_logits_list, adj_list = [], []
         for q_emb in q_emb_list:
-            if self.mol_relation_type!='par':
-                q_emb_map = self.encode_projection(q_emb)
-            else:
-                s_emb_map,q_emb_map = self.encode_projection(s_emb,q_emb)
+            s_emb_map,q_emb_map = self.encode_projection(s_emb,q_emb)
             s_logit, q_logit, adj = self.relation_forward(s_emb_map, q_emb_map, s_label, q_pred_adj=q_pred_adj)
             q_logits_list.append(q_logit.detach())
             if adj is not None:
@@ -196,10 +176,7 @@ class ContextAwareRelationNet(nn.Layer):
     def forward_query_loader(self, s_data, q_loader, s_label=None, q_pred_adj=False):
         s_data.tensor()
         _, s_emb = self.mol_encoder(s_data)
-        if self.mol_relation_type!='par':
-            s_emb_map = self.encode_projection(s_emb)
-        else:
-            s_emb_map = None
+
         y_true_list=[]
         q_logits_list, adj_list = [], []
         for q_data in q_loader:
@@ -207,13 +184,11 @@ class ContextAwareRelationNet(nn.Layer):
             q_data = G.Graph.batch(q_data)
             q_data.tensor()
             _, q_emb = self.mol_encoder(q_data)
-            if self.mol_relation_type!='par':
-                q_emb_map = self.encode_projection(q_emb)
-            else:
-                s_emb_map,q_emb_map = self.encode_projection(s_emb,q_emb)
+
+            s_emb_map,q_emb_map = self.encode_projection(s_emb,q_emb)
             s_logit, q_logit, adj = self.relation_forward(s_emb_map, q_emb_map, s_label, q_pred_adj=q_pred_adj)
             q_logits_list.append(q_logit)
-            if adj is not None and self.mol_relation_type == 'par':
+            if adj is not None:
                 sim_adj = adj[-1].detach()
                 adj_list.append(sim_adj)
 

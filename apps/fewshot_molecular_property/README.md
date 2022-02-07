@@ -36,31 +36,13 @@ To run the experiments, use the command (please check and tune the hyper-paramet
 python main.py
 ```
 
-You can quickly check out how PAR operates on the Tox21 dataset by using the command:
+If you want to quickly run PAR method on tox21 dataset, please use the command:
 
 ```
 bash script_train.sh
 ```
 
-Using the folllowing scripts on different datasets and methods:
-
- ```
-DATA=tox21 # training dataset
-TDATA=tox21  # testing  dataset
-setting=par
-NS=10 # n-shot
-NQ=16 # n-query
-pretrain=1 # pretrain or training from scratch
-seed=0 # random seed
-
-nohup python -u main.py --epochs 1000 --eval_steps 10 --pretrained $pretrain \
---setting $setting --n-shot-train $NS  --n-shot-test $NS --n-query $NQ --dataset $DATA --test-dataset $TDATA --seed $seed \
-> nohup_${DATA}${TDATA}-${setting}_s${NS}q${NQ} 2>&1 &
- ```
-
-If you want to run other datasets, you only need to change `DATA` and `TDATA` in the above or in the [script_train.sh](script_train.sh). 
-Please change `NS` and `NQ` for different n-shot and n-query settings.
 
 
 ## Contact
-We welcome advices and feedbacks for PAR. Please feel free to open an issue or contact [Yaqing Wang](mailto:wangyaqing01@baidu.com).
+We welcome advices and feedbacks for PAR. Please feel free to contact [Yaqing Wang](mailto:wangyaqing01@baidu.com) or [Zhenqian Shen](mailto:shenzhenqian@baidu.com).

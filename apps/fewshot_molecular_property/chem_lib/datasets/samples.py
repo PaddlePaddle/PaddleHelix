@@ -133,7 +133,7 @@ def sample_inds(data, size):
         return random.sample(data, len_data) + sample_inds(data, size - len_data)
 
 
-def sample_datasets(data, dataset, task, n_shot, n_query):
+def sample_meta_datasets(data, dataset, task, n_shot, n_query):
     distri_list = obtain_distr_list(dataset)
     thresh = distri_list[task][0]
 
@@ -146,35 +146,35 @@ def sample_datasets(data, dataset, task, n_shot, n_query):
     random.shuffle(l)
     q_list = sample_inds(l, n_query)
 
-    s_data = data[paddle.to_tensor(s_list)]
-    q_data = data[paddle.to_tensor(q_list)]
+    s_data = data[s_list]
+    q_data = data[q_list]
 
     return s_data, q_data
 
 
-def sample_meta_datasets(data, dataset, task, n_shot, n_query):
-    distri_list = obtain_distr_list(dataset)
-    thresh = distri_list[task][0]
+# def sample_meta_datasets(data, dataset, task, n_shot, n_query):
+#     distri_list = obtain_distr_list(dataset)
+#     thresh = distri_list[task][0]
 
-    neg_sample = sample_inds(range(0, thresh), 2 * n_shot)
-    pos_sample = sample_inds(range(thresh, len(data)), 2 * n_shot)
+#     neg_sample = sample_inds(range(0, thresh), 2 * n_shot)
+#     pos_sample = sample_inds(range(thresh, len(data)), 2 * n_shot)
 
-    s_list_1 = neg_sample[:n_shot] + pos_sample[:n_shot]
-    s_list_2 = neg_sample[n_shot:] + pos_sample[n_shot:]
+#     s_list_1 = neg_sample[:n_shot] + pos_sample[:n_shot]
+#     s_list_2 = neg_sample[n_shot:] + pos_sample[n_shot:]
 
-    l = [i for i in range(0, len(data)) if i not in s_list_1 + s_list_2]
-    random.shuffle(l)
-    q_sample = sample_inds(l, 2 * n_query)
-    q_list_1 = q_sample[:n_query]
-    q_list_2 = q_sample[n_query:2 * n_query]
+#     l = [i for i in range(0, len(data)) if i not in s_list_1 + s_list_2]
+#     random.shuffle(l)
+#     q_sample = sample_inds(l, 2 * n_query)
+#     q_list_1 = q_sample[:n_query]
+#     q_list_2 = q_sample[n_query:2 * n_query]
 
-    s_adapt = data[s_list_1]
-    s_eval = data[s_list_2]
+#     s_adapt = data[s_list_1]
+#     s_eval = data[s_list_2]
 
-    q_adapt = data[q_list_1]
-    q_eval = data[q_list_2]
+#     q_adapt = data[q_list_1]
+#     q_eval = data[q_list_2]
 
-    return s_adapt, q_adapt, s_eval, q_eval
+#     return s_adapt, q_adapt, s_eval, q_eval
 
 
 def sample_test_datasets(data, dataset, task, n_shot, n_query, update_step=1):
