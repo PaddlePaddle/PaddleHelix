@@ -234,7 +234,6 @@ class EdgeUpdateNetwork(nn.Layer):
             topk, indices = paddle.topk(adj_temp, k)
             mask = F.one_hot(indices,adj_temp.shape[1]).sum(1)
             mask = mask.reshape((n_q, n_edge, n1, n2))
-            mask = paddle.cast(((mask + mask.transpose((0,1,3,2))) > 0),'float32')
             if self.activation == 'softmax':
                 adj_val = self.softmax_with_mask(adj_val, mask)
             else:
@@ -316,7 +315,7 @@ class TaskAwareRelation(nn.Layer):
         node_feat = self.fc1(node_feat)
         node_feat = self.res_alpha * all_emb +  node_feat
 
-        s_feat = node_feat[:, :-1, :].mean(0)
+        s_feat = node_feat[:, :-1, :]
         q_feat = node_feat[:, -1, :]
 
         s_logits = self.fc2(s_feat)
