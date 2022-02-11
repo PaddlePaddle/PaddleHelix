@@ -10,7 +10,7 @@
 ![support os](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
 
 ## 最新消息
-`2022.02.07` 论文"Geometry-enhanced molecular representation learning for property prediction"被发表于Nature Machine Intelligence。详情参见[论文](https://www.nature.com/articles/s42256-021-00438-4)和[代码](./apps/pretrained_compound/ChemRL/GEM)。
+`2022.02.07` 论文"Geometry-enhanced molecular representation learning for property prediction"被发表于**Nature Machine Intelligence**。详情参见[论文](https://www.nature.com/articles/s42256-021-00438-4)和[代码](./apps/pretrained_compound/ChemRL/GEM)。
 
 `2022.01.07` 螺旋桨团队开源基于PaddlePaddle深度学习框架复现蛋白质结构预测模型[AlphaFold 2](https://doi.org/10.1038/s41586-021-03819-2)，详见 [PaddleFold](./apps/paddlefold)。
 
