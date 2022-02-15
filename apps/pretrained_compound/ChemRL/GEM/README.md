@@ -1,4 +1,4 @@
-# ChemRL-GEM: Geometry Enhanced Molecular Representation Learning for Property Prediction
+# Geometry Enhanced Molecular Representation Learning for Property Prediction
 
 # Background
 Recent advances in graph neural networks (GNNs) have shown great promise in applying GNNs for molecular representation learning. However, existing GNNs usually treat molecules as topological graph data without fully utilizing the molecular geometry information, which is one of the most critical factors for determining molecular physical, chemical, and biological properties. 
@@ -68,3 +68,17 @@ Run downstream finetuning and the final results will be saved under `./log/pretr
 
 The whole finetuning process for all datasets requires 1-2 days in a single V100 GPU card.
 
+## Citation
+If you use the code or data in this package, please cite:
+
+```bibtex
+@article{fang2022geometry,
+  title={Geometry-enhanced molecular representation learning for property prediction},
+  author={Fang, Xiaomin and Liu, Lihang and Lei, Jieqiong and He, Donglong and Zhang, Shanzhuo and Zhou, Jingbo and Wang, Fan and Wu, Hua and Wang, Haifeng},
+  journal={Nature Machine Intelligence},
+  pages={1--8},
+  year={2022},
+  publisher={Nature Publishing Group},
+  doi={10.1038/s42256-021-00438-4}
+}
+```
