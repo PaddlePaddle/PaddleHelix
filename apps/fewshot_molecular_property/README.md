@@ -26,7 +26,7 @@ We used the following packages for core development. We tested on `paddlepaddle 
 
 ## Datasets 
 
-Four datasets including Tox21, SIDER, MUV and ToxCast are provided. They are downloaded from [chem data](http://snap.stanford.edu/gnn-pretrain/data/chem_dataset.zip).
+Tox21, SIDER, MUV and ToxCast are previously downloaded from [SNAP](http://snap.stanford.edu/gnn-pretrain/data/chem_dataset.zip). You can download the data [here](https://drive.google.com/drive/folders/1Vc43cNKI_WKcHRuDo55Yk0s0uD4L50oJ), unzip the file and put the resultant ``muv, sider, tox21, and toxcast" in the data folder. 
 
 ## Experiments
 
