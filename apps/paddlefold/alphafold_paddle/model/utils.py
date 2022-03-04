@@ -152,28 +152,57 @@ def mask_mean(mask, value, axis=None, drop_mask_channel=False, eps=1e-10):
 def batched_gather(params, indices, axis=0, batch_dims=0):
     # Implement gather with batching, like tensorflow:
     # https://www.tensorflow.org/api_docs/python/tf/gather#batching
-    # print(params.shape, indices.shape, axis)
-    if batch_dims == 0 and len(indices.shape) == 1:
-        return paddle.gather(params, indices, axis=axis)
+    p, i = params, indices
+    rank = len(p.shape)
+    axis = (rank + axis) % rank
+    # The stride of axis
+    stride = p.shape[batch_dims + axis]
+
+    if batch_dims == 0 and len(i.shape) == 1:
+        return paddle.gather(p, i, axis=axis)
 
     elif batch_dims == 0:
-        result = []
-        for i in paddle.unbind(indices):
-            r = batched_gather(params, i, axis, batch_dims)
-            result.append(r)
+        flat_i = i.reshape([-1])
+        gathered = paddle.gather(p, flat_i, axis=axis)
+        shape = p.shape[:axis] + i.shape
+        if axis < rank - 1:
+            shape += params.shape[axis + 1:]
+        return gathered.reshape(shape)
 
-        return paddle.stack(result, axis=axis)
+    b = batch_dims
+    a = axis
+    assert p.shape[:b] == i.shape[:b]
+    bn = np.prod(p.shape[:b])
 
-    result = []
-    for p, i in zip(paddle.unbind(params), paddle.unbind(indices)):
-        r = batched_gather(p, i, axis=axis, batch_dims=batch_dims-1)
-        # In the above line:
-        # if axis=axis, same as jax in AF2, but axis cannot be negative;
-        # if axis=axis-1, same as tensorflow;
-        # note that in tf_gather, axis_tf = axis_jax + batch_dims
-        result.append(r)
+    # Shift batch dimensions right to bundle with axis
+    if a > 0:
+        perm = list(range(rank))
+        perm = perm[b:(b + a)] + perm[:b] + perm[(b + a):]
+        p = p.transpose(perm)
 
-    return paddle.stack(result)
+    # Merge params' batch+axis
+    p = p.reshape(p.shape[:a] + [-1] + p.shape[(b + a + 1):])
+
+    # indices = [Batch..., Index...]
+    # Expand the index values across batch elements
+    strides = paddle.arange(bn).unsqueeze(-1) * stride
+    i = i.reshape([bn, -1])
+    flat_i = paddle.flatten(i + strides)
+
+    # Do gather
+    gathered = paddle.gather(p, flat_i, axis=axis)
+
+    # Unbundle batch and index dimensions
+    unbundled_shape = p.shape[:a] + indices.shape + p.shape[a + 1:]
+    gathered = gathered.reshape(unbundled_shape)
+
+    # Shift batch dimensions back to the left
+    if a > 0:
+        perm = list(range(len(unbundled_shape)))
+        perm = perm[a:(a + b)] + perm[:a] + perm[(a + b):]
+        gathered = gathered.transpose(perm)
+
+    return gathered
 
 
 def subbatch(f, arg_idx, dim, bs, out_idx):
