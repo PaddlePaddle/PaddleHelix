@@ -23,9 +23,9 @@ Where <i>params</i> are keyword arguments. See [train.py](./train.py) for the li
 ```
 python test.py --model_name <path-to-saved-model> --label_data_path <path-to-protein-with-their-labels> [more params]  
 ```
-<i>model_name</i> and <i>label_data_path</i> are required arguments. More (optional) parameters can added as well. See [test.py](./test.py) for a full list of expected arguments.  
+<i>model_name</i> and <i>label_data_path</i> are required arguments. More (optional) parameters can be added as well. See [test.py](./test.py) for a full list of expected arguments.  
 
 
-## Reference
+## References
 > <a id="1">[1]</a> 
 Gligorijević, V., Renfrew, P.D., Kosciolek, T. et al. [Structure-based protein function prediction using graph convolutional networks](https://doi.org/10.1038/s41467-021-23303-9). Nat Commun 12, 3168 (2021).
