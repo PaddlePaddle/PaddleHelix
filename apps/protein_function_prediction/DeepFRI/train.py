@@ -224,9 +224,7 @@ if __name__ == "__main__":
         paddle.set_device("gpu:%s" % args.cuda)
 
     train_chain_list = [p.strip() for p in open(args.train_file)]
-    random.shuffle(train_chain_list)
-    train_chain_list = train_chain_list[:1000]
-    valid_chain_list = [p.strip() for p in open(args.valid_file)][:100]
+    valid_chain_list = [p.strip() for p in open(args.valid_file)]
 
     train_dataset = MyDataset(
         train_chain_list,
