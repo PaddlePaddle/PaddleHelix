@@ -10,7 +10,7 @@ Adaption of the method on protein-binding affinity prediction proposed by Li <i>
 * tqdm==4.62.3 
 
 ## Dataset
-The [Protein Data Bank (PDB)](https://www.rcsb.org/). Pre-processing and transformation of proteins into graphs can be found [here](../datasets_preprocess/PDB/). After preprocessing the data should be copied in the [data](./data) folder.
+The [Protein Data Bank (PDB)](https://www.rcsb.org/). Pre-processing and transformation of proteins into graphs can be found [here](../datasets_preprocess/PDB/). After preprocessing the data should be copied in the [./data](./data) folder. Dataset splits (i.e., test, validation, and test) can be downloaded [here](https://baidu-nlp.bj.bcebos.com/PaddleHelix/datasets/protein_functions/data.zip). They should also be copied to the folder [./data](./data) after extraction.
 
 
 ## Training

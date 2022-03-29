@@ -101,8 +101,10 @@ if __name__ == "__main__":
     test_loader = GoTermDataLoader(test_dataset, batch_size=args.batch_size)
 
     args.n_labels = test_dataset.n_labels
+
     model = ProteinSIGN(args)
     model.set_state_dict(saved_state_dict["model"])
+    
     model.eval()
 
     print(f"\n{args.task}: Testing on {len(test_dataset)} protein samples.")
