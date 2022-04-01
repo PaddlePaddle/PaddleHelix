@@ -10,7 +10,7 @@ Implementation in PaddlePaddle and Paddle Graph Learning (PGL) of the method pro
 * tqdm==4.62.3 
 
 ## Dataset
-The [Protein Data Bank (PDB)](https://www.rcsb.org/). Pre-processing and transformation of proteins into graphs can be found [here](../datasets_preprocess/PDB/). After preprocessing the data should be copied in the [./data](./data) folder. Dataset splits (i.e., test, validation, and test) can be downloaded [here](https://baidu-nlp.bj.bcebos.com/PaddleHelix/datasets/protein_functions/data.zip). They should also be copied to the folder [./data](./data) after extraction.
+The [Protein Data Bank (PDB)](https://www.rcsb.org/). Pre-processing and transformation of proteins into graphs can be found [here](../datasets_preprocess/PDB/). After preprocessing, the data should be copied in the [./data](./data) folder. Dataset splits (i.e., test, validation, and test) as proposed by [[1]](#1) can be downloaded [here](https://baidu-nlp.bj.bcebos.com/PaddleHelix/datasets/protein_functions/data.zip) or from their [repository](https://github.com/flatironinstitute/DeepFRI/tree/master/preprocessing/data). They should also be copied to the folder [./data](./data) after extraction.
 
 
 ## Training
