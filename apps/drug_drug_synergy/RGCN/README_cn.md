@@ -1,4 +1,4 @@
-# DDs(Drug Drug synergy)
+# DTSyn(Drug Drug synergy)
 
 [中文版本](./README_cn.md) [English Version](./README.md)
 
