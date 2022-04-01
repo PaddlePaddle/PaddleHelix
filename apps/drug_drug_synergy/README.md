@@ -1,4 +1,4 @@
-# drug_drug_synergy
+# Drug Drug Synergy
 
 [中文版本](./README_cn.md) [English Version](./README.md)
 

@@ -104,7 +104,7 @@ def smile_to_graph(smile):
 class DDsData(Dataset):
     """data"""
     def __init__(self, d1, d2, cg, label):
-        super(Dataset).__init__()
+        super(Dataset, self).__init__()
         self.d1 = d1
         self.d2 = d2
         self.cg = cg
@@ -124,7 +124,7 @@ class DDsData(Dataset):
 class DBData(Dataset):
     """data"""
     def __init__(self, d1, d2, cg):
-        super(Dataset).__init__()
+        super(Dataset, self).__init__()
         self.d1 = d1
         self.d2 = d2
         self.cg = cg
