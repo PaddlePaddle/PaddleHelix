@@ -137,3 +137,51 @@ class DBData(Dataset):
         return data1, data2, data3
     def __len__(self):
         return len(self.cg)
+
+def collate(batch):
+    """data process during data loading"""
+    d1_list , d2_list = [], []
+    mask1, mask2 = [], []
+    #dea, deb = [], []
+    cells = []
+    lbs = []
+    for cd1, cd2, cell, label in batch:
+        sm1, sm2 = cd1, cd2 #pub_dict[cd1], pub_dict[cd2]
+        dg1, n_dg1 = smile_to_graph(sm1)
+        dg2, n_dg2 = smile_to_graph(sm2)
+        #dg1, n_dg1 = gem_graph(sm1)
+        #dg2, n_dg2 = gem_graph(sm2)
+        mask1.append(n_dg1)
+        mask2.append(n_dg2)
+        
+        d1_list.append(dg1)
+        d2_list.append(dg2)
+        cells.append(cell)
+        lbs.append(label)
+        
+    join_graph1 = pgl.Graph.batch(d1_list)
+    join_mask1 = np.array(mask1)
+    join_mask2 = np.array(mask2)
+    join_graph2 = pgl.Graph.batch(d2_list)
+    
+    join_cells = np.array(cells)
+    labels = np.array(lbs)
+        
+    return join_graph1, join_graph2, join_mask1, join_mask2, join_cells, labels 
+
+def join_cell(ddi, cell):
+    """join all cell feature vectors in a batch"""
+    cgs = []
+    for c in ddi['cell']:
+        cgs.append(cell.loc[c, :].values)
+    
+    return cgs
+
+def join_pert(ddi, pert):
+    pta, ptb = [], []
+    for i in ddi.index:
+        a, b = ddi.loc[i, 'drug1'], ddi.loc[i, 'drug2']
+        pta.append(pert.loc[a, :].values)
+        ptb.append(pert.loc[b, :].values)
+
+    return pta, ptb

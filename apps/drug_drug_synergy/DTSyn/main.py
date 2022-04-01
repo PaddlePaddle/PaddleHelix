@@ -92,51 +92,6 @@ def test_auc(model, data_loader, lincs, criterion):
     return roc_auc_score(test_label, test_prob), auc(recall, precision), test_loss, ACC, BACC, PREC, TPR, KAPPA
 
 
-def collate(batch):
-    d1_list , d2_list = [], []
-    mask1, mask2 = [], []
-    #dea, deb = [], []
-    cells = []
-    lbs = []
-    for cd1, cd2, cell, label in batch:
-        sm1, sm2 = cd1, cd2 #pub_dict[cd1], pub_dict[cd2]
-        dg1, n_dg1 = smile_to_graph(sm1)
-        dg2, n_dg2 = smile_to_graph(sm2)
-        #dg1, n_dg1 = gem_graph(sm1)
-        #dg2, n_dg2 = gem_graph(sm2)
-        mask1.append(n_dg1)
-        mask2.append(n_dg2)
-        
-        d1_list.append(dg1)
-        d2_list.append(dg2)
-        cells.append(cell)
-        lbs.append(label)
-        
-    join_graph1 = pgl.Graph.batch(d1_list)
-    join_mask1 = np.array(mask1)
-    join_mask2 = np.array(mask2)
-    join_graph2 = pgl.Graph.batch(d2_list)
-    
-    join_cells = np.array(cells)
-    labels = np.array(lbs)
-        
-    return join_graph1, join_graph2, join_mask1, join_mask2, join_cells, labels 
-
-def join_cell(ddi, cell):
-    cgs = []
-    for c in ddi['cell']:
-        cgs.append(cell.loc[c, :].values)
-    
-    return cgs
-
-def join_pert(ddi, pert):
-    pta, ptb = [], []
-    for i in ddi.index:
-        a, b = ddi.loc[i, 'drug1'], ddi.loc[i, 'drug2']
-        pta.append(pert.loc[a, :].values)
-        ptb.append(pert.loc[b, :].values)
-
-    return pta, ptb
 
 def Pred(model, lincs, data_loader):
     model.eval()
@@ -177,45 +132,7 @@ def main(args):
     rna = pd.read_csv(args.rna, index_col=0)
     lincs = pd.read_csv(args.lincs, index_col=0, header=None).values
     lincs = paddle.to_tensor(lincs, 'float32')
-    #ddi_test = pd.read_csv(args.ddi_test)
-    #print(rna.index)
-    #drugs_pert = pd.read_csv(args.pert, index_col=0)
-    ###################test###################
-    """ddit = ddi.iloc[:512, :]
-    t_cell = join_cell(ddit, rna)
-    t_tr = DDsData(ddit['drug1'].values, 
-            ddit['drug2'].values, 
-            t_cell, 
-            ddit['label'].values)
-    loader_t = Dataloader(t_tr, batch_size=32, num_workers=4, collate_fn=collate)
-    model = TSNet(num_drug_feat=78, 
-                        num_L_feat=978, 
-                        num_cell_feat=954, 
-                        num_drug_out=128, 
-                        coarsed_heads=4, 
-                        fined_heads=4,
-                        coarse_hidd=64,
-                        fine_hidd=64)
-
-    lincs = paddle.to_tensor(lincs, 'float32')
-    opt = paddle.optimizer.Adam(learning_rate=args.lr, parameters=model.parameters())
-    loss_fn = paddle.nn.CrossEntropyLoss()
-    for g1, g2, gm1, gm2, cell, lbs in loader_t:
-        g1 = g1.tensor()
-        g2 = g2.tensor()
-        gm1 = paddle.to_tensor(gm1, 'int64')
-        gm2 = paddle.to_tensor(gm2, 'int64')
-        cell = paddle.to_tensor(cell, 'float32')
-        lbs = paddle.to_tensor(lbs, 'int64')
-        #batch_samples = len(lbs)
-        preds = model(g1, g2, gm1, gm2, cell, lincs, len(lbs))
-        loss = loss_fn(preds, lbs)
-        loss.backward()
-        opt.step()
-        opt.clear_grad()
-        print('loss: {}'.format(loss))
-        #print(preds)"""
-    ##########################################
+    
     ##############independent validation############
     #5-fold cross validation
     """NUM_CROSS = 5
@@ -230,7 +147,6 @@ def main(args):
     
     ddi_train = ddi.copy()
     train_cell = join_cell(ddi_train, rna)
-                #train_pta, train_ptb = join_pert(ddi_train, drugs_pert)
     bt_tr = DDsData(ddi_train['drug1'].values, 
                         ddi_train['drug2'].values, 
                         train_cell, 
