@@ -176,12 +176,3 @@ def join_cell(ddi, cell):
         cgs.append(cell.loc[c, :].values)
     
     return cgs
-
-def join_pert(ddi, pert):
-    pta, ptb = [], []
-    for i in ddi.index:
-        a, b = ddi.loc[i, 'drug1'], ddi.loc[i, 'drug2']
-        pta.append(pert.loc[a, :].values)
-        ptb.append(pert.loc[b, :].values)
-
-    return pta, ptb
