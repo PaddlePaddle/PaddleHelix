@@ -1,14 +1,11 @@
 # BatchDTA
 
-Source code for paper: "HybridDTA: Hybrid Data Fusion through Pairwise Training for Drug-Target Affinity Prediction". The preprint version is currently released on [bioRxiv](https://www.biorxiv.org/content/10.1101/2021.11.23.469641v1).
 
 ## Backgrounds
 
-Estimating drug-target binding affinity (DTA) is crucial for various tasks, including drug design, drug repurposing, and lead optimization. Advanced works adopt machine learning techniques, especially deep learning, to DTA estimation by utilizing the existing assay data. These powerful techniques make it possible to screen a massive amount of potential drugs with limited computation cost. 
+Candidate compounds with high binding affinities toward a target protein are likely to be developed as drugs. Deep neural networks (DNNs) have attracted increasing attention for drug-target affinity (DTA) estimation owning to their efficiency. However, the negative impact of batch effects caused by measure metrics, system technologies, and other assay information is seldom discussed when training a DNN model for DTA. Suffering from the data deviation caused by batch effects, the DNN models can only be trained on a small amount of "clean" data. Thus, it is challenging for them to provide precise and consistent estimations. 
 
-However, a typical DNN-based training paradigm directly minimizes the distances between the estimated scores and the ground truths, suffering from the issue of data inconsistency. The data inconsistency caused by various measurements, e.g., Kd, Ki, and IC50, as well as experimental conditions, e.g., reactant concentration and temperature, severely hinders the effective utilization of existing data, thus deteriorating the performance of DTA prediction.
-
-In our work, we propose a novel paradigm for effective training on hybrid DTA data to alleviate two critical questions in the DTA domain: (1) the lack of data sources; (2) the data inconsistency from the different experimental indicators. We compared our method with the previous pointwise training paradigm for four commonly used DTA backbone models (DeepDTA, GraphDTA_GCN, GraphDTA_GATGCN, MolTrans) on three datasets. The extensive results show that our proposed framework performs excellently on all the datasets.
+We design a batch-sensitive training framework, namely BatchDTA, to train the DNN models. BatchDTA implicitly aligns multiple batches toward the same protein, alleviating the impact of the batch effects on the DNN models. Extensive experiments demonstrate that BatchDTA facilitates four mainstream DNN models (DeepDTA, GraphDTA_GCN, GraphDTA_GATGCN, MolTrans) to enhance the ability and robustness on multiple DTA datasets. The average concordance index (CI) of the DNN models achieves a relative improvement of 4.0%. BatchDTA can also be applied to the fused data collected from multiple sources to achieve further improvement.
 
 ## Dependencies
 
@@ -125,23 +122,6 @@ CUDA_VISIBLE_DEVICES=0 python train_kiba.py --batchsize 64 --epochs 200 --rounds
 CUDA_VISIBLE_DEVICES=0 python train_bindingdb.py --batchsize 64 --epochs 50 --rounds 1 --lr 5e-4
 ```
 
-
-## Citation
-
-If you find our work is helpful in your research, please cite:
-```bibtex
-@article {Luo2021.11.23.469641,
-  author = {Luo, Hongyu and Xiang, Yingfei and Fang, Xiaomin and Lin, Wei and Wang, Fan and Wu, Hua and Wang, Haifeng},
-  title = {HybridDTA: Hybrid Data Fusion through Pairwise Training for Drug-Target Affinity Prediction},
-  elocation-id = {2021.11.23.469641},
-  year = {2021},
-  doi = {10.1101/2021.11.23.469641},
-  publisher = {Cold Spring Harbor Laboratory},
-  URL = {https://www.biorxiv.org/content/early/2021/11/23/2021.11.23.469641},
-  eprint = {https://www.biorxiv.org/content/early/2021/11/23/2021.11.23.469641.full.pdf},
-  journal = {bioRxiv}
-}
-```
 
 
 ## Reference
