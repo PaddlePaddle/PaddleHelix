@@ -23,7 +23,7 @@ In our work, we propose a novel paradigm for effective training on hybrid DTA da
 
 We provide the benchmark dataset Davis and KIBA with the 5-fold cross-validation of training set and the independant test set. We split based on the unseen proten sequence. We also provide the BindingDB dataset with the four subsets of indicators KD, KI, IC50 and EC50. Each subset is splitted as training/validation/test sets with ratio 8:1:1.
 
-The processed datasets can be downloaded from [here](https://baidu-nlp.bj.bcebos.com/PaddleHelix/datasets/dti_datasets/HybridDTA_data.zip). Before running the scripts, please uncompress and put the downloaded directory with data files under `/apps/drug_target_interaction/batchdta/`.
+The processed datasets can be downloaded from [here](https://baidu-nlp.bj.bcebos.com/PaddleHelix/datasets/dti_datasets/BatchDTA_processed_data.zip). Before running the scripts, please uncompress and put the downloaded directory with data files under `/apps/drug_target_interaction/batchdta/`.
 
 
 ## How to run
