@@ -1,5 +1,6 @@
 # BatchDTA
 
+Source code for paper: "BatchDTA: Implicit batch alignment enhances deep learning-based drug-target affinity estimation". The preprint version is currently released on [bioRxiv](https://www.biorxiv.org/content/10.1101/2021.11.23.469641v2).
 
 ## Backgrounds
 
@@ -122,6 +123,23 @@ CUDA_VISIBLE_DEVICES=0 python train_kiba.py --batchsize 64 --epochs 200 --rounds
 CUDA_VISIBLE_DEVICES=0 python train_bindingdb.py --batchsize 64 --epochs 50 --rounds 1 --lr 5e-4
 ```
 
+
+## Citation
+
+If you find our work is helpful to your research, please cite:
+```bibtex
+@article {Luo2021.11.23.469641,
+	author = {Luo, Hongyu and Xiang, Yingfei and Fang, Xiaomin and Lin, Wei and Wang, Fan and Wu, Hua and Wang, Haifeng},
+	title = {BatchDTA: Implicit batch alignment enhances deep learning-based drug-target affinity estimation},
+	elocation-id = {2021.11.23.469641},
+	year = {2022},
+	doi = {10.1101/2021.11.23.469641},
+	publisher = {Cold Spring Harbor Laboratory},
+	URL = {https://www.biorxiv.org/content/early/2022/04/13/2021.11.23.469641},
+	eprint = {https://www.biorxiv.org/content/early/2022/04/13/2021.11.23.469641.full.pdf},
+	journal = {bioRxiv}
+}
+```
 
 
 ## Reference
