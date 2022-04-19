@@ -1,0 +1,11 @@
+{
+    "crop_size": 100,
+    "unclamped_fape": false,
+    "loss_rescale_with_n_res": true,
+
+    "optimizer": {
+        "lr": 1e-4,
+        "warmup_steps": 1,
+        "grad_clip": 0.1
+    }
+}

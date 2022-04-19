@@ -1,10 +1,10 @@
-#   Copyright (c) 2021 PaddlePaddle Authors.
+#   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,6 +31,7 @@ for larger matrices than 3 dimensional, this code is written to avoid any
 unintended use of these cores on both GPUs and TPUs.
 """
 import paddle
+import numpy as np
 import collections
 from typing import List
 from alphafold_paddle.model import quat_affine
@@ -39,15 +40,18 @@ from alphafold_paddle.model import quat_affine
 # array of translations.
 Rigids = collections.namedtuple('Rigids', ['rot', 'trans'])
 
-class Vecs():
+class Vecs:
     def __init__(self, *args):
+        
         if len(args) == 1:
-            if type(args[0]) is list and len(args[0]) == 3:
+            if type(args[0]) in [list, tuple] and len(args[0]) == 3:
                 self.translation = paddle.stack(args[0], axis=-1)
-            elif type(args[0]) is paddle.Tensor and args[0].shape[-1] == 3:
+            elif len(args[0]) == 1:
+                self.translation = args[0]
+            elif args[0].shape[-1]==3:
                 self.translation = args[0]
             else:
-                raise ValueError('Invalid shape of input')
+                raise ValueError('Invalid number of inputs')
         elif len(args) == 3:
             self.translation = paddle.stack(args, axis=-1)
         else:
@@ -65,6 +69,10 @@ class Vecs():
             return Vecs(paddle.stack(result, axis=-1))
 
     @property
+    def shape(self):
+        return self.translation.shape
+
+    @property
     def x(self):
         return self.translation[..., 0]
 
@@ -76,12 +84,22 @@ class Vecs():
     def z(self):
         return self.translation[..., 2]
 
+    def __getitem__(self,index):
+        return Vecs(self.translation[index])
+    def __str__(self):
+        return str(self.translation.shape)
+    def __repr__(self):
+        return str(self.translation.shape)
 
-class Rots():
+    def reshape(self,*argv):
+        return self.translation.reshape(*argv)
+
+
+class Rots:
     def __init__(self, *args):
         if len(args) == 1:
             args = args[0]
-            if type(args) is list and len(args) == 9:
+            if len(args) == 9:
                 rots = paddle.stack(args, axis=-1)
                 self.rotation = rots.reshape(rots.shape[:-1] + [3, 3])
             else:
@@ -111,6 +129,10 @@ class Rots():
                 result_i.append(paddle.stack(result_j, axis=-1))
 
         return Rots(paddle.stack(result_i, axis=-2))
+
+    @property
+    def shape(self):
+        return self.rotation.shape
 
     @property
     def xx(self):
@@ -148,6 +170,15 @@ class Rots():
     def zz(self):
         return self.rotation[..., 2, 2]
 
+    def __getitem__(self,index):
+        return Rots(self.rotation[index])
+    def __str__(self):
+        return str(self.rotation.shape)
+    def __repr__(self):
+        return str(self.rotation.shape)
+    def reshape(self,*argv):
+        return self.rotation.reshape(*argv)
+
 
 def squared_difference(x, y):
     return paddle.square(x - y)
@@ -168,10 +199,36 @@ def invert_rots(m: Rots) -> Rots:
                 m.xz, m.yz, m.zz)
 
 
+def rigids_from_3_points_vecs(
+    point_on_neg_x_axis: Vecs,
+    origin: Vecs, 
+    point_on_xy_plane: Vecs,
+) -> Rigids:
+  """Create Rigids from 3 points.
+
+  Jumper et al. (2021) Suppl. Alg. 21 "rigidFrom3Points"
+  This creates a set of rigid transformations from 3 points by Gram Schmidt
+  orthogonalization.
+
+  Args:
+    point_on_neg_x_axis: Vecs corresponding to points on the negative x axis
+    origin: Origin of resulting rigid transformations
+    point_on_xy_plane: Vecs corresponding to points in the xy plane
+  Returns:
+    Rigid transformations from global frame to local frames derived from
+    the input points.
+  """
+  m = rots_from_two_vecs(
+      e0_unnormalized=vecs_sub(origin, point_on_neg_x_axis),
+      e1_unnormalized=vecs_sub(point_on_xy_plane, origin))
+
+  return Rigids(rot=m, trans=origin)
+
+
 def rigids_from_3_points(
-    p_neg_x_axis: paddle.Tensor,
+    point_on_neg_x_axis: paddle.Tensor,
     origin: paddle.Tensor,
-    p_xy_plane: paddle.Tensor,
+    point_on_xy_plane: paddle.Tensor,
     eps: float = 1e-8) -> Rigids:
     """Create Rigids from 3 points.
 
@@ -188,12 +245,12 @@ def rigids_from_3_points(
         Rigids corresponding to transformations from global frame
         to local frames derived from the input points.
     """
-    p_neg_x_axis = paddle.unbind(p_neg_x_axis, axis=-1)
+    point_on_neg_x_axis = paddle.unbind(point_on_neg_x_axis, axis=-1)
     origin = paddle.unbind(origin, axis=-1)
-    p_xy_plane = paddle.unbind(p_xy_plane, axis=-1)
+    point_on_xy_plane = paddle.unbind(point_on_xy_plane, axis=-1)
 
-    e0 = [c1 - c2 for c1, c2 in zip(origin, p_neg_x_axis)]
-    e1 = [c1 - c2 for c1, c2 in zip(p_xy_plane, origin)]
+    e0 = [c1 - c2 for c1, c2 in zip(origin, point_on_neg_x_axis)]
+    e1 = [c1 - c2 for c1, c2 in zip(point_on_xy_plane, origin)]
 
     norms = paddle.sqrt(paddle.square(e0[0]) +
                         paddle.square(e0[1]) +
@@ -307,7 +364,9 @@ def rigids_to_tensor_flat12(
     r: Rigids  # shape (...)
     ) -> paddle.Tensor:  # shape (..., 12)
     """Flat12 encoding: rotation matrix (9 floats) + translation (3 floats)."""
-    return paddle.stack(list(r.rot) + list(r.trans), axis=-1)
+    
+    return paddle.stack([r.rot.xx, r.rot.yx, r.rot.zx, r.rot.xy, r.rot.yy, r.rot.zy, r.rot.xz, r.rot.yz, r.rot.zz]
+                        + [r.trans.x, r.trans.y, r.trans.z], axis=-1)
 
 
 def rots_from_tensor3x3(

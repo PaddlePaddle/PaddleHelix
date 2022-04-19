@@ -1,0 +1,18 @@
+{
+    "train": {
+        "protein_clust_file": "./data/demo/protein_clust/demo_clust.list",
+        "protein_map_file": "./data/demo/protein_id.mapping",
+        "feature_dir": "./data/demo/features",
+        "structure_dir": "./data/demo/mmcif"
+    },
+    "valid": {
+        "protein_clust_file": "./data/demo/protein_clust/demo_clust.list",
+        "protein_map_file": "./data/demo/protein_id.mapping",
+        "feature_dir": "./data/demo/features",
+        "structure_dir": "./data/demo/mmcif"
+    },
+    "distill": {
+        "feature_dir": "./data/demo/distill/distill_features",
+        "structure_dir": "./data/demo/distill/distill_pdb"
+    }
+}

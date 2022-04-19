@@ -1,10 +1,10 @@
-# Copyright 2021 DeepMind Technologies Limited
+#   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,7 @@
 # limitations under the License.
 
 """Tests for relax.cleanup."""
+
 import io
 
 from absl.testing import absltest
@@ -30,8 +31,9 @@ def _lines_to_structure(pdb_lines):
 
 
 class CleanupTest(absltest.TestCase):
-
+  """tbd."""
   def test_missing_residues(self):
+    """tbd."""
     pdb_lines = ['SEQRES   1 C    3  CYS GLY LEU',
                  'ATOM      1  N   CYS C   1     -12.262  20.115  60.959  1.00 '
                  '19.08           N',
@@ -58,6 +60,7 @@ class CleanupTest(absltest.TestCase):
     self.assertCountEqual(alterations['missing_residues'].values(), [['GLY']])
 
   def test_missing_atoms(self):
+    """tbd."""
     pdb_lines = ['SEQRES   1 A    1  PRO',
                  'ATOM      1  CA  PRO A   1       1.000   1.000   1.000  1.00 '
                  ' 0.00           C']
@@ -81,6 +84,7 @@ class CleanupTest(absltest.TestCase):
                           [['OXT']])
 
   def test_remove_heterogens(self):
+    """tbd."""
     pdb_lines = ['SEQRES   1 A    1  GLY',
                  'ATOM      1  CA  GLY A   1       0.000   0.000   0.000  1.00 '
                  ' 0.00           C',
@@ -95,6 +99,7 @@ class CleanupTest(absltest.TestCase):
     self.assertEqual(alterations['removed_heterogens'], set(['HOH']))
 
   def test_fix_nonstandard_residues(self):
+    """tbd."""
     pdb_lines = ['SEQRES   1 A    1  DAL',
                  'ATOM      1  CA  DAL A   1       0.000   0.000   0.000  1.00 '
                  ' 0.00           C']
@@ -110,6 +115,7 @@ class CleanupTest(absltest.TestCase):
     self.assertEqual(new_name, 'ALA')
 
   def test_replace_met_se(self):
+    """tbd."""
     pdb_lines = ['SEQRES   1 A    1  MET',
                  'ATOM      1  SD  MET A   1       0.000   0.000   0.000  1.00 '
                  ' 0.00          Se']
@@ -122,6 +128,7 @@ class CleanupTest(absltest.TestCase):
     self.assertCountEqual(alterations['Se_in_MET'], [sd[0].residue_number])
 
   def test_remove_chains_of_length_one(self):
+    """tbd."""
     pdb_lines = ['SEQRES   1 A    1  GLY',
                  'ATOM      1  CA  GLY A   1       0.000   0.000   0.000  1.00 '
                  ' 0.00           C']

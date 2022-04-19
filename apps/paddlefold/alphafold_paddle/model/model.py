@@ -1,4 +1,4 @@
-#   Copyright (c) 2021 PaddlePaddle Authors
+#   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+"""Model."""
 
 import os
 import io
@@ -173,9 +175,10 @@ class RunModel(object):
 
         with paddle.no_grad():
             ret = self.alphafold(
-                feat,
+                feat, {},
                 ensemble_representations=ensemble_representations,
-                return_representations=return_representations)
+                return_representations=return_representations,
+                compute_loss=False)
 
         tensor_to_numpy(ret)
         return ret

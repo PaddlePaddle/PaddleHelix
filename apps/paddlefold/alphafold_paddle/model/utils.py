@@ -1,16 +1,18 @@
-#   Copyright (c) 2021 PaddlePaddle Authors.
+#   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+"""Utils."""
 
 import os
 import numbers
@@ -152,6 +154,7 @@ def mask_mean(mask, value, axis=None, drop_mask_channel=False, eps=1e-10):
 def batched_gather(params, indices, axis=0, batch_dims=0):
     # Implement gather with batching, like tensorflow:
     # https://www.tensorflow.org/api_docs/python/tf/gather#batching
+    # print(params.shape, indices.shape, axis)
     p, i = params, indices
     rank = len(p.shape)
     axis = (rank + axis) % rank
@@ -233,7 +236,6 @@ def subbatch(f, arg_idx, dim, bs, out_idx):
         if dim_width < bs:
             return f(*args, **kwargs)
 
-        # out = None
         outs = []
         for slice_at in np.arange(0, dim_width, bs):
             _args = []
@@ -243,12 +245,6 @@ def subbatch(f, arg_idx, dim, bs, out_idx):
                 _args.append(inp)
             outs.append(f(*_args, **kwargs))
 
-            # if out is None:
-            #     out = f(*_args, **kwargs)
-            # else:
-            #     out = paddle.concat([out, f(*_args, **kwargs)], out_idx)
-
-        # return out
         return paddle.concat(outs, out_idx)
 
     return wrapper
@@ -280,14 +276,29 @@ def generate_unrelaxed_pdb(aatype, residue_index, model_output, pdb_path,
     if b_factors is None:
         b_factors = np.zeros_like(fold_output['final_atom_mask'])
 
+    # NOTE: for single protein, chain_index is always 'A' (idx:0)
     prot = protein.Protein(
         aatype=aatype,
         atom_positions=fold_output['final_atom_positions'],
         atom_mask=fold_output['final_atom_mask'],
         residue_index=residue_index + 1,
+        chain_index=np.zeros(aatype.shape),
         b_factors=b_factors)
 
     with open(pdb_path, 'w') as f:
         f.write(protein.to_pdb(prot))
 
     return prot
+
+
+def set_tensor_constant(tensor, constant):
+    tensor.set_value(paddle.full_like(tensor, constant))
+
+
+def init_gate_linear(linear):
+    set_tensor_constant(linear.weight, 0)
+    set_tensor_constant(linear.bias, 1)
+
+
+def init_final_linear(linear):
+    set_tensor_constant(linear.weight, 0)

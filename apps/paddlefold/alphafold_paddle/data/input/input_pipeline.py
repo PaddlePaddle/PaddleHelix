@@ -1,4 +1,4 @@
-#   Copyright (c) 2021 PaddlePaddle Authors
+#   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,9 +16,12 @@
 
 import time
 import numpy as np
-
+import paddle
+from alphafold_paddle.data.data_utils import compose
 from alphafold_paddle.common import residue_constants
 from alphafold_paddle.data.input import data_transforms
+from alphafold_paddle.model import quat_affine, all_atom
+
 
 NUM_RES = 'num residues placeholder'
 NUM_SEQ = 'length msa placeholder'
@@ -60,9 +63,12 @@ def nonensembled_map_fns(data_config):
         data_transforms.add_distillation_flag(False),
         data_transforms.cast_64bit_ints,
         data_transforms.squeeze_features,
+        # Keep to not disrupt RNG.
         data_transforms.randomly_replace_msa_with_unknown(0.0),
         data_transforms.make_seq_mask,
         data_transforms.make_msa_mask,
+        # Compute the HHblits profile if it's not set. This has to be run before
+        # sampling the MSA.
         data_transforms.make_hhblits_profile,
         data_transforms.make_random_crop_to_size_seed,
     ]
@@ -71,7 +77,6 @@ def nonensembled_map_fns(data_config):
             data_transforms.fix_templates_aatype,
             data_transforms.make_pseudo_beta('template_')
         ])
-
     map_fns.extend([data_transforms.make_atom14_masks])
     return map_fns
 
@@ -231,7 +236,7 @@ def process_arrays_from_config(arrays, data_config):
         """Function to be mapped over the ensemble dimension."""
         d = data.copy()
         fns = ensembled_map_fns(data_config)
-        fn = data_transforms.compose(fns)
+        fn = compose(fns)
         d['ensemble_index'] = i
         return fn(d)
 
@@ -241,7 +246,7 @@ def process_arrays_from_config(arrays, data_config):
         num_ensemble *= data_config.common.num_recycle + 1
 
     eval_cfg = data_config.eval
-    arrays = data_transforms.compose(
+    arrays = compose(
         nonensembled_map_fns(data_config))(arrays)
     arrays_0 = _wrap_ensemble_fn(arrays, np.array(0, np.int32))
     result_array = {x: () for x in arrays_0.keys()}

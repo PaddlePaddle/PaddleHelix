@@ -1,32 +1,62 @@
-#   Copyright (c) 2021 PaddlePaddle Authors.
+#   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import paddle
-import paddle.nn as nn
+
+"""Modules."""
+
 import numpy as np
 
-from alphafold_paddle.model import folding
-from alphafold_paddle.model import all_atom
-from alphafold_paddle.model import quat_affine
+import paddle
+import paddle.nn as nn
+from paddle.fluid.framework import _dygraph_tracer
+from paddle.distributed.fleet.utils import recompute
+
 from alphafold_paddle.common import residue_constants
 from alphafold_paddle.model.utils import mask_mean, subbatch
+from alphafold_paddle.model import folding, lddt, quat_affine, all_atom
+from alphafold_paddle.model.utils import init_gate_linear, init_final_linear
 
 # Map head name in config to head name in model params
 Head_names = {
+    'masked_msa': 'masked_msa_head',
     'distogram': 'distogram_head',
     'predicted_lddt': 'predicted_lddt_head',
     'predicted_aligned_error': 'predicted_aligned_error_head',
+    'experimentally_resolved': 'experimentally_resolved_head',   # finetune loss
 }
+
+
+def recompute_wrapper(func, *args, is_recompute=True):
+    """Function wrapper for recompute"""
+    if is_recompute:
+        return recompute(func, *args)
+    else:
+        return func(*args)
+
+
+def softmax_cross_entropy(logits, labels):
+    """Computes softmax cross entropy given logits and one-hot class labels."""
+    loss = -paddle.sum(labels * paddle.nn.functional.log_softmax(logits), axis=-1)
+    return loss
+
+
+def sigmoid_cross_entropy(logits, labels):
+    """Computes sigmoid cross entropy given logits and multiple class labels."""
+    log_p = paddle.nn.functional.log_sigmoid(logits)
+    # log(1 - sigmoid(x)) = log_sigmoid(-x), the latter is more numerically stable
+    log_not_p = paddle.nn.functional.log_sigmoid(-logits)
+    loss = -labels * log_p - (1. - labels) * log_not_p
+    return loss
 
 
 class AlphaFold(nn.Layer):
@@ -45,8 +75,10 @@ class AlphaFold(nn.Layer):
 
     def forward(self,
                 batch,
+                label,
                 ensemble_representations=False,
-                return_representations=False):
+                return_representations=False,
+                compute_loss=True):
         """Run the AlphaFold model.
 
         Arguments:
@@ -74,8 +106,7 @@ class AlphaFold(nn.Layer):
 
             return new_prev
 
-        def _run_single_recycling(prev, recycle_idx):
-            print(f'########## recycle id: {recycle_idx} ##########')
+        def _run_single_recycling(prev, recycle_idx, compute_loss):
             if self.config.resample_msa_in_recycling:
                 # (B, (R+1)*E, N, ...)
                 # B: batch size, R: recycling number,
@@ -93,7 +124,8 @@ class AlphaFold(nn.Layer):
 
             non_ensembled_batch = prev
             return self.alphafold_iteration(
-                ensembled_batch, non_ensembled_batch,
+                ensembled_batch, label, non_ensembled_batch,
+                compute_loss=compute_loss,
                 ensemble_representations=ensemble_representations)
 
         if self.config.num_recycle:
@@ -114,25 +146,21 @@ class AlphaFold(nn.Layer):
             }
 
             if 'num_iter_recycling' in batch:
-                num_iter = batch['num_iter_recycling'][0].numpy()
+                # Training trick: dynamic recycling number
+                num_iter = batch['num_iter_recycling'].numpy()[0, 0]
                 num_iter = min(int(num_iter), self.config.num_recycle)
             else:
                 num_iter = self.config.num_recycle
 
             for recycle_idx in range(num_iter):
-                ret = _run_single_recycling(prev, recycle_idx)
+                ret = _run_single_recycling(prev, recycle_idx, compute_loss=False)
                 prev = _get_prev(ret)
 
         else:
             prev = {}
             num_iter = 0
 
-        ret = _run_single_recycling(prev, num_iter)
-
-        if not return_representations:
-            del ret['representations']
-
-        return ret
+        return _run_single_recycling(prev, num_iter, compute_loss=compute_loss)
 
 
 class AlphaFoldIteration(nn.Layer):
@@ -163,16 +191,16 @@ class AlphaFoldIteration(nn.Layer):
             self.global_config)
 
         Head_modules = {
+            'masked_msa': MaskedMsaHead,
+            'distogram': DistogramHead,
             'structure_module': folding.StructureModule,
             'predicted_lddt': PredictedLDDTHead,
             'predicted_aligned_error': PredictedAlignedErrorHead,
-            'distogram': DistogramHead,
+            'experimentally_resolved': ExperimentallyResolvedHead,   # finetune loss
         }
 
         self.used_heads = []
         for head_name, head_config in sorted(self.config.heads.items()):
-            if not head_config.weight:
-                continue  # Do not instantiate zero-weight heads.
             if head_name not in Head_modules:
                 continue
 
@@ -185,7 +213,9 @@ class AlphaFoldIteration(nn.Layer):
 
     def forward(self,
                 ensembled_batch,
+                label,
                 non_ensembled_batch,
+                compute_loss=False,
                 ensemble_representations=False):
         num_ensemble = ensembled_batch['seq_length'].shape[1]
         if not ensemble_representations:
@@ -202,6 +232,10 @@ class AlphaFoldIteration(nn.Layer):
         # MSA representations are not ensembled
         msa_representation = representations['msa']
         del representations['msa']
+        # MaskedMSAHead is apply on batch0
+        label['bert_mask'] = batch0['bert_mask']
+        label['true_msa'] = batch0['true_msa']
+        label['residue_index'] = batch0['residue_index']
 
         if ensemble_representations:
             for i in range(1, num_ensemble):
@@ -216,28 +250,82 @@ class AlphaFoldIteration(nn.Layer):
         representations['msa'] = msa_representation
         ret = {'representations': representations}
 
-        # for head_name, head_config in sorted(self.config.heads.items()):
-        for head_name, head_config in self._get_heads():
-            head_name_ = Head_names.get(head_name, head_name)
-            ret[head_name] = getattr(self, head_name_)(
-                representations, batch0)
+        def loss(head_name_, head_config, ret, head_name, filter_ret=True):
+            if filter_ret:
+                value = ret[head_name]
+            else:
+                value = ret
+            loss_output = getattr(self, head_name_).loss(value, label)
+            ret[head_name].update(loss_output)
+            loss = head_config.weight * ret[head_name]['loss']
+            return loss
 
-            if 'representations' in ret[head_name]:
-                # Extra representations from the head. Used by the
-                # structure module to provide activations for the
-                # PredictedLDDTHead.
-                representations.update(
-                    ret[head_name].pop('representations'))
+        def _forward_heads(representations, ret, batch0):
+            total_loss = 0.
+            for head_name, head_config in self._get_heads():
+                head_name_ = Head_names.get(head_name, head_name)
+                # Skip PredictedLDDTHead and PredictedAlignedErrorHead until
+                # StructureModule is executed.
+                if head_name in ('predicted_lddt', 'predicted_aligned_error'):
+                    continue
+                else:
+                    ret[head_name] = getattr(self, head_name_)(representations, batch0)
+                    if 'representations' in ret[head_name]:
+                    # Extra representations from the head. Used by the
+                    # structure module to provide activations for the PredictedLDDTHead.
+                        representations.update(ret[head_name].pop('representations'))
+                if compute_loss:
+                    total_loss += loss(head_name_, head_config, ret, head_name)
 
-        return ret
+            if self.config.heads.get('predicted_lddt.weight', 0.0):
+                # Add PredictedLDDTHead after StructureModule executes.
+                head_name = 'predicted_lddt'
+                # Feed all previous results to give access to structure_module result.
+                head_name_ = Head_names.get(head_name, head_name)
+                head_config = self.config.heads[head_name]
+                ret[head_name] = getattr(self, head_name_)(representations, batch0)
+                if compute_loss:
+                    total_loss += loss(head_name_, head_config, ret, head_name, filter_ret=False)
+
+            if ('predicted_aligned_error' in self.config.heads
+                    and self.config.heads.get('predicted_aligned_error.weight', 0.0)):
+                # Add PredictedAlignedErrorHead after StructureModule executes.
+                head_name = 'predicted_aligned_error'
+                # Feed all previous results to give access to structure_module result.
+                head_config = self.config.heads[head_name]
+                head_name_ = Head_names.get(head_name, head_name)
+                ret[head_name] = getattr(self, head_name_)(representations, batch0)
+                if compute_loss:
+                    total_loss += loss(head_name_, head_config, ret, head_name, filter_ret=False)
+
+            return ret, total_loss
+
+        tracer = _dygraph_tracer()
+        if tracer._amp_dtype == "bfloat16":
+            with paddle.amp.auto_cast(enable=False):
+                for key, value in representations.items():
+                    if value.dtype in [paddle.fluid.core.VarDesc.VarType.BF16]:
+                        temp_value = value.cast('float32')
+                        temp_value.stop_gradient = value.stop_gradient
+                        representations[key] = temp_value
+                for key, value in batch0.items():
+                    if value.dtype in [paddle.fluid.core.VarDesc.VarType.BF16]:
+                        temp_value = value.cast('float32')
+                        temp_value.stop_gradient = value.stop_gradient
+                        batch0[key] = temp_value
+                ret, total_loss = _forward_heads(representations, ret, batch0)
+
+        else:
+            ret, total_loss = _forward_heads(representations, ret, batch0)
+
+        if compute_loss:
+            return ret, total_loss
+        else:
+            return ret
 
     def _get_heads(self):
         assert 'structure_module' in self.used_heads
-        # Since heads `predicted_lddt` and `predicted_aligned_error`
-        # depend on results from `structure_module`, we put it at first
         head_names = [h for h in self.used_heads]
-        head_names.remove('structure_module')
-        head_names = ['structure_module'] + head_names
 
         for k in head_names:
             yield k, self.config.heads[k]
@@ -263,8 +351,6 @@ class Attention(nn.Layer):
         self.key_dim = key_dim
         self.value_dim = value_dim
 
-        # TODO: check if paddle's XavierUniform initializer exactly
-        # matches haiku's glorot_uniform initializer
         self.query_w = paddle.create_parameter(
             [q_dim, num_head, key_dim], 'float32',
             default_initializer=nn.initializer.XavierUniform())
@@ -353,13 +439,9 @@ class GlobalAttention(nn.Layer):
         self.key_dim = key_dim
         self.value_dim = value_dim
 
-        # TODO: check if paddle's XavierUniform initializer exactly
-        # matches haiku's glorot_uniform initializer
         self.query_w = paddle.create_parameter(
             [q_dim, num_head, key_dim], 'float32',
             default_initializer=nn.initializer.XavierUniform())
-        # NOTE: differ from non-global version in key_w & value_w
-        # global version has no heads for key and value!!
         self.key_w = paddle.create_parameter(
             [kv_dim, key_dim], 'float32',
             default_initializer=nn.initializer.XavierUniform())
@@ -580,7 +662,6 @@ class Transition(nn.Layer):
             in_dim = channel_num['pair_channel']
 
         self.input_layer_norm = nn.LayerNorm(in_dim)
-        # TODO: match Haiku's he_normal initializer
         self.transition1 = nn.Linear(
             in_dim, int(in_dim * self.config.num_intermediate_factor),
             weight_attr=paddle.ParamAttr(
@@ -598,21 +679,65 @@ class Transition(nn.Layer):
     def forward(self, act, mask):
         act = self.input_layer_norm(act)
 
-        def transition_module(x):
-            x = self.transition1(x)
-            x = nn.functional.relu(x)
-            x = self.transition2(x)
-            return x
-
         if not self.training:
             # low memory mode using subbatch
-            sb_transition = subbatch(transition_module, [0], [1],
+            sb_trans1 = subbatch(self.transition1, [0], [1],
                                  self.global_config.subbatch_size, 1)
-            act = sb_transition(act)
+            act = sb_trans1(act)
         else:
-            act = transition_module(act)
+            act = self.transition1(act)
+
+        act = nn.functional.relu(act)
+
+        if not self.training:
+            sb_trans2 = subbatch(self.transition2, [0], [1],
+                                 self.global_config.subbatch_size, 1)
+            act = sb_trans2(act)
+        else:
+            act = self.transition2(act)
 
         return act
+
+
+class MaskedMsaHead(nn.Layer):
+    """Head to predict MSA at the masked locations.
+
+    The MaskedMsaHead employs a BERT-style objective to reconstruct a masked
+    version of the full MSA, based on a linear projection of
+    the MSA representation.
+    Jumper et al. (2021) Suppl. Sec. 1.9.9 "Masked MSA prediction"
+    """
+    def __init__(self, channel_num, config, global_config, name='masked_msa_head'):
+        super(MaskedMsaHead, self).__init__()
+        self.config = config
+        self.global_config = global_config
+        self.num_output = config.num_output
+        self.logits = nn.Linear(channel_num['msa_channel'], self.num_output, name='logits')
+
+    def forward(self, representations, batch):
+        """Builds MaskedMsaHead module.
+
+        Arguments:
+        representations: Dictionary of representations, must contain:
+            * 'msa': MSA representation, shape [batch, N_seq, N_res, c_m].
+        batch: Batch, unused.
+
+        Returns:
+        Dictionary containing:
+            * 'logits': logits of shape [batch, N_seq, N_res, N_aatype] with
+                (unnormalized) log probabilies of predicted aatype at position.
+        """
+        del batch
+        logits = self.logits(representations['msa'])
+        return {'logits': logits}
+
+    def loss(self, value, batch):
+        errors = softmax_cross_entropy(
+            labels=paddle.nn.functional.one_hot(batch['true_msa'], num_classes=self.num_output),
+            logits=value['logits'])
+        loss = (paddle.sum(errors * batch['bert_mask'], axis=[-2, -1]) /
+                (1e-8 + paddle.sum(batch['bert_mask'], axis=[-2, -1])))
+        return {'loss': loss}
 
 
 class PredictedLDDTHead(nn.Layer):
@@ -658,7 +783,49 @@ class PredictedLDDTHead(nn.Layer):
         return dict(logits=logits)
 
     def loss(self, value, batch):
-        pass #TODO
+        # Shape (n_batch, num_res, 37, 3)
+        pred_all_atom_pos = value['structure_module']['final_atom_positions']
+        # Shape (n_batch, num_res, 37, 3)
+        true_all_atom_pos = paddle.cast(batch['all_atom_positions'], 'float32')
+        # Shape (n_batch, num_res, 37)
+        all_atom_mask = paddle.cast(batch['all_atom_mask'], 'float32')
+
+        # Shape (batch_size, num_res)
+        lddt_ca = lddt.lddt(
+            # Shape (batch_size, num_res, 3)
+            predicted_points=pred_all_atom_pos[:, :, 1, :],
+            # Shape (batch_size, num_res, 3)
+            true_points=true_all_atom_pos[:, :, 1, :],
+            # Shape (batch_size, num_res, 1)
+            true_points_mask=all_atom_mask[:, :, 1:2],
+            cutoff=15.,
+            per_residue=True)
+        lddt_ca = lddt_ca.detach()
+
+        # Shape (batch_size, num_res)
+        num_bins = self.config.num_bins
+        bin_index = paddle.floor(lddt_ca * num_bins)
+
+        # protect against out of range for lddt_ca == 1
+        bin_index = paddle.minimum(bin_index, paddle.to_tensor(num_bins - 1, dtype='float32'))
+        lddt_ca_one_hot = paddle.nn.functional.one_hot(paddle.cast(bin_index, 'int64'), num_classes=num_bins)
+
+        # Shape (n_batch, num_res, num_channel)
+        logits = value['predicted_lddt']['logits']
+        errors = softmax_cross_entropy(labels=lddt_ca_one_hot, logits=logits)
+
+        # Shape (num_res,)
+        mask_ca = all_atom_mask[:, :, residue_constants.atom_order['CA']]
+        mask_ca = paddle.to_tensor(mask_ca, dtype='float32')
+        loss = paddle.sum(errors * mask_ca, axis=-1) / (paddle.sum(mask_ca, axis=-1) + 1e-8)
+
+        if self.config.filter_by_resolution:
+            # NMR & distillation have resolution = 0
+            resolution = paddle.squeeze(batch['resolution'], axis=-1)
+            loss *= paddle.cast((resolution >= self.config.min_resolution)
+                    & (resolution <= self.config.max_resolution), 'float32')
+        output = {'loss': loss}
+        return output
 
 
 class PredictedAlignedErrorHead(nn.Layer):
@@ -681,18 +848,125 @@ class PredictedAlignedErrorHead(nn.Layer):
 
         Arguments:
             representations: Dictionary of representations, must contain:
-                * 'pair': pair representation, shape [N_res, N_res, c_z].
+                * 'pair': pair representation, shape [B, N_res, N_res, c_z].
             batch: Batch, unused.
 
         Returns:
             Dictionary containing:
-                * logits: logits for aligned error, shape [N_res, N_res, N_bins].
+                * logits: logits for aligned error, shape [B, N_res, N_res, N_bins].
                 * bin_breaks: array containing bin breaks, shape [N_bins - 1].
         """
         logits = self.logits(representations['pair'])
-        breaks = paddle.linspace(0, self.config.max_error_bin,
+        breaks = paddle.linspace(0., self.config.max_error_bin,
                                  self.config.num_bins-1)
-        return {'logits': logits, 'breaks': breaks}
+
+        return dict(logits=logits, breaks=breaks)
+
+    def loss(self, value, batch):
+        # Shape (B, num_res, 7)
+        predicted_affine = quat_affine.QuatAffine.from_tensor(
+            value['structure_module']['final_affines'])
+        # Shape (B, num_res, 7)
+        true_rot = paddle.to_tensor(batch['backbone_affine_tensor_rot'], dtype='float32')
+        true_trans = paddle.to_tensor(batch['backbone_affine_tensor_trans'], dtype='float32')
+        true_affine = quat_affine.QuatAffine(
+            quaternion=None,
+            translation=true_trans,
+            rotation=true_rot)
+        # Shape (B, num_res)
+        mask = batch['backbone_affine_mask']
+        # Shape (B, num_res, num_res)
+        square_mask = mask[..., None] * mask[:, None, :]
+        num_bins = self.config.num_bins
+        # (num_bins - 1)
+        breaks = value['predicted_aligned_error']['breaks']
+        # (B, num_res, num_res, num_bins)
+        logits = value['predicted_aligned_error']['logits']
+
+        # Compute the squared error for each alignment.
+        def _local_frame_points(affine):
+            points = [paddle.unsqueeze(x, axis=-2) for x in 
+                            paddle.unstack(affine.translation, axis=-1)]
+            return affine.invert_point(points, extra_dims=1)
+        error_dist2_xyz = [
+            paddle.square(a - b)
+            for a, b in zip(_local_frame_points(predicted_affine),
+                            _local_frame_points(true_affine))]
+        error_dist2 = sum(error_dist2_xyz)
+        # Shape (B, num_res, num_res)
+        # First num_res are alignment frames, second num_res are the residues.
+        error_dist2 = error_dist2.detach()
+
+        sq_breaks = paddle.square(breaks)
+        true_bins = paddle.sum(paddle.cast((error_dist2[..., None] > sq_breaks), 'int32'), axis=-1)
+
+        errors = softmax_cross_entropy(
+            labels=paddle.nn.functional.one_hot(true_bins, num_classes=num_bins), logits=logits)
+
+        loss = (paddle.sum(errors * square_mask, axis=[-2, -1]) /
+            (1e-8 + paddle.sum(square_mask, axis=[-2, -1])))
+
+        if self.config.filter_by_resolution:
+            # NMR & distillation have resolution = 0
+            resolution = paddle.squeeze(batch['resolution'], axis=-1)
+            loss *= paddle.cast((resolution >= self.config.min_resolution)
+                    & (resolution <= self.config.max_resolution), 'float32')
+
+        output = {'loss': loss}
+        return output
+
+
+class ExperimentallyResolvedHead(nn.Layer):
+    """Predicts if an atom is experimentally resolved in a high-res structure.
+
+    Only trained on high-resolution X-ray crystals & cryo-EM.
+    Jumper et al. (2021) Suppl. Sec. 1.9.10 '"Experimentally resolved" prediction'
+    """
+
+    def __init__(self, channel_num, config, global_config, name='experimentally_resolved_head'):
+        super(ExperimentallyResolvedHead, self).__init__()
+        self.config = config
+        self.global_config = global_config
+        self.logits = nn.Linear(channel_num['seq_channel'], 37, name='logits')
+
+    def forward(self, representations, batch):
+        """Builds ExperimentallyResolvedHead module.
+
+        Arguments:
+        representations: Dictionary of representations, must contain:
+            * 'single': Single representation, shape [B, N_res, c_s].
+        batch: Batch, unused.
+
+        Returns:
+        Dictionary containing:
+            * 'logits': logits of shape [B, N_res, 37],
+                log probability that an atom is resolved in atom37 representation,
+                can be converted to probability by applying sigmoid.
+        """
+        logits = self.logits(representations['single'])
+        return dict(logits=logits)
+
+    def loss(self, value, batch):
+        logits = value['logits']
+        assert len(logits.shape) == 3
+
+        # Does the atom appear in the amino acid?
+        atom_exists = batch['atom37_atom_exists']
+        # Is the atom resolved in the experiment? Subset of atom_exists,
+        # *except for OXT*
+        all_atom_mask = paddle.cast(batch['all_atom_mask'], 'float32')
+
+        xent = sigmoid_cross_entropy(labels=all_atom_mask, logits=logits)
+        loss = paddle.sum(xent * atom_exists, axis=[-2, -1]) / (1e-8 + paddle.sum(atom_exists, axis=[-2, -1]))
+
+        if self.config.filter_by_resolution:
+            # NMR & distillation have resolution = 0
+            resolution = paddle.squeeze(batch['resolution'], axis=-1)
+            loss *= paddle.cast((resolution >= self.config.min_resolution)
+                    & (resolution <= self.config.max_resolution), 'float32')
+
+        output = {'loss': loss}
+        return output
 
 
 class DistogramHead(nn.Layer):
@@ -701,13 +975,14 @@ class DistogramHead(nn.Layer):
     Jumper et al. (2021) Suppl. Sec. 1.9.8 "Distogram prediction"
     """
 
-    def __init__(self, channel_num, config, global_config, name='distogram_head'):
+    def __init__(self, channel_num, config, name='distogram_head'):
         super(DistogramHead, self).__init__()
         self.config = config
-        self.global_config = global_config
+        # self.global_config = global_config
 
         self.half_logits = nn.Linear(channel_num['pair_channel'],
-                                     self.config.num_bins, name='half_logits')
+                                    self.config.num_bins, name='half_logits')
+        init_final_linear(self.half_logits)
 
     def forward(self, representations, batch):
         """Builds DistogramHead module.
@@ -729,7 +1004,9 @@ class DistogramHead(nn.Layer):
         breaks = paddle.tile(breaks[None, :],
                             repeat_times=[logits.shape[0], 1])
 
-        return dict(logits=logits, bin_edges=breaks)
+        return {
+            'logits': logits, 
+            'bin_edges': breaks}
 
     def loss(self, value, batch):
         return _distogram_log_loss(value['logits'], value['bin_edges'],
@@ -738,7 +1015,34 @@ class DistogramHead(nn.Layer):
 
 def _distogram_log_loss(logits, bin_edges, batch, num_bins):
     """Log loss of a distogram."""
-    pass #TODO
+    positions = batch['pseudo_beta']
+    mask = batch['pseudo_beta_mask']
+
+    assert positions.shape[-1] == 3
+
+    sq_breaks = paddle.square(bin_edges).unsqueeze([1, 2])
+
+    dist2 = paddle.sum(
+        paddle.square(
+            paddle.unsqueeze(positions, axis=-2) -
+            paddle.unsqueeze(positions, axis=-3)),
+        axis=-1,
+        keepdim=True)
+
+    true_bins = paddle.sum(dist2 > sq_breaks, axis=-1)
+
+    errors = softmax_cross_entropy(
+        labels=paddle.nn.functional.one_hot(true_bins, num_classes=num_bins), logits=logits)
+
+    square_mask = paddle.unsqueeze(mask, axis=-2) * paddle.unsqueeze(mask, axis=-1)
+
+    avg_error = (
+        paddle.sum(errors * square_mask, axis=[-2, -1]) /
+        (1e-6 + paddle.sum(square_mask, axis=[-2, -1])))
+    dist2 = dist2[..., 0]
+    return {
+        'loss': avg_error, 
+        'true_dist': paddle.sqrt(1e-6 + dist2)}
 
 
 def dgram_from_positions(positions, num_bins, min_bin, max_bin):
@@ -766,7 +1070,6 @@ class EvoformerIteration(nn.Layer):
 
     Jumper et al. (2021) Suppl. Alg. 6 "EvoformerStack" lines 2-10
     """
-
     def __init__(self, channel_num, config, global_config, is_extra_msa=False):
         super(EvoformerIteration, self).__init__()
         self.channel_num = channel_num
@@ -810,11 +1113,13 @@ class EvoformerIteration(nn.Layer):
                     self.config.outer_product_mean, self.global_config,
                     self.is_extra_msa, name='outer_product_mean')
 
+        # Dropout
         dropout_rate, dropout_axis = self._parse_dropout_params(
             self.outer_product_mean)
         self.outer_product_mean_dropout = nn.Dropout(
             dropout_rate, axis=dropout_axis)
 
+        # Triangle Multiplication.
         self.triangle_multiplication_outgoing = TriangleMultiplication(channel_num,
                     self.config.triangle_multiplication_outgoing, self.global_config,
                     name='triangle_multiplication_outgoing')
@@ -831,6 +1136,7 @@ class EvoformerIteration(nn.Layer):
             self.triangle_multiplication_incoming)
         self.triangle_incoming_dropout = nn.Dropout(dropout_rate, axis=dropout_axis)
 
+        # TriangleAttention.
         self.triangle_attention_starting_node = TriangleAttention(channel_num,
                     self.config.triangle_attention_starting_node, self.global_config,
                     name='triangle_attention_starting_node')
@@ -847,6 +1153,7 @@ class EvoformerIteration(nn.Layer):
             self.triangle_attention_ending_node)
         self.triangle_ending_dropout = nn.Dropout(dropout_rate, axis=dropout_axis)
 
+        # Pair transition.
         self.pair_transition = Transition(
             channel_num, self.config.pair_transition, self.global_config,
             is_extra_msa, 'pair_transition')
@@ -867,11 +1174,9 @@ class EvoformerIteration(nn.Layer):
 
         return dropout_rate, dropout_axis
 
-    def forward(self, activations, masks):
-        msa_act, pair_act = activations['msa'], activations['pair']
+    def forward(self, msa_act, pair_act, masks):
         msa_mask, pair_mask = masks['msa'], masks['pair']
 
-        # dropout + residue update
         residual = self.msa_row_attention_with_pair_bias(
             msa_act, msa_mask, pair_act)
         residual = self.msa_row_attn_dropout(residual)
@@ -919,7 +1224,7 @@ class EvoformerIteration(nn.Layer):
         residual = self.pair_transition_dropout(residual)
         pair_act = pair_act + residual
 
-        return {'msa': msa_act, 'pair': pair_act}
+        return msa_act, pair_act
 
 
 class EmbeddingsAndEvoformer(nn.Layer):
@@ -1055,7 +1360,7 @@ class EmbeddingsAndEvoformer(nn.Layer):
         preprocess_1d = self.preprocess_1d(batch['target_feat'])
         # preprocess_msa = self.preprocess_msa(batch['msa_feat'])
         msa_activations = paddle.unsqueeze(preprocess_1d, axis=1) + \
-            self.preprocess_msa(batch['msa_feat'])
+                    self.preprocess_msa(batch['msa_feat'])
 
         right_single = self.right_single(batch['target_feat'])  # 1, n_res, 22 -> 1, n_res, 128
         right_single = paddle.unsqueeze(right_single, axis=1)   # 1, n_res, 128 -> 1, 1, n_res, 128
@@ -1063,8 +1368,7 @@ class EmbeddingsAndEvoformer(nn.Layer):
         left_single = paddle.unsqueeze(left_single, axis=2)     # 1, n_res, 128 -> 1, n_res, 1, 128
         pair_activations = left_single + right_single
 
-        mask_2d = paddle.unsqueeze(batch['seq_mask'], axis=1) * \
-            paddle.unsqueeze(batch['seq_mask'], axis=2)
+        mask_2d = paddle.unsqueeze(batch['seq_mask'], axis=1) * paddle.unsqueeze(batch['seq_mask'], axis=2)
 
         # Inject previous outputs for recycling.
         # Jumper et al. (2021) Suppl. Alg. 2 "Inference" line 6
@@ -1084,10 +1388,8 @@ class EmbeddingsAndEvoformer(nn.Layer):
                 # A workaround for `jax.ops.index_add`
                 msa_first_row = paddle.squeeze(msa_activations[:, 0, :], axis=1)
                 msa_first_row += prev_msa_first_row
-                # msa_other_rows = msa_activations[:, 1:, :]
                 msa_first_row = paddle.unsqueeze(msa_first_row, axis=1)
-                msa_activations = paddle.concat(
-                    [msa_first_row, msa_activations[:, 1:, :]], axis=1)
+                msa_activations = paddle.concat([msa_first_row, msa_activations[:, 1:, :]], axis=1)
 
             if 'prev_pair' in batch:
                 pair_activations += self.prev_pair_norm(batch['prev_pair'])
@@ -1132,10 +1434,15 @@ class EmbeddingsAndEvoformer(nn.Layer):
         }
 
         for extra_msa_stack_iteration in self.extra_msa_stack:
-            extra_msa_stack_output = extra_msa_stack_iteration(
-                activations=extra_msa_stack_input,
-                masks = {'msa': batch['extra_msa_mask'],
-                         'pair': mask_2d}, )
+            extra_msa_act, extra_pair_act = recompute_wrapper(extra_msa_stack_iteration,
+                    extra_msa_stack_input['msa'],
+                    extra_msa_stack_input['pair'],
+                    {'msa': batch['extra_msa_mask'],
+                            'pair': mask_2d},
+                    is_recompute=self.training)
+            extra_msa_stack_output = {
+                'msa': extra_msa_act,
+                'pair': extra_pair_act}
             extra_msa_stack_input = {
                 'msa': extra_msa_stack_output['msa'],
                 'pair': extra_msa_stack_output['pair']}
@@ -1197,9 +1504,14 @@ class EmbeddingsAndEvoformer(nn.Layer):
         # Jumper et al. (2021) Suppl. Alg. 2 "Inference" lines 17-18
         # ==================================================
         for evoformer_block in self.evoformer_iteration:
-            evoformer_output = evoformer_block(
-                activations=evoformer_input,
-                masks=evoformer_masks)
+            msa_act, pair_act = recompute_wrapper(evoformer_block,
+                    evoformer_input['msa'],
+                    evoformer_input['pair'],
+                    evoformer_masks,
+                    is_recompute=self.training)
+            evoformer_output = {
+                'msa': msa_act,
+                'pair': pair_act}
             evoformer_input = {
                 'msa': evoformer_output['msa'],
                 'pair': evoformer_output['pair'],
@@ -1251,12 +1563,11 @@ class OuterProductMean(nn.Layer):
             init_w = nn.initializer.KaimingNormal()
 
         self.output_w = paddle.create_parameter(
-            [self.config.num_outer_channel, self.config.num_outer_channel,
-             channel_num['pair_channel']],
+            [self.config.num_outer_channel, self.config.num_outer_channel, channel_num['pair_channel']],
             'float32', default_initializer=init_w)
         self.output_b = paddle.create_parameter(
             [channel_num['pair_channel']], 'float32',
-            default_initializer=nn.initializer.XavierUniform())
+            default_initializer=nn.initializer.Constant(value=0.0))
 
     def forward(self, act, mask):
         """Builds OuterProductMean module.
@@ -1275,6 +1586,12 @@ class OuterProductMean(nn.Layer):
         right_act = mask * self.right_projection(act)
 
         def compute_chunk(left_act):
+            # This is equivalent to
+            #
+            # act = jnp.einsum('abc,ade->dceb', left_act, right_act)
+            # act = jnp.einsum('dceb,cef->bdf', act, output_w) + output_b
+            #
+            # but faster. maybe for subbatch inference?
             left_act = left_act.transpose([0, 1, 3, 2])
             act = paddle.einsum('nacb,nade->ndceb', left_act, right_act)
             act = paddle.einsum('ndceb,cef->ndbf', act, self.output_w) + self.output_b
@@ -1341,8 +1658,7 @@ class TriangleAttention(nn.Layer):
 
         pair_act = self.query_norm(pair_act)
 
-        nonbatched_bias = paddle.einsum(
-            'bqkc,ch->bhqk', pair_act, self.feat_2d_weights)
+        nonbatched_bias = paddle.einsum('bqkc,ch->bhqk', pair_act, self.feat_2d_weights)
 
         if not self.training:
             # low memory mode using subbatch
@@ -1351,6 +1667,7 @@ class TriangleAttention(nn.Layer):
             pair_act = sb_attn(pair_act, pair_act, bias, nonbatched_bias)
         else:
             pair_act = self.attention(pair_act, pair_act, bias, nonbatched_bias)
+        # pair_act = self.attention(pair_act, pair_act, bias, nonbatched_bias)
 
         if self.config.orientation == 'per_column':
             pair_act = pair_act.transpose([0, 2, 1, 3])
@@ -1365,39 +1682,33 @@ class TriangleMultiplication(nn.Layer):
     Jumper et al. (2021) Suppl. Alg. 12 "TriangleMultiplicationIncoming"
     """
 
-    def __init__(self, channel_num, config, global_config,
-                 name='triangle_multiplication'):
+    def __init__(self, channel_num, config, global_config, name='triangle_multiplication'):
         super(TriangleMultiplication, self).__init__()
         self.channel_num = channel_num
         self.config = config
         self.global_config = global_config
 
-        self.layer_norm_input = nn.LayerNorm(
-            self.channel_num['pair_channel'], name='layer_norm_input')
-        self.left_projection = nn.Linear(
-            self.channel_num['pair_channel'],
-            self.config.num_intermediate_channel, name='left_projection')
-        self.right_projection = nn.Linear(
-            self.channel_num['pair_channel'],
-            self.config.num_intermediate_channel, name='right_projection')
-        self.left_gate = nn.Linear(
-            self.channel_num['pair_channel'],
-            self.config.num_intermediate_channel, name='left_gate')
-        self.right_gate = nn.Linear(
-            self.channel_num['pair_channel'],
-            self.config.num_intermediate_channel, name='right_gate')
+        self.layer_norm_input = nn.LayerNorm(self.channel_num['pair_channel'], name='layer_norm_input')
+        self.left_projection = nn.Linear(self.channel_num['pair_channel'],
+                                self.config.num_intermediate_channel, name='left_projection')
+        self.right_projection = nn.Linear(self.channel_num['pair_channel'],
+                                self.config.num_intermediate_channel, name='right_projection')
+        self.left_gate = nn.Linear(self.channel_num['pair_channel'],
+                                self.config.num_intermediate_channel, name='left_gate')
+        init_gate_linear(self.left_gate)
+        self.right_gate = nn.Linear(self.channel_num['pair_channel'],
+                                self.config.num_intermediate_channel, name='right_gate')
+        init_gate_linear(self.right_gate)
 
         # line 4
-        self.center_layer_norm = nn.LayerNorm(
-            self.config.num_intermediate_channel, name='center_layer_norm')
-        self.output_projection = nn.Linear(
-            self.config.num_intermediate_channel,
-            self.channel_num['pair_channel'], name='output_projection')
-
+        self.center_layer_norm = nn.LayerNorm(self.config.num_intermediate_channel, name='center_layer_norm')
+        self.output_projection = nn.Linear(self.config.num_intermediate_channel,
+                                    self.channel_num['pair_channel'], name='output_projection')
+        init_final_linear(self.output_projection)
         # line 3
-        self.gating_linear = nn.Linear(
-            self.channel_num['pair_channel'],
-            self.channel_num['pair_channel'], name='output_projection')
+        self.gating_linear = nn.Linear(self.channel_num['pair_channel'],
+                                    self.channel_num['pair_channel'], name='output_projection')
+        init_gate_linear(self.gating_linear)
 
     def forward(self, act, mask):
         """Builds TriangleMultiplication module.
@@ -1551,7 +1862,6 @@ class SingleTemplateEmbedding(nn.Layer):
 
     Jumper et al. (2021) Suppl. Alg. 2 "Inference" lines 9+11
     """
-
     def __init__(self, channel_num, config, global_config):
         super(SingleTemplateEmbedding, self).__init__()
         self.config = config

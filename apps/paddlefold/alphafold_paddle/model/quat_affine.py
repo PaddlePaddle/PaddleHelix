@@ -1,10 +1,10 @@
-#   Copyright (c) 2021 PaddlePaddle Authors.
+#   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,11 +33,10 @@ actually used are executed.
 
 import paddle
 import functools
+import numpy as np
 from typing import Tuple
 
-import numpy as np
 
-# pylint: disable=bad-whitespace
 QUAT_TO_ROT = np.zeros((4, 4, 3, 3), dtype=np.float32)
 
 QUAT_TO_ROT[0, 0] = [[ 1, 0, 0], [ 0, 1, 0], [ 0, 0, 1]]  # rr
@@ -75,7 +74,7 @@ QUAT_MULTIPLY[:, :, 3] = [[ 0, 0, 0, 1],
                           [ 1, 0, 0, 0]]
 
 QUAT_MULTIPLY_BY_VEC = QUAT_MULTIPLY[:, 1:, :]
-# pylint: enable=bad-whitespace
+
 
 def rot_to_quat(rot):
     """Convert rotation matrix to quaternion.
@@ -150,6 +149,21 @@ def apply_rot_to_vec(rot, vec, unstack=False):
             rot[..., 1, 0] * x + rot[..., 1, 1] * y + rot[..., 1, 2] * z,
             rot[..., 2, 0] * x + rot[..., 2, 1] * y + rot[..., 2, 2] * z]
 
+
+
+def apply_rot_to_vec_np(rot, vec, unstack=False):
+    """Multiply rotation matrix by a vector. vec is a list.
+    Returns: a list of 3 tensors of the points
+    """
+    if unstack:
+        x, y, z = [vec[..., i] for i in range(3)]
+    else:
+        x, y, z = vec
+    return [rot[0][0] * x + rot[0][1] * y + rot[0][2] * z,
+            rot[1][0] * x + rot[1][1] * y + rot[1][2] * z,
+            rot[2][0] * x + rot[2][1] * y + rot[2][2] * z]
+
+
 def apply_inverse_rot_to_vec(rot, vec):
     """Multiply the inverse of a rotation matrix by a vector. vec is a list.
     Returns: a list of 3 tensors of the points
@@ -204,7 +218,14 @@ class QuatAffine(object):
         """
             stop the gradient of rotations
         """
-        self.rotation.stop_gradient = False
+        quat = self.quaternion
+        if not quat is None:
+            quat = quat.detach()
+        return QuatAffine(
+            quaternion=quat,
+            translation=self.translation,
+            rotation=self.rotation.detach(),
+            normalize=False)
 
     def scale_translation(self, position_scale):
         """Return a new quat affine with a different scale for translation."""
@@ -300,6 +321,7 @@ class QuatAffine(object):
         pass # TODO
 
 
+######Paddle Implementation
 def _multiply(a, b):
     return paddle.stack([
         paddle.stack([
@@ -362,7 +384,7 @@ def make_canonical_transform(
     cos_c1 = c_x / norm
     zeros = paddle.zeros_like(sin_c1)
     ones = paddle.ones_like(sin_c1)
-    # pylint: disable=bad-whitespace
+
     c1_rot_matrix = paddle.stack([cos_c1, -sin_c1, zeros,
                                   sin_c1,  cos_c1, zeros,
                                   zeros,    zeros,  ones], axis=-1)
@@ -424,3 +446,118 @@ def make_transform_from_reference(
     """
     translation, rotation = make_canonical_transform(n_xyz, ca_xyz, c_xyz)
     return paddle.transpose(rotation, (0, 1, 3, 2)), -translation
+
+#######Numpy Implementation
+def _multiply_np(a, b):
+    return np.stack([
+        np.array([a[0][0]*b[0][0] + a[0][1]*b[1][0] + a[0][2]*b[2][0],
+                    a[0][0]*b[0][1] + a[0][1]*b[1][1] + a[0][2]*b[2][1],
+                    a[0][0]*b[0][2] + a[0][1]*b[1][2] + a[0][2]*b[2][2]]),
+
+        np.array([a[1][0]*b[0][0] + a[1][1]*b[1][0] + a[1][2]*b[2][0],
+                    a[1][0]*b[0][1] + a[1][1]*b[1][1] + a[1][2]*b[2][1],
+                    a[1][0]*b[0][2] + a[1][1]*b[1][2] + a[1][2]*b[2][2]]),
+
+        np.array([a[2][0]*b[0][0] + a[2][1]*b[1][0] + a[2][2]*b[2][0],
+                    a[2][0]*b[0][1] + a[2][1]*b[1][1] + a[2][2]*b[2][1],
+                    a[2][0]*b[0][2] + a[2][1]*b[1][2] + a[2][2]*b[2][2]])])
+
+
+def make_canonical_transform_np(
+    n_xyz: np.ndarray,
+    ca_xyz: np.ndarray,
+    c_xyz: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    """Returns translation and rotation matrices to canonicalize residue atoms.
+
+    Note that this method does not take care of symmetries. If you provide the
+    atom positions in the non-standard way, the N atom will end up not at
+    [-0.527250, 1.359329, 0.0] but instead at [-0.527250, -1.359329, 0.0]. You
+    need to take care of such cases in your code.
+
+    Args:
+        n_xyz: An array of shape [batch, 3] of nitrogen xyz coordinates.
+        ca_xyz: An array of shape [batch, 3] of carbon alpha xyz coordinates.
+        c_xyz: An array of shape [batch, 3] of carbon xyz coordinates.
+
+    Returns:
+        A tuple (translation, rotation) where:
+        translation is an array of shape [batch, 3] defining the translation.
+        rotation is an array of shape [batch, 3, 3] defining the rotation.
+        After applying the translation and rotation to all atoms in a residue:
+        * All atoms will be shifted so that CA is at the origin,
+        * All atoms will be rotated so that C is at the x-axis,
+        * All atoms will be shifted so that N is in the xy plane.
+    """
+    assert len(n_xyz.shape) == 2, n_xyz.shape
+    assert n_xyz.shape[-1] == 3, n_xyz.shape
+    assert n_xyz.shape == ca_xyz.shape == c_xyz.shape, (n_xyz.shape, ca_xyz.shape, c_xyz.shape)
+
+    # Place CA at the origin.
+    translation = -ca_xyz
+    n_xyz = n_xyz + translation
+    c_xyz = c_xyz + translation
+
+    # Place C on the x-axis.
+    c_x, c_y, c_z = [c_xyz[:, i] for i in range(3)]
+    # Rotate by angle c1 in the x-y plane (around the z-axis).
+    sin_c1 = -c_y / np.sqrt(1e-20 + c_x**2 + c_y**2)
+    cos_c1 = c_x / np.sqrt(1e-20 + c_x**2 + c_y**2)
+    zeros = np.zeros_like(sin_c1)
+    ones = np.ones_like(sin_c1)
+    # pylint: disable=bad-whitespace
+    c1_rot_matrix = np.stack([np.array([cos_c1, -sin_c1, zeros]),
+                               np.array([sin_c1,  cos_c1, zeros]),
+                               np.array([zeros,    zeros,  ones])])
+
+    # Rotate by angle c2 in the x-z plane (around the y-axis).
+    sin_c2 = c_z / np.sqrt(1e-20 + c_x**2 + c_y**2 + c_z**2)
+    cos_c2 = np.sqrt(c_x**2 + c_y**2) / np.sqrt(
+        1e-20 + c_x**2 + c_y**2 + c_z**2)
+    c2_rot_matrix = np.stack([np.array([cos_c2,  zeros, sin_c2]),
+                              np.array([zeros,    ones,  zeros]),
+                              np.array([-sin_c2, zeros, cos_c2])])
+
+    c_rot_matrix = _multiply_np(c2_rot_matrix, c1_rot_matrix)
+    n_xyz = np.stack(apply_rot_to_vec_np(c_rot_matrix, n_xyz, unstack=True)).T
+
+    # Place N in the x-y plane.
+    _, n_y, n_z = [n_xyz[:, i] for i in range(3)]
+    # Rotate by angle alpha in the y-z plane (around the x-axis).
+    sin_n = -n_z / np.sqrt(1e-20 + n_y**2 + n_z**2)
+    cos_n = n_y / np.sqrt(1e-20 + n_y**2 + n_z**2)
+    n_rot_matrix = np.stack([np.array([ones,  zeros,  zeros]),
+                              np.array([zeros, cos_n, -sin_n]),
+                              np.array([zeros, sin_n,  cos_n])])
+
+    return (translation, np.transpose(_multiply_np(n_rot_matrix, c_rot_matrix), [2, 0, 1]))
+
+
+def make_transform_from_reference_np(
+    n_xyz: np.ndarray,
+    ca_xyz: np.ndarray,
+    c_xyz: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+  """Returns rotation and translation matrices to convert from reference.
+
+  Note that this method does not take care of symmetries. If you provide the
+  atom positions in the non-standard way, the N atom will end up not at
+  [-0.527250, 1.359329, 0.0] but instead at [-0.527250, -1.359329, 0.0]. You
+  need to take care of such cases in your code.
+
+  Args:
+    n_xyz: An array of shape [batch, 3] of nitrogen xyz coordinates.
+    ca_xyz: An array of shape [batch, 3] of carbon alpha xyz coordinates.
+    c_xyz: An array of shape [batch, 3] of carbon xyz coordinates.
+
+  Returns:
+    A tuple (rotation, translation) where:
+      rotation is an array of shape [batch, 3, 3] defining the rotation.
+      translation is an array of shape [batch, 3] defining the translation.
+    After applying the translation and rotation to the reference backbone,
+    the coordinates will approximately equal to the input coordinates.
+
+    The order of translation and rotation differs from make_canonical_transform
+    because the rotation from this function should be applied before the
+    translation, unlike make_canonical_transform.
+  """
+  translation, rotation = make_canonical_transform_np(n_xyz, ca_xyz, c_xyz)
+  return np.transpose(rotation, (0, 2, 1)), -translation
