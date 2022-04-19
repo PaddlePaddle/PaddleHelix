@@ -26,13 +26,13 @@ module load apps/anaconda3/5.2.0
 创建Python环境
 
 ```
-conda create -p ~/conda-envs/paddle python==3.7.10
+conda create -p ~/conda-envs/paddle_20220413 python==3.7.10
 ```
 
 激活Python环境
 
 ```
-conda activate ~/conda-envs/paddle
+conda activate ~/conda-envs/paddle_20220413
 ```
 
 
@@ -41,14 +41,10 @@ conda activate ~/conda-envs/paddle
 在激活的Conda Python环境中安装PaddlePaddle ROCm版本
 
 ```
-pip install --pre paddlepaddle-rocm -f https://www.paddlepaddle.org.cn/whl/rocm/develop.html
+wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/tools/paddlepaddle_rocm-0.0.0-cp37-cp37m-linux_x86_64-0.whl
+pip install ./paddlepaddle_rocm-0.0.0-cp37-cp37m-linux_x86_64-0.whl
 ```
 
-详细请参考PaddlePaddle官网按照教程(选择ROCm版本)：
-https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/develop/guides/09_hardware_support/rocm_docs/paddle_install_cn.html
-
-飞桨框架ROCm版安装说明:
-https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/09_hardware_support/rocm_docs/paddle_install_cn.html#anchor-0
 
 # 3、PaddleFold
 
