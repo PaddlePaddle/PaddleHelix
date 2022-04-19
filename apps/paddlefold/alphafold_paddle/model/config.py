@@ -63,7 +63,6 @@ CONFIG_DIFFS = {
     'initial_model_5_dcu': {
         'data.eval.max_msa_clusters': 128,
         'data.common.max_extra_msa': 512,
-        'model.global_config.subbatch_size': 64,
         'model.heads.structure_module.structural_violation_loss_weight': 0.0,
         'model.heads.experimentally_resolved.weight': 0.0,
     },

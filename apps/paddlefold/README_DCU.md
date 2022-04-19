@@ -58,12 +58,12 @@ https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/09_hardware
 
 - 任务配置
   
-在 app/protein_folding/dcu_train.sh 脚本中配置任务使用的资源量
+在 dcu_train.sh 脚本中配置任务使用的资源量
 
 
 - 任务脚本
 
-在 app/protein_folding/train_dcu.sh 脚本中加载PaddlePaddle Python环境
+在 train_dcu.sh 脚本中加载PaddlePaddle Python环境
 
 例如：
 ```
@@ -75,10 +75,9 @@ source activate ~/conda-envs/paddle
 
 ## 提交训练任务
 ```
-cd app/protein_folding
 sbatch dcu_train.sh
 ```
 
 ## 查看训练日志
 
-日志在app/protein_folding/下log_开头的目录下
+日志在log/目录下
