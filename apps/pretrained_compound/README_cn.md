@@ -4,6 +4,6 @@
 
 我们提供以下化合物预训练模型。
 
-* [GEM](./ChemRL/README.md)
+* [GEM](./ChemRL/GEM/README.md)
 * [PretrainGNNs](./pretrain_gnns/README_cn.md)
 * [InfoGraph](./info_graph/README_cn.md)
