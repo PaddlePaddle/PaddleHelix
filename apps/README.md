@@ -13,3 +13,6 @@ We provide examples that implement various algorithms and show the methods runni
   - [LinearRNA](../c/pahelix/toolkit/linear_rna)
 * **Protein Structure Prediction**
   - [PaddleFold](./paddlefold)
+* **Protein Function Prediction**
+  - [DeepFRI](./protein_function_prediction/DeepFRI/)
+  - [ProteinSIGN](./protein_function_prediction/ProteinSIGN/)

@@ -13,3 +13,6 @@
   - [LinearRNA](../c/pahelix/toolkit/linear_rna)
 * **蛋白质结构预测**
   - [PaddleFold](./paddlefold)
+* **蛋白质功能预测**
+  - [DeepFRI](./protein_function_prediction/DeepFRI/)
+  - [ProteinSIGN](./protein_function_prediction/ProteinSIGN/)
