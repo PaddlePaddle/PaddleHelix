@@ -4,5 +4,6 @@
 
 We provide the following pretrained compound methods.
 
+* [GEM](./ChemRL/GEM/README.md)
 * [PretrainGNNs](./pretrain_gnns/README.md)
 * [InfoGraph](./info_graph/README.md)
