@@ -1,11 +1,13 @@
 #!/bin/bash
 #set -eu
 
+#1.python环境设置
 module rm compiler/rocm/2.9
 module load compiler/rocm/4.0.1
 module load apps/anaconda3/5.2.0
 source activate ~/conda-envs/paddle_20220413
 
+#2.机卡信息显示
 allhost=$1
 echo "-------------input params ${SLURM_NODEID}--------------"
 echo "${SLURM_NODEID} allhost:$allhost"
@@ -20,33 +22,33 @@ echo "node_num="${#allhost_arr[@]}
 export PADDLE_NODE_NUM=${node_num}
 echo "PADDLE_NODE_NUM="${PADDLE_NODE_NUM}
 
+#3.DCU硬件相关配置
 export PADDLE_WITH_GLOO=0
 export NCCL_SOCKET_IFNAME=eno1
 export NCCL_IB_DISABLE=0
 export NCCL_IB_HCA=mlx5_0,mlx5_3
 export HIP_VISIBLE_DEVICES=0,1,2,3
-
-DD_RAND_SEED=1
-
 export FLAGS_conv2d_disable_cudnn=True
 export MIOPEN_FIND_MODE=3
+DD_RAND_SEED=1
 
 echo "[INFO]: Rand seed "${DD_RAND_SEED}
 echo "[INFO]: PATH="$PATH
 echo "[INFO]: PYTHONPATH="$PYTHONPATH
 
+#4.训练配置
 log_dir="log/log_${SLURM_NODEID}"
 rm -rf ${log_dir}
 if [ ! -d ${log_dir} ]; then
-    mkdir ${log_dir}
+    mkdir -p ${log_dir}
 fi
 
 root_path="$(pwd)/../../"
 export DEBUG=1
 export PYTHONPATH=$root_path:$PYTHONPATH
 
-TM_SCORE_BIN="/public/home/test_alphafold/data/20220118/af2/tm_score"
-LDDT_SCORE_BIN="/public/home/test_alphafold/data/20220118/af2/lddt"
+TM_SCORE_BIN="./tools/tm_score"
+LDDT_SCORE_BIN="./tools/lddt"
 
 precision="fp32"
 data_config="./data_configs/demo.json"
