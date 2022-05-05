@@ -1,10 +1,10 @@
-# Copyright 2021 DeepMind Technologies Limited
+#   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,7 @@
 # limitations under the License.
 
 """Functions for parsing various file formats."""
+
 import collections
 import dataclasses
 import re
@@ -20,6 +21,31 @@ import string
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 DeletionMatrix = Sequence[Sequence[int]]
+
+@dataclasses.dataclass(frozen=True)
+class Msa:
+  """Class representing a parsed MSA file."""
+  sequences: Sequence[str]
+  deletion_matrix: DeletionMatrix
+  descriptions: Sequence[str]
+
+  def __post_init__(self):
+    if not (len(self.sequences) ==
+            len(self.deletion_matrix) ==
+            len(self.descriptions)):
+      raise ValueError(
+          'All fields for an MSA must have the same length. '
+          f'Got {len(self.sequences)} sequences, '
+          f'{len(self.deletion_matrix)} rows in the deletion matrix and '
+          f'{len(self.descriptions)} descriptions.')
+
+  def __len__(self):
+    return len(self.sequences)
+
+  def truncate(self, max_seqs: int):
+    return Msa(sequences=self.sequences[:max_seqs],
+               deletion_matrix=self.deletion_matrix[:max_seqs],
+               descriptions=self.descriptions[:max_seqs])
 
 
 @dataclasses.dataclass(frozen=True)

@@ -1,10 +1,10 @@
-# Copyright 2021 DeepMind Technologies Limited
+#   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,16 +13,15 @@
 # limitations under the License.
 
 """Parses the mmCIF file format."""
+
 import collections
 import dataclasses
+import functools
 import io
-import logging
 from typing import Any, Mapping, Optional, Sequence, Tuple
-
+from absl import logging
 from Bio import PDB
 from Bio.Data import SCOPData
-
-logger = logging.getLogger(__name__)
 
 # Type aliases:
 ChainId = str
@@ -162,6 +161,7 @@ def mmcif_loop_to_dict(prefix: str,
   return {entry[index]: entry for entry in entries}
 
 
+@functools.lru_cache(16, typed=False)
 def parse(*,
           file_id: str,
           mmcif_string: str,
@@ -305,7 +305,7 @@ def _get_header(parsed_info: MmCIFDict) -> PdbHeader:
   if '_pdbx_audit_revision_history.revision_date' in parsed_info:
     header['release_date'] = get_release_date(parsed_info)
   else:
-    logger.warning('Could not determine release_date: %s',
+    logging.warning('Could not determine release_date: %s',
                     parsed_info['_entry.id'])
 
   header['resolution'] = 0.00
@@ -316,7 +316,7 @@ def _get_header(parsed_info: MmCIFDict) -> PdbHeader:
         raw_resolution = parsed_info[res_key][0]
         header['resolution'] = float(raw_resolution)
       except ValueError:
-        logger.warning('Invalid resolution format: %s', parsed_info[res_key])
+        logging.debug('Invalid resolution format: %s', parsed_info[res_key])
 
   return header
 

@@ -6,3 +6,4 @@ immutabledict==2.0.0
 ml-collections==0.1.0
 numpy==1.19.5
 scipy==1.7.0
+tensorboardX==2.5

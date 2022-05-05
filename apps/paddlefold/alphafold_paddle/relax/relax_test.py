@@ -1,10 +1,10 @@
-# Copyright 2021 DeepMind Technologies Limited
+#   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,7 @@
 # limitations under the License.
 
 """Tests for relax."""
+
 import os
 
 from absl.testing import absltest
@@ -23,8 +24,9 @@ import numpy as np
 
 
 class RunAmberRelaxTest(absltest.TestCase):
-
+  """tbd."""
   def setUp(self):
+    """tbd."""
     super().setUp()
     self.test_dir = os.path.join(
         absltest.get_default_test_srcdir(),
@@ -37,6 +39,7 @@ class RunAmberRelaxTest(absltest.TestCase):
         'max_outer_iterations': 1}
 
   def test_process(self):
+    """tbd."""
     amber_relax = relax.AmberRelaxation(**self.test_config)
 
     with open(os.path.join(self.test_dir, 'model_output.pdb')) as f:
@@ -67,6 +70,7 @@ class RunAmberRelaxTest(absltest.TestCase):
     np.testing.assert_equal(num_violations, np.zeros_like(num_violations))
 
   def test_unresolved_violations(self):
+    """tbd."""
     amber_relax = relax.AmberRelaxation(**self.test_config)
     with open(os.path.join(self.test_dir,
                                  'with_violations_casp14.pdb')) as f:

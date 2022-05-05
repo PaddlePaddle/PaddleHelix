@@ -1,10 +1,10 @@
-# Copyright 2021 DeepMind Technologies Limited
+#   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,6 +16,7 @@
 
 import collections
 import functools
+import os
 from typing import List, Mapping, Tuple
 
 import numpy as np
@@ -398,12 +399,13 @@ def load_stereo_chemical_props() -> Tuple[Mapping[str, List[Bond]],
   ("residue_virtual_bonds").
 
   Returns:
-    residue_bonds:  dict that maps resname --> list of Bond tuples
-    residue_virtual_bonds: dict that maps resname --> list of Bond tuples
-    residue_bond_angles: dict that maps resname --> list of BondAngle tuples
+    residue_bonds: Dict that maps resname -> list of Bond tuples.
+    residue_virtual_bonds: Dict that maps resname -> list of Bond tuples.
+    residue_bond_angles: Dict that maps resname -> list of BondAngle tuples.
   """
-  stereo_chemical_props_path = (
-      'alphafold_paddle/common/stereo_chemical_props.txt')
+  stereo_chemical_props_path = os.path.join(
+      os.path.dirname(os.path.abspath(__file__)), 'stereo_chemical_props.txt'
+  )
   with open(stereo_chemical_props_path, 'rt') as f:
     stereo_chemical_props = f.read()
   lines_iter = iter(stereo_chemical_props.splitlines())

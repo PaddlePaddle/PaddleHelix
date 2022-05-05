@@ -1,17 +1,17 @@
-#   Copyright (c) 2021 PaddlePaddle Authors.
-# Copyright 2021 DeepMind Technologies Limited
+#   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """Model config."""
 
 import copy
@@ -26,7 +26,6 @@ NUM_TEMPLATES = 'num templates placeholder'
 
 def model_config(name: str) -> ml_collections.ConfigDict:
   """Get the ConfigDict of a CASP14 model."""
-
   if name not in CONFIG_DIFFS:
     raise ValueError(f'Invalid model name {name}.')
   cfg = copy.deepcopy(CONFIG)
@@ -60,6 +59,63 @@ CONFIG_DIFFS = {
     },
     'model_5': {
         # Jumper et al. (2021) Suppl. Table 5, Model 1.2.3
+    },
+    'initial_model_5_dcu': {
+        'data.eval.max_msa_clusters': 128,
+        'data.common.max_extra_msa': 512,
+        'model.heads.structure_module.structural_violation_loss_weight': 0.0,
+        'model.heads.experimentally_resolved.weight': 0.0,
+    },
+    'initial': {
+        'data.eval.max_msa_clusters': 128,
+        'data.common.max_extra_msa': 1024,
+        'data.common.reduce_msa_clusters_by_max_templates': True,
+        'data.common.use_templates': True,
+        'model.embeddings_and_evoformer.template.embed_torsion_angles': True,
+        'model.embeddings_and_evoformer.template.enabled': True,
+        'model.heads.structure_module.structural_violation_loss_weight': 0.0,
+        'model.heads.experimentally_resolved.weight': 0.0,
+    },
+    'finetune': {
+        'data.eval.max_msa_clusters': 512,
+        'data.common.max_extra_msa': 5120,
+        'data.common.reduce_msa_clusters_by_max_templates': True,
+        'data.common.use_templates': True,
+        'model.embeddings_and_evoformer.template.embed_torsion_angles': True,
+        'model.embeddings_and_evoformer.template.enabled': True,
+    },
+
+    'msa128_ex1024_vio0': {
+        'data.eval.max_msa_clusters': 128,
+        'data.common.max_extra_msa': 1024,
+        'model.heads.structure_module.structural_violation_loss_weight': 0.0,
+        'model.heads.experimentally_resolved.weight': 0.0,
+    },
+    'msa128_ex1024_temp_vio0': {
+        'data.eval.max_msa_clusters': 128,
+        'data.common.max_extra_msa': 1024,
+        'data.common.reduce_msa_clusters_by_max_templates': True,
+        'data.common.use_templates': True,
+        'model.embeddings_and_evoformer.template.embed_torsion_angles': True,
+        'model.embeddings_and_evoformer.template.enabled': True,
+        'model.heads.structure_module.structural_violation_loss_weight': 0.0,
+        'model.heads.experimentally_resolved.weight': 0.0,
+    },
+    'msa128_ex1024_ft': {
+        'data.eval.max_msa_clusters': 128,
+        'data.common.max_extra_msa': 1024,
+        'model.heads.structure_module.structural_violation_loss_weight': 1.0,
+        'model.heads.experimentally_resolved.weight': 0.01,
+    },
+    'msa512_ex1024': {
+        'data.eval.max_msa_clusters': 512,
+        'data.common.max_extra_msa': 1024,
+    },
+    'msa512_ex1024_rec6': {
+        'data.common.num_recycle': 6,
+        'model.num_recycle': 6,
+        'data.eval.max_msa_clusters': 512,
+        'data.common.max_extra_msa': 1024,
     },
 
     # The following models are fine-tuned from the corresponding models above
@@ -179,6 +235,9 @@ CONFIG = ml_collections.ConfigDict({
             'max_msa_clusters': 512,
             'max_templates': 4,
             'num_ensemble': 1,
+            'num_blocks': 5,    # for msa block deletion
+            'randomize_num_blocks': False,
+            'msa_fraction_per_block': 0.3,
         },
     },
     'model': {
@@ -316,13 +375,13 @@ CONFIG = ml_collections.ConfigDict({
                     }
                 },
                 'max_templates': 4,
-                'subbatch_size': 128,
+                'subbatch_size': 48,
                 'use_template_unit_vector': False,
             }
         },
         'global_config': {
             'deterministic': False,
-            'subbatch_size': 4,
+            'subbatch_size': 48,
             'use_remat': False,
             'zero_init': True
         },

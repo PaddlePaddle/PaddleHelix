@@ -1,4 +1,4 @@
-#   Copyright (c) 2021 PaddlePaddle Authors
+#   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,42 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Data transforms"""
+"""Data transforms."""
 
 import numpy as np
-
 from alphafold_paddle.common import residue_constants
 
 
-# ==================================================
-#                 helper function
-# ==================================================
-
-def curry1(f):
-    """Supply all arguments except the first."""
-
-    def fc(*args, **kwargs):
-        return lambda x: f(x, *args, **kwargs)
-
-    return fc
-
-
-@curry1
-def compose(x, fs):
-    for f in fs:
-        x = f(x)
-    return x
-
-
+## Helper function
 def shape_list(x):
     """Return list of dimensions of an array."""
     x = np.array(x)
 
     if x.ndim is None:
         return x.shape
-
     static = x.shape
-
     ret = []
     for _, dim in enumerate(static):
         ret.append(dim)
@@ -55,20 +33,9 @@ def shape_list(x):
 
 
 def one_hot(depth, indices):
+    """tbd."""
     res = np.eye(depth)[indices.reshape(-1)]
     return res.reshape(list(indices.shape) + [depth])
-
-
-def shaped_categorical(probs):
-    ds = shape_list(probs)
-    num_classes = ds[-1]
-    probs = np.reshape(probs, (-1, num_classes))
-    nums = list(range(num_classes))
-    counts = []
-    for prob in probs:
-        counts.append(np.random.choice(nums, p=prob))
-
-    return np.reshape(np.array(counts, np.int32), ds[:-1])
 
 
 class SeedMaker(object):
@@ -82,7 +49,6 @@ class SeedMaker(object):
         self.next_seed += 1
         return i
 
-
 NUM_RES = 'num residues placeholder'
 NUM_MSA_SEQ = 'msa placeholder'
 NUM_EXTRA_SEQ = 'extra msa placeholder'
@@ -90,10 +56,7 @@ NUM_TEMPLATES = 'num templates placeholder'
 
 MS_MIN32 = -2147483648
 MS_MAX32 = 2147483647
-_MSA_FEATURE_NAMES = [
-    'msa', 'deletion_matrix', 'msa_mask', 'msa_row_mask', 'bert_mask',
-    'true_msa'
-]
+
 Seed_maker = SeedMaker()
 
 def make_random_seed(size, low=MS_MIN32, high=MS_MAX32):
@@ -101,9 +64,67 @@ def make_random_seed(size, low=MS_MIN32, high=MS_MAX32):
     np.random.seed(Seed_maker())
     return np.random.uniform(size=size, low=low, high=high)
 
-# ==================================================
-#          transform for nonensembled data
-# ==================================================
+
+def cast_64bit_ints(protein):
+    """Cast 64bit ints."""
+    for k, v in protein.items():
+        if v.dtype == np.int64:
+            protein[k] = v.astype(np.int32)
+    return protein
+
+
+_MSA_FEATURE_NAMES = [
+    'msa', 'deletion_matrix', 'msa_mask', 'msa_row_mask', 'bert_mask',
+    'true_msa'
+]
+
+
+def make_seq_mask(protein):
+    """Make seq mask."""
+    protein['seq_mask'] = np.ones(shape_list(protein['aatype']),
+                                dtype=np.float32)
+    return protein
+
+
+def make_template_mask(protein):
+    """Make template mask."""
+    protein['template_mask'] = np.ones(shape_list(protein['template_domain_names']),
+                                dtype=np.float32)
+    return protein
+
+
+def curry1(f):
+    """Supply all arguments except the first."""
+    def fc(*args, **kwargs):
+        return lambda x: f(x, *args, **kwargs)
+
+    return fc
+
+
+@curry1
+def add_distillation_flag(protein, distillation):
+    """Add distillation flag."""
+    protein['is_distillation'] = np.array(
+        float(distillation), dtype=np.float32)
+    return protein
+
+
+def make_all_atom_aatype(protein):
+  protein['all_atom_aatype'] = protein['aatype']
+  return protein
+
+
+def fix_templates_aatype(protein):
+    """Fixes aatype encoding of templates."""
+    # Map one-hot to indices.
+    protein['template_aatype'] = np.argmax(protein['template_aatype'],
+                                           axis=-1).astype(np.int32)
+    # Map hhsearch-aatype to our aatype.
+    new_order_list = residue_constants.MAP_HHBLITS_AATYPE_TO_OUR_AATYPE
+    new_order = np.array(new_order_list, np.int32)
+    protein['template_aatype'] = new_order[protein['template_aatype']]
+    return protein
+
 
 def correct_msa_restypes(protein):
     """Correct MSA restype to have the same order as residue_constants."""
@@ -113,20 +134,13 @@ def correct_msa_restypes(protein):
 
     perm_matrix = np.zeros((22, 22), dtype=np.float32)
     perm_matrix[range(len(new_order_list)), new_order_list] = 1.
-    return protein
 
-
-@curry1
-def add_distillation_flag(protein, distillation):
-    protein['is_distillation'] = np.array(
-        float(distillation), dtype=np.float32)
-    return protein
-
-
-def cast_64bit_ints(protein):
-    for k, v in protein.items():
-        if v.dtype == np.int64:
-            protein[k] = v.astype(np.int32)
+    for k in protein:
+        if 'profile' in k:  # Include both hhblits and psiblast profiles
+            num_dim = protein[k].shape.as_list()[-1]
+            assert num_dim in [20, 21, 22], (
+                'num_dim for %s out of expected range: %s' % (k, num_dim))
+            protein[k] = np.tensordot(protein[k], perm_matrix[:num_dim, :num_dim], axes=1)
     return protein
 
 
@@ -146,7 +160,13 @@ def squeeze_features(protein):
         if k in protein:
             # Remove fake sequence dimension
             protein[k] = protein[k][0]
+    return protein
 
+
+def make_random_crop_to_size_seed(protein):
+    """Random seed for cropping residues and templates."""
+    protein['random_crop_to_size_seed'] = np.array(
+        make_random_seed([2]), np.int32)
     return protein
 
 
@@ -159,147 +179,13 @@ def randomly_replace_msa_with_unknown(protein, replace_proportion):
     msa_mask = np.logical_and(msa_mask, protein['msa'] != gap_idx)
     protein['msa'] = np.where(
         msa_mask, np.ones_like(protein['msa']) * x_idx, protein['msa'])
-
     aatype_mask = np.random.uniform(size=shape_list(protein['aatype']),
                                     low=0, high=1) < replace_proportion
     protein['aatype'] = np.where(
         aatype_mask, np.ones_like(protein['aatype']) * x_idx,
         protein['aatype'])
-
     return protein
 
-
-def make_seq_mask(protein):
-    protein['seq_mask'] = np.ones(shape_list(protein['aatype']),
-                                  dtype=np.float32)
-    return protein
-
-
-def make_msa_mask(protein):
-    """Mask features are all ones, but will later be zero-padded."""
-    protein['msa_mask'] = np.ones(shape_list(protein['msa']),
-                                  dtype=np.float32)
-    protein['msa_row_mask'] = np.ones(shape_list(protein['msa'])[0],
-                                      dtype=np.float32)
-    return protein
-
-
-def make_hhblits_profile(protein):
-    """Compute the HHblits MSA profile if not already present."""
-    if 'hhblits_profile' in protein:
-        return protein
-
-    protein['hhblits_profile'] = np.mean(one_hot(22, protein['msa']),
-                                         axis=0)
-    return protein
-
-
-def make_random_crop_to_size_seed(protein):
-    """Random seed for cropping residues and templates."""
-    protein['random_crop_to_size_seed'] = np.array(
-        make_random_seed([2]), np.int32)
-    return protein
-
-
-def fix_templates_aatype(protein):
-    """Fixes aatype encoding of templates."""
-    protein['template_aatype'] = np.argmax(protein['template_aatype'],
-                                           axis=-1).astype(np.int32)
-    new_order_list = residue_constants.MAP_HHBLITS_AATYPE_TO_OUR_AATYPE
-    new_order = np.array(new_order_list, np.int32)
-    protein['template_aatype'] = new_order[protein['template_aatype']]
-    return protein
-
-
-def pseudo_beta_fn(aatype, all_atom_positions, all_atom_masks):
-    """Create pseudo beta features."""
-    is_gly = np.equal(aatype, residue_constants.restype_order['G'])
-    ca_idx = residue_constants.atom_order['CA']
-    cb_idx = residue_constants.atom_order['CB']
-    pseudo_beta = np.where(
-        np.tile(is_gly[..., None].astype("int32"),
-                [1,] * len(is_gly.shape) + [3,]).astype("bool"),
-        all_atom_positions[..., ca_idx, :],
-        all_atom_positions[..., cb_idx, :])
-
-    if all_atom_masks is not None:
-        pseudo_beta_mask = np.where(is_gly, all_atom_masks[..., ca_idx], all_atom_masks[..., cb_idx])
-        pseudo_beta_mask = pseudo_beta_mask.astype(np.float32)
-        return pseudo_beta, pseudo_beta_mask
-
-    return pseudo_beta
-
-
-@curry1
-def make_pseudo_beta(protein, prefix=''):
-    """Create pseudo-beta (alpha for glycine) position and mask."""
-    assert prefix in ['', 'template_']
-    pseudo_beta, pseudo_beta_mask = pseudo_beta_fn(
-        protein['template_aatype' if prefix else 'all_atom_aatype'],
-        protein[prefix + 'all_atom_positions'],
-        protein['template_all_atom_masks' if prefix else 'all_atom_mask'])
-
-    protein[prefix + 'pseudo_beta'] = pseudo_beta
-    protein[prefix + 'pseudo_beta_mask'] = pseudo_beta_mask
-    return protein
-
-
-def make_atom14_masks(protein):
-    """Construct denser atom positions (14 dimensions instead of 37)."""
-    restype_atom14_to_atom37 = []
-    restype_atom37_to_atom14 = []
-    restype_atom14_mask = []
-
-    for rt in residue_constants.restypes:
-        atom_names = residue_constants.restype_name_to_atom14_names[
-            residue_constants.restype_1to3[rt]]
-
-        restype_atom14_to_atom37.append([
-            (residue_constants.atom_order[name] if name else 0)
-            for name in atom_names])
-
-        atom_name_to_idx14 = {name: i for i, name in enumerate(atom_names)}
-        restype_atom37_to_atom14.append([
-            (atom_name_to_idx14[name] if name in atom_name_to_idx14 else 0)
-            for name in residue_constants.atom_types])
-
-        restype_atom14_mask.append([
-            (1. if name else 0.) for name in atom_names])
-
-    restype_atom14_to_atom37.append([0] * 14)
-    restype_atom37_to_atom14.append([0] * 37)
-    restype_atom14_mask.append([0.] * 14)
-
-    restype_atom14_to_atom37 = np.array(restype_atom14_to_atom37, np.int32)
-    restype_atom37_to_atom14 = np.array(restype_atom37_to_atom14, np.int32)
-    restype_atom14_mask = np.array(restype_atom14_mask, np.float32)
-
-    residx_atom14_to_atom37 = restype_atom14_to_atom37[protein['aatype']]
-    residx_atom14_mask = restype_atom14_mask[protein['aatype']]
-
-    protein['atom14_atom_exists'] = residx_atom14_mask
-    protein['residx_atom14_to_atom37'] = residx_atom14_to_atom37
-
-    residx_atom37_to_atom14 = restype_atom37_to_atom14[protein['aatype']]
-    protein['residx_atom37_to_atom14'] = residx_atom37_to_atom14
-
-    restype_atom37_mask = np.zeros([21, 37], np.float32)
-    for restype, restype_letter in enumerate(residue_constants.restypes):
-        restype_name = residue_constants.restype_1to3[restype_letter]
-        atom_names = residue_constants.residue_atoms[restype_name]
-        for atom_name in atom_names:
-            atom_type = residue_constants.atom_order[atom_name]
-            restype_atom37_mask[restype, atom_type] = 1
-
-    residx_atom37_mask = restype_atom37_mask[protein['aatype']]
-    protein['atom37_atom_exists'] = residx_atom37_mask
-
-    return protein
-
-
-# ==================================================
-#           transform for ensembled data
-# ==================================================
 
 @curry1
 def sample_msa(protein, max_seq, keep_extra):
@@ -327,38 +213,30 @@ def sample_msa(protein, max_seq, keep_extra):
             if k == 'msa':
                 protein['extra_msa'] = protein['extra_msa'].astype(np.int32)
             protein[k] = protein[k][sel_seq]
-
     return protein
 
 
 @curry1
-def make_masked_msa(protein, config, replace_fraction):
-    """Create data for BERT on raw MSA."""
-    random_aa = np.array([0.05] * 20 + [0., 0.], dtype=np.float32)
+def crop_extra_msa(protein, max_extra_msa):
+    """MSA features are cropped so only `max_extra_msa` sequences are kept."""
+    if protein['extra_msa'].any():
+        num_seq = protein['extra_msa'].shape[0]
+        num_sel = np.minimum(max_extra_msa, num_seq)
+        shuffled = list(range(num_seq))
+        np.random.shuffle(shuffled)
+        select_indices = shuffled[:num_sel]
+        for k in _MSA_FEATURE_NAMES:
+            if 'extra_' + k in protein:
+                protein['extra_' + k] = protein['extra_' + k][
+                    select_indices]
+    return protein
 
-    categorical_probs = config.uniform_prob * random_aa + \
-        config.profile_prob * protein['hhblits_profile'] + \
-        config.same_prob * one_hot(22, protein['msa'])
 
-    pad_shapes = [[0, 0] for _ in range(len(categorical_probs.shape))]
-    pad_shapes[-1][1] = 1
-    mask_prob = 1. - config.profile_prob - config.same_prob - \
-        config.uniform_prob
-    assert mask_prob >= 0.
-
-    categorical_probs = np.pad(categorical_probs, pad_shapes,
-                               constant_values=(mask_prob,))
-
-    mask_position = np.random.uniform(size=shape_list(protein['msa']),
-                                      low=0, high=1) < replace_fraction
-
-    bert_msa = shaped_categorical(categorical_probs)
-    bert_msa = np.where(mask_position, bert_msa, protein['msa'])
-
-    protein['bert_mask'] = mask_position.astype(np.int32)
-    protein['true_msa'] = protein['msa']
-    protein['msa'] = bert_msa
-
+def delete_extra_msa(protein):
+    """Delete extra msa."""
+    for k in _MSA_FEATURE_NAMES:
+        if 'extra_' + k in protein:
+            del protein['extra_' + k]
     return protein
 
 
@@ -419,27 +297,130 @@ def summarize_clusters(protein):
     return protein
 
 
+def make_msa_mask(protein):
+    """Mask features are all ones, but will later be zero-padded."""
+    protein['msa_mask'] = np.ones(shape_list(protein['msa']),
+                                  dtype=np.float32)
+    protein['msa_row_mask'] = np.ones(shape_list(protein['msa'])[0],
+                                      dtype=np.float32)
+    return protein
+
+
+def pseudo_beta_fn(aatype, all_atom_positions, all_atom_masks):
+    """Create pseudo beta features."""
+    is_gly = np.equal(aatype, residue_constants.restype_order['G'])
+    ca_idx = residue_constants.atom_order['CA']
+    cb_idx = residue_constants.atom_order['CB']
+    pseudo_beta = np.where(
+        np.tile(is_gly[..., None].astype("int32"),
+                [1,] * len(is_gly.shape) + [3,]).astype("bool"),
+        all_atom_positions[..., ca_idx, :],
+        all_atom_positions[..., cb_idx, :])
+
+    if all_atom_masks is not None:
+        pseudo_beta_mask = np.where(is_gly, all_atom_masks[..., ca_idx], all_atom_masks[..., cb_idx])
+        pseudo_beta_mask = pseudo_beta_mask.astype(np.float32)
+        return pseudo_beta, pseudo_beta_mask
+
+    return pseudo_beta
+
+
 @curry1
-def crop_extra_msa(protein, max_extra_msa):
-    """MSA features are cropped so only `max_extra_msa` sequences are kept."""
-    if protein['extra_msa'].any():
-        num_seq = protein['extra_msa'].shape[0]
-        num_sel = np.minimum(max_extra_msa, num_seq)
-        shuffled = list(range(num_seq))
-        np.random.shuffle(shuffled)
-        select_indices = shuffled[:num_sel]
-        for k in _MSA_FEATURE_NAMES:
-            if 'extra_' + k in protein:
-                protein['extra_' + k] = protein['extra_' + k][
-                    select_indices]
+def make_pseudo_beta(protein, prefix=''):
+    """Create pseudo-beta (alpha for glycine) position and mask."""
+    assert prefix in ['', 'template_']
+    pseudo_beta, pseudo_beta_mask = pseudo_beta_fn(
+        protein['template_aatype' if prefix else 'all_atom_aatype'],
+        protein[prefix + 'all_atom_positions'],
+        protein['template_all_atom_masks' if prefix else 'all_atom_mask'])
+
+    protein[prefix + 'pseudo_beta'] = pseudo_beta
+    protein[prefix + 'pseudo_beta_mask'] = pseudo_beta_mask
+    return protein
+
+
+def shaped_categorical(probs):
+    """tbd."""
+    ds = shape_list(probs)
+    num_classes = ds[-1]
+    probs = np.reshape(probs, (-1, num_classes))
+    nums = list(range(num_classes))
+    counts = []
+    for prob in probs:
+        counts.append(np.random.choice(nums, p=prob))
+
+    return np.reshape(np.array(counts, np.int32), ds[:-1])
+
+
+def make_hhblits_profile(protein):
+    """Compute the HHblits MSA profile if not already present."""
+    if 'hhblits_profile' in protein:
+        return protein
+    # Compute the profile for every residue (over all MSA sequences).
+    protein['hhblits_profile'] = np.mean(one_hot(22, protein['msa']),
+                                         axis=0)
+    return protein
+
+
+@curry1
+def make_masked_msa(protein, config, replace_fraction):
+    """Create data for BERT on raw MSA."""
+    # Add a random amino acid uniformly.
+    random_aa = np.array([0.05] * 20 + [0., 0.], dtype=np.float32)
+
+    categorical_probs = config.uniform_prob * random_aa + \
+        config.profile_prob * protein['hhblits_profile'] + \
+        config.same_prob * one_hot(22, protein['msa'])
+    # Put all remaining probability on [MASK] which is a new column.
+    pad_shapes = [[0, 0] for _ in range(len(categorical_probs.shape))]
+    pad_shapes[-1][1] = 1
+    mask_prob = 1. - config.profile_prob - config.same_prob - \
+        config.uniform_prob
+    assert mask_prob >= 0.
+
+    categorical_probs = np.pad(categorical_probs, pad_shapes,
+                               constant_values=(mask_prob,))
+
+    mask_position = np.random.uniform(size=shape_list(protein['msa']),
+                                      low=0, high=1) < replace_fraction
+
+    bert_msa = shaped_categorical(categorical_probs)
+    bert_msa = np.where(mask_position, bert_msa, protein['msa'])
+
+    protein['bert_mask'] = mask_position.astype(np.int32)
+    protein['true_msa'] = protein['msa']
+    protein['msa'] = bert_msa
 
     return protein
 
 
-def delete_extra_msa(protein):
-    for k in _MSA_FEATURE_NAMES:
-        if 'extra_' + k in protein:
-            del protein['extra_' + k]
+@curry1
+def make_fixed_size(protein, shape_schema, msa_cluster_size, extra_msa_size,
+                    num_res, num_templates=0):
+    """Guess at the MSA and sequence dimensions to make fixed size."""
+
+    pad_size_map = {
+        NUM_RES: num_res,
+        NUM_MSA_SEQ: msa_cluster_size,
+        NUM_EXTRA_SEQ: extra_msa_size,
+        NUM_TEMPLATES: num_templates,
+    }
+
+    for k, v in protein.items():
+        if k == 'extra_cluster_assignment':
+            continue
+        shape = list(v.shape)
+        schema = shape_schema[k]
+        assert len(shape) == len(schema), f'Rank mismatch between ' + \
+            f'shape and shape schema for {k}: {shape} vs {schema}'
+
+        pad_size = [pad_size_map.get(s2, None) or s1
+                    for (s1, s2) in zip(shape, schema)]
+        padding = [(0, p - v.shape[i]) for i, p in enumerate(pad_size)]
+        if padding:
+            protein[k] = np.pad(v, padding)
+            protein[k].reshape(pad_size)
+
     return protein
 
 
@@ -482,6 +463,14 @@ def make_msa_feat(protein):
 @curry1
 def select_feat(protein, feature_list):
     return {k: v for k, v in protein.items() if k in feature_list}
+
+
+@curry1
+def crop_templates(protein, max_templates):
+    for k, v in protein.items():
+        if k.startswith('template_'):
+            protein[k] = v[:max_templates]
+    return protein
 
 
 @curry1
@@ -556,39 +545,54 @@ def random_crop_to_size(protein, crop_size, max_templates, shape_schema,
     return protein
 
 
-@curry1
-def make_fixed_size(protein, shape_schema, msa_cluster_size, extra_msa_size,
-                    num_res, num_templates=0):
-    """Guess at the MSA and sequence dimensions to make fixed size."""
+def make_atom14_masks(protein):
+    """Construct denser atom positions (14 dimensions instead of 37)."""
+    restype_atom14_to_atom37 = []
+    restype_atom37_to_atom14 = []
+    restype_atom14_mask = []
 
-    pad_size_map = {
-        NUM_RES: num_res,
-        NUM_MSA_SEQ: msa_cluster_size,
-        NUM_EXTRA_SEQ: extra_msa_size,
-        NUM_TEMPLATES: num_templates,
-    }
+    for rt in residue_constants.restypes:
+        atom_names = residue_constants.restype_name_to_atom14_names[
+            residue_constants.restype_1to3[rt]]
 
-    for k, v in protein.items():
-        if k == 'extra_cluster_assignment':
-            continue
-        shape = list(v.shape)
-        schema = shape_schema[k]
-        assert len(shape) == len(schema), f'Rank mismatch between ' + \
-            f'shape and shape schema for {k}: {shape} vs {schema}'
+        restype_atom14_to_atom37.append([
+            (residue_constants.atom_order[name] if name else 0)
+            for name in atom_names])
 
-        pad_size = [pad_size_map.get(s2, None) or s1
-                    for (s1, s2) in zip(shape, schema)]
-        padding = [(0, p - v.shape[i]) for i, p in enumerate(pad_size)]
-        if padding:
-            protein[k] = np.pad(v, padding)
-            protein[k].reshape(pad_size)
+        atom_name_to_idx14 = {name: i for i, name in enumerate(atom_names)}
+        restype_atom37_to_atom14.append([
+            (atom_name_to_idx14[name] if name in atom_name_to_idx14 else 0)
+            for name in residue_constants.atom_types])
 
-    return protein
+        restype_atom14_mask.append([
+            (1. if name else 0.) for name in atom_names])
 
+    restype_atom14_to_atom37.append([0] * 14)
+    restype_atom37_to_atom14.append([0] * 37)
+    restype_atom14_mask.append([0.] * 14)
 
-@curry1
-def crop_templates(protein, max_templates):
-    for k, v in protein.items():
-        if k.startswith('template_'):
-            protein[k] = v[:max_templates]
+    restype_atom14_to_atom37 = np.array(restype_atom14_to_atom37, np.int32)
+    restype_atom37_to_atom14 = np.array(restype_atom37_to_atom14, np.int32)
+    restype_atom14_mask = np.array(restype_atom14_mask, np.float32)
+
+    residx_atom14_to_atom37 = restype_atom14_to_atom37[protein['aatype']]
+    residx_atom14_mask = restype_atom14_mask[protein['aatype']]
+
+    protein['atom14_atom_exists'] = residx_atom14_mask
+    protein['residx_atom14_to_atom37'] = residx_atom14_to_atom37
+
+    residx_atom37_to_atom14 = restype_atom37_to_atom14[protein['aatype']]
+    protein['residx_atom37_to_atom14'] = residx_atom37_to_atom14
+
+    restype_atom37_mask = np.zeros([21, 37], np.float32)
+    for restype, restype_letter in enumerate(residue_constants.restypes):
+        restype_name = residue_constants.restype_1to3[restype_letter]
+        atom_names = residue_constants.residue_atoms[restype_name]
+        for atom_name in atom_names:
+            atom_type = residue_constants.atom_order[atom_name]
+            restype_atom37_mask[restype, atom_type] = 1
+
+    residx_atom37_mask = restype_atom37_mask[protein['aatype']]
+    protein['atom37_atom_exists'] = residx_atom37_mask
+
     return protein

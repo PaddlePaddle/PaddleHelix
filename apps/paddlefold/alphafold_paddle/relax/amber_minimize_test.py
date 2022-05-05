@@ -1,10 +1,10 @@
-# Copyright 2021 DeepMind Technologies Limited
+#   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,7 @@
 # limitations under the License.
 
 """Tests for amber_minimize."""
+
 import os
 
 from absl.testing import absltest
@@ -29,8 +30,9 @@ def _load_test_protein(data_path):
 
 
 class AmberMinimizeTest(absltest.TestCase):
-
+  """tbd."""
   def test_multiple_disulfides_target(self):
+    """tbd."""
     prot = _load_test_protein(
         'alphafold/relax/testdata/multiple_disulfides_target.pdb'
         )
@@ -40,6 +42,7 @@ class AmberMinimizeTest(absltest.TestCase):
     self.assertIn('min_attempts', ret)
 
   def test_raises_invalid_protein_assertion(self):
+    """tbd."""
     prot = _load_test_protein(
         'alphafold/relax/testdata/multiple_disulfides_target.pdb'
         )
@@ -53,6 +56,7 @@ class AmberMinimizeTest(absltest.TestCase):
                                   max_attempts=1)
 
   def test_iterative_relax(self):
+    """tbd."""
     prot = _load_test_protein(
         'alphafold/relax/testdata/with_violations.pdb'
         )
@@ -64,6 +68,7 @@ class AmberMinimizeTest(absltest.TestCase):
     self.assertEqual(0, out['num_residue_violations'])
 
   def test_find_violations(self):
+    """tbd."""
     prot = _load_test_protein(
         'alphafold/relax/testdata/multiple_disulfides_target.pdb'
         )

@@ -1,10 +1,10 @@
-# Copyright 2021 DeepMind Technologies Limited
+#   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,6 +14,8 @@
 
 """Test that residue_constants generates correct values."""
 
+import os
+import sys
 from absl.testing import absltest
 from absl.testing import parameterized
 from alphafold_paddle.common import residue_constants
@@ -21,6 +23,7 @@ import numpy as np
 
 
 class ResidueConstantsTest(parameterized.TestCase):
+  """tbd."""
 
   @parameterized.parameters(
       ('ALA', 0),
@@ -31,12 +34,14 @@ class ResidueConstantsTest(parameterized.TestCase):
       ('ARG', 4),
   )
   def testChiAnglesAtoms(self, residue_name, chi_num):
+    """tbd."""
     chi_angles_atoms = residue_constants.chi_angles_atoms[residue_name]
     self.assertLen(chi_angles_atoms, chi_num)
     for chi_angle_atoms in chi_angles_atoms:
       self.assertLen(chi_angle_atoms, 4)
 
   def testChiGroupsForAtom(self):
+    """tbd."""
     for k, chi_groups in residue_constants.chi_groups_for_atom.items():
       res_name, atom_name = k
       for chi_group_i, atom_i in chi_groups:
@@ -51,10 +56,12 @@ class ResidueConstantsTest(parameterized.TestCase):
       ('TYR', 12), ('VAL', 7)
   )
   def testResidueAtoms(self, atom_name, num_residue_atoms):
+    """tbd."""
     residue_atoms = residue_constants.residue_atoms[atom_name]
     self.assertLen(residue_atoms, num_residue_atoms)
 
   def testStandardAtomMask(self):
+    """tbd."""
     with self.subTest('Check shape'):
       self.assertEqual(residue_constants.STANDARD_ATOM_MASK.shape, (21, 37,))
 
@@ -98,6 +105,7 @@ class ResidueConstantsTest(parameterized.TestCase):
                        long_restype)
 
   def testAtomTypes(self):
+    """tbd."""
     self.assertEqual(residue_constants.atom_type_num, 37)
 
     self.assertEqual(residue_constants.atom_types[0], 'N')
@@ -114,6 +122,7 @@ class ResidueConstantsTest(parameterized.TestCase):
     self.assertEqual(residue_constants.atom_type_num, 37)
 
   def testRestypes(self):
+    """tbd."""
     three_letter_restypes = [
         residue_constants.restype_1to3[r] for r  in residue_constants.restypes]
     for restype, exp_restype in zip(
@@ -122,6 +131,7 @@ class ResidueConstantsTest(parameterized.TestCase):
     self.assertEqual(residue_constants.restype_num, 20)
 
   def testSequenceToOneHotHHBlits(self):
+    """tbd."""
     one_hot = residue_constants.sequence_to_onehot(
         'ABCDEFGHIJKLMNOPQRSTUVWXYZ-', residue_constants.HHBLITS_AA_TO_ID)
     exp_one_hot = np.array(
@@ -155,11 +165,13 @@ class ResidueConstantsTest(parameterized.TestCase):
     np.testing.assert_array_equal(one_hot, exp_one_hot)
 
   def testSequenceToOneHotStandard(self):
+    """tbd."""
     one_hot = residue_constants.sequence_to_onehot(
         'ARNDCQEGHILKMFPSTWYV', residue_constants.restype_order)
     np.testing.assert_array_equal(one_hot, np.eye(20))
 
   def testSequenceToOneHotUnknownMapping(self):
+    """tbd."""
     seq = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     expected_out = np.zeros([26, 21])
     for row, position in enumerate(
@@ -179,6 +191,7 @@ class ResidueConstantsTest(parameterized.TestCase):
       ('metadata', '>TEST'),  # FASTA metadata line.
   )
   def testSequenceToOneHotUnknownMappingError(self, seq):
+    """tbd."""
     with self.assertRaises(ValueError):
       residue_constants.sequence_to_onehot(
           sequence=seq,

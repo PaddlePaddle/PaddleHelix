@@ -1,0 +1,10 @@
+{
+    "crop_size": 384,
+    "unclamped_fape": false,
+
+    "optimizer": {
+        "lr": 5e-4,
+        "warmup_steps": 1,
+        "grad_clip": 0.1
+    }
+}
