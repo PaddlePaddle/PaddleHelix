@@ -679,22 +679,19 @@ class Transition(nn.Layer):
     def forward(self, act, mask):
         act = self.input_layer_norm(act)
 
+        def transition_module(x):
+            x = self.transition1(x)
+            x = nn.functional.relu(x)
+            x = self.transition2(x)
+            return x
+
         if not self.training:
             # low memory mode using subbatch
-            sb_trans1 = subbatch(self.transition1, [0], [1],
+            sb_transition = subbatch(transition_module, [0], [1],
                                  self.global_config.subbatch_size, 1)
-            act = sb_trans1(act)
+            act = sb_transition(act)
         else:
-            act = self.transition1(act)
-
-        act = nn.functional.relu(act)
-
-        if not self.training:
-            sb_trans2 = subbatch(self.transition2, [0], [1],
-                                 self.global_config.subbatch_size, 1)
-            act = sb_trans2(act)
-        else:
-            act = self.transition2(act)
+            act = transition_module(act)
 
         return act
 
