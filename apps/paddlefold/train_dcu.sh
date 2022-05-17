@@ -2,25 +2,28 @@
 #set -eu
 
 #1.python环境设置
-module rm compiler/rocm/2.9
-module load compiler/rocm/4.0.1
-module load apps/anaconda3/5.2.0
-source activate ~/conda-envs/paddle_20220413
-
-#2.机卡信息显示
 allhost=$1
-echo "-------------input params ${SLURM_NODEID}--------------"
-echo "${SLURM_NODEID} allhost:$allhost"
-echo "SLURM_NODEID:${SLURM_NODEID}"
 
-OLD_IFS="$IFS"
-IFS=","
-allhost_arr=($allhost)
-IFS="$OLD_IFS"
-node_num=${#allhost_arr[@]}
-echo "node_num="${#allhost_arr[@]}
-export PADDLE_NODE_NUM=${node_num}
-echo "PADDLE_NODE_NUM="${PADDLE_NODE_NUM}
+if [[ -n "${allhost}" ]]; then
+    module rm compiler/rocm/2.9
+    module load compiler/rocm/4.0.1
+    module load apps/anaconda3/5.2.0
+    source activate ~/conda-envs/paddle_20220413
+
+    #2.机卡信息显示
+    echo "-------------input params ${SLURM_NODEID}--------------"
+    echo "${SLURM_NODEID} allhost:$allhost"
+    echo "SLURM_NODEID:${SLURM_NODEID}"
+
+    OLD_IFS="$IFS"
+    IFS=","
+    allhost_arr=($allhost)
+    IFS="$OLD_IFS"
+    node_num=${#allhost_arr[@]}
+    echo "node_num="${#allhost_arr[@]}
+    export PADDLE_NODE_NUM=${node_num}
+    echo "PADDLE_NODE_NUM="${PADDLE_NODE_NUM}
+fi 
 
 #3.DCU硬件相关配置
 export PADDLE_WITH_GLOO=0
@@ -60,8 +63,11 @@ train_step=100000
 export MAX_EVAL_SIZE=1000
 
 distributed_args="--run_mode=collective --log_dir=${log_dir}"
+if [[ -n "${allhost}" ]]; then
+    distributed_args="${distributed_args} --ips=${allhost}"
+fi
 python -m paddle.distributed.launch ${distributed_args} \
-    --ips="${allhost}" --gpus="0,1" \
+    --gpus="0,1" \
     train.py \
     --distributed \
     --tm_score_bin="$TM_SCORE_BIN" \
