@@ -12,6 +12,8 @@ English | [简体中文](README_cn.md)
 
 
 ## Latest News
+`2022.05.24` Paper "HelixADMET: a robust and endpoint extensible ADMET system incorporating self-supervised knowledge transfer" is published in **Bioinformatics**. Refer to [paper](https://academic.oup.com/bioinformatics/advance-article-abstract/doi/10.1093/bioinformatics/btac342/6590643) for more information.
+
 `2022.02.07` Paper "Geometry-enhanced molecular representation learning for property prediction" is published in **Nature Machine Intelligence**. Please refer to [paper](https://www.nature.com/articles/s42256-021-00438-4) and [codes](./apps/pretrained_compound/ChemRL/GEM) to explore the algorithm.
 
 `2022.01.07` PaddleHelix released the reproduction of [AlphaFold 2](https://doi.org/10.1038/s41586-021-03819-2) using PaddlePaddle in [PaddleFold](./apps/paddlefold).
