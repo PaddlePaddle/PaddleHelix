@@ -1482,6 +1482,7 @@ class EmbeddingsAndEvoformer(nn.Layer):
             template_activations = self.template_single_embedding(
                 template_features)
             template_activations = nn.functional.relu(template_activations)
+            template_activations = self.template_projection(template_activations)
 
             # Concatenate the templates to the msa.
             evoformer_input['msa'] = paddle.concat(
