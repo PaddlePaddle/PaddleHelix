@@ -75,3 +75,13 @@ pip install paddlehelix
 ```bash
 conda deactivate
 ```
+
+## 使用 Docker 快速体验
+
+> Docker 是一种开源工具，用于在和系统本身环境相隔离的环境中构建、发布和运行各类应用程序。如果您没有 Docker 运行环境，请参考 [Docker 官网](https://www.docker.com/)进行安装，如果您准备使用 GPU 版本镜像，还需要提前安装好 [nvidia-docker](https://github.com/NVIDIA/nvidia-docker)。 
+
+我们提供了包含最新 PaddleHelix 代码的 docker 镜像，并预先安装好了所有的环境和库依赖，您只需要**拉取并运行 docker 镜像**，无需其他任何额外操作，即可开始享用 PaddleHelix 的所有功能。
+
+在 [Docker Hub](https://hub.docker.com/repository/docker/paddlecloud/paddlehelix) 中获取这些镜像及相应的使用指南，包括 CPU、GPU、ROCm 版本。
+
+如果您对自动化制作docker镜像感兴趣，或有自定义需求，请访问 [PaddlePaddle/PaddleCloud](https://github.com/PaddlePaddle/PaddleCloud/tree/main/tekton) 做进一步了解。
