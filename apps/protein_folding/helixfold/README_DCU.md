@@ -38,20 +38,20 @@ conda activate ~/conda-envs/paddle_20220413
 在激活的Conda Python环境中安装PaddlePaddle ROCm版本以及其他依赖库
 
 ```
-wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/PaddleFold/paddlepaddle_rocm-0.0.0-cp37-cp37m-linux_x86_64.whl
+wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/HelixFold/paddlepaddle_rocm-0.0.0-cp37-cp37m-linux_x86_64.whl
 pip install ./paddlepaddle_rocm-0.0.0-cp37-cp37m-linux_x86_64.whl
 pip install -r requirements.txt
 ```
 
-## 3、PaddleFold
+## 3、HelixFold
 
 ### 相关工具下载
 
-下载PaddleFold需要的两个工具：lddt和tm-score
+下载HelixFold需要的两个工具：lddt和tm-score
 
 ```
-wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/PaddleFold/lddt
-wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/PaddleFold/tm_score
+wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/HelixFold/lddt
+wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/HelixFold/tm_score
 mkdir tools && mv lddt tm_score tools
 ```
 
