@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH -o job.%j.out
-#SBATCH -J paddlefold_dcu
+#SBATCH -J helixfold_dcu
 #SBATCH -p normal
 #SBATCH --cpus-per-task=32
 #SBATCH --ntasks-per-node=1

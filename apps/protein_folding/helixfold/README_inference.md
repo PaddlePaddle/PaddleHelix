@@ -1,25 +1,25 @@
-# PaddleFold 
+# HelixFold 
 
 Reproduction of [AlphaFold 2](https://doi.org/10.1038/s41586-021-03819-2) with [PaddlePaddle](https://github.com/paddlepaddle/paddle).
 
-PaddleFold currently provides a PaddlePaddle implementation of the AlphaFold inference pipeline, and reproduces all of the features of the original open source inference code (v2.0.1) including recycle and ensembling.
+HelixFold currently provides a PaddlePaddle implementation of the AlphaFold inference pipeline, and reproduces all of the features of the original open source inference code (v2.0.1) including recycle and ensembling.
 
-Trainable PaddleFold is coming soon.
+Trainable HelixFold is coming soon.
 
 ## Installation
-PaddleFold depends on [PaddlePaddle](https://github.com/paddlepaddle/paddle).
-Python dependencies available through `pip` is provided in `requirements.txt`. PaddleFold also depends on `openmm==7.5.1` and `pdbfixer`, which are only available via `conda`. For producing multiple sequence alignments, `kalign`, the [HH-suite](https://github.com/soedinglab/hh-suite) and `jackhmmer` are also needed. The download scripts require `aria2c`.
+HelixFold depends on [PaddlePaddle](https://github.com/paddlepaddle/paddle).
+Python dependencies available through `pip` is provided in `requirements.txt`. HelixFold also depends on `openmm==7.5.1` and `pdbfixer`, which are only available via `conda`. For producing multiple sequence alignments, `kalign`, the [HH-suite](https://github.com/soedinglab/hh-suite) and `jackhmmer` are also needed. The download scripts require `aria2c`.
 
 We provide a script `setup_env` that setup a `conda ` environment and installs all dependencies. Run:
 ```
 sh setup_env
-conda activate paddlefold # activate the conda environment
+conda activate helixfold # activate the conda environment
 ```
 You can change the name of the environment and CUDA version in `setup_env`.
 
 ## Usage
 
-In order to run PaddleFold, the genetic databases and model parameters are required.
+In order to run HelixFold, the genetic databases and model parameters are required.
 
 You can use a script `scripts/download_all_data.sh`, which is the same as the original AlphaFold that can be used to download and set up all databases and model parameters:
 
@@ -40,16 +40,16 @@ You can use a script `scripts/download_all_data.sh`, which is the same as the or
     will download a reduced version of the databases to be used with the
     `reduced_dbs` preset. The total download size for the reduced databases is around 190 GB and the total size when unzipped is around 530 GB. 
 
-### Running PaddleFold for inference
+### Running HelixFold for inference
 
 To run inference on a sequence or multiple sequences using a set of DeepMind's pretrained parameters, run e.g.:
 ```
 fasta_file="target.fasta" # path to the target protein
 model_name="model_1" # the alphafold model name
 DATA_DIR="data" # path to the databases
-OUTPUT_DIR="paddlefold_output" # path to save the outputs
+OUTPUT_DIR="helixfold_output" # path to save the outputs
 
-python3 run_paddlefold.py \
+python3 run_helixfold.py \
   --fasta_paths=${fasta_file} \
   --data_dir=${DATA_DIR} \
   --small_bfd_database_path=${DATA_DIR}/small_bfd/bfd-first_non_consensus_sequences.fasta \
@@ -62,13 +62,13 @@ python3 run_paddlefold.py \
   --model_names=${model_name} \
   --output_dir=${OUTPUT_DIR} \
   --preset='reduced_dbs' \
-  --jackhmmer_binary_path /opt/conda/envs/paddlefold/bin/jackhmmer \
-  --hhblits_binary_path /opt/conda/envs/paddlefold/bin/hhblits \
-  --hhsearch_binary_path /opt/conda/envs/paddlefold/bin/hhsearch \
-  --kalign_binary_path /opt/conda/envs/paddlefold/bin/kalign \
+  --jackhmmer_binary_path /opt/conda/envs/helixfold/bin/jackhmmer \
+  --hhblits_binary_path /opt/conda/envs/helixfold/bin/hhblits \
+  --hhsearch_binary_path /opt/conda/envs/helixfold/bin/hhsearch \
+  --kalign_binary_path /opt/conda/envs/helixfold/bin/kalign \
   --random_seed=0
 ```
-You can use `python3 run_paddlefold.py -h` to find the description of the arguments.
+You can use `python3 run_helixfold.py -h` to find the description of the arguments.
 
 We retain the same outputs as AlphaFold. We copy the AlphaFold's descriptions here. 
 
@@ -144,4 +144,4 @@ when using for tasks such as molecular replacement).
 
 ## Copyright
 
-PaddleFold code is licensed under the Apache 2.0 License, which is same as AlphaFold. However, we use the AlphaFold parameters pretrained by DeepMind, which are made available for non-commercial use only under the terms of the CC BY-NC 4.0 license.
+HelixFold code is licensed under the Apache 2.0 License, which is same as AlphaFold. However, we use the AlphaFold parameters pretrained by DeepMind, which are made available for non-commercial use only under the terms of the CC BY-NC 4.0 license.

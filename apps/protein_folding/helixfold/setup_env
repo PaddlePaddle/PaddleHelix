@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ENV_NAME='paddlefold'
+ENV_NAME='helixfold'
 
 CUDA=11.0
 PADDLE='.post110'
