@@ -12,7 +12,7 @@
 * **疫苗设计**
   - [LinearRNA](../c/pahelix/toolkit/linear_rna)
 * **蛋白质结构预测**
-  - [PaddleFold](./paddlefold)
+  - [HelixFold](./protein_folding/helixfold)
 * **蛋白质功能预测**
   - [DeepFRI](./protein_function_prediction/DeepFRI/)
   - [ProteinSIGN](./protein_function_prediction/ProteinSIGN/)
