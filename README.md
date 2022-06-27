@@ -16,7 +16,7 @@ English | [简体中文](README_cn.md)
 
 `2022.02.07` Paper "Geometry-enhanced molecular representation learning for property prediction" is published in **Nature Machine Intelligence**. Please refer to [paper](https://www.nature.com/articles/s42256-021-00438-4) and [codes](./apps/pretrained_compound/ChemRL/GEM) to explore the algorithm.
 
-`2022.01.07` PaddleHelix released the reproduction of [AlphaFold 2](https://doi.org/10.1038/s41586-021-03819-2) using PaddlePaddle in [PaddleFold](./apps/paddlefold).
+`2022.01.07` PaddleHelix released the reproduction of [AlphaFold 2](https://doi.org/10.1038/s41586-021-03819-2) using PaddlePaddle in [HelixFold](./apps/protein_folding/helixfold).
 
 `2021.11.23` Paper "Multimodal Pre-Training Model for Sequence-based Prediction of Protein-Protein Interaction" is accepted by [MLCB 2021](https://sites.google.com/cs.washington.edu/mlcb2021/home). Please refer to [paper](https://arxiv.org/abs/2112.04814) and [code](https://github.com/PaddlePaddle/PaddleHelix/tree/dev/apps/protein_protein_interaction) for more details.
 
@@ -76,7 +76,7 @@ We also provide [examples](./apps) that implement various algorithms and show th
 * **Vaccine Design**
   - [LinearRNA](./c/pahelix/toolkit/linear_rna)
 * **Protein Structure Prediction**
-  - [PaddleFold](./apps/paddlefold)
+  - [HelixFold](./apps/protein_folding/helixfold)
 
 ### Competition Solutions
 PaddleHelix team participated in multiple competitions related to bio-computing. The solutions can be found [here](./competition).
