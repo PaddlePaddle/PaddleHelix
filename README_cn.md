@@ -14,7 +14,7 @@
 
 `2022.02.07` 论文"Geometry-enhanced molecular representation learning for property prediction"发表于期刊**Nature Machine Intelligence**。详情参见[论文](https://www.nature.com/articles/s42256-021-00438-4)和[代码](./apps/pretrained_compound/ChemRL/GEM)。
 
-`2022.01.07` 螺旋桨团队开源基于PaddlePaddle深度学习框架复现蛋白质结构预测模型[AlphaFold 2](https://doi.org/10.1038/s41586-021-03819-2)，详见 [PaddleFold](./apps/paddlefold)。
+`2022.01.07` 螺旋桨团队开源基于PaddlePaddle深度学习框架复现蛋白质结构预测模型[AlphaFold 2](https://doi.org/10.1038/s41586-021-03819-2)，详见 [HelixFold](./apps/protein_folding/helixfold)。
 
 `2021.11.23` 论文"Multimodal Pre-Training Model for Sequence-based Prediction of Protein-Protein Interaction"被[MLCB 2021](https://sites.google.com/cs.washington.edu/mlcb2021/home)接收. 详细信息请参见[论文](https://arxiv.org/abs/2112.04814)和[代码](https://github.com/PaddlePaddle/PaddleHelix/tree/dev/apps/protein_protein_interaction).
 
@@ -76,7 +76,7 @@
 * **疫苗设计**
   - [LinearRNA](./c/pahelix/toolkit/linear_rna/README_cn.md)
 * **蛋白质结构预测**
-  - [PaddleFold](./apps/paddlefold)
+  - [HelixFold](./apps/protein_folding/helixfold)
 
 ### 比赛解决方案
 螺旋桨团队参加了多项生物计算相关的赛事，相关解决方案可以参阅[这里](./competition).
