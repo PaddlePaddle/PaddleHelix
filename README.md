@@ -12,6 +12,8 @@ English | [简体中文](README_cn.md)
 
 
 ## Latest News
+`2022.07.07` Paper "BatchDTA: implicit batch alignment enhances deep learning-based drug–target affinity estimation" is published in **Briefings in Bioinformatics**. Please refer to [paper](https://academic.oup.com/bib/advance-article-abstract/doi/10.1093/bib/bbac260/6632927) and [codes](./apps/drug_target_interaction/batchdta) for more details.
+
 `2022.05.24` Paper "HelixADMET: a robust and endpoint extensible ADMET system incorporating self-supervised knowledge transfer" is published in **Bioinformatics**. Refer to [paper](https://academic.oup.com/bioinformatics/advance-article-abstract/doi/10.1093/bioinformatics/btac342/6590643) for more information.
 
 `2022.02.07` Paper "Geometry-enhanced molecular representation learning for property prediction" is published in **Nature Machine Intelligence**. Please refer to [paper](https://www.nature.com/articles/s42256-021-00438-4) and [codes](./apps/pretrained_compound/ChemRL/GEM) to explore the algorithm.

@@ -10,6 +10,8 @@
 ![support os](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
 
 ## 最新消息
+`2022.07.07` 论文"BatchDTA: implicit batch alignment enhances deep learning-based drug–target affinity estimation"发表于期刊**Briefings in Bioinformatics**。详情参见[论文](https://academic.oup.com/bib/advance-article-abstract/doi/10.1093/bib/bbac260/6632927)和[代码](./apps/drug_target_interaction/batchdta)。
+
 `2022.05.24` 论文"HelixADMET: a robust and endpoint extensible ADMET system incorporating self-supervised knowledge transfer"发表于期刊**Bioinformatics**. 详情参见[论文](https://academic.oup.com/bioinformatics/advance-article-abstract/doi/10.1093/bioinformatics/btac342/6590643)。
 
 `2022.02.07` 论文"Geometry-enhanced molecular representation learning for property prediction"发表于期刊**Nature Machine Intelligence**。详情参见[论文](https://www.nature.com/articles/s42256-021-00438-4)和[代码](./apps/pretrained_compound/ChemRL/GEM)。
