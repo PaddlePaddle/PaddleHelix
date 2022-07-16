@@ -1,17 +1,16 @@
-# HelixFold 
+# HelixFold Inference
 
 Reproduction of [AlphaFold 2](https://doi.org/10.1038/s41586-021-03819-2) with [PaddlePaddle](https://github.com/paddlepaddle/paddle).
 
 HelixFold currently provides a PaddlePaddle implementation of the AlphaFold inference pipeline, and reproduces all of the features of the original open source inference code (v2.0.1) including recycle and ensembling.
 
-Trainable HelixFold is coming soon.
 
 ## Installation
 HelixFold depends on [PaddlePaddle](https://github.com/paddlepaddle/paddle).
 Python dependencies available through `pip` is provided in `requirements.txt`. HelixFold also depends on `openmm==7.5.1` and `pdbfixer`, which are only available via `conda`. For producing multiple sequence alignments, `kalign`, the [HH-suite](https://github.com/soedinglab/hh-suite) and `jackhmmer` are also needed. The download scripts require `aria2c`.
 
 We provide a script `setup_env` that setup a `conda ` environment and installs all dependencies. Run:
-```
+```bash
 sh setup_env
 conda activate helixfold # activate the conda environment
 ```

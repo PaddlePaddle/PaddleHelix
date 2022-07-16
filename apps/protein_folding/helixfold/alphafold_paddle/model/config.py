@@ -59,10 +59,12 @@ CONFIG_DIFFS = {
     },
     'model_5': {
         # Jumper et al. (2021) Suppl. Table 5, Model 1.2.3
+        'model.global_config.subbatch_size': 48,
     },
     'initial_model_5_dcu': {
         'data.eval.max_msa_clusters': 128,
         'data.common.max_extra_msa': 512,
+        'model.global_config.subbatch_size': 64,
         'model.heads.structure_module.structural_violation_loss_weight': 0.0,
         'model.heads.experimentally_resolved.weight': 0.0,
     },
@@ -75,6 +77,7 @@ CONFIG_DIFFS = {
         'model.embeddings_and_evoformer.template.enabled': True,
         'model.heads.structure_module.structural_violation_loss_weight': 0.0,
         'model.heads.experimentally_resolved.weight': 0.0,
+        'model.embeddings_and_evoformer.template.template_pair_stack.recompute_start_block_index': 2,
     },
     'finetune': {
         'data.eval.max_msa_clusters': 512,
@@ -83,8 +86,9 @@ CONFIG_DIFFS = {
         'data.common.use_templates': True,
         'model.embeddings_and_evoformer.template.embed_torsion_angles': True,
         'model.embeddings_and_evoformer.template.enabled': True,
+        'model.embeddings_and_evoformer.evoformer.msa_row_attention_with_pair_bias.use_subbatch': True,
+        'model.embeddings_and_evoformer.evoformer.msa_row_attention_with_pair_bias.subbatch_size': 480,
     },
-
     'msa128_ex1024_vio0': {
         'data.eval.max_msa_clusters': 128,
         'data.common.max_extra_msa': 1024,
@@ -243,13 +247,16 @@ CONFIG = ml_collections.ConfigDict({
     'model': {
         'embeddings_and_evoformer': {
             'evoformer_num_block': 48,
+            'evoformer_recompute_start_block_index': 0,
             'evoformer': {
                 'msa_row_attention_with_pair_bias': {
                     'dropout_rate': 0.15,
                     'gating': True,
                     'num_head': 8,
                     'orientation': 'per_row',
-                    'shared_dropout': True
+                    'shared_dropout': True,
+                    'use_subbatch': False,
+                    'subbatch_size': 48,
                 },
                 'msa_column_attention': {
                     'dropout_rate': 0.0,
@@ -308,6 +315,7 @@ CONFIG = ml_collections.ConfigDict({
             },
             'extra_msa_channel': 64,
             'extra_msa_stack_num_block': 4,
+            'extra_msa_stack_recompute_start_block_index': 0,
             'max_relative_feature': 32,
             'msa_channel': 256,
             'pair_channel': 128,
@@ -335,6 +343,7 @@ CONFIG = ml_collections.ConfigDict({
                 'enabled': False,
                 'template_pair_stack': {
                     'num_block': 2,
+                    'recompute_start_block_index': 0,
                     'triangle_attention_starting_node': {
                         'dropout_rate': 0.25,
                         'gating': True,
@@ -383,7 +392,9 @@ CONFIG = ml_collections.ConfigDict({
             'deterministic': False,
             'subbatch_size': 48,
             'use_remat': False,
-            'zero_init': True
+            'zero_init': True,
+            'fuse_attention': True,
+            'use_dropout_nd': True,
         },
         'heads': {
             'distogram': {

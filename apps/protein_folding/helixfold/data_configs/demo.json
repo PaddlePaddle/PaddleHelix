@@ -12,7 +12,13 @@
         "structure_dir": "./data/demo/mmcif"
     },
     "distill": {
+        "protein_clust_file": "./data/demo/distill/demo_distill_clust.list",
+        "protein_map_file": "./data/demo/distill/protein_id.mapping",
         "feature_dir": "./data/demo/distill/distill_features",
-        "structure_dir": "./data/demo/distill/distill_pdb"
+        "structure_dir": "./data/demo/distill/distill_pdb",
+        "msa_sample": {
+            "min_depth": 1000,
+            "max_depth": 1000
+        }
     }
 }

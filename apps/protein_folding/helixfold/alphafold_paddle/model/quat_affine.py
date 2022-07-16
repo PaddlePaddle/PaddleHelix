@@ -323,21 +323,39 @@ class QuatAffine(object):
 
 ######Paddle Implementation
 def _multiply(a, b):
+    a1 = a[..., 0, 0]
+    a2 = a[..., 0, 1]
+    a3 = a[..., 0, 2]
+    a11 = a[..., 1, 0]
+    a12 = a[..., 1, 1]
+    a13 = a[..., 1, 2]
+    a21 = a[..., 2, 0]
+    a22 = a[..., 2, 1]
+    a23 = a[..., 2, 2]
+    b1 = b[..., 0, 0]
+    b2 = b[..., 1, 0]
+    b3 = b[..., 0, 1]
+    b11 = b[..., 1, 1]
+    b12 = b[..., 2, 0]
+    b13 = b[..., 0, 2]
+    b21 = b[..., 1, 2]
+    b22 = b[..., 2, 1]
+    b23 = b[..., 2, 2]
     return paddle.stack([
         paddle.stack([
-        a[..., 0, 0]*b[..., 0, 0] + a[..., 0, 1]*b[..., 1, 0] + a[..., 0, 2]*b[..., 2, 0],
-        a[..., 0, 0]*b[..., 0, 1] + a[..., 0, 1]*b[..., 1, 1] + a[..., 0, 2]*b[..., 2, 1],
-        a[..., 0, 0]*b[..., 0, 2] + a[..., 0, 1]*b[..., 1, 2] + a[..., 0, 2]*b[..., 2, 2]], axis=-1),
+        a1*b1 + a2*b2 + a3*b12,
+        a1*b3 + a2*b11 + a3*b22,
+        a1*b13 + a2*b21 + a3*b23], axis=-1),
 
         paddle.stack([
-        a[..., 1, 0]*b[..., 0, 0] + a[..., 1, 1]*b[..., 1, 0] + a[..., 1, 2]*b[..., 2, 0],
-        a[..., 1, 0]*b[..., 0, 1] + a[..., 1, 1]*b[..., 1, 1] + a[..., 1, 2]*b[..., 2, 1],
-        a[..., 1, 0]*b[..., 0, 2] + a[..., 1, 1]*b[..., 1, 2] + a[..., 1, 2]*b[..., 2, 2]], axis=-1),
+        a11*b1 + a12*b2 + a13*b12,
+        a11*b3 + a12*b11 + a13*b22,
+        a11*b13 + a12*b21 + a13*b23], axis=-1),
 
         paddle.stack([
-        a[..., 2, 0]*b[..., 0, 0] + a[..., 2, 1]*b[..., 1, 0] + a[..., 2, 2]*b[..., 2, 0],
-        a[..., 2, 0]*b[..., 0, 1] + a[..., 2, 1]*b[..., 1, 1] + a[..., 2, 2]*b[..., 2, 1],
-        a[..., 2, 0]*b[..., 0, 2] + a[..., 2, 1]*b[..., 1, 2] + a[..., 2, 2]*b[..., 2, 2]], axis=-1)], 
+        a21*b1 + a22*b2+ a23*b12,
+        a21*b3 + a22*b11 + a23*b22,
+        a21*b13 + a22*b21 + a23*b23], axis=-1)], 
         axis=-2)
 
 
@@ -379,7 +397,7 @@ def make_canonical_transform(
     # Place C on the x-axis.
     c_x, c_y, c_z = [c_xyz[..., i] for i in range(3)]
     # Rotate by angle c1 in the x-y plane (around the z-axis).
-    norm = paddle.sqrt(1e-20 + c_x ** 2 + c_y ** 2)
+    norm = paddle.sqrt(c_x ** 2 + c_y ** 2 + 1e-20)
     sin_c1 = -c_y / norm
     cos_c1 = c_x / norm
     zeros = paddle.zeros_like(sin_c1)
@@ -391,7 +409,8 @@ def make_canonical_transform(
     c1_rot_matrix = c1_rot_matrix.reshape(sin_c1.shape + [3,3])
 
     # Rotate by angle c2 in the x-z plane (around the y-axis).
-    norm = paddle.sqrt(1e-20 + c_x ** 2 + c_y ** 2 + c_z ** 2)
+    # norm = paddle.sqrt(1e-20 + c_x ** 2 + c_y ** 2 + c_z ** 2)
+    norm = paddle.sqrt(paddle.sum(c_xyz ** 2, axis=-1)) + 1e-20
     sin_c2 = c_z / norm
     cos_c2 = paddle.sqrt(c_x ** 2 + c_y ** 2) / norm
     c2_rot_matrix = paddle.stack([cos_c2,  zeros, sin_c2,
@@ -405,7 +424,7 @@ def make_canonical_transform(
     # Place N in the x-y plane.
     _, n_y, n_z = [n_xyz[..., i] for i in range(3)]
     # Rotate by angle alpha in the y-z plane (around the x-axis).
-    norm = paddle.sqrt(1e-20 + n_y**2 + n_z**2)
+    norm = paddle.sqrt(n_y**2 + n_z**2 + 1e-20)
     sin_n = -n_z / norm
     cos_n = n_y / norm
     n_rot_matrix = paddle.stack([ones,  zeros,  zeros,

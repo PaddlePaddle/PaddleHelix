@@ -2,8 +2,8 @@
 
 ENV_NAME='helixfold'
 
-CUDA=11.0
-PADDLE='.post110'
+CUDA=11.2
+# PADDLE='.post110'
 
 # Check your cuda version
 # CUDA=10.2
@@ -27,9 +27,7 @@ wget -q -P alphafold_paddle/common/ \
 
 /opt/conda/envs/${ENV_NAME}/bin/python -m pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
 /opt/conda/envs/${ENV_NAME}/bin/python -m pip install --upgrade pip \
-    && /opt/conda/envs/${ENV_NAME}/bin/python -m pip install -r requirements.txt \
-    && /opt/conda/envs/${ENV_NAME}/bin/python -m pip install paddlepaddle-gpu==2.2.0${PADDLE} -f \
-      https://www.paddlepaddle.org.cn/whl/linux/mkl/avx/stable.html
+    && /opt/conda/envs/${ENV_NAME}/bin/python -m pip install -r requirements.txt
 
 OPEN_MM_PATCH=$(pwd $0)/openmm.patch
 pushd /opt/conda/envs/${ENV_NAME}/lib/python3.7/site-packages

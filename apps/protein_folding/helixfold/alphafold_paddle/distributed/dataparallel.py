@@ -12,13 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-distribution helper functions
+Distributed Data Parallel helper functions
 """
 
 import paddle
+from alphafold_paddle.distributed.comm_group import scg
 
-__all__ = ['grad_sync', 'param_sync']
-
+__all__ = [
+    'grad_sync',
+    'param_sync'
+    ]
 
 @paddle.no_grad()
 def grad_sync(param_groups, comm_group=None, grad_avg=True):
@@ -73,3 +76,16 @@ def param_sync(model, src_rank=0, comm_group=None):
             param, src=src_rank, group=comm_group, use_calc_stream=True)
 
     return None
+
+
+@paddle.no_grad()
+def all_reduce(tensor, op=paddle.distributed.ReduceOp.SUM):
+    """ allreduce a tensor in bp group """
+    if scg.get_dp_world_size() == 1:
+        return tensor
+
+    group = scg.get_dp_group()
+    paddle.distributed.all_reduce(
+        tensor, use_calc_stream=True, op=op, group=group)
+
+    return tensor

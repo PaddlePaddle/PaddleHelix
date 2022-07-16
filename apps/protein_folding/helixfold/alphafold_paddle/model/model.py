@@ -29,8 +29,19 @@ import paddle
 from alphafold_paddle.model import utils
 from alphafold_paddle.relax import relax
 from alphafold_paddle.model import modules
+from alphafold_paddle.common import protein
 from alphafold_paddle.common import residue_constants
-from alphafold_paddle.data.input import input_pipeline
+
+try:
+  import tensorflow.compat.v1 as tf
+  from alphafold_paddle.data.tf_input import input_pipeline
+  from alphafold_paddle.data.tf_input import proteins_dataset
+
+  USE_TF = True
+except Exception:
+  from alphafold_paddle.data.input import input_pipeline
+
+  USE_TF = False
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +68,7 @@ def tensor_to_numpy(pred_dict):
             tensor_to_numpy(pred_dict[k])
 
 
-def slice_pred_dict(pred_dict, slice_idx, ignores=['breaks']):
+def slice_pred_dict(pred_dict, slice_idx, ignores=['breaks', 'traj', 'sidechains']):
     for k in pred_dict.keys():
         if k in ignores:
             continue
@@ -121,10 +132,11 @@ class RunModel(object):
             with open(pkl, 'rb') as f:
                 features = pickle.load(f)
 
+            print('########## feature shape ##########')
             print_shape(features)
             return utils.map_to_tensor(features, add_batch=True)
 
-        logger.info('Processing input features')
+        print('Processing input features')
         data_config = deepcopy(self.config.data)
         feature_names = data_config.common.unsupervised_features
         if data_config.common.use_templates:
@@ -137,29 +149,50 @@ class RunModel(object):
             raw_features['deletion_matrix'] = (raw_features.pop(
                 'deletion_matrix_int').astype(np.float32))
 
-        array_dict = input_pipeline.np_to_array_dict(
-            np_example=raw_features, features=feature_names,
-            use_templates=data_config.common.use_templates)
-        features = input_pipeline.process_arrays_from_config(
-            array_dict, data_config)
-        features = {k: v for k, v in features.items() if v.dtype != 'O'}
+        if USE_TF:
+            data_config.eval.delete_msa_block = False
 
-        extra_msa_length = data_config.common.max_extra_msa
-        for k in ['extra_msa', 'extra_has_deletion', 'extra_deletion_value',
-                  'extra_msa_mask']:
-            features[k] = features[k][:, :extra_msa_length]
+            tf_graph = tf.Graph()
+            with tf_graph.as_default(), tf.device('/device:CPU:0'):
+                tf.compat.v1.set_random_seed(random_seed)
+                tensor_dict = proteins_dataset.np_to_tensor_dict(
+                    np_example=raw_features, features=feature_names)
 
-        for k in features.keys():
-            if features[k].dtype == np.int64:
-                features[k] = features[k].astype(np.int32)
+                processed_batch = input_pipeline.process_tensors_from_config(
+                    tensor_dict, data_config)
 
-            elif features[k].dtype == np.float64:
-                features[k] = features[k].astype(np.float32)
+            tf_graph.finalize()
+
+            with tf.Session(graph=tf_graph) as sess:
+                features = sess.run(processed_batch)
+
+        else:
+
+            array_dict = input_pipeline.np_to_array_dict(
+                np_example=raw_features, features=feature_names,
+                use_templates=data_config.common.use_templates)
+            features = input_pipeline.process_arrays_from_config(
+                array_dict, data_config)
+            features = {k: v for k, v in features.items() if v.dtype != 'O'}
+
+            extra_msa_length = data_config.common.max_extra_msa
+            for k in ['extra_msa', 'extra_has_deletion', 'extra_deletion_value',
+                      'extra_msa_mask']:
+                features[k] = features[k][:, :extra_msa_length]
+
+            for k in features.keys():
+                if features[k].dtype == np.int64:
+                    features[k] = features[k].astype(np.int32)
+
+                elif features[k].dtype == np.float64:
+                    features[k] = features[k].astype(np.float32)
 
         if pkl is not None:
             with open(pkl, 'wb') as f:
                 pickle.dump(features, f, protocol=4)
 
+        print('Preprocessesing finished')
+        print('########## feature shape ##########')
         print_shape(features)
         return utils.map_to_tensor(features, add_batch=True)
 
@@ -180,6 +213,7 @@ class RunModel(object):
                 return_representations=return_representations,
                 compute_loss=False)
 
+        print('Prediction finished')
         tensor_to_numpy(ret)
         return ret
 
@@ -211,14 +245,20 @@ class RunModel(object):
             output_dir.joinpath(f'unrelaxed_{self.name}.pdb'),
             b_factors=plddt_b_factors)
 
-        t0 = time.time()
-        relaxed_pdb_str = relaxer.process(prot=prot)[0]
-        if timings is not None:
-            timings[f'relax_{self.name}'] = time.time() - t0
+        if relaxer is not None:
+            t0 = time.time()
+            relaxed_pdb_str = relaxer.process(prot=prot)[0]
+            if timings is not None:
+                timings[f'relax_{self.name}'] = time.time() - t0
 
-        with open(output_dir.joinpath(f'relaxed_{self.name}.pdb'), 'w') as f:
-            f.write(relaxed_pdb_str)
+            pdb = f'relaxed_{self.name}.pdb'
+            with open(output_dir.joinpath(pdb), 'w') as f:
+                f.write(relaxed_pdb_str)
 
+        else:
+            relaxed_pdb_str = protein.to_pdb(prot)
+
+        print('Postprocessing finished')
         return relaxed_pdb_str
 
     def update_subbatch_size(self, seq_len, extra_msa_num):

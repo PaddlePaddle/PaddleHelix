@@ -22,6 +22,7 @@ import paddle
 import paddle.distributed as dist
 
 from alphafold_paddle.common import protein
+from alphafold_paddle.distributed import dataparallel as dp
 from utils.utils import tree_map, tree_flatten, tree_filter
 
 
@@ -29,8 +30,8 @@ def dist_all_reduce(x, return_num=False, distributed=False):
     x_num = len(x)
     x_sum = 0 if x_num == 0 else np.sum(x)
     if distributed:
-        x_num = dist.all_reduce(paddle.to_tensor(x_num, dtype='int64')).numpy()[0]
-        x_sum = dist.all_reduce(paddle.to_tensor(x_sum, dtype='float32')).numpy()[0]
+        x_num = dp.all_reduce(paddle.to_tensor(x_num, dtype='int64')).numpy()[0]
+        x_sum = dp.all_reduce(paddle.to_tensor(x_sum, dtype='float32')).numpy()[0]
     x_mean = 0 if x_num == 0 else x_sum / x_num
     if return_num:
         return x_mean, x_num
@@ -221,15 +222,34 @@ class ResultsCollect(object):
         self.res_dict_list.append(res_dict)
         if self.eval_tm_score:
             self.tm_score.add(batch, results)
+
+    def _get_max_key_len(self, res_dict_list):
+        if len(res_dict_list) > 0:
+            key_len = len(list(res_dict_list[0]))
+        else:
+            key_len = 0
+        if self.distributed:
+            max_key_len = dp.all_reduce(
+                    paddle.to_tensor(key_len, dtype='int64'),
+                    dist.ReduceOp.MAX)
+        else:
+            max_key_len = key_len
+        return max_key_len
     
     def get_result(self):
         res = {}
         # get results in res_dict_list
+        max_key_len = self._get_max_key_len(self.res_dict_list)
         if len(self.res_dict_list) > 0:
             keys = list(self.res_dict_list[0].keys())
             for k in keys:
                 res[k] = dist_all_reduce(
                         [d[k] for d in self.res_dict_list], distributed=self.distributed)
+        else:
+            # This is tricky here for not blocking dist_all_reduce,
+            # since during test stage, some cards may have no data to evaluate.
+            for _ in range(max_key_len):
+                dist_all_reduce([], distributed=self.distributed)
 
         # get tm_score results
         if self.eval_tm_score:
@@ -251,6 +271,7 @@ class ResultsCollect(object):
                     })
             
             # get tm_score by msa_depth range
+            # TODO: such way of getting msa_depth is wrong
             msa_depth_range_list = [(0, 100), (100, 500), (500, np.inf)]
             for v_range in msa_depth_range_list:
                 prefix = f'depth{v_range[0]}_{v_range[1]}'
@@ -269,4 +290,3 @@ class ResultsCollect(object):
         res = tree_filter(lambda k: 'loss' in k or 'fape' in k, None, res)
         res = tree_map(lambda x: x.numpy().mean(), res)
         return res
-

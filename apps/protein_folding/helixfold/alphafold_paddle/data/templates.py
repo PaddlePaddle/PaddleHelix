@@ -450,9 +450,9 @@ def _get_atom_positions(
         f'Expected exactly one chain in structure with id {auth_chain_id}.')
   chain = relevant_chains[0]
 
-  all_positions = np.zeros([num_res, residue_constants.atom_type_num, 3])
+  all_positions = np.zeros([num_res, residue_constants.atom_type_num, 3], dtype=np.float32)
   all_positions_mask = np.zeros([num_res, residue_constants.atom_type_num],
-                                dtype=np.int64)
+                                dtype=np.int32)
   for res_index in range(num_res):
     pos = np.zeros([residue_constants.atom_type_num, 3], dtype=np.float32)
     mask = np.zeros([residue_constants.atom_type_num], dtype=np.float32)
