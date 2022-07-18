@@ -1,4 +1,4 @@
-# HelixFold 
+# HelixFold: An Efficient Implementation of [AlphaFold 2](https://doi.org/10.1038/s41586-021-03819-2) through [PaddlePaddle](https://github.com/paddlepaddle/paddle)
 
 <p align="center">
 <img src="../../../.github/helixfold_pipeline.png" align="middle" height="90%" width="90%" />
@@ -6,9 +6,7 @@
 
 ------
 
-Reproduction of [AlphaFold 2](https://doi.org/10.1038/s41586-021-03819-2) with [PaddlePaddle](https://github.com/paddlepaddle/paddle).
-
-[HelixFold](https://arxiv.org/abs/2207.05477) currently provides a PaddlePaddle implementation of the AlphaFold training and inference pipeline in GPU and DCU. We try to reproduce all the training details as stated in the AF2 paper. As for the inference pipeline, we reproduce exactly the same results as the original open source inference codes (v2.0.1) including recycle and ensembling.
+[HelixFold](https://arxiv.org/abs/2207.05477) provides an efficient and improved implementation of the whole training and inference pipelines of AlphaFold2 in GPU and DCU. Compared with computational performance of AlphaFold2 reported in the paper and OpenFold implemented through PyTorch, HelixFold reduces the training time from about 11 days to 7.5 days. Training HelixFold from scratch can achieve the competitive accuracy with AlphaFold2.
 
 The installation prerequisites are different for the training and inference pipeline in GPU and DCU. The following links provide detailed instructions on running HelixFold.
 
