@@ -4,13 +4,12 @@ Reproduction of [AlphaFold 2](https://doi.org/10.1038/s41586-021-03819-2) with [
 
 HelixFold currently provides a PaddlePaddle implementation of the AlphaFold inference pipeline, and reproduces all of the features of the original open source inference code (v2.0.1) including recycle and ensembling.
 
-
 ## Installation
 HelixFold depends on [PaddlePaddle](https://github.com/paddlepaddle/paddle).
 Python dependencies available through `pip` is provided in `requirements.txt`. HelixFold also depends on `openmm==7.5.1` and `pdbfixer`, which are only available via `conda`. For producing multiple sequence alignments, `kalign`, the [HH-suite](https://github.com/soedinglab/hh-suite) and `jackhmmer` are also needed. The download scripts require `aria2c`.
 
 We provide a script `setup_env` that setup a `conda ` environment and installs all dependencies. Run:
-```bash
+```
 sh setup_env
 conda activate helixfold # activate the conda environment
 ```
@@ -39,7 +38,7 @@ You can use a script `scripts/download_all_data.sh`, which is the same as the or
     will download a reduced version of the databases to be used with the
     `reduced_dbs` preset. The total download size for the reduced databases is around 190 GB and the total size when unzipped is around 530 GB. 
 
-### Running HelixFold for inference
+### Running HelixFold for Inference
 
 To run inference on a sequence or multiple sequences using a set of DeepMind's pretrained parameters, run e.g.:
 ```
@@ -140,6 +139,16 @@ The contents of each output file are as follows:
 The pLDDT confidence measure is stored in the B-factor field of the output PDB
 files (although unlike a B-factor, higher pLDDT is better, so care must be taken
 when using for tasks such as molecular replacement).
+
+### Running HelixFold for CASP14 Demo
+
+For convenience, we also provide a demo for some CASP14 proteins under folder `data/casp14_demo`. To run them, you just need to execute following command:
+
+```sh
+./gpu_infer.sh T1026
+```
+
+Note that such demo for T1026 and T1037 can work without downloading large MSA datasets, only model parameters are required.
 
 ## Copyright
 
