@@ -1,48 +1,27 @@
-# HelixFold 
+# [HelixFold](https://arxiv.org/abs/2207.05477): An Efficient and Improved Implementation of [AlphaFold 2](https://doi.org/10.1038/s41586-021-03819-2) through [PaddlePaddle](https://github.com/paddlepaddle/paddle)
+
+AlphaFold2 is an accurate protein structure prediction pipeline. [HelixFold](https://arxiv.org/abs/2207.05477) provides an efficient and improved implementation of the complete training and inference pipelines of AlphaFold2 in GPU and DCU. Compared with the computational performance of AlphaFold2 reported in the paper and OpenFold implemented through PyTorch, HelixFold reduces the training time from about 11 days to 7.5 days. Training HelixFold from scratch can achieve competitive accuracy with AlphaFold2.
 
 <p align="center">
-<img src="../../../.github/helixfold_pipeline.png" align="middle" height="90%" width="90%" />
+<img src="../../../.github/HelixFold_computational_performance.png" align="middle" height="50%" width="50%" />
+<img src="../../../.github/HelixFold_accuracy.png" align="middle" height="60%" width="60%" />
 </p>
 
-------
+## Instruction
+The detailed instructions on running HelixFold in GPU and DCU for training and inference are provided in the following links:
+* [Training in GPU](README_train.md)
+* [Training in DCU](README_DCU.md)
+* [Inference in GPU](README_inference.md)
 
-Reproduction of [AlphaFold 2](https://doi.org/10.1038/s41586-021-03819-2) with [PaddlePaddle](https://github.com/paddlepaddle/paddle).
+##  Technical Highlights for Efficient Implementation
 
-[HelixFold](https://arxiv.org/abs/2207.05477) currently provides a PaddlePaddle implementation of the AlphaFold training and inference pipeline in GPU and DCU. We try to reproduce all the training details as stated in the AF2 paper. As for the inference pipeline, we reproduce exactly the same results as the original open source inference codes (v2.0.1) including recycle and ensembling.
+* **Branch Parallelism and Hybrid Parallelism** HelixFold proposes **Branch Parallelism (BP)** to split the calculation branch across multiple devices in order to accelerate computation during the initial training phase. The training cost is further reduced by training with **Hybrid Parallelism**, combining BP with Dynamic Axial Parallelism (DAP) and Data Parallelism (DP).
 
-The installation prerequisites are different for the training and inference pipeline in GPU and DCU. The following links provide detailed instructions on running HelixFold.
+* **Operator Fusion and Tensor Fusion to Reduce the Cost of Scheduling** Scheduling a huge number of operators is one of the bottlenecks for the training. To reduce the cost of scheduling, **Fused Gated Self-Attention** is utilized to combine multiple blocks into an operator, and thousands of tensors are fused into only a few tensors.
 
-* [Training Pipeline in GPU](README_train.md)
-* [Training Pipeline in DCU](README_DCU.md)
-* [Inference Pipeline in GPU](README_inference.md)
+* **Multi-dimensional Memory Optimization** Multiple techniques, including Recompute, BFloat16, In-place memory, and Subbatch (Chunking), are exploited to reduce the memory required for training.
 
-## Highlights
-
-### Branch Parallelism and Hybrid Parallelism
-
-HelixFold proposes **Branch Parallelism (BP)** to split the calculation branch across multiple devices in order to accelerate computation during initial training phase. The training cost is further reduced by training with **Hybrid Parallelism** which combines BP with Dynamic Axial Parallelism (DAP) and Data Parallelism (DP).
-
-<p align="center">
-<img src="../../../.github/BP_DAP_DP.png" align="middle" height="90%" width="90%" />
-</p>
-
-### Fused Gated Self-Attention
-
-Because of the fairly small mini-batch size and sequence length, scheduling a huge number of operators is one of the bottlenecks for training AlphaFold2. HelixFold proposes **Fused Gated Self-Attention** to optimize both the CPU and GPU utilization.
-
-<p align="center">
-<img src="../../../.github/op_fuse.png" align="middle" height="90%" width="90%" />
-</p>
-
-### Tensor Fusion
-
-HelixFold fuses 4,630 model parameters of AlphaFold2 into a single one or a few parameters and modify the data pointer to fused memory by **Tensor Fusion**. It significantly improves the training efficiency and reduces memory fragmentation by reducing the number of kernal launches as well as the repeated creation and destruction of temporary small tensors.
-
-<p align="center">
-<img src="../../../.github/tensor_fuse.png" align="middle" height="90%" width="90%" />
-</p>
-
-Please check our [paper](https://arxiv.org/abs/2207.05477) for more details.
+Please refer to [paper](https://arxiv.org/abs/2207.05477) for more technical details.
 
 ## Copyright
 
@@ -53,9 +32,6 @@ HelixFold code is licensed under the Apache 2.0 License, which is same as AlphaF
 [1] Jumper J, Evans R, Pritzel A, et al. Highly accurate protein structure prediction with AlphaFold[J]. Nature, 2021, 596(7873): 583-589.
 
 ## Citation
-
-If you find our work is helpful to your research, please cite:
-
 ```
 @article{wang2022helixfold,
   title={HelixFold: An Efficient Implementation of AlphaFold2 using PaddlePaddle},
