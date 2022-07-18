@@ -21,10 +21,37 @@ sh setup_env
 conda activate helixfold # activate the conda environment
 ```
 
-## Usage
+## Download Demo Dataset
 
-After installing all the above required dependencies, you can have a try with running `gpu_train.sh`.
+We provide a subset of our full training dataset as a demo. Within the directory of `helixfold`, run:
 
 ```bash
-sh gpu_train.sh
+wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/HelixFold/data.tar.gz
+tar -zxvf data.tar.gz
+```
+
+## Usage
+
+After installing all the above required dependencies and downloading the demo dataset, you can have a try with running `gpu_train.sh`. We provide different training modes in one script, which includes intial training and finetune on `single node, 1 GPU`, `single node, 8 GPUs` and `multiple nodes, multiple GPUs`. The details of each parameters are included in the script `gpu_train.sh`.
+
+```bash
+sh gpu_train.sh [demo_initial_N1C1, demo_finetune_N1C1, demo_initial_N1C8, demo_finetune_N1C8, demo_initial_N8C64, demo_finetune_N8C64]
+```
+
+For example, if you want to train on single node, 1 GPU with initial training mode, you can run:
+
+```bash
+sh gpu_train.sh demo_initial_N1C1
+```
+
+If you want to train on single node, 8 GPUs with finetune mode, you can run:
+
+```bash
+sh gpu_train.sh demo_finetune_N1C8
+```
+
+If you want to train on 8 nodes, 8 GPUs with initial training mode, you can run:
+
+```bash
+sh gpu_train.sh demo_initial_N8C64
 ```

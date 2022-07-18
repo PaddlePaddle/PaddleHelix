@@ -22,13 +22,13 @@ module load apps/anaconda3/5.2.0
 
 创建Python环境
 
-```
+```bash
 conda create -p ~/conda-envs/paddle_20220413 python==3.7.10
 ```
 
 激活Python环境
 
-```
+```bash
 conda activate ~/conda-envs/paddle_20220413
 ```
 
@@ -37,7 +37,7 @@ conda activate ~/conda-envs/paddle_20220413
 
 在激活的Conda Python环境中安装PaddlePaddle ROCm版本以及其他依赖库
 
-```
+```bash
 wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/HelixFold/paddlepaddle_rocm-0.0.0-cp37-cp37m-linux_x86_64.whl
 pip install ./paddlepaddle_rocm-0.0.0-cp37-cp37m-linux_x86_64.whl
 pip install -r requirements.txt
@@ -47,12 +47,21 @@ pip install -r requirements.txt
 
 ### 相关工具下载
 
-下载HelixFold需要的两个工具：lddt和tm-score
+在`helixfold`目录下，下载HelixFold需要的两个工具：lddt和tm-score
 
-```
+```bash
 wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/HelixFold/lddt
 wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/HelixFold/tm_score
 mkdir tools && mv lddt tm_score tools
+```
+
+### Demo数据集下载
+
+在`helixfold`目录下，下载Demo数据集
+
+```bash
+wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/HelixFold/data.tar.gz
+tar -zxvf data.tar.gz
 ```
 
 ### 配置脚本
