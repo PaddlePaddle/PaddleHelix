@@ -12,26 +12,21 @@ To reproduce the results reported in our paper, specific environment settings ar
 - nccl: 2.12.12
 
 ## Installation
-
-We provide a PaddlePaddle `dev` package and a script `setup_env` that setups a `conda` environment and installs all dependencies. Within the directory of `helixfold`, run:
-
+PaddlePaddle `dev` package is required to run HelixFold. Script `setup_env` is used to setup the `conda` environment, installing all dependencies. Locate to the directory of `helixfold` and run:
 ```bash
 wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/HelixFold/paddlepaddle_gpu-0.0.0-cp37-cp37m-linux_x86_64.whl
 sh setup_env
 conda activate helixfold # activate the conda environment
 ```
 
-## Download Demo Dataset & Tools
-
-We provide a subset of our full training dataset as a demo. Within the directory of `helixfold`, run:
-
+## Download Demo Dataset and Evaluation Tools
+In order to facilitate the users to get start quickly, a demo dataset is provided to test the training pipeline. Locate to the directory of `helixfold` and run:
 ```bash
 wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/HelixFold/data.tar.gz
 tar -zxvf data.tar.gz
 ```
 
-Before running the training script, you also need to download `lddt` and `tm-score` for scoring metrics.
-
+To evaluate the accuracy of the trained model, evaluation tools `lddt` and `tm-score` are required for evaluation.
 ```bash
 wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/HelixFold/lddt
 wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/HelixFold/tm_score
@@ -39,27 +34,25 @@ mkdir tools && mv lddt tm_score tools && chmod +x ./tools/lddt && chmod +x ./too
 ```
 
 ## Usage
-
-After installing all the above required dependencies and downloading the demo dataset, you can have a try with running `gpu_train.sh`. We provide different training modes in one script, which includes intial training and finetune on `single node, 1 GPU`, `single node, 8 GPUs` and `multiple nodes, multiple GPUs`. Note that you need to set `PADDLE_NNODES=number of devices` and `PADDLE_MASTER="xxx.xxx.xxx.xxx:port"` according to your network environment. The details of each parameter are included in the script `gpu_train.sh`.
+After installing all the above required dependencies and downloading the demo dataset, you can have a try by running `gpu_train.sh`. We provide multiple training modes in one script, which includes intial training and finetune modes on `single node, single GPU`, `single node, multiple GPUs` and `multiple nodes, multiple GPUs`. Note that you need to set `PADDLE_NNODES=number of devices` and `PADDLE_MASTER="xxx.xxx.xxx.xxx:port"` according to your network environment. The details of each parameter are included in the script `gpu_train.sh`.
 
 ```bash
 sh gpu_train.sh [demo_initial_N1C1, demo_finetune_N1C1, demo_initial_N1C8, demo_finetune_N1C8, demo_initial_N8C64, demo_finetune_N8C64]
 ```
 
-For example, if you want to train on single node, 1 GPU with initial training mode, run:
+Following are three examples:
 
+1. Train on a single node with 1 GPU in initial training mode:
 ```bash
 sh gpu_train.sh demo_initial_N1C1
 ```
 
-For example, if you want to train on single node, 8 GPUs with finetune mode, run:
-
+2. Train on a single node with 8 GPUs in finetune mode:
 ```bash
 sh gpu_train.sh demo_finetune_N1C8
 ```
 
-For example, if you want to train on 8 nodes, 8 GPUs with initial training mode, run:
-
+3. Train on 8 nodes with 64 GPUs in initial training mode:
 ```bash
 sh gpu_train.sh demo_initial_N8C64
 ```
