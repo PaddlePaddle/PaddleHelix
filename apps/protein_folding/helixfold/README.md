@@ -1,7 +1,7 @@
 # HelixFold 
 
 <p align="center">
-<img src="../../../../.github/helixfold_pipeline.png" align="middle" height="90%" width="90%" />
+<img src="../../../.github/helixfold_pipeline.png" align="middle" height="90%" width="90%" />
 </p>
 
 ------
@@ -23,7 +23,7 @@ The installation prerequisites are different for the training and inference pipe
 HelixFold proposes Branch Parallelism (BP) to split the calculation branch across multiple devices in order to accelerate computation during initial training phase. The training cost is further reduced by combining BP with Dynamic Axial Parallelism (DAP) and Data Parallelism (DP).
 
 <p align="center">
-<img src="../../../../.github/BP_DAP_DP.png" align="middle" height="90%" width="90%" />
+<img src="../../../.github/BP_DAP_DP.png" align="middle" height="90%" width="90%" />
 </p>
 
 ## Copyright
