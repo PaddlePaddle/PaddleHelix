@@ -93,11 +93,10 @@ def _openmm_minimize(
 
   integrator = openmm.LangevinIntegrator(0, 0.01, 0.0)
 
-  k = 'CUDA_VISIBLE_DEVICES'
-  if k in os.environ and len(os.environ[k]) == 0:
-    platform = openmm.Platform.getPlatformByName("CPU")
-  else:
+  try:
     platform = openmm.Platform.getPlatformByName("CUDA")
+  except Exception:
+    platform = openmm.Platform.getPlatformByName("CPU")
 
   simulation = openmm_app.Simulation(
       pdb.topology, system, integrator, platform)

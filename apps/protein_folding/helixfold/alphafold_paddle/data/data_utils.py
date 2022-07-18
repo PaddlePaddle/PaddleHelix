@@ -92,7 +92,7 @@ def aatype_to_sequence(aatype):
     ])
 
 
-def load_pdb_chain(distill_obj, confidence_threshold=0.5):
+def load_pdb_chain(distill_obj, confidence_threshold=50.0):
     """Load pdb label."""
 
     pdb_label = {}
@@ -123,8 +123,8 @@ def load_chain(mmcif_obj, chain_id='A'):
     # Directly parses sequence from fasta, should be consistent to 'aatype' in input features (from .fasta or .pkl)
     sequence = mmcif_obj.chain_to_seqres[chain_id]           
     order_map = residue_constants.restype_order_with_x
-    aatype_idx = np.array([order_map.get(rn, order_map['X']) for rn in sequence])
-    resolution = np.array([mmcif_obj.header['resolution']])
+    aatype_idx = np.array([order_map.get(rn, order_map['X']) for rn in sequence], dtype=np.int32)
+    resolution = np.array([mmcif_obj.header['resolution']], dtype=np.float32)
     return {
         'aatype_index':       aatype_idx,           # [NR,]
         'all_atom_positions': all_atom_positions,   # [NR, 37, 3]
@@ -186,6 +186,29 @@ def generate_hhblits_profile(protein):
     # Compute the profile for every residue (over all MSA sequences).
     protein['hhblits_profile'] = np.mean(one_hot(22, protein['msa']), axis=0)
     return protein
+
+
+def sample_raw_msa(raw_features, data_config):
+    """
+    related key in raw_features:
+        msa: (msa_depth, seq_len)
+        deletion_matrix_int: (msa_depth, seq_len)
+    """
+    D = len(raw_features['msa'])
+    new_depth = np.random.randint(
+            data_config.msa_sample.min_depth, 
+            data_config.msa_sample.max_depth + 1)
+    new_depth = min(new_depth, D)
+    if new_depth == 1:
+        indices = np.array([0])
+    else:
+        indices = np.random.choice(D - 1, size=[new_depth - 1], replace=False)
+        indices = np.append(0, indices + 1).astype('int')
+
+    for k in ['msa', 'deletion_matrix_int']:
+        raw_features[k] = raw_features[k][indices]
+    raw_features['num_alignments'][:] = new_depth
+    return raw_features
 
 
 def generate_backbone_affine(prot):

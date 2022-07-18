@@ -135,7 +135,7 @@ def mask_mean(mask, value, axis=None, drop_mask_channel=False, eps=1e-10):
     elif axis is None:
         axis = list(range(len(mask_shape)))
 
-    assert isinstance(axis, collections.Iterable), \
+    assert isinstance(axis, collections.abc.Iterable), \
         'axis needs to be either an iterable, integer or "None"'
 
     broadcast_factor = 1.
@@ -208,7 +208,7 @@ def batched_gather(params, indices, axis=0, batch_dims=0):
     return gathered
 
 
-def subbatch(f, arg_idx, dim, bs, out_idx):
+def subbatch(f, arg_idx, dim, bs, out_idx, same_arg_idx={}):
     """ Converts a function to one that applies to subbatch of an input
     dimension.
 
@@ -218,12 +218,15 @@ def subbatch(f, arg_idx, dim, bs, out_idx):
         dim([int]): index of the dimension to be subbatched.
         bs(int): subbatch size.
         out_idx(int): index of the output dimension that needs stacking
+        same_arg_idx(dict), optional: index of same arg mapping. e.g {1: 0} means arg[1] == arg[0],
+                            we assign _args[1] = _args[0] avoiding slice repeatly.
 
     Returns:
         converted function.
     """
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
+
         assert len(arg_idx) == len(dim), f'Number of batching args and number of batching dims should match.'
 
         inps = [args[i] for i in arg_idx]
@@ -240,9 +243,14 @@ def subbatch(f, arg_idx, dim, bs, out_idx):
         for slice_at in np.arange(0, dim_width, bs):
             _args = []
             for i, inp in enumerate(args):
-                if i in arg_idx:
+                if i in same_arg_idx:
+                    assert i > same_arg_idx[i], f"expect i > same_arg_idx[i], but got i: {i} and same_arg_idx[i]: {same_arg_idx[i]}"
+                    _args.append(_args[same_arg_idx[i]])
+                elif i in arg_idx:
                     inp = inp.slice([inp_dim[inp]], [slice_at], [slice_at + bs])
-                _args.append(inp)
+                    _args.append(inp)
+                else:
+                    _args.append(inp)
             outs.append(f(*_args, **kwargs))
 
         return paddle.concat(outs, out_idx)

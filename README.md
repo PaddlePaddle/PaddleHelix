@@ -1,7 +1,7 @@
 English | [简体中文](README_cn.md)
 
 <p align="center">
-<img src="./.github/paddlehelix_logo.png" align="middle" heigh="90%" width="90%" />
+<img src="./.github/paddlehelix_logo.png" align="middle" height="90%" width="90%" />
 </p>
 
 ------
@@ -12,13 +12,15 @@ English | [简体中文](README_cn.md)
 
 
 ## Latest News
+`2022.07.18` PaddleHelix fully released HelixFold including training and inference pipeline. **The complete training time are optimized from 11 days to 7.5 days**. Please refer to [paper](https://arxiv.org/abs/2207.05477) and [codes](./apps/protein_folding/helixfold) for more details.
+
 `2022.07.07` Paper "BatchDTA: implicit batch alignment enhances deep learning-based drug–target affinity estimation" is published in **Briefings in Bioinformatics**. Please refer to [paper](https://academic.oup.com/bib/advance-article-abstract/doi/10.1093/bib/bbac260/6632927) and [codes](./apps/drug_target_interaction/batchdta) for more details.
 
 `2022.05.24` Paper "HelixADMET: a robust and endpoint extensible ADMET system incorporating self-supervised knowledge transfer" is published in **Bioinformatics**. Refer to [paper](https://academic.oup.com/bioinformatics/advance-article-abstract/doi/10.1093/bioinformatics/btac342/6590643) for more information.
 
 `2022.02.07` Paper "Geometry-enhanced molecular representation learning for property prediction" is published in **Nature Machine Intelligence**. Please refer to [paper](https://www.nature.com/articles/s42256-021-00438-4) and [codes](./apps/pretrained_compound/ChemRL/GEM) to explore the algorithm.
 
-`2022.01.07` PaddleHelix released the reproduction of [AlphaFold 2](https://doi.org/10.1038/s41586-021-03819-2) using PaddlePaddle in [HelixFold](./apps/protein_folding/helixfold).
+`2022.01.07` PaddleHelix released the reproduction of [AlphaFold 2](https://doi.org/10.1038/s41586-021-03819-2) inference pipeline using PaddlePaddle in [HelixFold](./apps/protein_folding/helixfold).
 
 `2021.11.23` Paper "Multimodal Pre-Training Model for Sequence-based Prediction of Protein-Protein Interaction" is accepted by [MLCB 2021](https://sites.google.com/cs.washington.edu/mlcb2021/home). Please refer to [paper](https://arxiv.org/abs/2112.04814) and [code](https://github.com/PaddlePaddle/PaddleHelix/tree/dev/apps/protein_protein_interaction) for more details.
 

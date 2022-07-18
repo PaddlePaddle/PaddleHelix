@@ -704,7 +704,7 @@ def find_structural_violations(
     temp_atomtype_radius = np.array([
         residue_constants.van_der_waals_radius[name[0]]
         for name in residue_constants.atom_types
-    ])
+    ], dtype=np.float32)
     atomtype_radius = paddle.to_tensor(temp_atomtype_radius)
     atom14_atom_radius = batch['atom14_atom_exists'] * utils.batched_gather(
         atomtype_radius, batch['residx_atom14_to_atom37'])
@@ -853,7 +853,7 @@ def supervised_chi_loss(ret, batch, value, config):
 
     residue_type_one_hot = paddle.nn.functional.one_hot(batch['aatype_index'], 
                             num_classes=residue_constants.restype_num + 1)
-    chi_pi_periodic = paddle.einsum('nijk, nkl->nijl', residue_type_one_hot[:, None, ...], 
+    chi_pi_periodic = paddle.einsum('nijk,nkl->nijl', residue_type_one_hot[:, None, ...], 
                             paddle.to_tensor(residue_constants.chi_pi_periodic)[None])
 
     sin_cos_true_chi = batch['chi_angles_sin_cos'][:, None, ...]

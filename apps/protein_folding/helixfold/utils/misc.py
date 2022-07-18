@@ -16,6 +16,7 @@ misc utils
 """
 
 from collections import OrderedDict
+import logging
 
 __all__ = ['AverageMeter']
 
@@ -85,6 +86,7 @@ class TrainLogger(object):
         self.info['batch_cost'] = AverageMeter("batch_cost", ".5f", postfix="s, ")
         self.info['avg_loss'] = AverageMeter("avg_loss", ".5f", postfix=", ")
         self.info['protein'] = AverageMeter("protein", "d", postfix=", ")
+        self.info['train_cost'] = AverageMeter("train_cost", ".5f", postfix=", ")
 
     def update(self, key, value, n=1):
         """ update value by key """
@@ -111,7 +113,7 @@ class TrainLogger(object):
         """ get state dict """
         state = {}
         for key in self.info:
-            if 'protein' == key:
+            if 'protein' == key or 'train_cost' == key:
                 state[key] = self.info[key].sum
             else:
                 state[key] = self.info[key].avg
@@ -122,10 +124,25 @@ class TrainLogger(object):
         """ return string """
         log_msg = ''
         for key in self.info:
-            if 'protein' == key:
+            if 'protein' == key or 'train_cost' == key:
                 log_msg += self.info[key].total
             else:
                 log_msg += self.info[key].mean
         
         log_msg += f"ips: {self.info['protein'].sum / self.info['batch_cost'].sum:.5f} protein/s"
         return log_msg
+
+
+def set_logging_level(level):
+    level_dict = {
+        "NOTSET": logging.NOTSET,
+        "DEBUG": logging.DEBUG,
+        "INFO": logging.INFO,
+        "WARNING": logging.WARNING,
+        "ERROR": logging.ERROR,
+        "CRITICAL": logging.CRITICAL
+    }
+    logging.basicConfig(
+        format='%(asctime)s %(levelname)s %(message)s',
+        level=level_dict[level],
+        datefmt='%Y-%m-%d %H:%M:%S')

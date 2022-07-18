@@ -25,6 +25,8 @@ from alphafold_paddle.common import residue_constants
 from alphafold_paddle.model.utils import mask_mean, subbatch
 from alphafold_paddle.model import folding, lddt, quat_affine, all_atom
 from alphafold_paddle.model.utils import init_gate_linear, init_final_linear
+from alphafold_paddle.distributed import dap, bp
+from alphafold_paddle.distributed.comm_group import scg
 
 # Map head name in config to head name in model params
 Head_names = {
@@ -57,6 +59,62 @@ def sigmoid_cross_entropy(logits, labels):
     log_not_p = paddle.nn.functional.log_sigmoid(-logits)
     loss = -labels * log_p - (1. - labels) * log_not_p
     return loss
+
+
+class Dropout(nn.Layer):
+    def __init__(self, p=0.5, axis=None, mode="upscale_in_train", name=None):
+        super(Dropout, self).__init__()
+
+        if not isinstance(p, (float, int)):
+            raise TypeError("p argument should be a number")
+        if p < 0 or p > 1:
+            raise ValueError("p argument should between 0 and 1")
+
+        mode = 'downgrade_in_infer' if mode == 'downscale_in_infer' else mode  #semantic transfer
+        if mode not in ('downscale_in_infer', 'upscale_in_train'):
+            raise ValueError(
+                "mode argument should be 'downscale_in_infer' or 'upscale_in_train'"
+            )
+
+        if axis and not isinstance(axis, (int, list, tuple)):
+            raise TypeError("datatype of axis argument should be int or list")
+
+        self.p = p
+        self.axis = axis
+        self.mode = mode
+        self.name = name
+
+    def forward(self, input):
+        # fast return for p == 0
+        if self.p == 0:
+            return input
+
+        if self.axis == None: 
+            out = nn.functional.dropout(input,
+                            p=self.p,
+                            axis=self.axis,
+                            training=self.training,
+                            mode=self.mode,
+                            name=self.name)
+        else:
+            seed = None
+            drop_axes = [self.axis] if isinstance(self.axis, int) else list(self.axis)
+            if paddle.static.default_main_program().random_seed != 0:
+                seed = paddle.static.default_main_program().random_seed
+
+            out, mask = paddle._C_ops.dropout_nd(input, 'dropout_prob', self.p, 'is_test',
+                                                    not self.training, 'fix_seed', seed
+                                                    is not None, 'seed',
+                                                    seed if seed is not None else 0,
+                                                    'dropout_implementation', self.mode, 'axis',
+                                                    drop_axes)
+
+        return out
+
+    def extra_repr(self):
+        name_str = ', name={}'.format(self.name) if self.name else ''
+        return 'p={}, axis={}, mode={}{}'.format(self.p, self.axis, self.mode,
+                                                 name_str)
 
 
 class AlphaFold(nn.Layer):
@@ -107,6 +165,9 @@ class AlphaFold(nn.Layer):
             return new_prev
 
         def _run_single_recycling(prev, recycle_idx, compute_loss):
+            if not self.training:
+                print(f'########## recycle id: {recycle_idx} ##########')
+
             if self.config.resample_msa_in_recycling:
                 # (B, (R+1)*E, N, ...)
                 # B: batch size, R: recycling number,
@@ -343,6 +404,10 @@ class Attention(nn.Layer):
         key_dim = self.config.get('key_dim', q_dim)
         value_dim = self.config.get('value_dim', kv_dim)
 
+        # TODO(GuoxiaWang): delete non fuse_attention related code on dcu
+        self.fuse_attention = self.global_config.fuse_attention
+        self.merge_qkv = (q_dim == kv_dim)
+
         assert key_dim % num_head == 0
         assert value_dim % num_head == 0
         key_dim = key_dim // num_head
@@ -351,16 +416,27 @@ class Attention(nn.Layer):
         self.key_dim = key_dim
         self.value_dim = value_dim
 
-        self.query_w = paddle.create_parameter(
-            [q_dim, num_head, key_dim], 'float32',
-            default_initializer=nn.initializer.XavierUniform())
-        self.key_w = paddle.create_parameter(
-            [kv_dim, num_head, key_dim], 'float32',
-            default_initializer=nn.initializer.XavierUniform())
-        self.value_w = paddle.create_parameter(
-            [kv_dim, num_head, value_dim], 'float32',
-            default_initializer=nn.initializer.XavierUniform())
+        self.qkv_w = None
+        self.query_w = None
+        self.key_w = None
+        self.value_w = None
+        if self.merge_qkv and self.fuse_attention:
+            self.qkv_w = paddle.create_parameter(
+                [3, num_head, key_dim, q_dim], 'float32',
+                default_initializer=nn.initializer.XavierUniform())
+        else:
+            self.query_w = paddle.create_parameter(
+                [q_dim, num_head, key_dim], 'float32',
+                default_initializer=nn.initializer.XavierUniform())
+            self.key_w = paddle.create_parameter(
+                [kv_dim, num_head, key_dim], 'float32',
+                default_initializer=nn.initializer.XavierUniform())
+            self.value_w = paddle.create_parameter(
+                [kv_dim, num_head, value_dim], 'float32',
+                default_initializer=nn.initializer.XavierUniform())
 
+        self.gating_w = None
+        self.gating_b = None
         if self.config.gating:
             self.gating_w = paddle.create_parameter(
                 [q_dim, num_head, value_dim], 'float32',
@@ -393,26 +469,33 @@ class Attention(nn.Layer):
         Returns:
             A float32 tensor of shape [batch_size, row_size, N_queries, output_dim].
         """
-        c = self.key_dim ** (-0.5)
-        q = paddle.einsum('nbqa,ahc->nbqhc', q_data, self.query_w) * c
-        k = paddle.einsum('nbka,ahc->nbkhc', m_data, self.key_w)
-        v = paddle.einsum('nbka,ahc->nbkhc', m_data, self.value_w)
-        logits = paddle.einsum('nbqhc,nbkhc->nbhqk', q, k) + bias
+        if self.fuse_attention:
+            if nonbatched_bias is not None:
+                nonbatched_bias = paddle.unsqueeze(nonbatched_bias, axis=1)
+            _, _, _, _, _, _, _, output = paddle._C_ops.fused_gate_attention(
+                q_data, m_data, self.query_w, self.key_w, self.value_w, self.qkv_w, nonbatched_bias, bias, self.gating_w, self.gating_b,
+                self.output_w, self.output_b, 'has_gating', self.config.gating, 'merge_qkv', self.merge_qkv)
+        else:
+            c = self.key_dim ** (-0.5)
+            q = paddle.einsum('nbqa,ahc->nbqhc', q_data, self.query_w) * c
+            k = paddle.einsum('nbka,ahc->nbkhc', m_data, self.key_w)
+            v = paddle.einsum('nbka,ahc->nbkhc', m_data, self.value_w)
+            logits = paddle.einsum('nbqhc,nbkhc->nbhqk', q, k) + bias
 
-        if nonbatched_bias is not None:
-            logits += paddle.unsqueeze(nonbatched_bias, axis=1)
+            if nonbatched_bias is not None:
+                logits += paddle.unsqueeze(nonbatched_bias, axis=1)
 
-        weights = nn.functional.softmax(logits)
-        weighted_avg = paddle.einsum('nbhqk,nbkhc->nbqhc', weights, v)
+            weights = nn.functional.softmax(logits)
+            weighted_avg = paddle.einsum('nbhqk,nbkhc->nbqhc', weights, v)
 
-        if self.config.gating:
-            gate_values = paddle.einsum('nbqc,chv->nbqhv', q_data,
-                                        self.gating_w) + self.gating_b
-            gate_values = nn.functional.sigmoid(gate_values)
-            weighted_avg *= gate_values
+            if self.config.gating:
+                gate_values = paddle.einsum('nbqc,chv->nbqhv', q_data,
+                                            self.gating_w) + self.gating_b
+                gate_values = nn.functional.sigmoid(gate_values)
+                weighted_avg *= gate_values
 
-        output = paddle.einsum('nbqhc,hco->nbqo', weighted_avg,
-                               self.output_w) + self.output_b
+            output = paddle.einsum('nbqhc,hco->nbqo', weighted_avg,
+                                self.output_w) + self.output_b 
         return output
 
 
@@ -469,7 +552,7 @@ class GlobalAttention(nn.Layer):
             [output_dim], 'float32',
             default_initializer=nn.initializer.Constant(0.0))
 
-    def forward(self, q_data, m_data, q_mask, bias):
+    def forward(self, q_data, m_data, q_mask):
         k = paddle.einsum('nbka,ac->nbkc', m_data, self.key_w)
         v = paddle.einsum('nbka,ac->nbkc', m_data, self.value_w)
 
@@ -539,17 +622,32 @@ class MSARowAttentionWithPairBias(nn.Layer):
                 msa_channel, msa_channel, msa_channel)
 
     def forward(self, msa_act, msa_mask, pair_act):
+
+        pair_act = self.feat_2d_norm(pair_act)
+        
+        # [B, N_res//dap_size, N_res, cz], [cz, head] => [B, head, N_res//dap_size, N_res]
+        nonbatched_bias_before = paddle.einsum(
+            'nqkc,ch->nhqk', pair_act, self.feat_2d_weights)
+        
+        # [B, head, N_res//dap_size, N_res] => [B, head, N_res, N_res]
+        nonbatched_bias = dap.all_gather(nonbatched_bias_before, axis=2)
+        nonbatched_bias = dap.all_gather_opp(nonbatched_bias, axis=2)
+
+        # [B, N_seq, N_res] => [B, N_seq//dap_size, N_res]
+        msa_mask = dap.scatter(msa_mask, axis=1)
+        
         bias = 1e9 * (msa_mask - 1.)
+        # [B, N_seq//dap_size, N_res] => [B, N_seq//dap_size, 1, 1, N_res]
         bias = paddle.unsqueeze(bias, axis=[2, 3])
         msa_act = self.query_norm(msa_act)
-        pair_act = self.feat_2d_norm(pair_act)
-        nonbatched_bias = paddle.einsum(
-            'nqkc,ch->nhqk', pair_act, self.feat_2d_weights)
 
-        if not self.training:
+        if not self.training or (self.is_extra_msa and self.config.use_subbatch):
             # low memory mode using subbatch
+            subbatch_size = self.config.subbatch_size
+            if not self.training:
+                subbatch_size = self.global_config.subbatch_size
             sb_attn = subbatch(self.attention, [0, 1, 2], [1, 1, 1],
-                               self.global_config.subbatch_size, 1)
+                               subbatch_size, 1, same_arg_idx={1: 0})
             msa_act = sb_attn(msa_act, msa_act, bias, nonbatched_bias)
         else:
             msa_act = self.attention(msa_act, msa_act, bias, nonbatched_bias)
@@ -577,6 +675,10 @@ class MSAColumnGlobalAttention(nn.Layer):
             extra_msa_channel, extra_msa_channel, extra_msa_channel)
 
     def forward(self, msa_act, msa_mask):
+        # scatter if using dap, otherwise do nothing
+        # [B, N_seq, N_res] => [B, N_seq, N_res//dap_size]
+        msa_mask = dap.scatter(msa_mask, axis=2)
+
         msa_act = paddle.transpose(msa_act, [0, 2, 1, 3])
         msa_mask = paddle.transpose(msa_mask, [0, 2, 1])
 
@@ -589,10 +691,10 @@ class MSAColumnGlobalAttention(nn.Layer):
         if not self.training:
             # low memory mode using subbatch
             sb_attn = subbatch(self.attention, [0, 1, 2], [1, 1, 1],
-                               self.global_config.subbatch_size, 1)
-            msa_act = sb_attn(msa_act, msa_act, msa_mask, bias)
+                               self.global_config.subbatch_size, 1, same_arg_idx={1: 0})
+            msa_act = sb_attn(msa_act, msa_act, msa_mask)
         else:
-            msa_act = self.attention(msa_act, msa_act, msa_mask, bias)
+            msa_act = self.attention(msa_act, msa_act, msa_mask)
 
         msa_act = paddle.transpose(msa_act, [0, 2, 1, 3])
         return msa_act
@@ -618,6 +720,10 @@ class MSAColumnAttention(nn.Layer):
             msa_channel, msa_channel, msa_channel)
 
     def forward(self, msa_act, msa_mask):
+        # scatter if using dap, otherwise do nothing
+        # [B, N_seq, N_res] => [B, N_seq, N_res//dap_size]
+        msa_mask = dap.scatter(msa_mask, axis=2)
+
         msa_act = paddle.transpose(msa_act, [0, 2, 1, 3])
         msa_mask = paddle.transpose(msa_mask, [0, 2, 1])
 
@@ -628,7 +734,7 @@ class MSAColumnAttention(nn.Layer):
         if not self.training:
             # low memory mode using subbatch
             sb_attn = subbatch(self.attention, [0, 1, 2], [1, 1, 1],
-                               self.global_config.subbatch_size, 1)
+                               self.global_config.subbatch_size, 1, same_arg_idx={1: 0})
             msa_act = sb_attn(msa_act, msa_act, bias)
         else:
             msa_act = self.attention(msa_act, msa_act, bias)
@@ -732,7 +838,7 @@ class MaskedMsaHead(nn.Layer):
         errors = softmax_cross_entropy(
             labels=paddle.nn.functional.one_hot(batch['true_msa'], num_classes=self.num_output),
             logits=value['logits'])
-        loss = (paddle.sum(errors * batch['bert_mask'], axis=[-2, -1]) /
+        loss = (paddle.sum(errors * paddle.cast(batch['bert_mask'], dtype=errors.dtype), axis=[-2, -1]) /
                 (1e-8 + paddle.sum(batch['bert_mask'], axis=[-2, -1])))
         return {'loss': loss}
 
@@ -1057,10 +1163,9 @@ def dgram_from_positions(positions, num_bins, min_bin, max_bin):
             paddle.unsqueeze(positions, axis=-3)),
         axis=-1, keepdim=True)
 
-    dgram = ((dist2 > lower_breaks).astype('float32') *
-                (dist2 < upper_breaks).astype('float32'))
+    dgram = ((dist2 > lower_breaks.astype(dist2.dtype)).astype('float32') *
+                (dist2 < upper_breaks.astype(dist2.dtype)).astype('float32'))
     return dgram
-
 
 class EvoformerIteration(nn.Layer):
     """Single iteration (block) of Evoformer stack.
@@ -1080,7 +1185,8 @@ class EvoformerIteration(nn.Layer):
             self.global_config, is_extra_msa)
         dropout_rate, dropout_axis = self._parse_dropout_params(
             self.msa_row_attention_with_pair_bias)
-        self.msa_row_attn_dropout = nn.Dropout(dropout_rate, axis=dropout_axis)
+        self.msa_row_attn_dropout = nn.Dropout(dropout_rate, axis=dropout_axis) \
+            if not self.global_config.use_dropout_nd else Dropout(dropout_rate, axis=dropout_axis)
 
         if self.is_extra_msa:
             self.msa_column_global_attention = MSAColumnGlobalAttention(
@@ -1088,14 +1194,16 @@ class EvoformerIteration(nn.Layer):
             dropout_rate, dropout_axis = self._parse_dropout_params(
                 self.msa_column_global_attention)
             self.msa_col_attn_dropout = nn.Dropout(
-                dropout_rate, axis=dropout_axis)
+                dropout_rate, axis=dropout_axis) \
+                    if not self.global_config.use_dropout_nd else Dropout(dropout_rate, axis=dropout_axis)
         else:
             self.msa_column_attention = MSAColumnAttention(
                 channel_num, config.msa_column_attention, global_config)
             dropout_rate, dropout_axis = self._parse_dropout_params(
                 self.msa_column_attention)
             self.msa_col_attn_dropout = nn.Dropout(
-                dropout_rate, axis=dropout_axis)
+                dropout_rate, axis=dropout_axis) \
+                    if not self.global_config.use_dropout_nd else Dropout(dropout_rate, axis=dropout_axis)
 
         self.msa_transition = Transition(
             channel_num, self.config.msa_transition, self.global_config,
@@ -1103,7 +1211,8 @@ class EvoformerIteration(nn.Layer):
         dropout_rate, dropout_axis = self._parse_dropout_params(
             self.msa_transition)
         self.msa_transition_dropout = nn.Dropout(
-            dropout_rate, axis=dropout_axis)
+            dropout_rate, axis=dropout_axis) \
+                if not self.global_config.use_dropout_nd else Dropout(dropout_rate, axis=dropout_axis)
 
         # OuterProductMean
         self.outer_product_mean = OuterProductMean(channel_num,
@@ -1114,7 +1223,8 @@ class EvoformerIteration(nn.Layer):
         dropout_rate, dropout_axis = self._parse_dropout_params(
             self.outer_product_mean)
         self.outer_product_mean_dropout = nn.Dropout(
-            dropout_rate, axis=dropout_axis)
+            dropout_rate, axis=dropout_axis) \
+                if not self.global_config.use_dropout_nd else Dropout(dropout_rate, axis=dropout_axis)
 
         # Triangle Multiplication.
         self.triangle_multiplication_outgoing = TriangleMultiplication(channel_num,
@@ -1123,7 +1233,8 @@ class EvoformerIteration(nn.Layer):
 
         dropout_rate, dropout_axis = self._parse_dropout_params(
             self.triangle_multiplication_outgoing)
-        self.triangle_outgoing_dropout = nn.Dropout(dropout_rate, axis=dropout_axis)
+        self.triangle_outgoing_dropout = nn.Dropout(dropout_rate, axis=dropout_axis) \
+            if not self.global_config.use_dropout_nd else Dropout(dropout_rate, axis=dropout_axis)
 
         self.triangle_multiplication_incoming = TriangleMultiplication(channel_num,
                     self.config.triangle_multiplication_incoming, self.global_config,
@@ -1131,7 +1242,8 @@ class EvoformerIteration(nn.Layer):
 
         dropout_rate, dropout_axis = self._parse_dropout_params(
             self.triangle_multiplication_incoming)
-        self.triangle_incoming_dropout = nn.Dropout(dropout_rate, axis=dropout_axis)
+        self.triangle_incoming_dropout = nn.Dropout(dropout_rate, axis=dropout_axis) \
+            if not self.global_config.use_dropout_nd else Dropout(dropout_rate, axis=dropout_axis)
 
         # TriangleAttention.
         self.triangle_attention_starting_node = TriangleAttention(channel_num,
@@ -1140,7 +1252,8 @@ class EvoformerIteration(nn.Layer):
 
         dropout_rate, dropout_axis = self._parse_dropout_params(
             self.triangle_attention_starting_node)
-        self.triangle_starting_dropout = nn.Dropout(dropout_rate, axis=dropout_axis)
+        self.triangle_starting_dropout = nn.Dropout(dropout_rate, axis=dropout_axis) \
+            if not self.global_config.use_dropout_nd else Dropout(dropout_rate, axis=dropout_axis)
 
         self.triangle_attention_ending_node = TriangleAttention(channel_num,
                     self.config.triangle_attention_ending_node, self.global_config,
@@ -1148,7 +1261,8 @@ class EvoformerIteration(nn.Layer):
 
         dropout_rate, dropout_axis = self._parse_dropout_params(
             self.triangle_attention_ending_node)
-        self.triangle_ending_dropout = nn.Dropout(dropout_rate, axis=dropout_axis)
+        self.triangle_ending_dropout = nn.Dropout(dropout_rate, axis=dropout_axis) \
+            if not self.global_config.use_dropout_nd else Dropout(dropout_rate, axis=dropout_axis)
 
         # Pair transition.
         self.pair_transition = Transition(
@@ -1157,7 +1271,8 @@ class EvoformerIteration(nn.Layer):
 
         dropout_rate, dropout_axis = self._parse_dropout_params(
             self.pair_transition)
-        self.pair_transition_dropout = nn.Dropout(dropout_rate, axis=dropout_axis)
+        self.pair_transition_dropout = nn.Dropout(dropout_rate, axis=dropout_axis) \
+            if not self.global_config.use_dropout_nd else Dropout(dropout_rate, axis=dropout_axis)
 
     def _parse_dropout_params(self, module):
         dropout_rate = 0.0 if self.global_config.deterministic else \
@@ -1173,53 +1288,237 @@ class EvoformerIteration(nn.Layer):
 
     def forward(self, msa_act, pair_act, masks):
         msa_mask, pair_mask = masks['msa'], masks['pair']
-
-        residual = self.msa_row_attention_with_pair_bias(
-            msa_act, msa_mask, pair_act)
-        residual = self.msa_row_attn_dropout(residual)
-        msa_act = msa_act + residual
-
-        if self.is_extra_msa:
-            residual = self.msa_column_global_attention(msa_act, msa_mask)
-            residual = self.msa_col_attn_dropout(residual)
+        if self.global_config.origin_evoformer_structure:
+            residual = self.msa_row_attention_with_pair_bias(
+                msa_act, msa_mask, pair_act)
+            residual = self.msa_row_attn_dropout(residual)
             msa_act = msa_act + residual
 
-            residual = self.msa_transition(msa_act, msa_mask)
-            residual = self.msa_transition_dropout(residual)
-            msa_act = msa_act + residual
+            if self.is_extra_msa:
+                residual = self.msa_column_global_attention(msa_act, msa_mask)
+                residual = self.msa_col_attn_dropout(residual)
+                msa_act = msa_act + residual
 
+                residual = self.msa_transition(msa_act, msa_mask)
+                residual = self.msa_transition_dropout(residual)
+                msa_act = msa_act + residual
+
+            else:
+                residual = self.msa_column_attention(msa_act, msa_mask)
+                residual = self.msa_col_attn_dropout(residual)
+                msa_act = msa_act + residual
+
+                residual = self.msa_transition(msa_act, msa_mask)
+                residual = self.msa_transition_dropout(residual)
+                msa_act = msa_act + residual
+
+            residual = self.outer_product_mean(msa_act, msa_mask)
+            residual = self.outer_product_mean_dropout(residual)
+            pair_act = pair_act + residual
+
+            residual = self.triangle_multiplication_outgoing(pair_act, pair_mask)
+            residual = self.triangle_outgoing_dropout(residual)
+            pair_act = pair_act + residual
+
+            residual = self.triangle_multiplication_incoming(pair_act, pair_mask)
+            residual = self.triangle_incoming_dropout(residual)
+            pair_act = pair_act + residual
+
+            residual = self.triangle_attention_starting_node(pair_act, pair_mask)
+            residual = self.triangle_starting_dropout(residual)
+            pair_act = pair_act + residual
+
+            residual = self.triangle_attention_ending_node(pair_act, pair_mask)
+            residual = self.triangle_ending_dropout(residual)
+            pair_act = pair_act + residual
+
+            residual = self.pair_transition(pair_act, pair_mask)
+            residual = self.pair_transition_dropout(residual)
+            pair_act = pair_act + residual
         else:
-            residual = self.msa_column_attention(msa_act, msa_mask)
-            residual = self.msa_col_attn_dropout(residual)
-            msa_act = msa_act + residual
+            if scg.get_bp_world_size() > 1:
 
-            residual = self.msa_transition(msa_act, msa_mask)
-            residual = self.msa_transition_dropout(residual)
-            msa_act = msa_act + residual
+                # Note(GuoxiaWang): add zeros trigger the status of stop_gradient=False within recompute context.
+                pair_act = pair_act + paddle.zeros_like(pair_act)
 
-        residual = self.outer_product_mean(msa_act, msa_mask)
-        residual = self.outer_product_mean_dropout(residual)
-        pair_act = pair_act + residual
+                # Note(GuoxiaWang): reduce the pair_act's gradient from msa branch and pair branch
+                if not pair_act.stop_gradient:
+                    pair_act._register_grad_hook(bp.all_reduce)
 
-        residual = self.triangle_multiplication_outgoing(pair_act, pair_mask)
-        residual = self.triangle_outgoing_dropout(residual)
-        pair_act = pair_act + residual
+                if scg.get_bp_rank_in_group() == 0:
+                    # [B, N_seq//dap_size, N_res, c_m]
+                    
+                    residual = self.msa_row_attention_with_pair_bias(
+                        msa_act, msa_mask, pair_act)
+                    residual = self.msa_row_attn_dropout(residual)
+                    msa_act = msa_act + residual
 
-        residual = self.triangle_multiplication_incoming(pair_act, pair_mask)
-        residual = self.triangle_incoming_dropout(residual)
-        pair_act = pair_act + residual
+                    # [B, N_seq//dap_size, N_res, c_m] => [B, N_seq, N_res//dap_size, c_m]
+                    msa_act = dap.row_to_col(msa_act)
 
-        residual = self.triangle_attention_starting_node(pair_act, pair_mask)
-        residual = self.triangle_starting_dropout(residual)
-        pair_act = pair_act + residual
+                    if self.is_extra_msa:
+                        # [B, N_seq, N_res//dap_size, c_m]
+                        residual = self.msa_column_global_attention(msa_act, msa_mask)
+                        residual = self.msa_col_attn_dropout(residual)
+                        msa_act = msa_act + residual
 
-        residual = self.triangle_attention_ending_node(pair_act, pair_mask)
-        residual = self.triangle_ending_dropout(residual)
-        pair_act = pair_act + residual
+                        # [B, N_seq, N_res//dap_size, c_m]
+                        residual = self.msa_transition(msa_act, msa_mask)
+                        residual = self.msa_transition_dropout(residual)
+                        msa_act = msa_act + residual
 
-        residual = self.pair_transition(pair_act, pair_mask)
-        residual = self.pair_transition_dropout(residual)
-        pair_act = pair_act + residual
+                    else:
+                        # [B, N_seq, N_res//dap_size, c_m]
+                        residual = self.msa_column_attention(msa_act, msa_mask)
+                        residual = self.msa_col_attn_dropout(residual)
+                        msa_act = msa_act + residual
+
+                        # [B, N_seq, N_res//dap_size, c_m]
+                        residual = self.msa_transition(msa_act, msa_mask)
+                        residual = self.msa_transition_dropout(residual)
+                        msa_act = msa_act + residual
+
+                    # [B, N_res//dap_size, N_res, c_z]
+                    residual = self.outer_product_mean(msa_act, msa_mask)
+                    outer_product_mean = self.outer_product_mean_dropout(residual)
+
+                    # Note(GuoxiaWang): stop the gradient from pair transition
+                    pair_act = pair_act.clone()
+                    pair_act.stop_gradient = True
+
+                    # [B, N_seq, N_res//dap_size, c_m] => [B, N_seq//dap_size, N_res, c_m]
+                    msa_act = dap.col_to_row(msa_act)
+
+                if scg.get_bp_rank_in_group() == 1:
+
+                    outer_product_mean = paddle.zeros_like(pair_act)
+
+                    # Note(GuoxiaWang): enable gradient flow in backward
+                    msa_act = msa_act.clone()
+
+                    # scatter if using dap, otherwise do nothing
+                    pair_mask_row = dap.scatter(pair_mask, axis=1)
+                    pair_mask_col = dap.scatter(pair_mask, axis=2)
+
+                    # [B, N_res//dap_size, N_res, c_z]
+                    residual = self.triangle_multiplication_outgoing(pair_act, pair_mask_row)
+                    residual = self.triangle_outgoing_dropout(residual)
+                    pair_act = pair_act + residual
+
+                    # [B, N_res//dap_size, N_res, c_z] => [B, N_res, N_res//dap_size, c_z]
+                    pair_act = dap.row_to_col(pair_act)
+                    # [B, N_res, N_res//dap_size, c_z]
+                    residual = self.triangle_multiplication_incoming(pair_act, pair_mask_col)
+                    residual = self.triangle_incoming_dropout(residual)
+                    pair_act = pair_act + residual
+
+                    # [B, N_res, N_res//dap_size, c_z] => [B, N_res//dap_size, N_res, c_z]
+                    pair_act = dap.col_to_row(pair_act)
+                    # [B, N_res//dap_size, N_res, c_z]
+                    residual = self.triangle_attention_starting_node(pair_act, pair_mask_row)
+                    residual = self.triangle_starting_dropout(residual)
+                    pair_act = pair_act + residual
+
+                    # [B, N_res//dap_size, N_res, c_z] => [B, N_res, N_res//dap_size, c_z]
+                    pair_act = dap.row_to_col(pair_act)
+                    # [B, N_res, N_res//dap_size, c_z]
+                    residual = self.triangle_attention_ending_node(pair_act, pair_mask_col)
+                    residual = self.triangle_ending_dropout(residual)
+                    pair_act = pair_act + residual
+
+                    # [B, N_res, N_res//dap_size, c_z] => [B, N_res//dap_size, N_res, c_z]
+                    pair_act = dap.col_to_row(pair_act)
+
+                bp.broadcast(msa_act, 0)
+                bp.broadcast(pair_act, 1)
+
+                bp.broadcast(outer_product_mean, 0)
+                pair_act = pair_act + outer_product_mean
+
+                residual = self.pair_transition(pair_act, pair_mask)
+                residual = self.pair_transition_dropout(residual)
+                pair_act = pair_act + residual
+
+            else:
+
+                # [B, N_seq//dap_size, N_res, c_m]
+                residual = self.msa_row_attention_with_pair_bias(
+                    msa_act, msa_mask, pair_act)
+                residual = self.msa_row_attn_dropout(residual)
+                msa_act = msa_act + residual
+
+                # [B, N_seq//dap_size, N_res, c_m] => [B, N_seq, N_res//dap_size, c_m]
+                msa_act = dap.row_to_col(msa_act)
+
+                if self.is_extra_msa:
+                    # [B, N_seq, N_res//dap_size, c_m]
+                    residual = self.msa_column_global_attention(msa_act, msa_mask)
+                    residual = self.msa_col_attn_dropout(residual)
+                    msa_act = msa_act + residual
+
+                    # [B, N_seq, N_res//dap_size, c_m]
+                    residual = self.msa_transition(msa_act, msa_mask)
+                    residual = self.msa_transition_dropout(residual)
+                    msa_act = msa_act + residual
+
+                else:
+                    # [B, N_seq, N_res//dap_size, c_m]
+                    residual = self.msa_column_attention(msa_act, msa_mask)
+                    residual = self.msa_col_attn_dropout(residual)
+                    msa_act = msa_act + residual
+
+                    # [B, N_seq, N_res//dap_size, c_m]
+                    residual = self.msa_transition(msa_act, msa_mask)
+                    residual = self.msa_transition_dropout(residual)
+                    msa_act = msa_act + residual
+
+                # [B, N_res//dap_size, N_res, c_z]
+                residual = self.outer_product_mean(msa_act, msa_mask)
+                outer_product_mean = self.outer_product_mean_dropout(residual)
+
+                # [B, N_seq, N_res//dap_size, c_m] => [B, N_seq//dap_size, N_res, c_m]
+                msa_act = dap.col_to_row(msa_act)
+
+                # scatter if using dap, otherwise do nothing
+                pair_mask_row = dap.scatter(pair_mask, axis=1)
+                pair_mask_col = dap.scatter(pair_mask, axis=2)
+
+                # [B, N_res//dap_size, N_res, c_z]
+                # TODO(GuoxiaWang): why have diffrence whether remove pair_act = pair_act.clone()
+                pair_act = pair_act.clone()
+                residual = self.triangle_multiplication_outgoing(pair_act, pair_mask_row)
+                residual = self.triangle_outgoing_dropout(residual)
+                pair_act = pair_act + residual
+
+                # [B, N_res//dap_size, N_res, c_z] => [B, N_res, N_res//dap_size, c_z]
+                pair_act = dap.row_to_col(pair_act)
+                # [B, N_res, N_res//dap_size, c_z]
+                residual = self.triangle_multiplication_incoming(pair_act, pair_mask_col)
+                residual = self.triangle_incoming_dropout(residual)
+                pair_act = pair_act + residual
+
+                # [B, N_res, N_res//dap_size, c_z] => [B, N_res//dap_size, N_res, c_z]
+                pair_act = dap.col_to_row(pair_act)
+                # [B, N_res//dap_size, N_res, c_z]
+                residual = self.triangle_attention_starting_node(pair_act, pair_mask_row)
+                residual = self.triangle_starting_dropout(residual)
+                pair_act = pair_act + residual
+
+                # [B, N_res//dap_size, N_res, c_z] => [B, N_res, N_res//dap_size, c_z]
+                pair_act = dap.row_to_col(pair_act)
+                # [B, N_res, N_res//dap_size, c_z]
+                residual = self.triangle_attention_ending_node(pair_act, pair_mask_col)
+                residual = self.triangle_ending_dropout(residual)
+                pair_act = pair_act + residual
+
+                # [B, N_res, N_res//dap_size, c_z] => [B, N_res//dap_size, N_res, c_z]
+                pair_act = dap.col_to_row(pair_act)
+
+                pair_act = pair_act + outer_product_mean
+
+                residual = self.pair_transition(pair_act, pair_mask)
+                residual = self.pair_transition_dropout(residual)
+                pair_act = pair_act + residual
 
         return msa_act, pair_act
 
@@ -1430,19 +1729,32 @@ class EmbeddingsAndEvoformer(nn.Layer):
             'pair': pair_activations,
         }
 
-        for extra_msa_stack_iteration in self.extra_msa_stack:
+        if scg.get_bp_world_size() > 1:
+            extra_msa_stack_input['msa'] = bp.broadcast_grad_for_backward(extra_msa_stack_input['msa'], 0)
+
+        # scatter if using dap, otherwise do nothing
+        # [B, N_seq, N_res, c_m] => [B, N_seq//dap_size, N_res, c_m]
+        extra_msa_stack_input['msa'] = dap.scatter(extra_msa_stack_input['msa'], axis=1)
+        # [B, N_res, N_res, c_z] => [B, N_res//dap_size, N_res, c_z]
+        extra_msa_stack_input['pair'] = dap.scatter(extra_msa_stack_input['pair'], axis=1)
+
+        for idx, extra_msa_stack_iteration in enumerate(self.extra_msa_stack):
             extra_msa_act, extra_pair_act = recompute_wrapper(extra_msa_stack_iteration,
                     extra_msa_stack_input['msa'],
                     extra_msa_stack_input['pair'],
                     {'msa': batch['extra_msa_mask'],
                             'pair': mask_2d},
-                    is_recompute=self.training)
+                    is_recompute=self.training and idx >= self.config.extra_msa_stack_recompute_start_block_index)
             extra_msa_stack_output = {
                 'msa': extra_msa_act,
                 'pair': extra_pair_act}
             extra_msa_stack_input = {
                 'msa': extra_msa_stack_output['msa'],
                 'pair': extra_msa_stack_output['pair']}
+
+        # gather if using dap, otherwise do nothing
+        # [B, N_res//dap_size, N_res, c_z] => [B, N_res, N_res, c_z]
+        extra_msa_stack_output['pair'] = dap.gather(extra_msa_stack_output['pair'], axis=1)
 
         evoformer_input = {
             'msa': msa_activations,
@@ -1497,16 +1809,25 @@ class EmbeddingsAndEvoformer(nn.Layer):
             evoformer_masks['msa'] = paddle.concat(
                 [evoformer_masks['msa'], torsion_angle_mask], axis=1)
 
+        if scg.get_bp_world_size() > 1:
+            evoformer_input['msa'] = bp.broadcast_grad_for_backward(evoformer_input['msa'], 0)
+
+        # scatter if using dap, otherwise do nothing
+        # [B, N_seq, N_res, c_m] => [B, N_seq//dap_size, N_res, c_m]
+        evoformer_input['msa'] = dap.scatter(evoformer_input['msa'], axis=1)
+        # [B, N_res, N_res, c_z] => [B, N_res//dap_size, N_res, c_z]
+        evoformer_input['pair'] = dap.scatter(evoformer_input['pair'], axis=1)
+
         # ==================================================
         #  Main MSA Stack
         # Jumper et al. (2021) Suppl. Alg. 2 "Inference" lines 17-18
         # ==================================================
-        for evoformer_block in self.evoformer_iteration:
+        for idx, evoformer_block in enumerate(self.evoformer_iteration):
             msa_act, pair_act = recompute_wrapper(evoformer_block,
                     evoformer_input['msa'],
                     evoformer_input['pair'],
                     evoformer_masks,
-                    is_recompute=self.training)
+                    is_recompute=self.training and idx >= self.config.evoformer_recompute_start_block_index)
             evoformer_output = {
                 'msa': msa_act,
                 'pair': pair_act}
@@ -1514,6 +1835,12 @@ class EmbeddingsAndEvoformer(nn.Layer):
                 'msa': evoformer_output['msa'],
                 'pair': evoformer_output['pair'],
             }
+
+        # gather if using dap, otherwise do nothing
+        # [B, N_seq//dap_size, N_res, c_m] => [B, N_seq, N_res, c_m]
+        evoformer_output['msa'] = dap.gather(evoformer_output['msa'], axis=1)
+        # [B, N_res//dap_size, N_res, c_z] => [B, N_res, N_res, c_z]
+        evoformer_output['pair'] = dap.gather(evoformer_output['pair'], axis=1)
 
         msa_activations = evoformer_output['msa']
         pair_activations = evoformer_output['pair']
@@ -1577,35 +1904,55 @@ class OuterProductMean(nn.Layer):
         Returns:
         Update to pair representation, shape [batch, N_res, N_res, c_z].
         """
-        mask = paddle.unsqueeze(mask, axis=-1)
-
+        # [B, N_seq, N_res//dap_size, c_m]
         act = self.layer_norm_input(act)
-        left_act = mask * self.left_projection(act)
-        right_act = mask * self.right_projection(act)
+        # [B, N_seq, N_res//dap_size, c_m] => [B, N_seq, N_res//dap_size, num_outer_channel]
+        right_act_before = self.right_projection(act)
+        # [B, N_seq, N_res//dap_size, num_outer_channel] => [B, N_seq, N_res, num_outer_channel]
+        right_act = dap.all_gather(right_act_before, axis=2)
+        
+        # [B, N_seq, N_res//dap_size, c_m] => [B, N_seq, N_res//dap_size, num_outer_channel]
+        left_act = self.left_projection(act)
+        # [B, N_seq, N_res] => [B, N_seq, N_res, 1]
+        mask = paddle.unsqueeze(mask, axis=-1)
+        # [B, N_seq, N_res, 1] => [B, N_seq, N_res//dap_size, 1]
+        mask_col = dap.scatter(mask, axis=2)
+        left_act = mask_col * left_act
+        
+        # [B, N_seq, N_res//dap_size, 1], [B, N_seq, N_res, 1] => [B, N_res//dap_size, N_res, 1]
+        epsilon = 1e-3
+        norm = paddle.einsum('nabc,nadc->nbdc', mask_col, mask) + epsilon
 
-        def compute_chunk(left_act):
+        def compute_chunk(left_act, right_act):
             # This is equivalent to
             #
             # act = jnp.einsum('abc,ade->dceb', left_act, right_act)
             # act = jnp.einsum('dceb,cef->bdf', act, output_w) + output_b
             #
             # but faster. maybe for subbatch inference?
+            
+            # [B, N_seq, N_res//dap_size, num_outer_channel] => [B, N_seq, num_outer_channel, N_res//dap_size]
             left_act = left_act.transpose([0, 1, 3, 2])
-            act = paddle.einsum('nacb,nade->ndceb', left_act, right_act)
+            # wait if using async communication and dap, otherwise do nothing
+            right_act_after = dap.all_gather_opp(right_act, axis=2)
+            # [B, N_seq, num_outer_channel, N_res//dap_size], [B, N_seq, N_res, num_outer_channel]
+            # => [B, N_res, num_outer_channel, num_outer_channel, N_res//dap_size]
+            act = paddle.einsum('nacb,nade->ndceb', left_act, right_act_after)
+            # [B, N_res, num_outer_channel, num_outer_channel, N_res//dap_size], [num_outer_channel, num_outer_channel, c_z]
+            # => [B, N_res, N_res//dap_size, c_z]
             act = paddle.einsum('ndceb,cef->ndbf', act, self.output_w) + self.output_b
+            # [B, N_res, N_res//dap_size, c_z] => [B, N_res//dap_size, N_res, c_z]
             return act.transpose([0, 2, 1, 3])
 
         if not self.training:
             # low memory mode using subbatch
             sb_chunk = subbatch(compute_chunk, [0], [2],
                                self.config.chunk_size, 1)
-            act = sb_chunk(left_act)
+            act = sb_chunk(left_act, right_act)
         else:
-            act = compute_chunk(left_act)
+            act = compute_chunk(left_act, right_act)
 
-        epsilon = 1e-3
-        norm = paddle.einsum('nabc,nadc->nbdc', mask, mask)
-        act = act / (epsilon + norm)
+        act = act / norm
 
         return act
 
@@ -1651,21 +1998,27 @@ class TriangleAttention(nn.Layer):
             pair_act = pair_act.transpose([0, 2, 1, 3])
             pair_mask = pair_mask.transpose([0, 2, 1])
 
+        # [B, N_res//dap_size, N_res]
         bias = 1e9 * (pair_mask - 1.)
-        bias = paddle.unsqueeze(bias, axis=[2, 3]) # [batch, N_res, 1, 1, N_res]
+        # [B, N_res//dap_size, 1, 1, N_res]
+        bias = paddle.unsqueeze(bias, axis=[2, 3])
 
         pair_act = self.query_norm(pair_act)
 
-        nonbatched_bias = paddle.einsum('bqkc,ch->bhqk', pair_act, self.feat_2d_weights)
+        # [B, N_res//dap_size, N_res, cz], [cz, head] => [B, head, N_res//dap_size, N_res]
+        nonbatched_bias_before = paddle.einsum('bqkc,ch->bhqk', pair_act, self.feat_2d_weights)
+        
+        # # [B, head, N_res//dap_size, N_res] => [B, head, N_res, N_res]
+        nonbatched_bias = dap.all_gather(nonbatched_bias_before, axis=2)
+        nonbatched_bias = dap.all_gather_opp(nonbatched_bias, axis=2)
 
         if not self.training:
             # low memory mode using subbatch
             sb_attn = subbatch(self.attention, [0, 1, 2], [1, 1, 1],
-                               self.global_config.subbatch_size, 1)
+                               self.global_config.subbatch_size, 1, same_arg_idx={1: 0})
             pair_act = sb_attn(pair_act, pair_act, bias, nonbatched_bias)
         else:
             pair_act = self.attention(pair_act, pair_act, bias, nonbatched_bias)
-        # pair_act = self.attention(pair_act, pair_act, bias, nonbatched_bias)
 
         if self.config.orientation == 'per_column':
             pair_act = pair_act.transpose([0, 2, 1, 3])
@@ -1718,34 +2071,82 @@ class TriangleMultiplication(nn.Layer):
         Returns:
         Outputs, same shape/type as act.
         """
+        # Outgoing [batch, N_res//dap_size, N_res] => [batch, N_res//dap_size, N_res, 1]
+        # Incoming [batch, N_res, N_res//dap_size] => [batch, N_res, N_res//dap_size, 1] 
         mask = paddle.unsqueeze(mask, axis=-1) # [batch, N_res, N_res, 1]
 
+        # Outgoing [B, N_res//dap_size, N_res, c_z]
+        # Incoming [B, N_res, N_res//dap_size, c_z]
         act = self.layer_norm_input(act) # line 1
 
-        gate_values = nn.functional.sigmoid(self.gating_linear(act)) # line 3
-
+        # Outgoing [B, N_res//dap_size, N_res, c_z] => [B, N_res//dap_size, N_res, num_intermediate_channel]
+        # Incoming [B, N_res, N_res//dap_size, c_z] => [B, N_res, N_res//dap_size, num_intermediate_channel]
         left_proj_act = mask * self.left_projection(act)
         right_proj_act = mask * self.right_projection(act)
+        
+        # Outgoing [B, N_res//dap_size, N_res, c_z] => [B, N_res//dap_size, N_res, num_intermediate_channel]
+        # Incoming [B, N_res, N_res//dap_size, c_z] => [B, N_res, N_res//dap_size, num_intermediate_channel]
         left_gate_values = nn.functional.sigmoid(self.left_gate(act))
         right_gate_values = nn.functional.sigmoid(self.right_gate(act))
+        
+        # Outgoing [B, N_res//dap_size, N_res, num_intermediate_channel]
+        # Incoming [B, N_res, N_res//dap_size, num_intermediate_channel]
         left_proj_act = left_proj_act * left_gate_values
-        right_proj_act = right_proj_act * right_gate_values
+        right_proj_act_before = right_proj_act * right_gate_values
+
+        # "Outgoing" edges equation: 'ikc,jkc->ijc'
+        # "Incoming" edges equation: 'kjc,kic->ijc'
+        # Note on the Suppl. Alg. 11 & 12 notation:
+        # For the "outgoing" edges, a = left_proj_act and b = right_proj_act
+        # For the "incoming" edges, it's swapped:
+        #   b = left_proj_act and a = right_proj_act
+        
+        if self.config.equation == 'ikc,jkc->ijc':
+            # Outgoing
+            # [B, N_res//dap_size, N_res, num_intermediate_channel] => [B, N_res, N_res, num_intermediate_channel]
+            right_proj_act = dap.all_gather(right_proj_act_before, axis=1)
+        elif  self.config.equation == 'kjc,kic->ijc':
+            # Incoming
+            # [B, N_res, N_res//dap_size, num_intermediate_channel] => [B, N_res, N_res, num_intermediate_channel]
+            right_proj_act = dap.all_gather(right_proj_act_before, axis=2)
+        else:
+            raise ValueError('unknown equation.')
+        
+        
+        # Outgoing [B, N_res//dap_size, N_res, c_z]
+        # Incoming [B, N_res, N_res//dap_size, c_z]        
+        gate_values = nn.functional.sigmoid(self.gating_linear(act)) # line 3
 
         if self.config.equation == 'ikc,jkc->ijc':
+            # Outgoing
             dim, out_idx = 1, 1
             equation = 'bikc,bjkc->bijc'
+            
+            # [B, N_res, N_res, num_intermediate_channel]
+            right_proj_act_after = dap.all_gather_opp(right_proj_act, axis=1)
         elif  self.config.equation == 'kjc,kic->ijc':
+            # Incoming
             dim, out_idx = 2, 2
             equation = 'bkjc,bkic->bijc'
+            
+            # [B, N_res, N_res, num_intermediate_channel]
+            right_proj_act_after = dap.all_gather_opp(right_proj_act, axis=2)
         else:
             raise ValueError('unknown equation.')
 
         if not self.training:
             einsum_fn = subbatch(paddle.einsum, [1], [dim],
                                  self.global_config.subbatch_size, out_idx)
-            act = einsum_fn(equation, left_proj_act, right_proj_act)
+            act = einsum_fn(equation, left_proj_act, right_proj_act_after)
         else:
-            act = paddle.einsum(equation, left_proj_act, right_proj_act)
+            # Outgoing equation = 'bikc,bjkc->bijc'
+            # [B, N_res//dap_size, N_res, num_intermediate_channel], [B, N_res, N_res, num_intermediate_channel]
+            # => [B, N_res//dap_size, N_res, num_intermediate_channel]
+            
+            # Incoming equation = 'bkjc,bkic->bijc'
+            # [B, N_res, N_res//dap_size, num_intermediate_channel], [B, N_res, N_res, num_intermediate_channel]
+            # => [B, N_res, N_res//dap_size, num_intermediate_channel]
+            act = paddle.einsum(equation, left_proj_act, right_proj_act_after)
 
         act = self.center_layer_norm(act)
         act = self.output_projection(act)
@@ -1774,7 +2175,8 @@ class TemplatePair(nn.Layer):
 
         dropout_rate, dropout_axis = self._parse_dropout_params(
             self.triangle_attention_starting_node)
-        self.triangle_starting_dropout = nn.Dropout(dropout_rate, axis=dropout_axis)
+        self.triangle_starting_dropout = nn.Dropout(dropout_rate, axis=dropout_axis) \
+            if not self.global_config.use_dropout_nd else Dropout(dropout_rate, axis=dropout_axis)
 
         self.triangle_attention_ending_node = TriangleAttention(channel_num,
                     self.config.triangle_attention_ending_node, self.global_config,
@@ -1782,7 +2184,8 @@ class TemplatePair(nn.Layer):
 
         dropout_rate, dropout_axis = self._parse_dropout_params(
             self.triangle_attention_ending_node)
-        self.triangle_ending_dropout = nn.Dropout(dropout_rate, axis=dropout_axis)
+        self.triangle_ending_dropout = nn.Dropout(dropout_rate, axis=dropout_axis) \
+            if not self.global_config.use_dropout_nd else Dropout(dropout_rate, axis=dropout_axis)
 
         self.triangle_multiplication_outgoing = TriangleMultiplication(channel_num,
                     self.config.triangle_multiplication_outgoing, self.global_config,
@@ -1790,7 +2193,8 @@ class TemplatePair(nn.Layer):
 
         dropout_rate, dropout_axis = self._parse_dropout_params(
             self.triangle_multiplication_outgoing)
-        self.triangle_outgoing_dropout = nn.Dropout(dropout_rate, axis=dropout_axis)
+        self.triangle_outgoing_dropout = nn.Dropout(dropout_rate, axis=dropout_axis) \
+            if not self.global_config.use_dropout_nd else Dropout(dropout_rate, axis=dropout_axis)
 
         self.triangle_multiplication_incoming = TriangleMultiplication(channel_num,
                     self.config.triangle_multiplication_incoming, self.global_config,
@@ -1798,7 +2202,8 @@ class TemplatePair(nn.Layer):
 
         dropout_rate, dropout_axis = self._parse_dropout_params(
             self.triangle_multiplication_incoming)
-        self.triangle_incoming_dropout = nn.Dropout(dropout_rate, axis=dropout_axis)
+        self.triangle_incoming_dropout = nn.Dropout(dropout_rate, axis=dropout_axis) \
+            if not self.global_config.use_dropout_nd else Dropout(dropout_rate, axis=dropout_axis)
 
         self.pair_transition = Transition(channel_num, self.config.pair_transition,
                     self.global_config, is_extra_msa=False,
@@ -1806,7 +2211,8 @@ class TemplatePair(nn.Layer):
 
         dropout_rate, dropout_axis = self._parse_dropout_params(
             self.pair_transition)
-        self.pair_transition_dropout = nn.Dropout(dropout_rate, axis=dropout_axis)
+        self.pair_transition_dropout = nn.Dropout(dropout_rate, axis=dropout_axis) \
+            if not self.global_config.use_dropout_nd else Dropout(dropout_rate, axis=dropout_axis)
 
 
     def _parse_dropout_params(self, module):
@@ -1832,25 +2238,33 @@ class TemplatePair(nn.Layer):
         Updated pair_act, shape [batch, N_res, N_res, c_t].
         """
 
-        residual = self.triangle_attention_starting_node(pair_act, pair_mask)
+        pair_mask_row = dap.scatter(pair_mask, axis=1)
+        pair_mask_col = dap.scatter(pair_mask, axis=2)
+
+        residual = self.triangle_attention_starting_node(pair_act, pair_mask_row)
         residual = self.triangle_starting_dropout(residual)
         pair_act = pair_act + residual
 
-        residual = self.triangle_attention_ending_node(pair_act, pair_mask)
+        pair_act = dap.row_to_col(pair_act) 
+        residual = self.triangle_attention_ending_node(pair_act, pair_mask_col)
         residual = self.triangle_ending_dropout(residual)
         pair_act = pair_act + residual
 
-        residual = self.triangle_multiplication_outgoing(pair_act, pair_mask)
+        pair_act = dap.col_to_row(pair_act)
+        residual = self.triangle_multiplication_outgoing(pair_act, pair_mask_row)
         residual = self.triangle_outgoing_dropout(residual)
         pair_act = pair_act + residual
 
-        residual = self.triangle_multiplication_incoming(pair_act, pair_mask)
+        pair_act = dap.row_to_col(pair_act)
+        residual = self.triangle_multiplication_incoming(pair_act, pair_mask_col)
         residual = self.triangle_incoming_dropout(residual)
         pair_act = pair_act + residual
 
         residual = self.pair_transition(pair_act, pair_mask)
         residual = self.pair_transition_dropout(residual)
         pair_act = pair_act + residual
+
+        pair_act = dap.col_to_row(pair_act)
 
         return pair_act
 
@@ -1951,8 +2365,12 @@ class SingleTemplateEmbedding(nn.Layer):
         act *= template_mask_2d[..., None]
 
         act = self.embedding2d(act)
-        for pair_encoder in self.template_pair_stack:
-            act = pair_encoder(act, mask_2d)
+
+        act = dap.scatter(act, axis=1)
+        for idx, pair_encoder in enumerate(self.template_pair_stack):
+            act = recompute_wrapper(pair_encoder, act, mask_2d,
+                is_recompute=self.training and idx >= self.config.template_pair_stack.recompute_start_block_index)
+        act = dap.gather(act, axis=1)
 
         act = self.output_layer_norm(act)
         return act

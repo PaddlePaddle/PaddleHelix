@@ -1,4 +1,4 @@
-#   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
 # limitations under the License.
 
 """Full AlphaFold protein structure prediction script."""
+
 import sys
 import time
 import json
@@ -24,11 +25,18 @@ import argparse
 import numpy as np
 from typing import Dict
 
+import paddle
+from paddle import distributed as dist
+
 from alphafold_paddle.model import config
 from alphafold_paddle.model import model
 from alphafold_paddle.relax import relax
+from alphafold_paddle.distributed.comm_group import scg
 from alphafold_paddle.data import pipeline, templates
+from alphafold_paddle.distributed import dataparallel as ddp
+from alphafold_paddle.data.utils import align_feat, unpad_prediction
 
+logging.basicConfig()
 logger = logging.getLogger(__file__)
 
 MAX_TEMPLATE_HITS = 20
@@ -38,8 +46,34 @@ RELAX_STIFFNESS = 10.0
 RELAX_EXCLUDE_RESIDUES = []
 RELAX_MAX_OUTER_ITERATIONS = 20
 
+def init_seed(seed):
+    """ set seed for reproduct results"""
+    paddle.seed(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+
+def init_distributed_env(args):
+    """ init ddp and dap distributed environment"""
+    dp_rank = 0 # ID for current device in distributed data parallel collective communication group
+    dp_nranks = 1 # The number of devices in distributed data parallel collective communication group
+    if args.distributed:
+        # init bp, dap, dp hybrid distributed environment
+        assert args.bp_degree > 1 or args.dap_degree > 1, f"distributed inference required args.bp_degree > 1 or args.dap_degree > 1, \
+            but got args.bp_degree: {args.bp_degree}, args.dap_degree: {args.dap_degree}"
+        scg.init_group(bp_degree=args.bp_degree, dap_degree=args.dap_degree, dap_comm_sync=args.dap_comm_sync)
+
+        dp_nranks = scg.get_dp_world_size()
+        dp_rank = scg.get_dp_rank_in_group() if dp_nranks > 1 else 0
+
+        if args.bp_degree > 1 or args.dap_degree > 1:
+            assert args.seed is not None, "BP and DAP should be set seed!"
+
+    return dp_rank, dp_nranks
+
 
 def predict_structure(
+        dp_rank: int,
+        dp_nranks: int,
         fasta_path: str,
         fasta_name: str,
         output_dir_base: str,
@@ -55,12 +89,17 @@ def predict_structure(
     msa_output_dir.mkdir(exist_ok=True)
 
     feature_dict = None
+    features_npz = output_dir.joinpath('features.npz')
     features_pkl = output_dir.joinpath('features.pkl')
-    if features_pkl.exists():
+    if features_npz.exists():
+        logger.info('Use cached features.npz')
+        feature_dict = np.load(features_npz, allow_pickle=True)
+        feature_dict = dict(feature_dict)
+    elif features_pkl.exists():
         logger.info('Use cached features.pkl')
         with open(features_pkl, 'rb') as f:
             feature_dict = pickle.load(f)
-    else:
+    elif dp_rank == 0:
         t0 = time.time()
         feature_dict = data_pipeline.process(
             input_fasta_path=fasta_path,
@@ -70,6 +109,9 @@ def predict_structure(
         with open(features_pkl, 'wb') as f:
             pickle.dump(feature_dict, f, protocol=4)
 
+    if args.distributed:
+        dist.barrier()
+
     relaxed_pdbs, plddts = dict(), dict()
     for model_name, model_runner in model_runners.items():
         logger.info('Running model %s', model_name)
@@ -78,44 +120,77 @@ def predict_structure(
         has_cache = input_features_pkl.exists()
 
         t0 = time.time()
-        processed_feature_dict = model_runner.preprocess(
-            feature_dict, random_seed, input_features_pkl)
-        if not has_cache:
-            timings[f'process_features_{model_name}'] = time.time() - t0
+        if dp_rank == 0:
+            processed_feature_dict = model_runner.preprocess(
+                feature_dict, random_seed, input_features_pkl)
+            if not has_cache and dp_rank == 0:
+                timings[f'process_features_{model_name}'] = time.time() - t0
+
+            if args.distributed and args.dap_degree > 1:
+                processed_feature_dict = align_feat(
+                    processed_feature_dict, args.dap_degree)
+        else:
+            processed_feature_dict = dict()
+
+        if args.distributed:
+            for _, tensor in processed_feature_dict.items():
+                dist.broadcast(tensor, 0)
+
+            dist.barrier()
 
         t0 = time.time()
         prediction = model_runner.predict(
             processed_feature_dict,
             ensemble_representations=True,
             return_representations=True)
-        timings[f'predict_{model_name}'] = time.time() - t0
 
-        aatype = processed_feature_dict['aatype'].numpy()[0, 0]
-        residue_index = processed_feature_dict['residue_index'].numpy()[0, 0]
-        relaxed_pdbs[model_name] = model_runner.postprocess(
-            aatype, residue_index, amber_relaxer, prediction,
-            output_dir, 0, timings)
-        plddts[model_name] = np.mean(prediction['plddt'])
+        if args.distributed and dp_rank == 0 and args.dap_degree > 1:
+            prediction = unpad_prediction(feature_dict, prediction)
 
-    # Rank by pLDDT and write out relaxed PDBs in rank order.
-    ranked_order = []
-    for idx, (model_name, _) in enumerate(
-            sorted(plddts.items(), key=lambda x: x[1], reverse=True)):
-        ranked_order.append(model_name)
+        print('########## prediction shape ##########')
+        model.print_shape(prediction)
 
-        with open(output_dir.joinpath(f'ranked_{idx}.pdb'), 'w') as f:
-            f.write(relaxed_pdbs[model_name])
+        if dp_rank == 0:
+            timings[f'predict_{model_name}'] = time.time() - t0
 
-    with open(output_dir.joinpath('ranking_debug.json'), 'w') as f:
-        f.write(json.dumps({
-            'plddts': plddts, 'order': ranked_order}, indent=4))
+            aatype = feature_dict['aatype'].argmax(axis=-1)
+            residue_index = feature_dict['residue_index']
+            relaxed_pdbs[model_name] = model_runner.postprocess(
+                aatype, residue_index, amber_relaxer, prediction,
+                output_dir, 0, timings)
+            plddts[model_name] = np.mean(prediction['plddt'])
 
-    logger.info('Final timings for %s: %s', fasta_name, timings)
-    with open(output_dir.joinpath('timings.json'), 'w') as f:
-        f.write(json.dumps(timings, indent=4))
+    if dp_rank == 0:
+        # Rank by pLDDT and write out relaxed PDBs in rank order.
+        ranked_order = []
+        for idx, (model_name, _) in enumerate(
+                sorted(plddts.items(), key=lambda x: x[1], reverse=True)):
+            ranked_order.append(model_name)
+
+            with open(output_dir.joinpath(f'ranked_{idx}.pdb'), 'w') as f:
+                f.write(relaxed_pdbs[model_name])
+
+        with open(output_dir.joinpath('ranking_debug.json'), 'w') as f:
+            f.write(json.dumps({
+                'plddts': plddts, 'order': ranked_order}, indent=4))
+
+        logger.info('Final timings for %s: %s', fasta_name, timings)
+        with open(output_dir.joinpath('timings.json'), 'w') as f:
+            f.write(json.dumps(timings, indent=4))
 
 
-def main():
+def main(args):
+    ### check paddle version
+    if args.distributed:
+        assert paddle.fluid.core.is_compiled_with_dist(), "Please using the paddle version compiled with distribute."
+    args.distributed = args.distributed and dist.get_world_size() > 1
+    dp_rank, dp_nranks = init_distributed_env(args)
+
+    ### set seed for reproduce experiment results
+    if args.seed is not None:
+        args.seed += dp_rank
+        init_seed(args.seed)
+
     use_small_bfd = args.preset == 'reduced_dbs'
     if use_small_bfd:
         assert args.small_bfd_database_path is not None
@@ -133,31 +208,37 @@ def main():
     if len(fasta_names) != len(set(fasta_names)):
         raise ValueError('All FASTA paths must have a unique basename.')
 
-    template_featurizer = templates.TemplateHitFeaturizer(
-        mmcif_dir=args.template_mmcif_dir,
-        max_template_date=args.max_template_date,
-        max_hits=MAX_TEMPLATE_HITS,
-        kalign_binary_path=args.kalign_binary_path,
-        release_dates_path=None,
-        obsolete_pdbs_path=args.obsolete_pdbs_path)
+    try:
+        template_featurizer = templates.TemplateHitFeaturizer(
+            mmcif_dir=args.template_mmcif_dir,
+            max_template_date=args.max_template_date,
+            max_hits=MAX_TEMPLATE_HITS,
+            kalign_binary_path=args.kalign_binary_path,
+            release_dates_path=None,
+            obsolete_pdbs_path=args.obsolete_pdbs_path)
 
-    data_pipeline = pipeline.DataPipeline(
-        jackhmmer_binary_path=args.jackhmmer_binary_path,
-        hhblits_binary_path=args.hhblits_binary_path,
-        hhsearch_binary_path=args.hhsearch_binary_path,
-        uniref90_database_path=args.uniref90_database_path,
-        mgnify_database_path=args.mgnify_database_path,
-        bfd_database_path=args.bfd_database_path,
-        uniclust30_database_path=args.uniclust30_database_path,
-        small_bfd_database_path=args.small_bfd_database_path,
-        pdb70_database_path=args.pdb70_database_path,
-        template_featurizer=template_featurizer,
-        use_small_bfd=use_small_bfd)
+        data_pipeline = pipeline.DataPipeline(
+            jackhmmer_binary_path=args.jackhmmer_binary_path,
+            hhblits_binary_path=args.hhblits_binary_path,
+            hhsearch_binary_path=args.hhsearch_binary_path,
+            uniref90_database_path=args.uniref90_database_path,
+            mgnify_database_path=args.mgnify_database_path,
+            bfd_database_path=args.bfd_database_path,
+            uniclust30_database_path=args.uniclust30_database_path,
+            small_bfd_database_path=args.small_bfd_database_path,
+            pdb70_database_path=args.pdb70_database_path,
+            template_featurizer=template_featurizer,
+            use_small_bfd=use_small_bfd)
+    except Exception:
+        logger.warning('Failed to create data pipeline, if there is no cache '
+                       'features.pkl, inference job will fail!')
+        data_pipeline = None
 
     model_runners = dict()
     for model_name in args.model_names.split(','):
         model_config = config.model_config(model_name)
         model_config.data.eval.num_ensemble = num_ensemble
+        model_config.model.global_config.subbatch_size = args.subbatch_size
 
         data_dir = pathlib.Path(args.data_dir)
         params = f'params_{model_name}'
@@ -171,12 +252,14 @@ def main():
     logger.info('Have %d models: %s', len(model_runners),
                 list(model_runners.keys()))
 
-    amber_relaxer = relax.AmberRelaxation(
-        max_iterations=RELAX_MAX_ITERATIONS,
-        tolerance=RELAX_ENERGY_TOLERANCE,
-        stiffness=RELAX_STIFFNESS,
-        exclude_residues=RELAX_EXCLUDE_RESIDUES,
-        max_outer_iterations=RELAX_MAX_OUTER_ITERATIONS)
+    amber_relaxer = None
+    if not args.disable_amber_relax:
+        amber_relaxer = relax.AmberRelaxation(
+            max_iterations=RELAX_MAX_ITERATIONS,
+            tolerance=RELAX_ENERGY_TOLERANCE,
+            stiffness=RELAX_STIFFNESS,
+            exclude_residues=RELAX_EXCLUDE_RESIDUES,
+            max_outer_iterations=RELAX_MAX_OUTER_ITERATIONS)
 
     random_seed = args.random_seed
     if random_seed is None:
@@ -186,6 +269,8 @@ def main():
 
     for fasta_path, fasta_name in zip(args.fasta_paths.split(','), fasta_names):
         predict_structure(
+            dp_rank=dp_rank,
+            dp_nranks=dp_nranks,
             fasta_path=fasta_path,
             fasta_name=fasta_name,
             output_dir_base=args.output_dir,
@@ -274,5 +359,17 @@ if __name__ == '__main__':
                         help='The random seed for the data pipeline. '
                         'By default, this is randomly generated.')
 
+    parser.add_argument('--distributed',
+                        action='store_true', default=False,
+                        help='Whether to use distributed DAP inference')
+    parser.add_argument("--dap_degree", type=int, default=1)
+    parser.add_argument("--dap_comm_sync", action='store_true', default=True)
+    parser.add_argument("--bp_degree", type=int, default=1)
+    parser.add_argument("--seed", type=int, default=None, help="set seed for reproduce experiment results, None is do not set seed")
+
+    parser.add_argument('--disable_amber_relax',
+                        action='store_true', default=False)
+    parser.add_argument('--subbatch_size', type=int, default=48)
+
     args = parser.parse_args()
-    main()
+    main(args)

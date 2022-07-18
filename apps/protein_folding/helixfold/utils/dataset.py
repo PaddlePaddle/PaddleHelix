@@ -29,7 +29,7 @@ from paddle.io import IterableDataset, DataLoader
 
 from alphafold_paddle.data import mmcif_parsing
 from alphafold_paddle.data.mmcif_parsing import MmcifObject, ResidueAtPosition, ResiduePosition
-from alphafold_paddle.data.data_utils import Msas_to_features, a3m_to_features, load_chain, generate_label, load_pdb_chain
+from alphafold_paddle.data.data_utils import a3m_to_features, load_chain, generate_label, load_pdb_chain, sample_raw_msa
 from alphafold_paddle.data.utils import crop_and_pad
 from alphafold_paddle.model import features
 from alphafold_paddle.common import protein as protein_utils
@@ -185,8 +185,7 @@ class AF2Dataset(paddle.io.Dataset):
             return None
         processed_feature_dict = features.np_example_to_features(
                 np_example=raw_features,
-                config=self.model_config,
-                random_seed=None)
+                config=self.model_config)
         return processed_feature_dict
 
     def get_label(self, protein):
@@ -269,22 +268,49 @@ class AF2DistillDataset(paddle.io.Dataset):
         self.is_pad_if_crop = is_pad_if_crop
         self.trainer_id=trainer_id
         self.trainer_num=trainer_num
+        self.is_shuffle = is_shuffle
 
         def _assert_exists(path):
             assert exists(path), path
+        _assert_exists(self.data_config.protein_clust_file)
+        _assert_exists(self.data_config.protein_map_file)
         _assert_exists(self.data_config.feature_dir)
         _assert_exists(self.data_config.structure_dir)
 
         ## check and filter (bad or not needed) proteins
-        self.proteins = sorted(os.listdir(self.data_config.feature_dir))[trainer_id::trainer_num]
+        self.protein2seq_map = self._load_protein2seq_map()
+        self.clusts = self._load_clusts()
+        self.clusts_to_consume = [[] for _ in range(len(self.clusts))]
 
         def _print_attribute(key, value):
             print(f'[{self.__class__.__name__}] {key}: {value}')
+        _print_attribute('protein_clust_file', self.data_config.protein_clust_file)
         _print_attribute('trainer_id/trainer_num', f'{self.trainer_id}/{self.trainer_num}')
-        _print_attribute('protein_num', len(self.proteins))
+        _print_attribute('clust_num', len(self.clusts))
+        _print_attribute('protein_num', np.sum([len(x) for x in self.clusts]))
         _print_attribute('crop_size', crop_size)
         _print_attribute('is_pad_if_crop', is_pad_if_crop)
         _print_attribute('delete_msa_block', delete_msa_block)
+
+    def _load_protein2seq_map(self):
+        protein2seq_map = {}
+        for line in open(self.data_config.protein_map_file):
+            protein, protein_seqid = line.split()
+            protein2seq_map[protein] = protein_seqid
+        return protein2seq_map
+
+    def _load_clusts(self):
+        with open(self.data_config.protein_clust_file) as r:
+            lines = r.readlines()[self.trainer_id::self.trainer_num]
+        clusts = []
+        for line in lines:
+            clust = []
+            for protein in line.split():
+                if self._check_protein(protein):
+                    clust.append(protein)
+            if len(clust) > 0:
+                clusts.append(clust)
+        return clusts
     
     def _check_protein(self, protein):
         """tbd."""
@@ -296,7 +322,8 @@ class AF2DistillDataset(paddle.io.Dataset):
     
     def _get_protein_feature_file(self, protein):
         """tbd."""
-        return os.path.join(self.data_config.feature_dir, protein, 'a3m.gz')
+        return os.path.join(self.data_config.feature_dir, 
+                self.protein2seq_map[protein], 'features.pkl.gz')
     
     def _get_protein_struct_file(self, protein):
         """tbd."""
@@ -317,22 +344,16 @@ class AF2DistillDataset(paddle.io.Dataset):
             return False
 
         protein_feature_file = self._get_protein_feature_file(protein)
-        a3m_str = None
-        with gzip.open(protein_feature_file) as f_read:
-            a3m_str = f_read.read().decode('utf8')
-        seq_sequences, seq_descriptions = parsers.parse_fasta(a3m_str)
-        seq_sequence, seq_description = seq_sequences[0], seq_descriptions[0]
-        num_res = len(seq_sequence)
-        msa_sequences, msa_deletion_matrix = parsers.parse_a3m(a3m_str)
-        sequence_features = make_sequence_features(seq_sequence, seq_description, num_res)
-        msa_features = make_msa_features((msa_sequences, ), (msa_deletion_matrix, ))
-        raw_features = {**sequence_features, **msa_features}
+        with gzip.open(protein_feature_file, 'rb') as pkl:
+            raw_features = pickle.load(pkl)
         if _random_drop(raw_features):
             return None
+        # downsample msa
+        if 'msa_sample' in self.data_config:
+            raw_features = sample_raw_msa(raw_features, self.data_config)
         processed_feature_dict = features.np_example_to_features(
                 np_example=raw_features,
-                config=self.model_config,
-                random_seed=None)
+                config=self.model_config)
         return processed_feature_dict
 
     def get_label(self, protein):
@@ -343,36 +364,61 @@ class AF2DistillDataset(paddle.io.Dataset):
         with gzip.open(protein_struct_file, 'r') as f:
             pdb_file = f.read().decode('utf8')
         prot_obj = protein_utils.from_pdb_string(pdb_file, chain_id)
-        protein_chain_d = load_pdb_chain(prot_obj, confidence_threshold=0.5)
+        protein_chain_d = load_pdb_chain(prot_obj, confidence_threshold=80.0)
         protein_label = generate_label(protein_chain_d)
         return protein_label
+
+    def select_protein(self, clust_index):
+        """tbd."""
+        if len(self.clusts_to_consume[clust_index]) == 0:
+            self.clusts_to_consume[clust_index] = deepcopy(self.clusts[clust_index])
+            if self.is_shuffle:
+                np.random.shuffle(self.clusts_to_consume[clust_index])
+        clust = self.clusts_to_consume[clust_index]
+        last_name = clust[-1]
+        del clust[-1]
+        return last_name
 
     def get_sample(self, protein):
         if self._check_protein(protein) == False:
             return None
-        feat = self.get_input_feat(protein)
-        if feat is None:
+        protein_struct_file = self._get_protein_struct_file(protein)
+        chain_id = None
+        tmp_pdb_val = 0
+        with gzip.open(protein_struct_file, 'r') as f:
+            pdb_file = f.read().decode('utf8')
+        prot_obj = protein_utils.from_pdb_string(pdb_file, chain_id)
+        for i in range(len(prot_obj.b_factors)):
+            tmp_pdb_val += prot_obj.b_factors[i][0]
+        plddt_score = tmp_pdb_val / len(prot_obj.b_factors)
+
+        if plddt_score > 50.0:
+            feat = self.get_input_feat(protein)
+            if feat is None:
+                return None
+            label = self.get_label(protein)
+            if feat['aatype'].shape[1] != label['aatype_index'].shape[0]:
+                print(f'Skip {protein} due to inequal residue num')
+                return None
+            # crop
+            if not self.crop_size is None and self.crop_size > 0:
+                feat, label = crop_and_pad(
+                        feat, label, crop_size=self.crop_size, pad_for_shorter_seq=self.is_pad_if_crop)
+            sample = {
+                'name': protein,
+                'feat': feat,
+                'label': label,
+            }
+            return sample
+        else:
+            print(f'Skip {protein} due to pLDDT confidence smaller than 50')
             return None
-        label = self.get_label(protein)
-        if feat['aatype'].shape[1] != label['aatype_index'].shape[0]:
-            print(f'Skip {protein} due to inequal residue num')
-            return None
-        # crop
-        if not self.crop_size is None and self.crop_size > 0:
-            feat, label = crop_and_pad(
-                    feat, label, crop_size=self.crop_size, pad_for_shorter_seq=self.is_pad_if_crop)
-        sample = {
-            'name': protein,
-            'feat': feat,
-            'label': label,
-        }
-        return sample
     
     def __len__(self):
-        return len(self.proteins)
+        return len(self.clusts)
     
     def __getitem__(self, index):
-        protein = self.proteins[index % self.__len__()]
+        protein = self.select_protein(index)
         try:
             sample = self.get_sample(protein)
         except Exception as ex:
@@ -442,8 +488,7 @@ class AF2TestDataset(IterableDataset):
             raw_features = pickle.load(pkl)
         processed_feature_dict = features.np_example_to_features(
                 np_example=raw_features,
-                config=self.model_config,
-                random_seed=None)
+                config=self.model_config)
         return processed_feature_dict
         
     def get_label(self, protein):

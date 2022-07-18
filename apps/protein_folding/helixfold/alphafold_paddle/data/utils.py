@@ -17,9 +17,11 @@
 from typing import *
 from absl import logging
 import numpy as np
+import paddle
 import pickle
 import os
 import sys
+from copy import deepcopy
 from multiprocessing import Queue
 
 from alphafold_paddle.common.residue_constants import restype_order_with_x
@@ -110,19 +112,93 @@ batched_keys = [
     'template_pseudo_beta_mask',
 ]
 
+# keys that should be ignored when conducting crop & pad
+def is_ignored_key(k):
+    return k in ignored_keys
+
+# keys that have batch dim, e.g. msa features which have shape [N_msa, N_res, ...]
+def is_batched_key(k):
+    return k in batched_keys
+
+def align_feat(feat, size):
+    # get num res from aatype
+    assert 'aatype' in feat.keys(), \
+        "'aatype' missing from batch, which is not expected."
+    num_res = feat['aatype'].shape[2]
+
+    if num_res % size != 0:
+        align_size = (num_res // size + 1) * size
+
+        # pad short seq (0 padding and (automatically) create masks)
+        def pad(key, array, start_axis, align_size, num_res):
+            if is_ignored_key(key):
+                return array
+            d_seq = start_axis      # choose the dim to crop / pad
+            if is_batched_key(key):
+                d_seq += 1
+            pad_shape = list(array.shape)
+            pad_shape[d_seq] = align_size - num_res
+            pad_array = paddle.zeros(pad_shape, dtype=array.dtype)
+            array = paddle.concat([array, pad_array], axis=d_seq)
+            return array
+
+        feat = {k: pad(k, v, 2, align_size, num_res) for k, v in feat.items()}
+        feat['seq_length'] = (align_size * paddle.ones_like(feat['seq_length']))
+
+    return feat
+
+
+def unpad_prediction(feat, pred):
+    unpad_pred = deepcopy(pred)
+    n = feat['aatype'].shape[0]
+
+    k1 = 'logits'
+
+    k0 = 'distogram'
+    unpad_pred[k0][k1] = pred[k0][k1][:, :n, :n]
+
+    k0 = 'experimentally_resolved'
+    unpad_pred[k0][k1] = pred[k0][k1][:, :n]
+
+    k0 = 'masked_msa'
+    unpad_pred[k0][k1] = pred[k0][k1][:, :, :n]
+
+    k0 = 'predicted_lddt'
+    unpad_pred[k0][k1] = pred[k0][k1][:, :n]
+
+    k0 = 'structure_module'
+    for k1 in pred[k0].keys():
+        if k1.startswith('final_'):
+            unpad_pred[k0][k1] = pred[k0][k1][:, :n]
+
+        elif k1 == 'sidechains':
+            for k2 in pred[k0][k1].keys():
+                unpad_pred[k0][k1][k2] = pred[k0][k1][k2][:, :, :n]
+
+        elif k1 == 'traj':
+            unpad_pred[k0][k1] = pred[k0][k1][:, :, :n]
+
+    k0 = 'representations'
+    if k0 in pred.keys():
+        for k1 in pred[k0].keys():
+            if k1 == 'pair':
+                unpad_pred[k0][k1] = pred[k0][k1][:, :n, :n]
+
+            elif k1 == 'msa':
+                unpad_pred[k0][k1] = pred[k0][k1][:, :, :n]
+
+            else:
+                unpad_pred[k0][k1] = pred[k0][k1][:, :n]
+
+    return unpad_pred
+
+
 def crop_and_pad(
     raw_features: FeatureDict,
     raw_labels: FeatureDict,
     crop_size: int = 256,
     pad_for_shorter_seq: bool = True) -> FeatureDict:
     """Cropping and padding."""
-    # keys that should be ignored when conducting crop & pad
-    def is_ignored_key(k):
-        return k in ignored_keys
-
-    # keys that have batch dim, e.g. msa features which have shape [N_msa, N_res, ...]
-    def is_batched_key(k):
-        return k in batched_keys
 
     # get num res from aatype
     assert 'aatype' in raw_features.keys(), \
@@ -157,7 +233,7 @@ def crop_and_pad(
                 d_seq += 1
             slices = [slice(None)] * len(array.shape)
             slices[d_seq] = slice(crop_start, crop_end)
-            return array[slices]
+            return array[tuple(slices)]
         raw_features = {k: crop(k, v, 1) for k, v in raw_features.items()}
         raw_labels = {k: crop(k, v, 0) for k, v in raw_labels.items()}
     else:
