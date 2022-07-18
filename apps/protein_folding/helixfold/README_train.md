@@ -52,21 +52,13 @@ For example, if you want to train on single node, 1 GPU with initial training mo
 sh gpu_train.sh demo_initial_N1C1
 ```
 
-<<<<<<< HEAD
-For example, if you want to train on single node, 8 GPUs with finetune mode, you can run:
-=======
-If you want to train on single node, 8 GPUs with finetune mode, run:
->>>>>>> 342af067b9f8e3d9de3d1c883d62c3a0b01f8856
+For example, if you want to train on single node, 8 GPUs with finetune mode, run:
 
 ```bash
 sh gpu_train.sh demo_finetune_N1C8
 ```
 
-<<<<<<< HEAD
-For example, if you want to train on 8 nodes, 8 GPUs with initial training mode, you can run:
-=======
-If you want to train on 8 nodes, 8 GPUs with initial training mode, run:
->>>>>>> 342af067b9f8e3d9de3d1c883d62c3a0b01f8856
+For example, if you want to train on 8 nodes, 8 GPUs with initial training mode, run:
 
 ```bash
 sh gpu_train.sh demo_initial_N8C64
