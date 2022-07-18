@@ -9,8 +9,8 @@ export FLAGS_use_cuda_managed_memory=true
 
 #DATA_DIR="$root_path/data"
 DATA_DIR="/root/paddlejob/workspace/env_run/alphafold_data"
-fasta_file="$root_path/data/casp14_demo/fasta/${demo}.fasta"
-OUTPUT_DIR="$root_path/data/casp14_demo/output"
+fasta_file="$root_path/demo_data/casp14_demo/fasta/${demo}.fasta"
+OUTPUT_DIR="$root_path/demo_data/casp14_demo/output"
 MODELS="model_1,model_5"
 USE_DAP=false
 

@@ -8,8 +8,9 @@ HelixFold currently provides a PaddlePaddle implementation of the AlphaFold infe
 HelixFold depends on [PaddlePaddle](https://github.com/paddlepaddle/paddle).
 Python dependencies available through `pip` is provided in `requirements.txt`. HelixFold also depends on `openmm==7.5.1` and `pdbfixer`, which are only available via `conda`. For producing multiple sequence alignments, `kalign`, the [HH-suite](https://github.com/soedinglab/hh-suite) and `jackhmmer` are also needed. The download scripts require `aria2c`.
 
-We provide a script `setup_env` that setup a `conda ` environment and installs all dependencies. Run:
+We provide a script `setup_env` that setup a `conda` environment and installs all dependencies. Run:
 ```
+wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/HelixFold/paddlepaddle_gpu-0.0.0-cp37-cp37m-linux_x86_64.whl
 sh setup_env
 conda activate helixfold # activate the conda environment
 ```
@@ -142,10 +143,10 @@ when using for tasks such as molecular replacement).
 
 ### Running HelixFold for CASP14 Demo
 
-For convenience, we also provide a demo for some CASP14 proteins under folder `data/casp14_demo`. To run them, you just need to execute following command:
+For convenience, we also provide a demo for some CASP14 proteins under folder `demo_data/casp14_demo`. To run them, you just need to execute following command:
 
 ```sh
-./gpu_infer.sh T1026
+sh gpu_infer.sh T1026
 ```
 
 Note that such demo for T1026 and T1037 can work without downloading large MSA datasets, only model parameters are required.

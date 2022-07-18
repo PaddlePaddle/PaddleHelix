@@ -30,7 +30,7 @@ wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/HelixFold/data.tar.gz
 tar -zxvf data.tar.gz
 ```
 
-Before running the training script, you also need to download `lddt` and `tm-score`.
+Before running the training script, you also need to download `lddt` and `tm-score` for scoring metrics.
 
 ```bash
 wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/HelixFold/lddt
