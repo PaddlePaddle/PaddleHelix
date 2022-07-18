@@ -177,7 +177,7 @@ mkdir -p debug_log debug_models
 ### Initial Training_N8C64
 {
     if [[ "$exp_name" == "demo_initial_N8C64" ]]; then
-        export PADDLE_NNODES=8
+        export PADDLE_NNODES=8 # set number of devices
         export PADDLE_MASTER="xxx.xxx.xxx.xxx:port" # set PADDLE_MASTER="xxx.xxx.xxx.xxx:port" according to your network environment
         # export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 
@@ -202,7 +202,7 @@ mkdir -p debug_log debug_models
     if [[ "$exp_name" == "demo_finetune_N8C64" ]]; then
         export FLAGS_allocator_strategy=naive_best_fit
         export FLAGS_fraction_of_gpu_memory_to_use=0.92
-        export PADDLE_NNODES=8
+        export PADDLE_NNODES=8 # set number of devices
         export PADDLE_MASTER="xxx.xxx.xxx.xxx:port" # set PADDLE_MASTER="xxx.xxx.xxx.xxx:port" according to your network environment
         # export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
         

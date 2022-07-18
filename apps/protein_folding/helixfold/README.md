@@ -2,7 +2,7 @@
 
 Reproduction of [AlphaFold 2](https://doi.org/10.1038/s41586-021-03819-2) with [PaddlePaddle](https://github.com/paddlepaddle/paddle).
 
-[HelixFold](https://arxiv.org/abs/2207.05477) currently provides a PaddlePaddle implementation of the AlphaFold training/inference pipeline in GPU and DCU. We try to reproduce all the training details as stated in the AF2 paper. As for the inference pipeline, we reproduce exactly the same results as the original open source inference code (v2.0.1) including recycle and ensembling.
+[HelixFold](https://arxiv.org/abs/2207.05477) currently provides a PaddlePaddle implementation of the AlphaFold training/inference pipeline in GPU and DCU. We try to reproduce all the training details as stated in the AF2 paper. As for the inference pipeline, we reproduce exactly the same results as the original open source inference codes (v2.0.1) including recycle and ensembling.
 
 The installation prerequisites are different for the training/inference pipeline in GPU and DCU. The following links provide detailed instructions to run HelixFold.
 

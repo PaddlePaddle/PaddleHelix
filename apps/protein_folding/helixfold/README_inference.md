@@ -9,11 +9,14 @@ HelixFold currently provides a PaddlePaddle implementation of the AlphaFold infe
 HelixFold depends on [PaddlePaddle](https://github.com/paddlepaddle/paddle).
 Python dependencies available through `pip` is provided in `requirements.txt`. HelixFold also depends on `openmm==7.5.1` and `pdbfixer`, which are only available via `conda`. For producing multiple sequence alignments, `kalign`, the [HH-suite](https://github.com/soedinglab/hh-suite) and `jackhmmer` are also needed. The download scripts require `aria2c`.
 
-We provide a script `setup_env` that setup a `conda ` environment and installs all dependencies. Run:
+We provide a PaddlePaddle `dev` package and a script `setup_env` that setups a `conda` environment and installs all dependencies. Within the directory of `helixfold`, run:
+
 ```bash
+wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/HelixFold/paddlepaddle_gpu-0.0.0-cp37-cp37m-linux_x86_64.whl
 sh setup_env
 conda activate helixfold # activate the conda environment
 ```
+
 You can change the name of the environment and CUDA version in `setup_env`.
 
 ## Usage
