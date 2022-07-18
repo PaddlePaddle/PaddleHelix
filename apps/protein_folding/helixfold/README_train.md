@@ -1,6 +1,6 @@
 # HelixFold Training
 
-We implement [AlphaFold2](https://doi.org/10.1038/s41586-021-03819-2) using [PaddlePaddle](https://github.com/paddlepaddle/paddle), namely HelixFold, to improve training and inference speed and reduce memory consumption. The performance is improved by operator fusion, tensor fusion, and hybrid parallelism computation, while the memory is optimized through Recompute, BFloat16, and memory read/write in-place. Compared with the original AlphaFold2 (implemented with Jax) and OpenFold (implemented with PyTorch), HelixFold needs only 7.5 days to complete the full end-to-end training and only 5.3 days when using hybrid parallelism, while both AlphaFold2 and OpenFold take about 11 days. HelixFold saves 1x training time. We verified that HelixFold's accuracy could be on par with AlphaFold2 on the CASP14 and CAMEO datasets.
+We implement [AlphaFold2](https://doi.org/10.1038/s41586-021-03819-2) using [PaddlePaddle](https://github.com/paddlepaddle/paddle), namely [HelixFold](https://arxiv.org/abs/2207.05477), to improve training and inference speed and reduce memory consumption. The performance is improved by operator fusion, tensor fusion, and hybrid parallelism computation, while the memory is optimized through Recompute, BFloat16, and memory read/write in-place. Compared with the original AlphaFold2 (implemented with Jax) and OpenFold (implemented with PyTorch), HelixFold needs only 7.5 days to complete the full end-to-end training and only 5.3 days when using hybrid parallelism, while both AlphaFold2 and OpenFold take about 11 days. HelixFold saves 1x training time. We verified that HelixFold's accuracy could be on par with AlphaFold2 on the CASP14 and CAMEO datasets.
 
 ## Environment
 
@@ -38,19 +38,19 @@ After installing all the above required dependencies and downloading the demo da
 sh gpu_train.sh [demo_initial_N1C1, demo_finetune_N1C1, demo_initial_N1C8, demo_finetune_N1C8, demo_initial_N8C64, demo_finetune_N8C64]
 ```
 
-For example, if you want to train on single node, 1 GPU with initial training mode, you can run:
+For example, if you want to train on single node, 1 GPU with initial training mode, run:
 
 ```bash
 sh gpu_train.sh demo_initial_N1C1
 ```
 
-If you want to train on single node, 8 GPUs with finetune mode, you can run:
+If you want to train on single node, 8 GPUs with finetune mode, run:
 
 ```bash
 sh gpu_train.sh demo_finetune_N1C8
 ```
 
-If you want to train on 8 nodes, 8 GPUs with initial training mode, you can run:
+If you want to train on 8 nodes, 8 GPUs with initial training mode, run:
 
 ```bash
 sh gpu_train.sh demo_initial_N8C64
