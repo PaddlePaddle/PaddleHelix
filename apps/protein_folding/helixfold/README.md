@@ -8,7 +8,7 @@
 </p>
 
 ## Instruction
-The detailed instructions on running HelixFold in GPU and DCU for training and inference are provided in the following:
+The detailed instructions on running HelixFold in GPU and DCU for training and inference are provided in the following links:
 * [Training in GPU](README_train.md)
 * [Training in DCU](README_DCU.md)
 * [Inference in GPU](README_inference.md)
