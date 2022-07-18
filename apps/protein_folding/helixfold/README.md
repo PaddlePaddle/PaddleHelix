@@ -20,11 +20,29 @@ The installation prerequisites are different for the training and inference pipe
 
 ### Branch Parallelism and Hybrid Parallelism
 
-HelixFold proposes Branch Parallelism (BP) to split the calculation branch across multiple devices in order to accelerate computation during initial training phase. The training cost is further reduced by combining BP with Dynamic Axial Parallelism (DAP) and Data Parallelism (DP).
+HelixFold proposes **Branch Parallelism (BP)** to split the calculation branch across multiple devices in order to accelerate computation during initial training phase. The training cost is further reduced by training with **Hybrid Parallelism** which combines BP with Dynamic Axial Parallelism (DAP) and Data Parallelism (DP).
 
 <p align="center">
 <img src="../../../.github/BP_DAP_DP.png" align="middle" height="90%" width="90%" />
 </p>
+
+### Fused Gated Self-Attention
+
+Because of the fairly small mini-batch size and sequence length, scheduling a huge number of operators is one of the bottlenecks for training AlphaFold2. HelixFold proposes **Fused Gated Self-Attention** to optimize both the CPU and GPU utilization.
+
+<p align="center">
+<img src="../../../.github/op_fuse.png" align="middle" height="90%" width="90%" />
+</p>
+
+### Tensor Fusion
+
+HelixFold fuses 4,630 model parameters of AlphaFold2 into a single one or a few parameters and modify the data pointer to fused memory by **Tensor Fusion**. It significantly improves the training efficiency and reduces memory fragmentation by reducing the number of kernal launches as well as the repeated creation and destruction of temporary small tensors.
+
+<p align="center">
+<img src="../../../.github/tensor_fuse.png" align="middle" height="90%" width="90%" />
+</p>
+
+Please check our [paper](https://arxiv.org/abs/2207.05477) for more details.
 
 ## Copyright
 

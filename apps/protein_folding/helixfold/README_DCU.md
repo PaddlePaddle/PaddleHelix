@@ -38,7 +38,7 @@ conda activate ~/conda-envs/paddle_20220413
 在激活的Conda Python环境中安装PaddlePaddle ROCm版本以及其他依赖库
 
 ```bash
-wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/HelixFold/paddlepaddle_rocm-0.0.0-cp37-cp37m-linux_x86_64.whl
+wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/HelixFold/paddlepaddle_rocm-0.0.0.dev628-cp37-cp37m-linux_x86_64.whl 
 pip install ./paddlepaddle_rocm-0.0.0-cp37-cp37m-linux_x86_64.whl
 pip install -r requirements.txt
 ```

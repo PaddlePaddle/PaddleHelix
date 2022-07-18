@@ -6,7 +6,7 @@ We implement [AlphaFold2](https://doi.org/10.1038/s41586-021-03819-2) using [Pad
 
 To reproduce the results reported in our paper, specific environment settings are required as below. 
 
-- python：3.7
+- python: 3.7
 - cuda: 11.2
 - cudnn: 8.10.1
 - nccl: 2.12.12
