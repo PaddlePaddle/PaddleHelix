@@ -105,13 +105,45 @@ class RunModel(object):
 
     def init_params(self, params_path: str):
         if params_path.endswith('.npz'):
-            logger.info('Load as AlphaFold pre-trained model')
             with open(params_path, 'rb') as f:
                 params = np.load(io.BytesIO(f.read()), allow_pickle=False)
                 params = dict(params)
 
             pd_params = utils.jax_params_to_paddle(params)
             pd_params = {k[len('alphafold.'):]: v for k, v in pd_params.items()}
+            
+            from collections import defaultdict
+            qkv_dicts = defaultdict(dict)
+            
+            if self.config.model.global_config.fuse_attention:
+                for key in pd_params:
+                    if 'msa_column_global_attention' not in key and 'attention' in key and ('query_w' in key or 'key_w' in key or 'value_w' in key):
+                        prefix = key[:key.rfind('.')]
+                        if 'extra_msa_stack' in key:
+                            qkv_dicts[prefix][key] = pd_params[key]
+                            #print(key)
+                        elif 'evoformer_iteration' in key:
+                            qkv_dicts[prefix][key] = pd_params[key]
+                            #print(key)
+                        elif 'template_pair_stack' in key:
+                            qkv_dicts[prefix][key] = pd_params[key]
+                            #print(key)
+
+                for prefix in qkv_dicts:
+                    query_w = qkv_dicts[prefix][prefix + '.query_w']
+                    key_w = qkv_dicts[prefix][prefix + '.key_w']
+                    value_w = qkv_dicts[prefix][prefix + '.value_w']
+                    if query_w.shape[0] == key_w.shape[0] and key_w.shape[0] == value_w.shape[0]:
+                        # 1. merge to [3, num_head, key_dim, q_dim]
+                        qkv_w = np.stack([query_w, key_w, value_w], axis=0).transpose((0, 2, 3, 1))
+                        
+                        # 2. remove seperated param
+                        del pd_params[prefix + '.query_w']
+                        del pd_params[prefix + '.key_w']
+                        del pd_params[prefix + '.value_w']
+                        
+                        # 3. add merged param to pd_params
+                        pd_params[prefix + '.qkv_w'] = qkv_w
 
         elif params_path.endswith('.pd'):
             logger.info('Load as Paddle model')

@@ -1288,18 +1288,160 @@ class EvoformerIteration(nn.Layer):
 
     def forward(self, msa_act, pair_act, masks):
         msa_mask, pair_mask = masks['msa'], masks['pair']
-        if scg.get_bp_world_size() > 1:
+        if self.global_config.origin_evoformer_structure:
+            residual = self.msa_row_attention_with_pair_bias(
+                msa_act, msa_mask, pair_act)
+            residual = self.msa_row_attn_dropout(residual)
+            msa_act = msa_act + residual
 
-            # Note(GuoxiaWang): add zeros trigger the status of stop_gradient=False within recompute context.
-            pair_act = pair_act + paddle.zeros_like(pair_act)
+            if self.is_extra_msa:
+                residual = self.msa_column_global_attention(msa_act, msa_mask)
+                residual = self.msa_col_attn_dropout(residual)
+                msa_act = msa_act + residual
 
-            # Note(GuoxiaWang): reduce the pair_act's gradient from msa branch and pair branch
-            if not pair_act.stop_gradient:
-                pair_act._register_grad_hook(bp.all_reduce)
+                residual = self.msa_transition(msa_act, msa_mask)
+                residual = self.msa_transition_dropout(residual)
+                msa_act = msa_act + residual
 
-            if scg.get_bp_rank_in_group() == 0:
+            else:
+                residual = self.msa_column_attention(msa_act, msa_mask)
+                residual = self.msa_col_attn_dropout(residual)
+                msa_act = msa_act + residual
+
+                residual = self.msa_transition(msa_act, msa_mask)
+                residual = self.msa_transition_dropout(residual)
+                msa_act = msa_act + residual
+
+            residual = self.outer_product_mean(msa_act, msa_mask)
+            residual = self.outer_product_mean_dropout(residual)
+            pair_act = pair_act + residual
+
+            residual = self.triangle_multiplication_outgoing(pair_act, pair_mask)
+            residual = self.triangle_outgoing_dropout(residual)
+            pair_act = pair_act + residual
+
+            residual = self.triangle_multiplication_incoming(pair_act, pair_mask)
+            residual = self.triangle_incoming_dropout(residual)
+            pair_act = pair_act + residual
+
+            residual = self.triangle_attention_starting_node(pair_act, pair_mask)
+            residual = self.triangle_starting_dropout(residual)
+            pair_act = pair_act + residual
+
+            residual = self.triangle_attention_ending_node(pair_act, pair_mask)
+            residual = self.triangle_ending_dropout(residual)
+            pair_act = pair_act + residual
+
+            residual = self.pair_transition(pair_act, pair_mask)
+            residual = self.pair_transition_dropout(residual)
+            pair_act = pair_act + residual
+        else:
+            if scg.get_bp_world_size() > 1:
+
+                # Note(GuoxiaWang): add zeros trigger the status of stop_gradient=False within recompute context.
+                pair_act = pair_act + paddle.zeros_like(pair_act)
+
+                # Note(GuoxiaWang): reduce the pair_act's gradient from msa branch and pair branch
+                if not pair_act.stop_gradient:
+                    pair_act._register_grad_hook(bp.all_reduce)
+
+                if scg.get_bp_rank_in_group() == 0:
+                    # [B, N_seq//dap_size, N_res, c_m]
+                    
+                    residual = self.msa_row_attention_with_pair_bias(
+                        msa_act, msa_mask, pair_act)
+                    residual = self.msa_row_attn_dropout(residual)
+                    msa_act = msa_act + residual
+
+                    # [B, N_seq//dap_size, N_res, c_m] => [B, N_seq, N_res//dap_size, c_m]
+                    msa_act = dap.row_to_col(msa_act)
+
+                    if self.is_extra_msa:
+                        # [B, N_seq, N_res//dap_size, c_m]
+                        residual = self.msa_column_global_attention(msa_act, msa_mask)
+                        residual = self.msa_col_attn_dropout(residual)
+                        msa_act = msa_act + residual
+
+                        # [B, N_seq, N_res//dap_size, c_m]
+                        residual = self.msa_transition(msa_act, msa_mask)
+                        residual = self.msa_transition_dropout(residual)
+                        msa_act = msa_act + residual
+
+                    else:
+                        # [B, N_seq, N_res//dap_size, c_m]
+                        residual = self.msa_column_attention(msa_act, msa_mask)
+                        residual = self.msa_col_attn_dropout(residual)
+                        msa_act = msa_act + residual
+
+                        # [B, N_seq, N_res//dap_size, c_m]
+                        residual = self.msa_transition(msa_act, msa_mask)
+                        residual = self.msa_transition_dropout(residual)
+                        msa_act = msa_act + residual
+
+                    # [B, N_res//dap_size, N_res, c_z]
+                    residual = self.outer_product_mean(msa_act, msa_mask)
+                    outer_product_mean = self.outer_product_mean_dropout(residual)
+
+                    # Note(GuoxiaWang): stop the gradient from pair transition
+                    pair_act = pair_act.clone()
+                    pair_act.stop_gradient = True
+
+                    # [B, N_seq, N_res//dap_size, c_m] => [B, N_seq//dap_size, N_res, c_m]
+                    msa_act = dap.col_to_row(msa_act)
+
+                if scg.get_bp_rank_in_group() == 1:
+
+                    outer_product_mean = paddle.zeros_like(pair_act)
+
+                    # Note(GuoxiaWang): enable gradient flow in backward
+                    msa_act = msa_act.clone()
+
+                    # scatter if using dap, otherwise do nothing
+                    pair_mask_row = dap.scatter(pair_mask, axis=1)
+                    pair_mask_col = dap.scatter(pair_mask, axis=2)
+
+                    # [B, N_res//dap_size, N_res, c_z]
+                    residual = self.triangle_multiplication_outgoing(pair_act, pair_mask_row)
+                    residual = self.triangle_outgoing_dropout(residual)
+                    pair_act = pair_act + residual
+
+                    # [B, N_res//dap_size, N_res, c_z] => [B, N_res, N_res//dap_size, c_z]
+                    pair_act = dap.row_to_col(pair_act)
+                    # [B, N_res, N_res//dap_size, c_z]
+                    residual = self.triangle_multiplication_incoming(pair_act, pair_mask_col)
+                    residual = self.triangle_incoming_dropout(residual)
+                    pair_act = pair_act + residual
+
+                    # [B, N_res, N_res//dap_size, c_z] => [B, N_res//dap_size, N_res, c_z]
+                    pair_act = dap.col_to_row(pair_act)
+                    # [B, N_res//dap_size, N_res, c_z]
+                    residual = self.triangle_attention_starting_node(pair_act, pair_mask_row)
+                    residual = self.triangle_starting_dropout(residual)
+                    pair_act = pair_act + residual
+
+                    # [B, N_res//dap_size, N_res, c_z] => [B, N_res, N_res//dap_size, c_z]
+                    pair_act = dap.row_to_col(pair_act)
+                    # [B, N_res, N_res//dap_size, c_z]
+                    residual = self.triangle_attention_ending_node(pair_act, pair_mask_col)
+                    residual = self.triangle_ending_dropout(residual)
+                    pair_act = pair_act + residual
+
+                    # [B, N_res, N_res//dap_size, c_z] => [B, N_res//dap_size, N_res, c_z]
+                    pair_act = dap.col_to_row(pair_act)
+
+                bp.broadcast(msa_act, 0)
+                bp.broadcast(pair_act, 1)
+
+                bp.broadcast(outer_product_mean, 0)
+                pair_act = pair_act + outer_product_mean
+
+                residual = self.pair_transition(pair_act, pair_mask)
+                residual = self.pair_transition_dropout(residual)
+                pair_act = pair_act + residual
+
+            else:
+
                 # [B, N_seq//dap_size, N_res, c_m]
-                
                 residual = self.msa_row_attention_with_pair_bias(
                     msa_act, msa_mask, pair_act)
                 residual = self.msa_row_attn_dropout(residual)
@@ -1334,25 +1476,16 @@ class EvoformerIteration(nn.Layer):
                 residual = self.outer_product_mean(msa_act, msa_mask)
                 outer_product_mean = self.outer_product_mean_dropout(residual)
 
-                # Note(GuoxiaWang): stop the gradient from pair transition
-                pair_act = pair_act.clone()
-                pair_act.stop_gradient = True
-
                 # [B, N_seq, N_res//dap_size, c_m] => [B, N_seq//dap_size, N_res, c_m]
                 msa_act = dap.col_to_row(msa_act)
-
-            if scg.get_bp_rank_in_group() == 1:
-
-                outer_product_mean = paddle.zeros_like(pair_act)
-
-                # Note(GuoxiaWang): enable gradient flow in backward
-                msa_act = msa_act.clone()
 
                 # scatter if using dap, otherwise do nothing
                 pair_mask_row = dap.scatter(pair_mask, axis=1)
                 pair_mask_col = dap.scatter(pair_mask, axis=2)
 
                 # [B, N_res//dap_size, N_res, c_z]
+                # TODO(GuoxiaWang): why have diffrence whether remove pair_act = pair_act.clone()
+                pair_act = pair_act.clone()
                 residual = self.triangle_multiplication_outgoing(pair_act, pair_mask_row)
                 residual = self.triangle_outgoing_dropout(residual)
                 pair_act = pair_act + residual
@@ -1381,96 +1514,11 @@ class EvoformerIteration(nn.Layer):
                 # [B, N_res, N_res//dap_size, c_z] => [B, N_res//dap_size, N_res, c_z]
                 pair_act = dap.col_to_row(pair_act)
 
-            bp.broadcast(msa_act, 0)
-            bp.broadcast(pair_act, 1)
+                pair_act = pair_act + outer_product_mean
 
-            bp.broadcast(outer_product_mean, 0)
-            pair_act = pair_act + outer_product_mean
-
-            residual = self.pair_transition(pair_act, pair_mask)
-            residual = self.pair_transition_dropout(residual)
-            pair_act = pair_act + residual
-
-        else:
-
-            # [B, N_seq//dap_size, N_res, c_m]
-            residual = self.msa_row_attention_with_pair_bias(
-                msa_act, msa_mask, pair_act)
-            residual = self.msa_row_attn_dropout(residual)
-            msa_act = msa_act + residual
-
-            # [B, N_seq//dap_size, N_res, c_m] => [B, N_seq, N_res//dap_size, c_m]
-            msa_act = dap.row_to_col(msa_act)
-
-            if self.is_extra_msa:
-                # [B, N_seq, N_res//dap_size, c_m]
-                residual = self.msa_column_global_attention(msa_act, msa_mask)
-                residual = self.msa_col_attn_dropout(residual)
-                msa_act = msa_act + residual
-
-                # [B, N_seq, N_res//dap_size, c_m]
-                residual = self.msa_transition(msa_act, msa_mask)
-                residual = self.msa_transition_dropout(residual)
-                msa_act = msa_act + residual
-
-            else:
-                # [B, N_seq, N_res//dap_size, c_m]
-                residual = self.msa_column_attention(msa_act, msa_mask)
-                residual = self.msa_col_attn_dropout(residual)
-                msa_act = msa_act + residual
-
-                # [B, N_seq, N_res//dap_size, c_m]
-                residual = self.msa_transition(msa_act, msa_mask)
-                residual = self.msa_transition_dropout(residual)
-                msa_act = msa_act + residual
-
-            # [B, N_res//dap_size, N_res, c_z]
-            residual = self.outer_product_mean(msa_act, msa_mask)
-            outer_product_mean = self.outer_product_mean_dropout(residual)
-
-            # [B, N_seq, N_res//dap_size, c_m] => [B, N_seq//dap_size, N_res, c_m]
-            msa_act = dap.col_to_row(msa_act)
-
-            # scatter if using dap, otherwise do nothing
-            pair_mask_row = dap.scatter(pair_mask, axis=1)
-            pair_mask_col = dap.scatter(pair_mask, axis=2)
-
-            # [B, N_res//dap_size, N_res, c_z]
-            # TODO(GuoxiaWang): why have diffrence whether remove pair_act = pair_act.clone()
-            pair_act = pair_act.clone()
-            residual = self.triangle_multiplication_outgoing(pair_act, pair_mask_row)
-            residual = self.triangle_outgoing_dropout(residual)
-            pair_act = pair_act + residual
-
-            # [B, N_res//dap_size, N_res, c_z] => [B, N_res, N_res//dap_size, c_z]
-            pair_act = dap.row_to_col(pair_act)
-            # [B, N_res, N_res//dap_size, c_z]
-            residual = self.triangle_multiplication_incoming(pair_act, pair_mask_col)
-            residual = self.triangle_incoming_dropout(residual)
-            pair_act = pair_act + residual
-
-            # [B, N_res, N_res//dap_size, c_z] => [B, N_res//dap_size, N_res, c_z]
-            pair_act = dap.col_to_row(pair_act)
-            # [B, N_res//dap_size, N_res, c_z]
-            residual = self.triangle_attention_starting_node(pair_act, pair_mask_row)
-            residual = self.triangle_starting_dropout(residual)
-            pair_act = pair_act + residual
-
-            # [B, N_res//dap_size, N_res, c_z] => [B, N_res, N_res//dap_size, c_z]
-            pair_act = dap.row_to_col(pair_act)
-            # [B, N_res, N_res//dap_size, c_z]
-            residual = self.triangle_attention_ending_node(pair_act, pair_mask_col)
-            residual = self.triangle_ending_dropout(residual)
-            pair_act = pair_act + residual
-
-            # [B, N_res, N_res//dap_size, c_z] => [B, N_res//dap_size, N_res, c_z]
-            pair_act = dap.col_to_row(pair_act)
-
-            pair_act = pair_act + outer_product_mean
-
-            residual = self.pair_transition(pair_act, pair_mask)
-            residual = self.pair_transition_dropout(residual)
-            pair_act = pair_act + residual
+                residual = self.pair_transition(pair_act, pair_mask)
+                residual = self.pair_transition_dropout(residual)
+                pair_act = pair_act + residual
 
         return msa_act, pair_act
 
