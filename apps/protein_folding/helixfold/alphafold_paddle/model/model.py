@@ -226,6 +226,7 @@ class RunModel(object):
                     slice_idx: int = 0,
                     timings: Optional[Dict[str, float]] = None):
         """Compute pLDDT, save unrelaxed pdb and execute relaxation"""
+        print('Running postprocessing, it may takes long time')
         single_pred = slice_pred_dict(prediction, slice_idx)
         prediction.update(utils.get_confidence_metrics(single_pred))
         plddt = prediction['plddt']
@@ -254,6 +255,8 @@ class RunModel(object):
             pdb = f'relaxed_{self.name}.pdb'
             with open(output_dir.joinpath(pdb), 'w') as f:
                 f.write(relaxed_pdb_str)
+
+            print('Saved {}'.format(output_dir.joinpath(pdb)))
 
         else:
             relaxed_pdb_str = protein.to_pdb(prot)
