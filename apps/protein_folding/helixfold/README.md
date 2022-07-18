@@ -17,7 +17,7 @@ The detailed instructions on running HelixFold in GPU and DCU for training and i
 
 * **Branch Parallelism and Hybrid Parallelism** HelixFold proposes **Branch Parallelism (BP)** to split the calculation branch across multiple devices in order to accelerate computation during the initial training phase. The training cost is further reduced by training with **Hybrid Parallelism**, combining BP with Dynamic Axial Parallelism (DAP) and Data Parallelism (DP).
 
-* **Operator Fusion and Tensor Fusion to Reduce the Cost of Scheduling** Scheduling a huge number of operators is one of the bottlenecks for the training. To reduce the cost of scheduling, **Fused Gated Self-Attention** is utilized to combine multiple block into an operator, and thousands of tensors are fused into only a few tensors.
+* **Operator Fusion and Tensor Fusion to Reduce the Cost of Scheduling** Scheduling a huge number of operators is one of the bottlenecks for the training. To reduce the cost of scheduling, **Fused Gated Self-Attention** is utilized to combine multiple blocks into an operator, and thousands of tensors are fused into only a few tensors.
 
 * **Multi-dimensional Memory Optimization** Multiple techniques, including Recompute, BFloat16, In-place memory, and Subbatch (Chunking), are exploited to reduce the memory required for training.
 
