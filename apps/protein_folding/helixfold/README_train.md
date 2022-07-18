@@ -32,7 +32,7 @@ tar -zxvf data.tar.gz
 
 ## Usage
 
-After installing all the above required dependencies and downloading the demo dataset, you can have a try with running `gpu_train.sh`. We provide different training modes in one script, which includes intial training and finetune on `single node, 1 GPU`, `single node, 8 GPUs` and `multiple nodes, multiple GPUs`. The details of each parameters are included in the script `gpu_train.sh`.
+After installing all the above required dependencies and downloading the demo dataset, you can have a try with running `gpu_train.sh`. We provide different training modes in one script, which includes intial training and finetune on `single node, 1 GPU`, `single node, 8 GPUs` and `multiple nodes, multiple GPUs`. Note that you need to set `PADDLE_MASTER="xxx.xxx.xxx.xxx:port"` according to your network environment. The details of each parameter are included in the script `gpu_train.sh`.
 
 ```bash
 sh gpu_train.sh [demo_initial_N1C1, demo_finetune_N1C1, demo_initial_N1C8, demo_finetune_N1C8, demo_initial_N8C64, demo_finetune_N8C64]

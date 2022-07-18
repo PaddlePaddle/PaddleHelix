@@ -130,7 +130,7 @@ mkdir -p debug_log debug_models
 {
     if [[ "$exp_name" == "demo_initial_N1C8" ]]; then
         export PADDLE_NNODES=1
-        export PADDLE_MASTER="127.0.0.1:12538"
+        export PADDLE_MASTER="127.0.0.1:12538" # set PADDLE_MASTER="xxx.xxx.xxx.xxx:port" according to your network environment
         export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 
         batch_size=1
@@ -155,7 +155,7 @@ mkdir -p debug_log debug_models
         export FLAGS_allocator_strategy=naive_best_fit
         export FLAGS_fraction_of_gpu_memory_to_use=0.92
         export PADDLE_NNODES=1
-        export PADDLE_MASTER="127.0.0.1:12538"
+        export PADDLE_MASTER="127.0.0.1:12538" # set PADDLE_MASTER="xxx.xxx.xxx.xxx:port" according to your network environment
         export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
         
         batch_size=1
@@ -178,7 +178,7 @@ mkdir -p debug_log debug_models
 {
     if [[ "$exp_name" == "demo_initial_N8C64" ]]; then
         export PADDLE_NNODES=8
-        export PADDLE_MASTER="127.0.0.1:12538"
+        export PADDLE_MASTER="xxx.xxx.xxx.xxx:port" # set PADDLE_MASTER="xxx.xxx.xxx.xxx:port" according to your network environment
         # export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 
         batch_size=1
@@ -203,7 +203,7 @@ mkdir -p debug_log debug_models
         export FLAGS_allocator_strategy=naive_best_fit
         export FLAGS_fraction_of_gpu_memory_to_use=0.92
         export PADDLE_NNODES=8
-        export PADDLE_MASTER="127.0.0.1:12538"
+        export PADDLE_MASTER="xxx.xxx.xxx.xxx:port" # set PADDLE_MASTER="xxx.xxx.xxx.xxx:port" according to your network environment
         # export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
         
         batch_size=1
