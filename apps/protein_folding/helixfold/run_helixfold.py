@@ -36,6 +36,7 @@ from alphafold_paddle.data import pipeline, templates
 from alphafold_paddle.distributed import dataparallel as ddp
 from alphafold_paddle.data.utils import align_feat, unpad_prediction
 
+logging.basicConfig()
 logger = logging.getLogger(__file__)
 
 MAX_TEMPLATE_HITS = 20
@@ -207,26 +208,31 @@ def main(args):
     if len(fasta_names) != len(set(fasta_names)):
         raise ValueError('All FASTA paths must have a unique basename.')
 
-    template_featurizer = templates.TemplateHitFeaturizer(
-        mmcif_dir=args.template_mmcif_dir,
-        max_template_date=args.max_template_date,
-        max_hits=MAX_TEMPLATE_HITS,
-        kalign_binary_path=args.kalign_binary_path,
-        release_dates_path=None,
-        obsolete_pdbs_path=args.obsolete_pdbs_path)
+    try:
+        template_featurizer = templates.TemplateHitFeaturizer(
+            mmcif_dir=args.template_mmcif_dir,
+            max_template_date=args.max_template_date,
+            max_hits=MAX_TEMPLATE_HITS,
+            kalign_binary_path=args.kalign_binary_path,
+            release_dates_path=None,
+            obsolete_pdbs_path=args.obsolete_pdbs_path)
 
-    data_pipeline = pipeline.DataPipeline(
-        jackhmmer_binary_path=args.jackhmmer_binary_path,
-        hhblits_binary_path=args.hhblits_binary_path,
-        hhsearch_binary_path=args.hhsearch_binary_path,
-        uniref90_database_path=args.uniref90_database_path,
-        mgnify_database_path=args.mgnify_database_path,
-        bfd_database_path=args.bfd_database_path,
-        uniclust30_database_path=args.uniclust30_database_path,
-        small_bfd_database_path=args.small_bfd_database_path,
-        pdb70_database_path=args.pdb70_database_path,
-        template_featurizer=template_featurizer,
-        use_small_bfd=use_small_bfd)
+        data_pipeline = pipeline.DataPipeline(
+            jackhmmer_binary_path=args.jackhmmer_binary_path,
+            hhblits_binary_path=args.hhblits_binary_path,
+            hhsearch_binary_path=args.hhsearch_binary_path,
+            uniref90_database_path=args.uniref90_database_path,
+            mgnify_database_path=args.mgnify_database_path,
+            bfd_database_path=args.bfd_database_path,
+            uniclust30_database_path=args.uniclust30_database_path,
+            small_bfd_database_path=args.small_bfd_database_path,
+            pdb70_database_path=args.pdb70_database_path,
+            template_featurizer=template_featurizer,
+            use_small_bfd=use_small_bfd)
+    except Exception:
+        logger.warning('Failed to create data pipeline, if there is no cache '
+                       'features.pkl, inference job will fail!')
+        data_pipeline = None
 
     model_runners = dict()
     for model_name in args.model_names.split(','):
