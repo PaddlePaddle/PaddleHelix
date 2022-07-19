@@ -18,6 +18,8 @@
 
 `2022.02.07` 论文"Geometry-enhanced molecular representation learning for property prediction"发表于期刊**Nature Machine Intelligence**。详情参见[论文](https://www.nature.com/articles/s42256-021-00438-4)和[代码](./apps/pretrained_compound/ChemRL/GEM)。
 
+<details>
+<summary>更多信息...</summary>
 `2022.01.07` 螺旋桨团队开源基于PaddlePaddle深度学习框架的[AlphaFold 2](https://doi.org/10.1038/s41586-021-03819-2)蛋白质结构预测模型推理实现，详见[HelixFold](./apps/protein_folding/helixfold)。
 
 `2021.11.23` 论文"Multimodal Pre-Training Model for Sequence-based Prediction of Protein-Protein Interaction"被[MLCB 2021](https://sites.google.com/cs.washington.edu/mlcb2021/home)接收. 详细信息请参见[论文](https://arxiv.org/abs/2112.04814)和[代码](https://github.com/PaddlePaddle/PaddleHelix/tree/dev/apps/protein_protein_interaction).
@@ -35,6 +37,7 @@
 `2021.05.18` 论文"Structure-aware Interactive Graph Neural Networks for the Prediction of Protein-Ligand Binding Affinity"被[KDD 2021](https://kdd.org/kdd2021/accepted-papers/index)接收。代码参见[这里](./apps/drug_target_interaction/sign).
 
 `2021.03.15` 螺旋桨团队在权威图榜单[OGB](https://ogb.stanford.edu/docs/leader_graphprop/)的ogbg-molhiv和ogbg-molpcba任务上取得第一名。这两项任务均是预测小分子的属性。
+ </details>
 
 ---
 
