@@ -5,6 +5,10 @@
     "optimizer": {
         "lr": 1e-3,
         "warmup_steps": 1000,
-        "grad_clip": 0.1
+        "grad_clip": 0.1,
+        "decay": {
+            "step_size": 50000,
+            "gamma": 0.95
+        }
     }
 }
