@@ -23,24 +23,23 @@ module load apps/anaconda3/5.2.0
 创建Python环境
 
 ```bash
-conda create -p ~/conda-envs/paddle_20220413 python==3.7.10
+conda create -p ~/conda-envs/paddle_dcu python==3.7.10
 ```
 
 激活Python环境
 
 ```bash
-conda activate ~/conda-envs/paddle_20220413
+conda activate ~/conda-envs/paddle_dcu
 ```
 
 
 ### 安装PaddlePaddle
 
-在激活的Conda Python环境中安装PaddlePaddle ROCm版本以及其他依赖库
+在激活的Conda Python环境中安装依赖库
 
 ```bash
 wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/HelixFold/paddlepaddle_rocm-0.0.0.dev628-cp37-cp37m-linux_x86_64.whl 
-pip install ./paddlepaddle_rocm-0.0.0-cp37-cp37m-linux_x86_64.whl
-pip install -r requirements.txt
+pip install -r requirements_dcu.txt
 ```
 
 ## 3、HelixFold
@@ -80,7 +79,7 @@ tar -zxvf data.tar.gz
 module rm compiler/rocm/2.9
 module load compiler/rocm/4.0.1
 module load apps/anaconda3/5.2.0
-source activate ~/conda-envs/paddle_20220413
+source activate ~/conda-envs/paddle_dcu
 ```
 
 ### 提交训练任务
