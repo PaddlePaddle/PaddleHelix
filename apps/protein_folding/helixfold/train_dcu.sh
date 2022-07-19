@@ -8,7 +8,7 @@ if [[ -n "${allhost}" ]]; then
     module rm compiler/rocm/2.9
     module load compiler/rocm/4.0.1
     module load apps/anaconda3/5.2.0
-    source activate ~/conda-envs/paddle_20220413
+    source activate ~/conda-envs/paddle_dcu
 
     #2.机卡信息显示
     echo "-------------input params ${SLURM_NODEID}--------------"
