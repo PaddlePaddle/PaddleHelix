@@ -20,6 +20,9 @@ English | [简体中文](README_cn.md)
 
 `2022.02.07` Paper "Geometry-enhanced molecular representation learning for property prediction" is published in **Nature Machine Intelligence**. Please refer to [paper](https://www.nature.com/articles/s42256-021-00438-4) and [codes](./apps/pretrained_compound/ChemRL/GEM) to explore the algorithm.
 
+<details>
+<summary>More news ...</summary>
+
 `2022.01.07` PaddleHelix released the reproduction of [AlphaFold 2](https://doi.org/10.1038/s41586-021-03819-2) inference pipeline using PaddlePaddle in [HelixFold](./apps/protein_folding/helixfold).
 
 `2021.11.23` Paper "Multimodal Pre-Training Model for Sequence-based Prediction of Protein-Protein Interaction" is accepted by [MLCB 2021](https://sites.google.com/cs.washington.edu/mlcb2021/home). Please refer to [paper](https://arxiv.org/abs/2112.04814) and [code](https://github.com/PaddlePaddle/PaddleHelix/tree/dev/apps/protein_protein_interaction) for more details.
@@ -37,6 +40,7 @@ English | [简体中文](README_cn.md)
 `2021.05.18` Paper "Structure-aware Interactive Graph Neural Networks for the Prediction of Protein-Ligand Binding Affinity" is accepted by [KDD 2021](https://kdd.org/kdd2021/accepted-papers/index). The code is available at [here](./apps/drug_target_interaction/sign).
 
 `2021.03.15` PaddleHelix team ranks 1st in the ogbg-molhiv and ogbg-molpcba of [OGB](https://ogb.stanford.edu/docs/leader_graphprop/), predicting the molecular properties.
+</details>
 
 ------
 
