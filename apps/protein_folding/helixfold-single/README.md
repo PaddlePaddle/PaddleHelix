@@ -2,10 +2,12 @@
 
 AI-based protein structure prediction pipelines, such as AlphaFold2, have achieved near-experimental accuracy. These advanced pipelines mainly rely on Multiple Sequence Alignments (MSAs) and templates as inputs to learn the co-evolution information from the homologous sequences. Nonetheless, searching MSAs and templates from protein databases is time-consuming, usually taking dozens of minutes. Consequently, we attempt to explore the limits of fast protein structure prediction by using only primary sequences of proteins. **HelixFold-Single** is proposed to combine a large-scale protein language model with the superior geometric learning capability of AlphaFold2. Our proposed method, HelixFold-Single, first pre-trains a large-scale protein language model (PLM) with thousands of millions of primary sequences utilizing the self-supervised learning paradigm, which will be used as an alternative to MSAs and templates for learning the co-evolution information. Then, by combining the pre-trained PLM and the essential components of AlphaFold2, we obtain an end-to-end differentiable model to predict the 3D coordinates of atoms from only the primary sequence. 
 
+## Online Service
+For those who want to try out our model without any installation, we also provide an online interface [PaddleHelix HelixFold-Single Forecast](https://paddlehelix.baidu.com/app/drug/protein-single/forecast) through web service.
 
 ## Installation
 Except those listed in the `requirements.txt`, PaddlePaddle `dev` package is required to run HelixFold.
-Visit (here)[https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/develop/install/pip/linux-pip.html] to 
+Visit [here](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/develop/install/pip/linux-pip.html) to 
 install PaddlePaddle `dev`. Also, we provide a package here if your machine environment is Nvidia A100 with
 cuda=11.2.
 
@@ -41,3 +43,16 @@ The output is organized as：
         unrelaxed.pdb
 
 where `unrelaxed.pdb` is the predicted pdb file.
+
+## Citing this work
+
+If you use the code or data in this repos, please cite:
+
+```bibtex
+@article{fang2022helixfold_single,
+  title={HelixFold-Single: MSA-free Protein Structure Prediction by Using Protein Language Model as an Alternative},
+  author={Fang, Xiaomin and Wang, Fan and Liu, Lihang and He, Jingzhou and Lin, Dayong and Xiang, Yingfei and Zhang, Xiaonan and Wu, Hua and Li, Hui and Song, Le},
+  journal={arXiv preprint arXiv:2207.13921},
+  year={2022}
+}
+```
