@@ -12,6 +12,9 @@ English | [简体中文](README_cn.md)
 
 
 ## Latest News
+`2022.07.29` PaddleHelix released the codes of HelixFold-Single, an **MSA-free** protein structure prediction pipeline relying on only the primary sequences, which can **predict the protein structures within seconds**. Please refer to [paper](https://arxiv.org/abs/2207.13921) and [codes](./apps/protein_folding/helixfold-single) for more details. Welcome to [PaddleHelix website](https://paddlehelix.baidu.com/app/drug/protein-single/forecast
+) to try out the structure prediction online service.
+
 `2022.07.18` PaddleHelix fully released HelixFold including training and inference pipeline. **The complete training time are optimized from 11 days to 7.5 days**. Please refer to [paper](https://arxiv.org/abs/2207.05477) and [codes](./apps/protein_folding/helixfold) for more details.
 
 `2022.07.07` Paper "BatchDTA: implicit batch alignment enhances deep learning-based drug–target affinity estimation" is published in **Briefings in Bioinformatics**. Please refer to [paper](https://academic.oup.com/bib/advance-article-abstract/doi/10.1093/bib/bbac260/6632927) and [codes](./apps/drug_target_interaction/batchdta) for more details.
@@ -85,6 +88,7 @@ We also provide [examples](./apps) that implement various algorithms and show th
   - [LinearRNA](./c/pahelix/toolkit/linear_rna)
 * **Protein Structure Prediction**
   - [HelixFold](./apps/protein_folding/helixfold)
+  - [HelixFold-Single](./apps/protein_folding/helixfold-single)
 
 ### Competition Solutions
 PaddleHelix team participated in multiple competitions related to bio-computing. The solutions can be found [here](./competition).
