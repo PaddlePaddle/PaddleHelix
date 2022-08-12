@@ -1,0 +1,5 @@
+{
+    "node_channel": 256,
+    "pair_channel": 256,
+    "triple_channel": 256
+}

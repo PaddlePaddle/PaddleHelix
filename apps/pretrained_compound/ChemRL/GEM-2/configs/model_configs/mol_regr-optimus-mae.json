@@ -1,0 +1,4 @@
+{
+    "model.encoder_type": "optimus",
+    "model.heads.property_regr.loss_type": "l1loss"
+}
