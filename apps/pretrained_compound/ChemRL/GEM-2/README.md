@@ -1,6 +1,8 @@
 # GEM-2: Next Generation Molecular Property Prediction Network with Many-body and Full-range Interaction Modeling
 Molecular property prediction is a fundamental task in the drug and material industries. Physically, the properties of a molecule are determined by its own electronic structure, which can be exactly described by the Schrödinger equation. However, solving the Schrödinger equation for most molecules is extremely challenging due to long-range interactions in the behavior of a quantum many-body system. While deep learning methods have proven to be effective in molecular property prediction, we design a novel method, namely GEM-2, which comprehensively considers both the long-range and many-body interactions in molecules. GEM-2 consists of two interacted tracks: an atom-level track modeling both the local and global correlation between any two atoms, and a pair-level track modeling the correlation between all atom pairs, which embed information between any 3 or 4 atoms. Extensive experiments demonstrated the superiority of GEM-2 over multiple baseline methods in quantum chemistry and drug discovery tasks.
 
+A preprint version of our work can be found [here](https://arxiv.org/abs/2208.05863).
+
 # Installation guide
 ## Prerequisites
 
@@ -55,3 +57,18 @@ You can adjsut the json files in the config folder to  change the training setti
 The models will be saved under `./model`.
 
 It will take around 60 mintues to finish one epoch on 16 A100 cards with total batch size of 512.
+
+
+## Citing this work
+
+If you use the code or data in this repos, please cite:
+
+```bibtex
+@article{liu2022gem-2,
+  title={GEM-2: Next Generation Molecular Property Prediction Network with Many-body and Full-range Interaction Modeling
+},
+  author={Liu, Lihang and He, Donglong and Fang, Xiaomin and Zhang, Shanzhuo and Wang, Fan and He, Jingzhou and Wu, Hua},
+  journal={arXiv preprint arXiv:2208.05863},
+  year={2022}
+}
+```
