@@ -5,6 +5,15 @@ AI-based protein structure prediction pipelines, such as AlphaFold2, have achiev
 ## Online Service
 For those who want to try out our model without any installation, we also provide an online interface [PaddleHelix HelixFold-Single Forecast](https://paddlehelix.baidu.com/app/drug/protein-single/forecast) through web service.
 
+## Environment
+To reproduce the results reported in our paper, specific environment settings are required as below.
+
+- python: 3.7
+- cuda: 11.2
+- cudnn: 8.10.1
+- nccl: 2.12.12
+
+
 ## Installation
 Except those listed in the `requirements.txt`, PaddlePaddle `dev` package is required to run HelixFold.
 Visit [here](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/develop/install/pip/linux-pip.html) to 
