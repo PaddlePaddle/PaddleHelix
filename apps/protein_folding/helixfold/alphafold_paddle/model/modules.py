@@ -20,6 +20,10 @@ import paddle
 import paddle.nn as nn
 from paddle.fluid.framework import _dygraph_tracer
 from paddle.distributed.fleet.utils import recompute
+try:
+    from paddle import _legacy_C_ops as _C_ops
+except:
+    from paddle import _C_ops
 
 from alphafold_paddle.common import residue_constants
 from alphafold_paddle.model.utils import mask_mean, subbatch
@@ -102,7 +106,7 @@ class Dropout(nn.Layer):
             if paddle.static.default_main_program().random_seed != 0:
                 seed = paddle.static.default_main_program().random_seed
 
-            out, mask = paddle._C_ops.dropout_nd(input, 'dropout_prob', self.p, 'is_test',
+            out, mask = _C_ops.dropout_nd(input, 'dropout_prob', self.p, 'is_test',
                                                     not self.training, 'fix_seed', seed
                                                     is not None, 'seed',
                                                     seed if seed is not None else 0,
@@ -472,7 +476,7 @@ class Attention(nn.Layer):
         if self.fuse_attention:
             if nonbatched_bias is not None:
                 nonbatched_bias = paddle.unsqueeze(nonbatched_bias, axis=1)
-            _, _, _, _, _, _, _, output = paddle._C_ops.fused_gate_attention(
+            _, _, _, _, _, _, _, output = _C_ops.fused_gate_attention(
                 q_data, m_data, self.query_w, self.key_w, self.value_w, self.qkv_w, nonbatched_bias, bias, self.gating_w, self.gating_b,
                 self.output_w, self.output_b, 'has_gating', self.config.gating, 'merge_qkv', self.merge_qkv)
         else:
