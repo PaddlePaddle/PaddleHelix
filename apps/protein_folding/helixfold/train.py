@@ -38,10 +38,9 @@ from utils.param_fuse import get_fused_params
 from utils.clip_grad import clip_grad_norm_
 from utils.misc import TrainLogger, set_logging_level
 from alphafold_paddle.model import config
-from alphafold_paddle.distributed import dap, bp
-from alphafold_paddle.distributed import dataparallel as ddp
-from alphafold_paddle.distributed.comm_group import scg
 from alphafold_paddle.data.utils import align_feat
+from ppfleetx.distributed.protein_folding import dap, bp, dp
+from ppfleetx.distributed.protein_folding.scg import scg
 
 
 MAX_EVAL_SIZE = int(os.environ.get('MAX_EVAL_SIZE', 1400))
@@ -61,15 +60,14 @@ def init_seed(seed):
 
 
 def init_distributed_env(args):
-    """ init ddp and dap distributed environment"""
     dp_rank = 0 # ID for current device in distributed data parallel collective communication group
     dp_nranks = 1 # The number of devices in distributed data parallel collective communication group
     if args.distributed:
         # init bp, dap, dp hybrid distributed environment
-        scg.init_group(bp_degree=args.bp_degree, dap_degree=args.dap_degree, dap_comm_sync=args.dap_comm_sync)
+        scg.init_process_group(parallel_degree=[('dp', None), ('dap', args.dap_degree), ('bp', args.bp_degree)])
 
-        dp_nranks = scg.get_dp_world_size()
-        dp_rank = scg.get_dp_rank_in_group() if dp_nranks > 1 else 0
+        dp_nranks = dp.get_world_size()
+        dp_rank = dp.get_rank_in_group() if dp_nranks > 1 else 0
 
         if args.bp_degree > 1 or args.dap_degree > 1:
             assert args.seed is not None, "BP and DAP should be set seed!"
@@ -285,11 +283,11 @@ def train(args, cur_step, model, train_data_gen, distill_data_gen, train_config,
     s3 = time_me()
     if args.distributed and cur_step % args.gradient_merge_k_steps == 0:
         # sync the gradient for branch parallel firstly
-        bp.grad_sync(optimizer._param_groups, scg.get_bp_group())
+        bp.grad_sync(optimizer._param_groups)
         # then sync the gradient for dap
-        dap.grad_sync(optimizer._param_groups, scg.get_dap_group())
+        dap.grad_sync(optimizer._param_groups)
         # finally sync the gradient for ddp
-        ddp.grad_sync(optimizer._param_groups, scg.get_dp_group())
+        dp.grad_sync(optimizer._param_groups)
 
     s4 = time_me()
     if cur_step % args.gradient_merge_k_steps == 0:
@@ -363,7 +361,7 @@ def main(args):
 
     if args.distributed:
         # broadcast param to other ranks when using distributed data parallel
-        ddp.param_sync(model, src_rank=0)
+        dp.param_sync(model, src_rank=0)
 
     if dist.get_rank() == 0:
         # print("model:", model)

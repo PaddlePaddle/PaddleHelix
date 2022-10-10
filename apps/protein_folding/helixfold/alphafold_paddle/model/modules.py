@@ -29,8 +29,8 @@ from alphafold_paddle.common import residue_constants
 from alphafold_paddle.model.utils import mask_mean, subbatch
 from alphafold_paddle.model import folding, lddt, quat_affine, all_atom
 from alphafold_paddle.model.utils import init_gate_linear, init_final_linear
-from alphafold_paddle.distributed import dap, bp
-from alphafold_paddle.distributed.comm_group import scg
+from ppfleetx.distributed.protein_folding import dap, bp
+from ppfleetx.distributed.protein_folding.scg import scg
 
 # Map head name in config to head name in model params
 Head_names = {
@@ -1340,7 +1340,7 @@ class EvoformerIteration(nn.Layer):
             residual = self.pair_transition_dropout(residual)
             pair_act = pair_act + residual
         else:
-            if scg.get_bp_world_size() > 1:
+            if bp.get_world_size() > 1:
 
                 # Note(GuoxiaWang): add zeros trigger the status of stop_gradient=False within recompute context.
                 pair_act = pair_act + paddle.zeros_like(pair_act)
@@ -1349,7 +1349,7 @@ class EvoformerIteration(nn.Layer):
                 if not pair_act.stop_gradient:
                     pair_act._register_grad_hook(bp.all_reduce)
 
-                if scg.get_bp_rank_in_group() == 0:
+                if bp.get_rank_in_group() == 0:
                     # [B, N_seq//dap_size, N_res, c_m]
                     
                     residual = self.msa_row_attention_with_pair_bias(
@@ -1393,7 +1393,7 @@ class EvoformerIteration(nn.Layer):
                     # [B, N_seq, N_res//dap_size, c_m] => [B, N_seq//dap_size, N_res, c_m]
                     msa_act = dap.col_to_row(msa_act)
 
-                if scg.get_bp_rank_in_group() == 1:
+                if bp.get_rank_in_group() == 1:
 
                     outer_product_mean = paddle.zeros_like(pair_act)
 
@@ -1733,7 +1733,7 @@ class EmbeddingsAndEvoformer(nn.Layer):
             'pair': pair_activations,
         }
 
-        if scg.get_bp_world_size() > 1:
+        if bp.get_world_size() > 1:
             extra_msa_stack_input['msa'] = bp.broadcast_grad_for_backward(extra_msa_stack_input['msa'], 0)
 
         # scatter if using dap, otherwise do nothing
@@ -1813,7 +1813,7 @@ class EmbeddingsAndEvoformer(nn.Layer):
             evoformer_masks['msa'] = paddle.concat(
                 [evoformer_masks['msa'], torsion_angle_mask], axis=1)
 
-        if scg.get_bp_world_size() > 1:
+        if bp.get_world_size() > 1:
             evoformer_input['msa'] = bp.broadcast_grad_for_backward(evoformer_input['msa'], 0)
 
         # scatter if using dap, otherwise do nothing
