@@ -395,7 +395,7 @@ CONFIG = ml_collections.ConfigDict({
             'zero_init': True,
             'fuse_attention': True,
             'use_dropout_nd': True,
-            'origin_evoformer_structure': False,
+            'outer_product_mean_position': 'origin', # 'origin' or 'middle', 'first', 'end'
         },
         'heads': {
             'distogram': {

@@ -20,7 +20,6 @@ chmod +x $LDDT_SCORE_BIN
 
 # disable C++ enisum, using python enisum
 export FLAGS_new_einsum=0
-export FLAGS_enable_eager_mode=0
 
 train_af2_single() {
     start_step=0

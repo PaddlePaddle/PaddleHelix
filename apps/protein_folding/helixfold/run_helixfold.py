@@ -36,6 +36,8 @@ from alphafold_paddle.data import pipeline, templates
 from alphafold_paddle.distributed import dataparallel as ddp
 from alphafold_paddle.data.utils import align_feat, unpad_prediction
 
+from utils.init_env import init_seed, init_distributed_env
+
 logging.basicConfig()
 logger = logging.getLogger(__file__)
 
@@ -45,30 +47,6 @@ RELAX_ENERGY_TOLERANCE = 2.39
 RELAX_STIFFNESS = 10.0
 RELAX_EXCLUDE_RESIDUES = []
 RELAX_MAX_OUTER_ITERATIONS = 20
-
-def init_seed(seed):
-    """ set seed for reproduct results"""
-    paddle.seed(seed)
-    np.random.seed(seed)
-    random.seed(seed)
-
-def init_distributed_env(args):
-    """ init ddp and dap distributed environment"""
-    dp_rank = 0 # ID for current device in distributed data parallel collective communication group
-    dp_nranks = 1 # The number of devices in distributed data parallel collective communication group
-    if args.distributed:
-        # init bp, dap, dp hybrid distributed environment
-        assert args.bp_degree > 1 or args.dap_degree > 1, f"distributed inference required args.bp_degree > 1 or args.dap_degree > 1, \
-            but got args.bp_degree: {args.bp_degree}, args.dap_degree: {args.dap_degree}"
-        scg.init_group(bp_degree=args.bp_degree, dap_degree=args.dap_degree, dap_comm_sync=args.dap_comm_sync)
-
-        dp_nranks = scg.get_dp_world_size()
-        dp_rank = scg.get_dp_rank_in_group() if dp_nranks > 1 else 0
-
-        if args.bp_degree > 1 or args.dap_degree > 1:
-            assert args.seed is not None, "BP and DAP should be set seed!"
-
-    return dp_rank, dp_nranks
 
 
 def predict_structure(
@@ -246,6 +224,8 @@ def main(args):
         if not model_params.exists():
             model_params = data_dir.joinpath('params', f'{params}.npz')
 
+        if args.bp_degree > 1 or args.dap_degree > 1:
+            model_config.model.global_config.dist_model = True
         model_runner = model.RunModel(model_name, model_config, model_params)
         model_runners[model_name] = model_runner
 

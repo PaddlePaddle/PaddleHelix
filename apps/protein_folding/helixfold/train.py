@@ -36,6 +36,7 @@ from utils.exponential_moving_average import ExponentialMovingAverage, EMA
 from utils.dataset import LoopedBatchSampler, AF2Dataset, AF2TestDataset, AF2DistillDataset
 from utils.param_fuse import get_fused_params
 from utils.clip_grad import clip_grad_norm_
+from utils.init_env import init_seed, init_distributed_env
 from utils.misc import TrainLogger, set_logging_level
 from alphafold_paddle.model import config
 from alphafold_paddle.data.utils import align_feat
@@ -50,29 +51,6 @@ print(f'[ENV] MAX_EVAL_SIZE:{MAX_EVAL_SIZE}')
 def time_me():
     # paddle.device.cuda.synchronize()
     return time.time()
-
-
-def init_seed(seed):
-    """ set seed for reproduct results"""
-    paddle.seed(seed)
-    np.random.seed(seed)
-    random.seed(seed)
-
-
-def init_distributed_env(args):
-    dp_rank = 0 # ID for current device in distributed data parallel collective communication group
-    dp_nranks = 1 # The number of devices in distributed data parallel collective communication group
-    if args.distributed:
-        # init bp, dap, dp hybrid distributed environment
-        scg.init_process_group(parallel_degree=[('dp', None), ('dap', args.dap_degree), ('bp', args.bp_degree)])
-
-        dp_nranks = dp.get_world_size()
-        dp_rank = dp.get_rank_in_group() if dp_nranks > 1 else 0
-
-        if args.bp_degree > 1 or args.dap_degree > 1:
-            assert args.seed is not None, "BP and DAP should be set seed!"
-
-    return dp_rank, dp_nranks
 
 def get_optimizer(opt_config, model):
     if opt_config.grad_clip == 0:
@@ -356,7 +334,10 @@ def main(args):
     
     ### create model
     model_config = config.model_config(args.model_name)
+    if args.bp_degree > 1 or args.dap_degree > 1:
+        model_config.model.global_config.dist_model = True
     # print(f'>>> model_config:\n{model_config}')
+
     model = RunModel(train_config, model_config)
 
     if args.distributed:
