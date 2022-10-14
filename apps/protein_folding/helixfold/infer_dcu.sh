@@ -90,7 +90,7 @@ OUTPUT_DIR="$root_path/output"
 distributed_args="--run_mode=collective --log_dir=${log_dir}"
 python -m paddle.distributed.launch ${distributed_args} \
   --ips="${allhost}" --gpus="0,1,2,3" \
-  run_paddlefold.py \
+  run_helixfold.py \
   --distributed \
   --dap_degree 4 \
   --fasta_paths=${fasta_file} \
