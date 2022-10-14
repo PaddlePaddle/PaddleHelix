@@ -4,7 +4,7 @@
 module rm compiler/rocm/2.9
 module load compiler/rocm/4.0.1
 module load apps/anaconda3/5.2.0
-source activate ~/conda-envs/paddle-liqi
+source activate ~/conda-envs/paddle_dcu
 
 allhost=$1
 demo=$2
