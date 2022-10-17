@@ -6,3 +6,4 @@
 
 * [DeepFRI](./DeepFRI/README.md)
 * [ProteinSIGN](./ProteinSIGN/README.md)
+* [PTHL](./PTHL/)
