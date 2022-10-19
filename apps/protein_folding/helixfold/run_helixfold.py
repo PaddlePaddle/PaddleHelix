@@ -31,9 +31,7 @@ from paddle import distributed as dist
 from alphafold_paddle.model import config
 from alphafold_paddle.model import model
 from alphafold_paddle.relax import relax
-from alphafold_paddle.distributed.comm_group import scg
 from alphafold_paddle.data import pipeline, templates
-from alphafold_paddle.distributed import dataparallel as ddp
 from alphafold_paddle.data.utils import align_feat, unpad_prediction
 
 from utils.init_env import init_seed, init_distributed_env
