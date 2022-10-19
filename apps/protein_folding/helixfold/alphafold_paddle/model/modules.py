@@ -1961,7 +1961,7 @@ class TriangleMultiplication(nn.Layer):
         right_gate_values = nn.functional.sigmoid(self.right_gate(act))
         
         left_proj_act = left_proj_act * left_gate_values
-        right_proj_act_before = right_proj_act * right_gate_values
+        right_proj_act = right_proj_act * right_gate_values
 
         # "Outgoing" edges equation: 'ikc,jkc->ijc'
         # "Incoming" edges equation: 'kjc,kic->ijc'
