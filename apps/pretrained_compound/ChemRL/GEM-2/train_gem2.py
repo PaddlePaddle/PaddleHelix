@@ -75,15 +75,13 @@ def get_optimizer(args, train_config, model):
     return optimizer, scheduler
 
 
-def get_train_steps_per_epoch(dataset_len):
-    if args.DEBUG:
-        return 20
-    # add as argument
-    min_data_len = paddle.to_tensor(dataset_len)
-    from paddle.distributed import ReduceOp
-    dist.all_reduce(min_data_len, ReduceOp.MIN)
-    dataset_len = min_data_len.numpy()[0]
-    logging.info(f'min dataset len: {dataset_len}')
+def get_train_steps_per_epoch(dataset_len, args):
+    if args.distributed:
+        min_data_len = paddle.to_tensor(dataset_len)
+        from paddle.distributed import ReduceOp
+        dist.all_reduce(min_data_len, ReduceOp.MIN)
+        dataset_len = min_data_len.numpy()[0]
+        logging.info(f'min dataset len: {dataset_len}')
     return int(dataset_len / args.batch_size) - 5
 
 
@@ -135,7 +133,10 @@ def load_data(args, trainer_id, trainer_num, model_config, dataset_config, trans
     if args.DEBUG:
         train_npz_files = train_npz_files[:16]
         valid_npz_files = valid_npz_files[:8]
-    train_dataset = InMemoryDataset(npz_data_files=train_npz_files[trainer_id::trainer_num])
+    if args.inference:
+        train_dataset = []
+    else:
+        train_dataset = InMemoryDataset(npz_data_files=train_npz_files[trainer_id::trainer_num])
     valid_dataset = InMemoryDataset(npz_data_files=valid_npz_files[trainer_id::trainer_num]) 
     if model_config.data.get('post_transform', False):
         logging.info('post transform')
@@ -284,6 +285,10 @@ def main(args):
     ema_start_step = 0 if args.DEBUG else 30
 
     optimizer, scheduler = get_optimizer(args, train_config, model)
+    if args.inference:
+        mean_mae = evaluate(args, 0, model, valid_dataset, collate_fn)
+        print(f"mean mae : {mean_mae}")
+        exit(0)
 
     ### start train
     data_writer = None
@@ -292,7 +297,7 @@ def main(args):
             data_writer = SummaryWriter(f'{args.log_dir}/tensorboard_log_dir', max_queue=0)
         except Exception as ex:
             print(f'Create data_writer failed: {ex}')
-    train_steps = get_train_steps_per_epoch(len(train_dataset))
+    train_steps = get_train_steps_per_epoch(len(train_dataset), args)
     print("train_steps per epoch : ", train_steps)
     mean_mae_list = []
     for _ in range(args.start_step):
@@ -301,6 +306,9 @@ def main(args):
         ## ema register
         if epoch_id >= ema_start_step and not ema.is_registered:
             ema.register()
+        
+        if epoch_id == 69:
+            model.encoder.reduce_dropout()
 
         ## train
         s_time = time.time()
@@ -362,6 +370,7 @@ if __name__ == '__main__':
     parser.add_argument("--model_config", type=str)
     parser.add_argument("--encoder_config", type=str)
     parser.add_argument("--train_config", type=str)
+    parser.add_argument("--inference", action='store_true', default=False)
     parser.add_argument("--init_model", type=str)
     parser.add_argument("--start_step", type=int)
     parser.add_argument("--model_dir", type=str, default="./debug_models")
