@@ -32,6 +32,15 @@ You can download the PCQM4Mv2 dataset from ogb website:
     
     https://dgl-data.s3-accelerate.amazonaws.com/dataset/OGB-LSC/pcqm4m-v2.zip
 
+# Processed Data
+You can download the processed PCQM4Mv2 dataset with rdkit generated 3d information from:
+    https://baidu-nlp.bj.bcebos.com/PaddleHelix/datasets/compound_datasets/pcqm4mv2_gem2.tgz
+And then use tar to unzip the data.
+```bash
+  mkdir -p ../data
+  tar xzf pcqm4mv2_gem2.tgz -C ../data
+```
+
 # How to run
 ## Introduction to related configs
 You can adjsut the json files in the config folder to  change the training settings.
@@ -57,6 +66,12 @@ You can adjsut the json files in the config folder to  change the training setti
 The models will be saved under `./model`.
 
 It will take around 60 mintues to finish one epoch on 16 A100 cards with total batch size of 512.
+
+## Run inference
+To reproduce the result from the ogb leaderboard, you can download the checkponit from:
+    https://baidu-nlp.bj.bcebos.com/PaddleHelix/models/molecular_modeling/gem2_l12_c256.pdparams
+Then put it under the local `./model` folder and run the inference command:
+    sh scripts/inference.sh
 
 
 ## Citing this work
