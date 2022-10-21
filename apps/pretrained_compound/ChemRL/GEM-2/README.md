@@ -1,7 +1,23 @@
 # GEM-2: Next Generation Molecular Property Prediction Network with Many-body and Full-range Interaction Modeling
-Molecular property prediction is a fundamental task in the drug and material industries. Physically, the properties of a molecule are determined by its own electronic structure, which can be exactly described by the Schrödinger equation. However, solving the Schrödinger equation for most molecules is extremely challenging due to long-range interactions in the behavior of a quantum many-body system. While deep learning methods have proven to be effective in molecular property prediction, we design a novel method, namely GEM-2, which comprehensively considers both the long-range and many-body interactions in molecules. GEM-2 consists of two interacted tracks: an atom-level track modeling both the local and global correlation between any two atoms, and a pair-level track modeling the correlation between all atom pairs, which embed information between any 3 or 4 atoms. Extensive experiments demonstrated the superiority of GEM-2 over multiple baseline methods in quantum chemistry and drug discovery tasks.
-
+GEM-2 is a molecular modeling framework which comprehensively considers full-range many-body interactions in molecules. Multiple tracks are utilized to model the full-range interactions between the many-bodies with different orders, and a novel axial attention mechanism is designed to approximate the full-range interaction modeling with much lower computational cost.
 A preprint version of our work can be found [here](https://arxiv.org/abs/2208.05863).
+
+# Framework
+<p align="center">
+<img src="../../../../.github/optimus_framework3.png" align="middle" heigh="70%" width="70%" />
+</p>
+
+The overall framework of GEM-2. First, a molecule is described by the representations of many-bodies of multiple orders. Then, Optimus blocks are designed to update the representations. Each Optimus block contains $M$ tracks, and the $m$-th track contains a stack of many-body axial attentions to model the full-range interactions between the $m$-bodies. The many-body axial attentions and the Low2High module also play the roles of exchanging messages across the tracks. Finally, the molecular property prediction is made by pooling over the $1$-body representations.
+# Result
+## PCQM4Mv2
+<p align="center">
+<img src="../../../../.github/pcqm4mv2_result.png" align="middle" heigh="70%" width="70%" />
+</p>
+
+## LITPCBA
+<p align="center">
+<img src="../../../../.github/LIT-PCBA_result.png" align="middle" heigh="70%" width="70%" />
+</p>
 
 # Installation guide
 ## Prerequisites
@@ -32,6 +48,15 @@ You can download the PCQM4Mv2 dataset from ogb website:
     
     https://dgl-data.s3-accelerate.amazonaws.com/dataset/OGB-LSC/pcqm4m-v2.zip
 
+# Processed Data
+You can download the processed PCQM4Mv2 dataset with rdkit generated 3d information from:
+    https://baidu-nlp.bj.bcebos.com/PaddleHelix/datasets/compound_datasets/pcqm4mv2_gem2.tgz
+And then use tar to unzip the data.
+```bash
+  mkdir -p ../data
+  tar xzf pcqm4mv2_gem2.tgz -C ../data
+```
+
 # How to run
 ## Introduction to related configs
 You can adjsut the json files in the config folder to  change the training settings.
@@ -57,6 +82,12 @@ You can adjsut the json files in the config folder to  change the training setti
 The models will be saved under `./model`.
 
 It will take around 60 mintues to finish one epoch on 16 A100 cards with total batch size of 512.
+
+## Run inference
+To reproduce the result from the ogb leaderboard, you can download the checkponit from:
+    https://baidu-nlp.bj.bcebos.com/PaddleHelix/models/molecular_modeling/gem2_l12_c256.pdparams
+Then put it under the local `./model` folder and run the inference command:
+    sh scripts/inference.sh
 
 
 ## Citing this work
