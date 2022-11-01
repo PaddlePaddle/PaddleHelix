@@ -122,10 +122,10 @@ class EmbeddingLayer(nn.Layer):
         return results
         
 
-class NodeAttention(nn.Layer):
+class FirstBodyAxialAttention(nn.Layer):
     """Compute self-attention over columns of a 2D input."""
     def __init__(self, model_config, global_config):
-        super(NodeAttention, self).__init__()
+        super(FirstBodyAxialAttention, self).__init__()
         self.model_config = model_config
 
         node_channel = global_config.node_channel
@@ -253,9 +253,9 @@ class FeedForwardNetwork(nn.Layer):
         return x
 
 
-class OuterProductMean(nn.Layer):
+class Low2HighModule(nn.Layer):
     def __init__(self, model_config, global_config):
-        super(OuterProductMean, self).__init__()
+        super(Low2HighModule, self).__init__()
         node_channel = global_config.node_channel
         pair_channel = global_config.pair_channel
         inner_channel = model_config.inner_channel
@@ -285,9 +285,9 @@ class OuterProductMean(nn.Layer):
         return act
 
 
-class TriangleAttentionWithAngle(nn.Layer):
+class SecondBodyAxialAttentionWithAngle(nn.Layer):
     def __init__(self, model_config, global_config):
-        super(TriangleAttentionWithAngle, self).__init__()
+        super(SecondBodyAxialAttentionWithAngle, self).__init__()
         pair_channel = global_config.pair_channel
         triple_channel = global_config.triple_channel
         self.num_head = model_config.num_head
@@ -342,9 +342,9 @@ class TriangleAttentionWithAngle(nn.Layer):
         return out
 
 
-class TriangleAttentionWithAngleBias(nn.Layer):
+class SecondBodyAxialAttentionWithAngleBias(nn.Layer):
     def __init__(self, model_config, global_config):
-        super(TriangleAttentionWithAngleBias, self).__init__()
+        super(SecondBodyAxialAttentionWithAngleBias, self).__init__()
         pair_channel = global_config.pair_channel
         triple_channel = global_config.triple_channel
         self.num_head = model_config.num_head
@@ -395,15 +395,15 @@ class TriangleAttentionWithAngleBias(nn.Layer):
         return out
 
 
-class TriangleAttention(nn.Layer):
+class SecondBodyAxialAttention(nn.Layer):
     def __init__(self, model_config, global_config):
-        super(TriangleAttention, self).__init__()
+        super(SecondBodyAxialAttention, self).__init__()
         self.is_start = model_config.is_start
 
         if model_config.get('angle_as_bias', False):
-            self.attn_mod = TriangleAttentionWithAngleBias(model_config, global_config)
+            self.attn_mod = SecondBodyAxialAttentionWithAngleBias(model_config, global_config)
         else:
-            self.attn_mod = TriangleAttentionWithAngle(model_config, global_config)
+            self.attn_mod = SecondBodyAxialAttentionWithAngle(model_config, global_config)
     
     def forward(self, pair_acts, triple_acts, triple_mask):
         """
@@ -431,29 +431,29 @@ class OptimusBlock(nn.Layer):
         pair_channel = global_config.pair_channel
         
         ### node track
-        self.node_attn = NodeAttention(
-                model_config.node_attention, global_config)
-        self.node_attn_dropout = nn.Dropout(model_config.node_dropout_rate)
+        self.first_body_axial_attention = FirstBodyAxialAttention(
+                model_config.first_body_axial_attention, global_config)
+        self.first_body_axial_attention_dropout = nn.Dropout(model_config.first_body_axial_attention_dropout)
 
         self.node_ffn = FeedForwardNetwork(
                 model_config.node_ffn, node_channel)
-        self.node_ffn_dropout = nn.Dropout(model_config.node_dropout_rate)
+        self.node_ffn_dropout = nn.Dropout(model_config.first_body_axial_attention_dropout)
 
-        ### outer
-        self.outer_product = OuterProductMean(
-                model_config.outer_product, global_config)
-        self.outer_product_dropout = nn.Dropout(model_config.pair_dropout_rate)
+        ### low2high
+        self.low2high = Low2HighModule(
+                model_config.low2high, global_config)
+        self.low2high_dropout = nn.Dropout(model_config.pair_dropout_rate)
 
         ### pair track
         self.pair_before_ln = nn.LayerNorm(pair_channel)
 
-        self.triangle_attn_start = TriangleAttention(
-                model_config.triangle_attention_start_node, global_config)
-        self.triangle_attn_start_dropout = nn.Dropout(model_config.pair_dropout_rate)
+        self.second_body_first_axis = SecondBodyAxialAttention(
+                model_config.second_body_first_axis, global_config)
+        self.second_body_first_axis_dropout = nn.Dropout(model_config.pair_dropout_rate)
 
-        self.triangle_attn_end = TriangleAttention(
-                model_config.triangle_attention_end_node, global_config)
-        self.triangle_attn_end_dropout = nn.Dropout(model_config.pair_dropout_rate)
+        self.second_body_second_axis = SecondBodyAxialAttention(
+                model_config.second_body_second_axis, global_config)
+        self.second_body_second_axis_dropout = nn.Dropout(model_config.pair_dropout_rate)
 
         self.pair_ffn = FeedForwardNetwork(
                 model_config.pair_ffn, pair_channel)
@@ -476,24 +476,24 @@ class OptimusBlock(nn.Layer):
         triple_mask = mask_dict['triple']
 
         # node track
-        residual = self.node_attn(node_acts, pair_acts, node_mask, pair_mask)
-        node_acts += self.node_attn_dropout(residual)
+        residual = self.first_body_axial_attention(node_acts, pair_acts, node_mask, pair_mask)
+        node_acts += self.first_body_axial_attention_dropout(residual)
 
         residual = self.node_ffn(node_acts)
         node_acts += self.node_ffn_dropout(residual)
 
         # outer
-        outer = self.outer_product(node_acts, node_mask)
-        pair_acts += self.outer_product_dropout(outer)
+        outer = self.low2high(node_acts, node_mask)
+        pair_acts += self.low2high_dropout(outer)
 
         # pair track
         pair_acts = self.pair_before_ln(pair_acts)
 
-        residual = self.triangle_attn_start(pair_acts, triple_acts, triple_mask)
-        pair_acts += self.triangle_attn_start_dropout(residual)
+        residual = self.second_body_first_axis(pair_acts, triple_acts, triple_mask)
+        pair_acts += self.second_body_first_axis_dropout(residual)
 
-        residual = self.triangle_attn_end(pair_acts, triple_acts, triple_mask)
-        pair_acts += self.triangle_attn_end_dropout(residual)
+        residual = self.second_body_second_axis(pair_acts, triple_acts, triple_mask)
+        pair_acts += self.second_body_second_axis_dropout(residual)
 
         residual = self.pair_ffn(pair_acts)
         pair_acts += self.pair_ffn_dropout(residual)
@@ -534,6 +534,15 @@ class Optimus(nn.Layer):
         elif isinstance(layer, nn.LayerNorm):
             layer._epsilon = 1e-12
     
+    def reduce_dropout(self):
+        """
+        setting the model's dropout rate to 0
+        """
+        def reduce_p(layer):
+            if isinstance(layer, nn.Dropout):
+                layer.p = 0
+        self.apply(reduce_p)
+
     def _create_mask(self, batch):
         node_mask = batch["node_mask"]  # (B, N)
 

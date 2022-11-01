@@ -84,9 +84,9 @@ OPTIMUS_MODEL_CONFIG = ml_collections.ConfigDict({
 
     "optimus_block_num": 12,
     "optimus_block": {
-        "node_dropout_rate": 0.05,
+        "first_body_axial_attention_dropout": 0.05,
         "pair_dropout_rate": 0.05,
-        "node_attention": {
+        "first_body_axial_attention": {
             "use_pair_layer_norm": True,
             "num_head": 8,
             "dropout_rate": 0.05,
@@ -96,15 +96,15 @@ OPTIMUS_MODEL_CONFIG = ml_collections.ConfigDict({
             "hidden_factor": 4,
             "dropout_rate": 0.1
         },
-        "outer_product": {
+        "low2high": {
             "inner_channel": 32
         },
-        "triangle_attention_start_node": {
+        "second_body_first_axis": {
             "num_head": 8,
             "dropout_rate": 0.05,
             "is_start": True
         },
-        "triangle_attention_end_node": {
+        "second_body_second_axis": {
             "num_head": 8,
             "dropout_rate": 0.05,
             "is_start": False
