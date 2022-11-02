@@ -65,6 +65,8 @@ def init_distributed_env(args):
         dp_nranks = scg.get_dp_world_size()
         dp_rank = scg.get_dp_rank_in_group() if dp_nranks > 1 else 0
 
+        print(f"bp_degree: {args.bp_degree}, dap_degree: {args.dap_degree}")
+
         if args.bp_degree > 1 or args.dap_degree > 1:
             assert args.seed is not None, "BP and DAP should be set seed!"
 
@@ -91,6 +93,7 @@ def predict_structure(
     feature_dict = None
     features_npz = output_dir.joinpath('features.npz')
     features_pkl = output_dir.joinpath('features.pkl')
+    print(f"features_pkl: {features_pkl}")
     if features_npz.exists():
         logger.info('Use cached features.npz')
         feature_dict = np.load(features_npz, allow_pickle=True)

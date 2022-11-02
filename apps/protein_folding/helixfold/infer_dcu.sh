@@ -4,7 +4,7 @@
 module rm compiler/rocm/2.9
 module load compiler/rocm/4.0.1
 module load apps/anaconda3/5.2.0
-source activate ~/conda-envs/paddle_dcu
+source activate ~/conda-envs/paddle_20221102
 
 allhost=$1
 demo=$2
@@ -84,18 +84,14 @@ root_path="$(pwd)"
 export PYTHONPATH=$root_path:$PYTHONPATH
 
 DATA_DIR="$root_path/data"
-fasta_file="$DATA_DIR/${demo}.fasta"
-OUTPUT_DIR="$root_path/output"
+fasta_file="$root_path/demo_data/casp14_demo/fasta/${demo}.fasta"
+OUTPUT_DIR="$root_path/demo_data/casp14_demo/output"
 
-distributed_args="--run_mode=collective --log_dir=${log_dir}"
-python -m paddle.distributed.launch ${distributed_args} \
-  --ips="${allhost}" --gpus="0,1,2,3" \
-  run_helixfold.py \
-  --distributed \
-  --dap_degree 4 \
+HIP_VISIBLE_DEVICES=0 python run_helixfold.py \
   --fasta_paths=${fasta_file} \
   --data_dir=${DATA_DIR} \
   --bfd_database_path=${DATA_DIR}/bfd/bfd_metaclust_clu_complete_id30_c90_final_seq.sorted_opt \
+  --small_bfd_database_path=${DATA_DIR}/small_bfd/bfd-first_non_consensus_sequences.fasta \
   --uniclust30_database_path=${DATA_DIR}/uniclust30/uniclust30_2018_08/uniclust30_2018_08 \
   --uniref90_database_path=${DATA_DIR}/uniref90/uniref90.fasta \
   --mgnify_database_path=${DATA_DIR}/mgnify/mgy_clusters_2018_12.fa \
@@ -105,7 +101,9 @@ python -m paddle.distributed.launch ${distributed_args} \
   --max_template_date=2020-05-14 \
   --model_names=model_5 \
   --output_dir=${OUTPUT_DIR} \
-  --preset='full_dbs' \
-  --random_seed=0
+  --disable_amber_relax \
+  --preset='reduced_dbs' \
+  --random_seed=0 \
+  --seed=2022
 
 echo "done"

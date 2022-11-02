@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -o job_out/job.%j.out
+#SBATCH -o job.%j.out
 #SBATCH -J helixfold_dcu
 #SBATCH -p normal
 #SBATCH --cpus-per-task=32
