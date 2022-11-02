@@ -23,7 +23,7 @@ Note: If you have a different version of python3 and cuda, please refer to [here
 In order to run scripts with DAP/BP/DP-DAP-BP mode, you also need to install `ppfleetx`. Please refer to [here](https://github.com/PaddlePaddle/PaddleFleetX/tree/develop/ppfleetx/models/protein_folding) for more details.
 ```bash
 git clone https://github.com/PaddlePaddle/PaddleFleetX.git
-git checkout release/2.4          # change to develop branch
+git checkout release/2.4          # change branch
 python setup.py develop       	  # install ppfleetx
 ```
 
@@ -45,7 +45,7 @@ mkdir tools && mv lddt tm_score tools && chmod +x ./tools/lddt && chmod +x ./too
 After installing all the above required dependencies and downloading the demo dataset, you can have a try by running `gpu_train.sh`. We provide multiple training modes in one script, which includes intial training and finetune modes on `single node, single GPU`, `single node, multiple GPUs` and `multiple nodes, multiple GPUs`. Note that you need to set `PADDLE_NNODES=number of devices` and `PADDLE_MASTER="xxx.xxx.xxx.xxx:port"` according to your network environment. The details of each parameter are included in the script `gpu_train.sh`.
 
 ```bash
-sh gpu_train.sh [demo_initial_N1C1, demo_finetune_N1C1, demo_initial_N1C8, demo_finetune_N1C8, demo_initial_N8C64, demo_finetune_N8C64, demo_initial_N8C64_dp16_bp2_dap2, demo_initial_N8C64_dp32_bp1_dap2]
+sh gpu_train.sh [demo_initial_N1C1, demo_finetune_N1C1, demo_initial_N1C8, demo_finetune_N1C8, demo_initial_N8C64, demo_finetune_N8C64, demo_initial_N8C64_dp16_bp2_dap2, demo_initial_N8C64_dp32_bp1_dap2, demo_initial_N8C64_dp32_bp2_dap1]
 ```
 
 Following are few examples:
@@ -73,4 +73,9 @@ sh gpu_train.sh demo_initial_N8C64_dp16_bp2_dap2
 5. Train on 8 nodes with 64 GPUs, BP=1, DAP=2 in initial training mode:
 ```bash
 sh gpu_train.sh demo_initial_N8C64_dp32_bp1_dap2
+```
+
+6. Train on 8 nodes with 64 GPUs, BP=2, DAP=1 in initial training mode:
+```bash
+sh gpu_train.sh demo_initial_N8C64_dp32_bp2_dap1
 ```
