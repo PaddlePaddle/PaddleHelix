@@ -15,8 +15,8 @@ Note: If you have a different version of python3 and cuda, please refer to [here
 In order to run scripts with DAP/BP/DP-DAP-BP mode, you also need to install `ppfleetx`. Please refer to [here](https://github.com/PaddlePaddle/PaddleFleetX/tree/develop/ppfleetx/models/protein_folding) for more details.
 ```bash
 git clone https://github.com/PaddlePaddle/PaddleFleetX.git
-git checkout develop          # change to develop branch
-python setup.py develop       # install ppfleetx
+git checkout release/2.4          # change to develop branch
+python setup.py develop           # install ppfleetx
 ```
 
 ## Usage

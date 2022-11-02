@@ -220,3 +220,44 @@ mkdir -p debug_log debug_models
         train_af2_distributed
     fi
 }
+
+### Initial Training_N8C64_dp16_bp2_dap2
+{
+    if [[ "$exp_name" == "demo_initial_N8C64_dp16_bp2_dap2" ]]; then
+        export PADDLE_NNODES=8 # set number of devices
+        export PADDLE_MASTER="xxx.xxx.xxx.xxx:port" # set PADDLE_MASTER="xxx.xxx.xxx.xxx:port" according to your network environment
+
+        batch_size=1
+        dap_degree=2
+        bp_degree=2
+        train_config="./train_configs/demo.json"
+        data_config="./data_configs/demo.json"
+        model_name="initial"
+        # init_model="$root_path/data/af2_pd_params/model_5.pdparams"
+        precision="bf16"
+        log_step="--log_step=20"
+        eval_step="--eval_step=1000"
+        save_step="--save_step=1000"
+        train_af2_distributed
+    fi
+}
+
+# Initial Training_N8C64_dp32_bp2_dap1
+{
+    if [[ "$exp_name" == "demo_initial_N8C64_dp32_bp1_dap2" ]]; then
+        export PADDLE_NNODES=8 # set number of devices
+        export PADDLE_MASTER="xxx.xxx.xxx.xxx:port" # set PADDLE_MASTER="xxx.xxx.xxx.xxx:port" according to your network environment
+
+        batch_size=1
+        dap_degree=2
+        bp_degree=1
+        train_config="./train_configs/demo.json"
+        data_config="./data_configs/demo.json"
+        model_name="initial"
+        precision="bf16"
+        log_step="--log_step=20"
+        eval_step="--eval_step=1000"
+        save_step="--save_step=1000"
+        train_af2_distributed
+    fi
+}
