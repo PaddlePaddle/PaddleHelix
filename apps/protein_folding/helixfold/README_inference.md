@@ -4,13 +4,20 @@
 HelixFold depends on [PaddlePaddle](https://github.com/paddlepaddle/paddle).
 Python dependencies available through `pip` is provided in `requirements.txt`. HelixFold also depends on `openmm==7.5.1` and `pdbfixer`, which are only available via `conda`. For producing multiple sequence alignments, `kalign`, the [HH-suite](https://github.com/soedinglab/hh-suite) and `jackhmmer` are also needed. The download scripts require `aria2c`.
 
-We provide a script `setup_env` that setup a `conda` environment and installs all dependencies. Run:
-```
-wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/HelixFold/paddlepaddle_gpu-0.0.0-cp37-cp37m-linux_x86_64.whl
+We provide a script `setup_env` that setup a `conda` environment and installs all dependencies. You can change the name of the environment and CUDA version in `setup_env`. Run:
+```bash
+wget https://paddle-wheel.bj.bcebos.com/develop/linux/linux-gpu-cuda11.2-cudnn8-mkl-gcc8.2-avx/paddlepaddle_gpu-0.0.0.post112-cp37-cp37m-linux_x86_64.whl
 sh setup_env
 conda activate helixfold # activate the conda environment
 ```
-You can change the name of the environment and CUDA version in `setup_env`.
+Note: If you have a different version of python3 and cuda, please refer to [here](https://www.paddlepaddle.org.cn/whl/linux/gpu/develop.html) for the compatible PaddlePaddle `dev` package.
+
+In order to run scripts with DAP/BP/DP-DAP-BP mode, you also need to install `ppfleetx`. Please refer to [here](https://github.com/PaddlePaddle/PaddleFleetX/tree/develop/ppfleetx/models/protein_folding) for more details.
+```bash
+git clone https://github.com/PaddlePaddle/PaddleFleetX.git
+git checkout develop          # change to develop branch
+python setup.py develop       # install ppfleetx
+```
 
 ## Usage
 
@@ -38,32 +45,72 @@ You can use a script `scripts/download_all_data.sh`, which is the same as the or
 ### Running HelixFold for Inference
 
 To run inference on a sequence or multiple sequences using a set of DeepMind's pretrained parameters, run e.g.:
-```
-fasta_file="target.fasta" # path to the target protein
-model_name="model_1" # the alphafold model name
-DATA_DIR="data" # path to the databases
-OUTPUT_DIR="helixfold_output" # path to save the outputs
 
-python3 run_helixfold.py \
-  --fasta_paths=${fasta_file} \
-  --data_dir=${DATA_DIR} \
-  --small_bfd_database_path=${DATA_DIR}/small_bfd/bfd-first_non_consensus_sequences.fasta \
-  --uniref90_database_path=${DATA_DIR}/uniref90/uniref90.fasta \
-  --mgnify_database_path=${DATA_DIR}/mgnify/mgy_clusters_2018_12.fa \
-  --pdb70_database_path=${DATA_DIR}/pdb70/pdb70 \
-  --template_mmcif_dir=${DATA_DIR}/pdb_mmcif/mmcif_files \
-  --obsolete_pdbs_path=${DATA_DIR}/pdb_mmcif/obsolete.dat \
-  --max_template_date=2020-05-14 \
-  --model_names=${model_name} \
-  --output_dir=${OUTPUT_DIR} \
-  --preset='reduced_dbs' \
-  --jackhmmer_binary_path /opt/conda/envs/helixfold/bin/jackhmmer \
-  --hhblits_binary_path /opt/conda/envs/helixfold/bin/hhblits \
-  --hhsearch_binary_path /opt/conda/envs/helixfold/bin/hhsearch \
-  --kalign_binary_path /opt/conda/envs/helixfold/bin/kalign \
-  --random_seed=0
-```
-You can use `python3 run_helixfold.py -h` to find the description of the arguments.
+*   Inference on single GPU (DP):
+    ```bash
+    fasta_file="target.fasta"       # path to the target protein
+    model_name="model_5"            # the alphafold model name
+    DATA_DIR="data"                 # path to the databases
+    OUTPUT_DIR="helixfold_output"   # path to save the outputs
+
+    python run_helixfold.py \
+      --fasta_paths=${fasta_file} \
+      --data_dir=${DATA_DIR} \
+      --bfd_database_path=${DATA_DIR}/bfd/bfd_metaclust_clu_complete_id30_c90_final_seq.sorted_opt \
+      --small_bfd_database_path=${DATA_DIR}/small_bfd/bfd-first_non_consensus_sequences.fasta \
+      --uniclust30_database_path=${DATA_DIR}/uniclust30/uniclust30_2018_08/uniclust30_2018_08 \
+      --uniref90_database_path=${DATA_DIR}/uniref90/uniref90.fasta \
+      --mgnify_database_path=${DATA_DIR}/mgnify/mgy_clusters_2018_12.fa \
+      --pdb70_database_path=${DATA_DIR}/pdb70/pdb70 \
+      --template_mmcif_dir=${DATA_DIR}/pdb_mmcif/mmcif_files \
+      --obsolete_pdbs_path=${DATA_DIR}/pdb_mmcif/obsolete.dat \
+      --max_template_date=2020-05-14 \
+      --model_names=${model_name} \
+      --output_dir=${OUTPUT_DIR} \
+      --preset='reduced_dbs' \
+      --jackhmmer_binary_path /opt/conda/envs/helixfold/bin/jackhmmer \
+      --hhblits_binary_path /opt/conda/envs/helixfold/bin/hhblits \
+      --hhsearch_binary_path /opt/conda/envs/helixfold/bin/hhsearch \
+      --kalign_binary_path /opt/conda/envs/helixfold/bin/kalign \
+      --random_seed=0
+    ```
+
+*   Inference on multiple GPUs (DAP):
+    ```bash
+    fasta_file="target.fasta"       # path to the target protein
+    model_name="model_5"            # the alphafold model name
+    DATA_DIR="data"                 # path to the databases
+    OUTPUT_DIR="helixfold_output"   # path to save the outputs
+    log_dir="demo_log"              # path to log file
+
+    distributed_args="--run_mode=collective --log_dir=${log_dir}"
+    python -m paddle.distributed.launch ${distributed_args} \
+      --gpus="0,1,2,3,4,5,6,7" \
+      run_helixfold.py \
+      --distributed \
+      --dap_degree 8 \
+      --fasta_paths=${fasta_file} \
+      --data_dir=${DATA_DIR} \
+      --bfd_database_path=${DATA_DIR}/bfd/bfd_metaclust_clu_complete_id30_c90_final_seq.sorted_opt \
+      --small_bfd_database_path=${DATA_DIR}/small_bfd/bfd-first_non_consensus_sequences.fasta \
+      --uniclust30_database_path=${DATA_DIR}/uniclust30/uniclust30_2018_08/uniclust30_2018_08 \
+      --uniref90_database_path=${DATA_DIR}/uniref90/uniref90.fasta \
+      --mgnify_database_path=${DATA_DIR}/mgnify/mgy_clusters_2018_12.fa \
+      --pdb70_database_path=${DATA_DIR}/pdb70/pdb70 \
+      --template_mmcif_dir=${DATA_DIR}/pdb_mmcif/mmcif_files \
+      --obsolete_pdbs_path=${DATA_DIR}/pdb_mmcif/obsolete.dat \
+      --max_template_date=2020-05-14 \
+      --model_names=${model_name} \
+      --output_dir=${OUTPUT_DIR} \
+      --preset='reduced_dbs' \
+      --seed 2022 \
+      --jackhmmer_binary_path /opt/conda/envs/helixfold/bin/jackhmmer \
+      --hhblits_binary_path /opt/conda/envs/helixfold/bin/hhblits \
+      --hhsearch_binary_path /opt/conda/envs/helixfold/bin/hhsearch \
+      --kalign_binary_path /opt/conda/envs/helixfold/bin/kalign \
+      --random_seed=0
+    ```
+You can use `python run_helixfold.py -h` to find the description of the arguments.
 
 We retain the same outputs as AlphaFold. We copy the AlphaFold's descriptions here. 
 
@@ -139,9 +186,9 @@ when using for tasks such as molecular replacement).
 
 ### Running HelixFold for CASP14 Demo
 
-For convenience, we also provide a demo for some CASP14 proteins under folder `demo_data/casp14_demo`. To run them, you just need to execute following command:
+For convenience, we also provide a demo script `gpu_infer.sh` for some CASP14 proteins under folder `demo_data/casp14_demo`. To run them, you just need to execute following command:
 
-```sh
+```bash
 sh gpu_infer.sh T1026
 ```
 

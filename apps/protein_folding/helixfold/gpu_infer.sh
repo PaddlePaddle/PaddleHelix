@@ -11,6 +11,7 @@ export FLAGS_use_cuda_managed_memory=true
 DATA_DIR="/root/paddlejob/workspace/env_run/alphafold_data"
 fasta_file="$root_path/demo_data/casp14_demo/fasta/${demo}.fasta"
 OUTPUT_DIR="$root_path/demo_data/casp14_demo/output"
+log_dir="$root_path/demo_data/casp14_demo/demo_log"
 MODELS="model_1,model_5"
 USE_DAP=false
 
@@ -35,6 +36,8 @@ if [ $USE_DAP == true ]; then
           --max_template_date=2020-05-14 \
           --model_names=${MODELS} \
           --output_dir=${OUTPUT_DIR} \
+          --disable_amber_relax \
+          --seed 2022 \
           --preset='reduced_dbs' \
           --random_seed=0 \
           ${@:2}
@@ -54,6 +57,7 @@ else
           --max_template_date=2020-05-14 \
           --model_names=${MODELS} \
           --output_dir=${OUTPUT_DIR} \
+          --disable_amber_relax \
           --preset='reduced_dbs' \
           --random_seed=0 \
           ${@:2}

@@ -46,4 +46,11 @@ If you use the code or data in this repos, please cite:
   journal={arXiv preprint arXiv:2207.05477},
   year={2022}
 }
+
+@article{wang2022efficient_alphafold2,
+  title={Efficient AlphaFold2 Training using Parallel Evoformer and Branch Parallelism},
+  author={Wang, Guoxia and Wu, Zhihua and Fang, Xiaomin and Xiang, Yingfei and Liu, Yiqun and Yu, Dianhai and Ma, Yanjun},
+  journal={arXiv preprint arXiv:2211.00235},
+  year={2022}
+}
 ```
