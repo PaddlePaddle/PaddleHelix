@@ -20,7 +20,7 @@ conda activate helixfold # activate the conda environment
 ```
 Note: If you have a different version of python3 and cuda, please refer to [here](https://www.paddlepaddle.org.cn/whl/linux/gpu/develop.html) for the compatible PaddlePaddle `dev` package.
 
-In order to run scripts with DAP/BP/DP-DAP-BP mode, you also need to install `ppfleetx`. Please refer to [here](https://github.com/PaddlePaddle/PaddleFleetX/tree/develop/ppfleetx/models/protein_folding) for more details.
+In order to run scripts with DAP/BP/DP-DAP-BP mode, you also need to install `ppfleetx`. Please refer to [here](https://github.com/PaddlePaddle/PaddleFleetX/tree/release/2.4/projects/protein_folding) for more details.
 ```bash
 git clone https://github.com/PaddlePaddle/PaddleFleetX.git
 git checkout release/2.4          # change branch
@@ -50,32 +50,36 @@ sh gpu_train.sh [demo_initial_N1C1, demo_finetune_N1C1, demo_initial_N1C8, demo_
 
 Following are few examples:
 
-1. Train on a single node with 1 GPU in initial training mode:
+**DP mode**
+
+* Train on a single node with 1 GPU in initial training mode:
 ```bash
 sh gpu_train.sh demo_initial_N1C1
 ```
 
-2. Train on a single node with 8 GPUs in finetune mode:
+* Train on a single node with 8 GPUs in finetune mode:
 ```bash
 sh gpu_train.sh demo_finetune_N1C8
 ```
 
-3. Train on 8 nodes with 64 GPUs in initial training mode:
+* Train on 8 nodes with 64 GPUs in initial training mode:
 ```bash
 sh gpu_train.sh demo_initial_N8C64
 ```
 
-4. Train on 8 nodes with 64 GPUs, BP=2, DAP=2 in initial training mode:
+**DAP/BP/DP-DAP-BP mode**
+
+* Train on 8 nodes with 64 GPUs, BP=2, DAP=2 in initial training mode:
 ```bash
 sh gpu_train.sh demo_initial_N8C64_dp16_bp2_dap2
 ```
 
-5. Train on 8 nodes with 64 GPUs, BP=1, DAP=2 in initial training mode:
+* Train on 8 nodes with 64 GPUs, BP=1, DAP=2 in initial training mode:
 ```bash
 sh gpu_train.sh demo_initial_N8C64_dp32_bp1_dap2
 ```
 
-6. Train on 8 nodes with 64 GPUs, BP=2, DAP=1 in initial training mode:
+* Train on 8 nodes with 64 GPUs, BP=2, DAP=1 in initial training mode:
 ```bash
 sh gpu_train.sh demo_initial_N8C64_dp32_bp2_dap1
 ```
