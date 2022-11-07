@@ -12,6 +12,8 @@ English | [简体中文](README_cn.md)
 
 
 ## Latest News
+`2022.08.11` PaddleHelix released the codes of HelixGEM-2, a novel Molecular Property Prediction Network that models full-range many-body interactions. And it ranked 1st in the OGB [PCQM4Mv2](https://ogb.stanford.edu/docs/lsc/leaderboards/) leaderboard. Please refer to [paper](https://arxiv.org/abs/2208.05863) and [codes](./apps/pretrained_compound/ChemRL/GEM-2) for more details.
+
 `2022.07.29` PaddleHelix released the codes of HelixFold-Single, an **MSA-free** protein structure prediction pipeline relying on only the primary sequences, which can **predict the protein structures within seconds**. Please refer to [paper](https://arxiv.org/abs/2207.13921) and [codes](./apps/protein_folding/helixfold-single) for more details. Welcome to [PaddleHelix website](https://paddlehelix.baidu.com/app/drug/protein-single/forecast
 ) to try out the structure prediction online service.
 
