@@ -6,3 +6,4 @@ We provide the following protein function prediction methods.
 
 * [DeepFRI](./DeepFRI/README.md)
 * [ProteinSIGN](./ProteinSIGN/README.md)
+* [PTHL](./PTHL/)
