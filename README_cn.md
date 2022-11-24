@@ -10,6 +10,8 @@
 ![support os](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
 
 ## 最新消息
+`2022.08.11` 螺旋桨团队开源了HelixGEM-2的代码, 它是一个全新的基于长程多体建模的小分子属性预测框架，并在OGB [PCQM4Mv2](https://ogb.stanford.edu/docs/lsc/leaderboards/) 排行榜取得第一的成绩。详情参见 [论文](https://arxiv.org/abs/2208.05863) 和 [代码](./apps/pretrained_compound/ChemRL/GEM-2)。
+
 `2022.07.29` 螺旋桨团队开源了HelixFold-Single的代码，HelixFold-Single是一个**不依赖于MSA的**蛋白质结构预测流程，仅仅需要一级序列作为输入就可以提供**秒级别的蛋白质结构预测**。详情参见[论文](https://arxiv.org/abs/2207.13921)和[代码](./apps/protein_folding/helixfold-single)。欢迎到[PaddleHelix网站](https://paddlehelix.baidu.com/app/drug/protein-single/forecast
 )去试用结构预测的在线服务。
 
