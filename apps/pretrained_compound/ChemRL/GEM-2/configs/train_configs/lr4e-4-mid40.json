@@ -1,5 +1,0 @@
-{
-    "lr": 4e-4,
-    "warmup_step": 10,
-    "mid_step": 40
-}

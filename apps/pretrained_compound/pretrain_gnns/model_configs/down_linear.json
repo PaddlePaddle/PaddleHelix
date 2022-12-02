@@ -1,6 +1,0 @@
-{
-    "layer_num": 1,
-    "dropout_rate": 0.2,
-    "act": "relu",
-    "hidden_size": 256
-}

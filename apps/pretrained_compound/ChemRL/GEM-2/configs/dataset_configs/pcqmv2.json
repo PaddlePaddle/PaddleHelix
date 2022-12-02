@@ -1,5 +1,0 @@
-{
-    "data_dir": "../data/pcqm4m-v2",
-    "load_sdf": false,
-    "task_names": ["homolumogap"]
-}
