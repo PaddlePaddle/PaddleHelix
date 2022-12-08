@@ -90,9 +90,4 @@ def clip_grad_norm_(parameters, clip_norm, auto_skip_clip=False):
             clip_input = (clip_var.astype('float16')
                           if g.dtype == paddle.float16 else
                           clip_var)
-            paddle.fluid.framework._dygraph_tracer().trace_op(
-                type="elementwise_mul",
-                inputs={'X': g,
-                        'Y': clip_input},
-                outputs={'Out': g},
-                attrs={'axis': -1})
+            g.detach().scale_(clip_input)

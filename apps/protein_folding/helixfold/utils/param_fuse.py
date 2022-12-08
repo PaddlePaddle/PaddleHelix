@@ -17,6 +17,7 @@ fuse parameters helper functions
 
 from collections import OrderedDict, defaultdict
 
+import os
 import copy
 import contextlib
 from enum import Enum
@@ -24,7 +25,12 @@ import numpy as np
 import paddle
 import paddle.fluid
 from paddle.fluid import core, unique_name
-from paddle.fluid.framework import ParamBase
+from paddle.fluid.framework import in_dygraph_mode
+
+if in_dygraph_mode():
+    from paddle.fluid.framework import EagerParamBase
+else:
+    from paddle.fluid.framework import ParamBase
 
 alignment = {"gpu": 256, }
 align = {
@@ -33,8 +39,11 @@ align = {
     paddle.float32: 4,
 }
 
+
 def check_dtype(dtype):
-    assert dtype in [paddle.float32, paddle.float16, paddle.bfloat16], f"It does not supported dtype {dtype}"
+    assert dtype in [paddle.float32, paddle.float16, paddle.bfloat16
+                     ], f"It does not supported dtype {dtype}"
+
 
 @contextlib.contextmanager
 def device_guard(dev_id=0, device="cpu"):
@@ -47,6 +56,7 @@ def device_guard(dev_id=0, device="cpu"):
         yield
     finally:
         paddle.set_device(origin_device)
+
 
 class ParamStorage(object):
     """
@@ -72,7 +82,10 @@ class ParamStorage(object):
             else:
                 value = np.zeros(size, dtype=np.float32)
 
-            self.buffer = core.VarBase(value=value, place=core.CPUPlace())
+            if in_dygraph_mode():
+                self.buffer = core.eager.Tensor(value=value, place=core.CPUPlace())
+            else:
+                self.buffer = core.VarBase(value=value, place=core.CPUPlace())
         else:
             self.buffer = paddle.zeros(size, dtype=dtype)
 
@@ -93,8 +106,8 @@ class ParamStorage(object):
                 dev_id) if device == "gpu" else self.buffer.cpu()
             for param in self._params:
                 param.clear_gradient(False)
-                param._gradient_set_empty(False)
-            self.buffer.value().get_tensor()._clear()
+
+            del self.buffer
             self.buffer = tmp_buffer
             self._device = device
 
@@ -160,14 +173,27 @@ class ParamStorage(object):
         dev_id = 0 if paddle.get_device() == "cpu" else int(paddle.get_device()
                                                             .split(":")[1])
         with device_guard(dev_id, "cpu"):
-            tmp_var = core.VarBase(tensor=self.buffer._slice(self._fill,
-                                                             var_end))
-            if convert_gpu:
-                param_cpu = param.cpu()
-                param.value().get_tensor()._clear()
-                tmp_var.set_value(param_cpu)
+            if in_dygraph_mode():
+                tmp_var = self.buffer._slice(self._fill, var_end)
+
+                if convert_gpu:
+                    param_cpu = param.cpu()
+                    param._clear_data()
+                    tmp_var.set_value(param_cpu)
+                else:
+                    tmp_var.set_value(param)
+                del tmp_var
+
             else:
-                tmp_var.set_value(param)
+                tmp_var = core.VarBase(
+                    tensor=self.buffer._slice(self._fill, var_end))
+                tmp_var.value().get_tensor()._set_dims(param.shape)
+                if convert_gpu:
+                    param_cpu = param.cpu()
+                    param.value().get_tensor()._clear()
+                    tmp_var.set_value(param_cpu)
+                else:
+                    tmp_var.set_value(param)
 
         self._fill = offset
         return p_shape
@@ -180,9 +206,16 @@ class ParamStorage(object):
         assert offset <= np.prod(self.buffer.shape)
 
         # Convert the param value
-        tmp_tensor = self.buffer._slice(self._fill, var_end)
-        param.value().get_tensor()._share_data_with(tmp_tensor)
-        param.value().get_tensor()._set_dims(p_shape)
+        if in_dygraph_mode():
+            dev_id = 0 if paddle.get_device() == "cpu" else int(paddle.get_device().split(":")[1])
+            with device_guard(dev_id, self._device):
+                tmp_tensor = self.buffer._slice(self._fill, var_end)
+                tmp_tensor._share_buffer_to(param)
+                param.get_tensor()._set_dims(p_shape)
+        else:
+            tmp_tensor = self.buffer._slice(self._fill, var_end)
+            param.value().get_tensor()._share_data_with(tmp_tensor)
+            param.value().get_tensor()._set_dims(p_shape)
 
         self._fill = offset
 
@@ -197,6 +230,7 @@ class ParamStorage(object):
         self._fill = 0
         for p in self._params:
             self._convert_buffer(p, p.shape, self.param2align[p.name])  # modify
+
 
 class GradStorage(object):
     """
@@ -230,8 +264,10 @@ class GradStorage(object):
                 value = np.zeros(size, dtype=np.uint16)
             else:
                 value = np.zeros(size, dtype=np.float32)
-
-            self.buffer = core.VarBase(value=value, place=core.CPUPlace())
+            if in_dygraph_mode():
+                self.buffer = core.eager.Tensor(value=value, place=core.CPUPlace())
+            else:
+                self.buffer = core.VarBase(value=value, place=core.CPUPlace())
         else:
             self.buffer = paddle.zeros(size, dtype=dtype)
 
@@ -280,8 +316,7 @@ class GradStorage(object):
                 dev_id) if device == "gpu" else self.buffer.cpu()
             for param in self._params:
                 param.clear_gradient(False)
-                param._gradient_set_empty(False)
-            self.buffer.value().get_tensor()._clear()
+            del self.buffer
             self.buffer = tmp_buffer
             self._device = device
 
@@ -315,7 +350,6 @@ class GradStorage(object):
             for p in self._params:
                 if p.grad is not None:
                     p.clear_gradient(False)
-                    p._gradient_set_empty(False)
 
             self.buffer = None
             self._fill = 0
@@ -360,14 +394,34 @@ class GradStorage(object):
         # Copy the current grad value to InternalStorage
         dev_id = 0 if paddle.get_device() == "cpu" else int(paddle.get_device()
                                                             .split(":")[1])
-        if self._device == "cpu":
-            with device_guard(dev_id, self._device):
-                tmp_var = core.VarBase(self.buffer._slice(self._fill, grad_end))
-                param._copy_gradient_from(tmp_var)
 
-        elif self._device == "gpu":
-            tmp_var = core.VarBase(self.buffer._slice(self._fill, grad_end))
-            param._copy_gradient_from(tmp_var)
+        if in_dygraph_mode():
+            with device_guard(dev_id, self._device):
+                tmp_var = self.buffer._slice(self._fill, grad_end)
+                tmp_var.get_tensor()._set_dims(param.shape)
+                param._copy_gradient_from(tmp_var)
+                del tmp_var
+        else:
+            if self._device == "cpu":
+                with device_guard(dev_id, self._device):
+                    if in_dygraph_mode():
+                        tmp_var = core.eager.Tensor(
+                            self.buffer._slice(self._fill, grad_end))
+                        tmp_var.get_tensor()._set_dims(param.shape)
+                    else:
+                        tmp_var = core.VarBase(self.buffer._slice(self._fill, grad_end))
+                        tmp_var.value().get_tensor()._set_dims(param.shape)
+                    param._copy_gradient_from(tmp_var)
+
+            elif self._device == "gpu":
+                if in_dygraph_mode():
+                    tmp_var = core.eager.Tensor(
+                        self.buffer._slice(self._fill, grad_end))
+                    tmp_var.get_tensor()._set_dims(param.shape)
+                else:
+                    tmp_var = core.VarBase(self.buffer._slice(self._fill, grad_end))
+                    tmp_var.value().get_tensor()._set_dims(param.shape)
+                param._copy_gradient_from(tmp_var)
 
         self._fill = offset
 
@@ -377,8 +431,12 @@ def assign_group_by_size(parameters, group_size=256 * 1024 * 1024):
     assign group by size
     """
     is_sparse_gradient = [False] * len(parameters)
-    group_indices = core.assign_group_by_size(parameters, is_sparse_gradient,
-                                              [group_size, group_size])
+    if in_dygraph_mode():
+        group_indices = core.eager_assign_group_by_size(
+            parameters, is_sparse_gradient, [group_size, group_size])
+    else:
+        group_indices = core.assign_group_by_size(
+            parameters, is_sparse_gradient, [group_size, group_size])
     var_groups = OrderedDict()
     for group_idx, indices in enumerate(group_indices):
         for index in indices:
@@ -422,10 +480,16 @@ def flatten_dense_tensors(parameters):
     for param in parameters:
         grad_storage.add_grad(param, _param2align[param.name])
 
-    fused_param = ParamBase(
-        shape=param_storage.buffer.shape,
-        dtype=dtype,
-        name=unique_name.generate('fused_param'))
+    if in_dygraph_mode():
+        fused_param = EagerParamBase(
+            shape=param_storage.buffer.shape,
+            dtype=dtype,
+            name=unique_name.generate('fused_param'))
+    else:
+        fused_param = ParamBase(
+            shape=param_storage.buffer.shape,
+            dtype=dtype,
+            name=unique_name.generate('fused_param'))
     param_storage.buffer._share_buffer_to(fused_param)
     fused_param._copy_gradient_from(grad_storage.buffer)
     fused_param.__dict__.update(state)

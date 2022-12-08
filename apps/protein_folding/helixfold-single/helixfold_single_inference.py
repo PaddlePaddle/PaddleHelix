@@ -113,7 +113,7 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--init_model", type=str, help='tape + af2 stacked model')
+    parser.add_argument("--init_model", type=str, help='path to pretrained model')
     parser.add_argument("--fasta_file", type=str, help='path to fasta file to be predicted')
     parser.add_argument("--output_dir", type=str, help='path to prediction outputs')
     args = parser.parse_args()

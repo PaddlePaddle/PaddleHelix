@@ -63,7 +63,7 @@ def training(model, training_loader, optim):
         optim.clear_grad()
         loss.backward()
         optim.step()
-        res_loss = loss.numpy()[0]
+        res_loss = float(loss.numpy())
     return res_loss
 
 

@@ -22,16 +22,16 @@ import paddle
 import paddle.distributed as dist
 
 from alphafold_paddle.common import protein
-from alphafold_paddle.distributed import dataparallel as dp
 from utils.utils import tree_map, tree_flatten, tree_filter
+from ppfleetx.distributed.protein_folding import dp
 
 
 def dist_all_reduce(x, return_num=False, distributed=False):
     x_num = len(x)
     x_sum = 0 if x_num == 0 else np.sum(x)
     if distributed:
-        x_num = dp.all_reduce(paddle.to_tensor(x_num, dtype='int64')).numpy()[0]
-        x_sum = dp.all_reduce(paddle.to_tensor(x_sum, dtype='float32')).numpy()[0]
+        x_num = int(dp.all_reduce(paddle.to_tensor(x_num, dtype='int64')))
+        x_sum = float(dp.all_reduce(paddle.to_tensor(x_sum, dtype='float32')))
     x_mean = 0 if x_num == 0 else x_sum / x_num
     if return_num:
         return x_mean, x_num

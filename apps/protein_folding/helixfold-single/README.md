@@ -16,8 +16,7 @@ To reproduce the results reported in our paper, specific environment settings ar
 
 ## Installation
 Except those listed in the `requirements.txt`, PaddlePaddle `dev` package is required to run HelixFold.
-Visit [here](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/develop/install/pip/linux-pip.html) to 
-install PaddlePaddle `dev`. Also, we provide a package here if your machine environment is Nvidia A100 with
+Visit [here](https://www.paddlepaddle.org.cn/install/quick?docurl=/documentation/docs/zh/develop/install/pip/linux-pip.html) to install PaddlePaddle `dev`. Also, we provide a package here if your machine environment is Nvidia A100 with
 cuda=11.2.
 
 ```bash
@@ -45,6 +44,7 @@ python helixfold_single_inference.py \
 
 - `init_model`: the trained model.
 - `fasta_file`: the fasta_file file which contains the protein sequence to be predicted.
+- `output_dir`: the path to the output.
 
 The output is organized as：
 

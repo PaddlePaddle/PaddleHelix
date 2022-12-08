@@ -534,6 +534,15 @@ class Optimus(nn.Layer):
         elif isinstance(layer, nn.LayerNorm):
             layer._epsilon = 1e-12
     
+    def reduce_dropout(self):
+        """
+        setting the model's dropout rate to 0
+        """
+        def reduce_p(layer):
+            if isinstance(layer, nn.Dropout):
+                layer.p = 0
+        self.apply(reduce_p)
+
     def _create_mask(self, batch):
         node_mask = batch["node_mask"]  # (B, N)
 

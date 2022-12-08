@@ -80,7 +80,7 @@ def get_train_steps_per_epoch(dataset_len, args):
         min_data_len = paddle.to_tensor(dataset_len)
         from paddle.distributed import ReduceOp
         dist.all_reduce(min_data_len, ReduceOp.MIN)
-        dataset_len = min_data_len.numpy()[0]
+        dataset_len = int(min_data_len)
         logging.info(f'min dataset len: {dataset_len}')
     return int(dataset_len / args.batch_size) - 5
 
@@ -228,24 +228,6 @@ def evaluate(args, epoch_id, model, test_dataset, collate_fn):
     return mean_mae
 
 
-def adjust_dropout(model_config, encoder_config, last_ck_path):
-    """
-    adjust the dropout rate of the model to achieve better performance
-    """
-    encoder_config.init_dropout_rate = 0
-    encoder_config.optimus_block.first_body_axial_attention_dropout = 0
-    encoder_config.optimus_block.pair_dropout_rate = 0
-    encoder_config.optimus_block.first_body_axial_attention.dropout_rate = 0
-    encoder_config.optimus_block.node_ffn.dropout_rate = 0
-    encoder_config.optimus_block.second_body_first_axis.dropout_rate = 0
-    encoder_config.optimus_block.second_body_second_axis.dropout_rate = 0
-    encoder_config.optimus_block.pair_ffn.dropout_rate = 0
-    model = MolRegressionModel(model_config, encoder_config)
-    model.set_state_dict(paddle.load(last_ck_path))
-    print('Load state_dict from %s' % last_ck_path)
-    return model
-
-
 def main(args):
     """
     Call the configuration function of the model, build the model and load data, then start training.
@@ -326,7 +308,7 @@ def main(args):
             ema.register()
         
         if epoch_id == 69:
-            model = adjust_dropout(model_config, encoder_config, f'./{args.model_dir}/epoch_{epoch_id - 1}.pdparams')
+            model.encoder.reduce_dropout()
 
         ## train
         s_time = time.time()

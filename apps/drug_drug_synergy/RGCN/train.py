@@ -87,7 +87,7 @@ def train(num_subgraph, graph, label_idx, epochs, sub_neighbours=[10, 10], init=
                 fpr, tpr, _ = roc_curve(y_true=ground_truth, y_score=pred_prob)
                 auc_v = auc(fpr, tpr)
                 print("sub_graph index : {} | epoch: {} | training loss: {:.4f} | AUC: {:.3f}".format(
-                sub_g, epoch, train_loss.numpy()[0], auc_v))
+                sub_g, epoch, float(train_loss), auc_v))
                 
     return model
 
