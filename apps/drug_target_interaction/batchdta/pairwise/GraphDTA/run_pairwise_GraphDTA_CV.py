@@ -195,9 +195,9 @@ def model_eval(model,val_dataloader,device):
                 i_data = i_data.to(device)                    
                 pred_scores = model.forward_single(i_data)
                 # get the predicted labels
-                i_target_pred_scores.append(pred_scores.cpu().numpy()[0])              
+                i_target_pred_scores.append(float(pred_scores))              
                 # get the true labels
-                i_target_y_label.append(i_data.y.cpu().numpy()[0])
+                i_target_y_label.append(float(i_data.y.cpu()))
 
             i_target_pred_scores = np.array(i_target_pred_scores)
             i_target_y_label = np.array(i_target_y_label)

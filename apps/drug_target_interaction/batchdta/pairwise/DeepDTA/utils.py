@@ -312,7 +312,7 @@ def model_eval(model,val_dataloader):
         
         for i_target_score in range(batch_smiles.shape[0]):
             
-            i_target_len = int(batch_len[i_target_score].numpy()[0])
+            i_target_len = int(batch_len[i_target_score])
             smiles = batch_smiles[i_target_score][0:i_target_len]
             target = batch_protein[i_target_score][0:i_target_len]
             y_label = batch_y[i_target_score][0:i_target_len].numpy()

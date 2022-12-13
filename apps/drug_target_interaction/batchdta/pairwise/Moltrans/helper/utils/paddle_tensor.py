@@ -32,7 +32,7 @@ def item(self):
     """
     Item function
     """
-    return self.numpy()[0]
+    return float(self)
 
 
 @add_tensor_function

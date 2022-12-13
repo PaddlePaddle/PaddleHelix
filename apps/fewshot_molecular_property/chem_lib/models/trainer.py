@@ -294,7 +294,7 @@ class Meta_Trainer(nn.Layer):
             losses_eval.backward()
             self.optimizer.step()
 
-            print('Train Epoch:',self.train_epoch,', train update step:', k, ', loss_eval:', losses_eval.numpy()[0])
+            print('Train Epoch:',self.train_epoch,', train update step:', k, ', loss_eval:', float(losses_eval))
 
         return self.model.layers
         

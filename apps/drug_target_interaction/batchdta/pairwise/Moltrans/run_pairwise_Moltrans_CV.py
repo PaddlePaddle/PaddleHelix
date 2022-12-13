@@ -297,7 +297,7 @@ def model_eval(model,val_dataloader,len_SMILES,len_target):
 
         for i_target_score in range(batch_x.shape[0]):
             
-            i_target_len = int(batch_len[i_target_score].numpy()[0])
+            i_target_len = int(batch_len[i_target_score])
             smiles = batch_x_smiles[i_target_score][0:i_target_len]
             target = batch_x_protein[i_target_score][0:i_target_len]
             smiles_mask = batch_x_smiles_mask[i_target_score][0:i_target_len]
