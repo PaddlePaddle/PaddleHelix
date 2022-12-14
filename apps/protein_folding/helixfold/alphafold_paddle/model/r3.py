@@ -428,10 +428,6 @@ def broadcast_shape(x_shape, y_shape):
 
 def rots_mul_rots(a: Rots, b: Rots) -> Rots:
     """Composition of rotations 'a' and 'b'."""
-    # c0 = rots_mul_vecs(a, Vecs(b.xx, b.yx, b.zx))
-    # c1 = rots_mul_vecs(a, Vecs(b.xy, b.yy, b.zy))
-    # c2 = rots_mul_vecs(a, Vecs(b.xz, b.yz, b.zz))
-    # return Rots(c0.x, c1.x, c2.x, c0.y, c1.y, c2.y, c0.z, c1.z, c2.z)
     a_rot = a.rotation
     b_rot = b.rotation
     if a.shape == b.shape:
@@ -453,9 +449,6 @@ def rots_mul_rots(a: Rots, b: Rots) -> Rots:
 
 def rots_mul_vecs(m: Rots, v: Vecs) -> Vecs:
     """Apply rotations 'm' to vectors 'v'."""
-    # return Vecs(m.xx * v.x + m.xy * v.y + m.xz * v.z,
-    #             m.yx * v.x + m.yy * v.y + m.yz * v.z,
-    #             m.zx * v.x + m.zy * v.y + m.zz * v.z)
     m_rot = m.rotation
     v_trans = v.translation
     if m_rot.shape[:-2] == v_trans.shape[:-1]:
@@ -499,7 +492,6 @@ def vecs_from_tensor(x: paddle.Tensor  # shape (..., 3)
                     ) -> Vecs:  # shape (...)
     """Converts from tensor of shape (3,) to Vecs."""
     assert x.shape[-1] == 3
-    #return Vecs(x[..., 0], x[..., 1], x[..., 2])
     return Vecs(x)
 
 
