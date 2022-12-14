@@ -432,8 +432,10 @@ def rots_mul_rots(a: Rots, b: Rots) -> Rots:
     # c1 = rots_mul_vecs(a, Vecs(b.xy, b.yy, b.zy))
     # c2 = rots_mul_vecs(a, Vecs(b.xz, b.yz, b.zz))
     # return Rots(c0.x, c1.x, c2.x, c0.y, c1.y, c2.y, c0.z, c1.z, c2.z)
-    if a.shape == b.shape:$
-        return Rots(paddle.matmul(a.rotation, b.rotation))
+    a_rot = a.rotation
+    b_rot = b.rotation
+    if a.shape == b.shape:
+        return Rots(paddle.matmul(a_rot, b_rot))
     else:
         out_shape = broadcast_shape(a_rot.shape, b_rot.shape)
         zeros = paddle.zeros(shape=out_shape, dtype=a_rot.dtype)
