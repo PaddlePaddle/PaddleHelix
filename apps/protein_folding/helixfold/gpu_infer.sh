@@ -34,6 +34,7 @@ if [ $USE_DAP == true ]; then
           --obsolete_pdbs_path=${DATA_DIR}/pdb_mmcif/obsolete.dat \
           --max_template_date=2020-05-14 \
           --model_names=${MODELS} \
+          --seed=2022 \
           --output_dir=${OUTPUT_DIR} \
           --preset='reduced_dbs' \
           --random_seed=0 \
@@ -53,6 +54,7 @@ else
           --obsolete_pdbs_path=${DATA_DIR}/pdb_mmcif/obsolete.dat \
           --max_template_date=2020-05-14 \
           --model_names=${MODELS} \
+          --seed=2022 \
           --output_dir=${OUTPUT_DIR} \
           --preset='reduced_dbs' \
           --random_seed=0 \
