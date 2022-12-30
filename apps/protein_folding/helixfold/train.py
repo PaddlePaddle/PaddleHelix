@@ -164,6 +164,7 @@ def eval(args, model, eval_dataset, compute_loss, cache_dir=None):
         s1 = time_me()
         if args.dap_degree > 1:
             batch['feat'] = align_feat(batch['feat'], args.dap_degree)
+            batch['label'] = align_label(batch['label'], args.dap_degree)
         
         res = model(batch, compute_loss=compute_loss)
         if compute_loss:
@@ -171,9 +172,6 @@ def eval(args, model, eval_dataset, compute_loss, cache_dir=None):
         else:
             results, loss = res, np.zeros([1])
         s2 = time_me()
-
-        if args.dap_degree > 1:
-            batch['label'] = align_label(batch['label'], args.dap_degree)
 
         extra_dict = {'loss': np.array(loss)[0], 'data_time': s1 - s0, 'train_time': s2 - s1}
         res_collect.add(batch, results, extra_dict)
