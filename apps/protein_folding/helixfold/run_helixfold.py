@@ -111,7 +111,7 @@ def predict_structure(
 
         processed_feature_dict = model_runner.preprocess(
             feature_dict, random_seed, input_features_pkl)
-        if not has_cache and dp_rank == 0:
+        if not has_cache and dap_rank == 0 and bp_rank == 0:
             timings[f'process_features_{model_name}'] = time.time() - t0
 
         if args.distributed and args.dap_degree > 1:
@@ -124,13 +124,13 @@ def predict_structure(
             ensemble_representations=True,
             return_representations=True)
 
-        if args.distributed and dp_rank == 0 and args.dap_degree > 1:
+        if args.distributed and dap_rank == 0 and bp_rank == 0 and args.dap_degree > 1:
             prediction = unpad_prediction(feature_dict, prediction)
 
         print('########## prediction shape ##########')
         model.print_shape(prediction)
 
-        if dp_rank == 0:
+        if dap_rank == 0 and bp_rank == 0:
             timings[f'predict_{model_name}'] = time.time() - t0
 
             aatype = feature_dict['aatype'].argmax(axis=-1)
@@ -140,7 +140,7 @@ def predict_structure(
                 output_dir, 0, timings)
             plddts[model_name] = np.mean(prediction['plddt'])
 
-    if dp_rank == 0:
+    if dap_rank == 0 and bp_rank == 0:
         # Rank by pLDDT and write out relaxed PDBs in rank order.
         ranked_order = []
         for idx, (model_name, _) in enumerate(
