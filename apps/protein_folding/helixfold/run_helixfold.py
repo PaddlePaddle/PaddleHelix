@@ -124,7 +124,7 @@ def predict_structure(
             ensemble_representations=True,
             return_representations=True)
 
-        if args.distributed and dap_rank == 0 and bp_rank == 0 and args.dap_degree > 1:
+        if args.distributed and args.dap_degree > 1:
             prediction = unpad_prediction(feature_dict, prediction)
 
         print('########## prediction shape ##########')
