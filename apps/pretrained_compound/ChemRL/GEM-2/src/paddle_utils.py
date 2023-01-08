@@ -37,8 +37,8 @@ def dist_mean(array, distributed=False):
     n = len(array)
     x_sum = 0 if n == 0 else np.sum(array)
     if distributed:
-        n = dist_all_reduce(paddle.to_tensor(n, dtype='int64')).numpy()[0]
-        x_sum = dist_all_reduce(paddle.to_tensor(x_sum, dtype='float32')).numpy()[0]
+        n = int(dist_all_reduce(paddle.to_tensor(n, dtype='int64')))
+        x_sum = float(dist_all_reduce(paddle.to_tensor(x_sum, dtype='float32')))
     x_mean = 0 if n == 0 else x_sum / n
     return x_mean
 
@@ -47,14 +47,14 @@ def dist_sum(array, distributed=False):
     n = len(array)
     x_sum = 0 if n == 0 else np.sum(array)
     if distributed:
-        x_sum = dist_all_reduce(paddle.to_tensor(x_sum, dtype='float32')).numpy()[0]
+        x_sum = float(dist_all_reduce(paddle.to_tensor(x_sum, dtype='float32')))
     return x_sum
 
 
 def dist_length(array, distributed=False):
     n = len(array)
     if distributed:
-        n = dist_all_reduce(paddle.to_tensor(n, dtype='int64')).numpy()[0]
+        n = int(dist_all_reduce(paddle.to_tensor(n, dtype='int64')))
     return n
 
 

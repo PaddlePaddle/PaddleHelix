@@ -80,7 +80,7 @@ def get_train_steps_per_epoch(dataset_len, args):
         min_data_len = paddle.to_tensor(dataset_len)
         from paddle.distributed import ReduceOp
         dist.all_reduce(min_data_len, ReduceOp.MIN)
-        dataset_len = min_data_len.numpy()[0]
+        dataset_len = int(min_data_len)
         logging.info(f'min dataset len: {dataset_len}')
     return int(dataset_len / args.batch_size) - 5
 

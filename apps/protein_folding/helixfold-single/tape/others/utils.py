@@ -48,8 +48,8 @@ def dist_all_reduce(x, return_num=False, distributed=False):
     n = len(x)
     x_sum = 0 if n == 0 else np.sum(x)
     if distributed:
-        n = dist.all_reduce(paddle.to_tensor(n, dtype='int64')).numpy()[0]
-        x_sum = dist.all_reduce(paddle.to_tensor(x_sum, dtype='float32')).numpy()[0]
+        n = int(dist.all_reduce(paddle.to_tensor(n, dtype='int64')))
+        x_sum = float(dist.all_reduce(paddle.to_tensor(x_sum, dtype='float32')))
     x_mean = 0 if n == 0 else x_sum / n
     if return_num:
         return x_mean, n
@@ -62,8 +62,8 @@ def dist_mean(x, distributed=False):
     n = len(x)
     x_sum = 0 if n == 0 else np.sum(x)
     if distributed:
-        n = dist.all_reduce(paddle.to_tensor(n, dtype='int64')).numpy()[0]
-        x_sum = dist.all_reduce(paddle.to_tensor(x_sum, dtype='float32')).numpy()[0]
+        n = int(dist.all_reduce(paddle.to_tensor(n, dtype='int64')))
+        x_sum = float(dist.all_reduce(paddle.to_tensor(x_sum, dtype='float32')))
     x_mean = 0 if n == 0 else x_sum / n
     return x_mean
 
@@ -73,7 +73,7 @@ def dist_sum(x, distributed=False):
     n = len(x)
     x_sum = 0 if n == 0 else np.sum(x)
     if distributed:
-        x_sum = dist.all_reduce(paddle.to_tensor(x_sum, dtype='float32')).numpy()[0]
+        x_sum = float(dist.all_reduce(paddle.to_tensor(x_sum, dtype='float32')))
     return x_sum
 
 
@@ -81,7 +81,7 @@ def dist_length(x, distributed=False):
     """tbd"""
     n = len(x)
     if distributed:
-        n = dist.all_reduce(paddle.to_tensor(n, dtype='int64')).numpy()[0]
+        n = int(dist.all_reduce(paddle.to_tensor(n, dtype='int64')))
     return n
 
 

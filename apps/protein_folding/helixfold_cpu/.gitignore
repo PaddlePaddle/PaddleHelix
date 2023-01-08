@@ -1,0 +1,10 @@
+**/*pyc
+**/__pycache__
+*/*/__pycache__
+*/*/*/__pycache__
+*/*/*/scripts
+paddlecloud*
+internal*
+*/internal*
+.DS_Store
+*/.DS_Store

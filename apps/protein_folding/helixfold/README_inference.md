@@ -6,7 +6,7 @@ Python dependencies available through `pip` is provided in `requirements.txt`. H
 
 We provide a script `setup_env` that setup a `conda` environment and installs all dependencies. You can change the name of the environment and CUDA version in `setup_env`. Run:
 ```bash
-wget https://paddle-wheel.bj.bcebos.com/develop/linux/linux-gpu-cuda11.2-cudnn8-mkl-gcc8.2-avx/paddlepaddle_gpu-0.0.0.post112-cp37-cp37m-linux_x86_64.whl
+wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/HelixFold/paddlepaddle_gpu-2.4.1-cp37-cp37m-linux_x86_64.whl
 sh setup_env
 conda activate helixfold # activate the conda environment
 ```

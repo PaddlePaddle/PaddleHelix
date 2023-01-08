@@ -122,9 +122,9 @@ def _train_epoch(model, data_loader, epoch, kl_weight, optimizer=None):
             optimizer.clear_grad()
         
         # Log
-        kl_loss_values.append(kl_loss.numpy()[0])
-        perplexity_loss_values.append(perplexity.numpy()[0])
-        loss_values.append(loss.numpy()[0])
+        kl_loss_values.append(float(kl_loss))
+        perplexity_loss_values.append(float(perplexity))
+        loss_values.append(float(loss))
         lr = (optimizer.get_lr()
                   if optimizer is not None
                   else 0)
