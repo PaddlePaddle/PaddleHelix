@@ -5,7 +5,8 @@ root_path="$(pwd)"
 demo=$1
 
 export PYTHONPATH=$root_path:$PYTHONPATH
-export FLAGS_use_cuda_managed_memory=true
+
+
 
 #DATA_DIR="$root_path/data"
 DATA_DIR="/root/paddlejob/workspace/env_run/alphafold_data"
@@ -13,7 +14,13 @@ fasta_file="$root_path/demo_data/casp14_demo/fasta/${demo}.fasta"
 OUTPUT_DIR="$root_path/demo_data/casp14_demo/output"
 log_dir="$root_path/demo_data/casp14_demo/demo_log"
 MODELS="model_1,model_5"
+
+# enable dap or unified memory for EXTREMELY LONG SEQUENCE PROTEIN
 USE_DAP=false
+#export FLAGS_use_cuda_managed_memory=true
+
+# 'fp32' or 'bf16'
+PRECISION='bf16'
 
 if [ $USE_DAP == true ]; then
 
@@ -40,6 +47,7 @@ if [ $USE_DAP == true ]; then
           --seed 2022 \
           --preset='reduced_dbs' \
           --random_seed=0 \
+          --precision=${PRECISION} \
           ${@:2}
 else
 

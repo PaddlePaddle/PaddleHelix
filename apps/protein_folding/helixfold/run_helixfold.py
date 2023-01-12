@@ -36,6 +36,7 @@ from alphafold_paddle.data.utils import align_feat, unpad_prediction
 
 from utils.init_env import init_seed, init_distributed_env
 from ppfleetx.distributed.protein_folding import dp, dap, bp
+from utils.utils import get_bf16_op_list
 
 logging.basicConfig()
 logger = logging.getLogger(__file__)
@@ -49,8 +50,6 @@ RELAX_MAX_OUTER_ITERATIONS = 20
 
 
 def predict_structure(
-        dp_rank: int,
-        dp_nranks: int,
         fasta_path: str,
         fasta_name: str,
         output_dir_base: str,
@@ -118,11 +117,24 @@ def predict_structure(
             processed_feature_dict = align_feat(
                 processed_feature_dict, args.dap_degree)
 
+        def _forward_with_precision(processed_feature_dict):
+            if args.precision == "bf16":
+                black_list, white_list = get_bf16_op_list()
+                with paddle.amp.auto_cast(level='O1', custom_white_list=white_list, custom_black_list=black_list, dtype='bfloat16'):
+                    return model_runner.predict(
+                                processed_feature_dict,
+                                ensemble_representations=True,
+                                return_representations=True)
+            elif args.precision == "fp32":
+                return model_runner.predict(
+                                processed_feature_dict,
+                                ensemble_representations=True,
+                                return_representations=True)
+            else:
+                raise ValueError("Please choose precision from bf16 and fp32! ")
+
         t0 = time.time()
-        prediction = model_runner.predict(
-            processed_feature_dict,
-            ensemble_representations=True,
-            return_representations=True)
+        prediction = _forward_with_precision(processed_feature_dict)
 
         if args.distributed and args.dap_degree > 1:
             prediction = unpad_prediction(feature_dict, prediction)
@@ -338,7 +350,7 @@ if __name__ == '__main__':
     parser.add_argument('--random_seed', type=int,
                         help='The random seed for the data pipeline. '
                         'By default, this is randomly generated.')
-
+    parser.add_argument("--precision", type=str, choices=['fp32', 'bf16'], default='fp32')
     parser.add_argument('--distributed',
                         action='store_true', default=False,
                         help='Whether to use distributed DAP inference')

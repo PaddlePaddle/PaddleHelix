@@ -19,6 +19,14 @@ from os.path import basename
 import numpy as np
 import paddle
 
+def get_bf16_op_list():
+    """tbd."""
+
+    black_list = {"reduce_sum"}
+    white_list = {"concat", "elementwise_add", "elementwise_div", "elementwise_mul", "elementwise_sub", "fill_any_like", "fill_constant", "gather", "gaussian_random",
+        "softmax", "layer_norm", "log_softmax", "matmul_v2", "p_norm", "py_layer", "relu", "scale", "sigmoid", "slice", "softplus", "split", "sqrt", "square", "stack",
+        "sum", "transpose2", "fused_gate_attention", "dropout_nd"}
+    return black_list, white_list
 
 def get_model_parameter_size(model):
     """tbd"""
