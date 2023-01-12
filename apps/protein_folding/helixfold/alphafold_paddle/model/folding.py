@@ -848,7 +848,8 @@ def supervised_chi_loss(ret, batch, value, config):
     num_res = sequence_mask.shape[1]
     batch_size = sequence_mask.shape[0]
     chi_mask = batch['chi_mask']
-    pred_angles = paddle.reshape(value['sidechains']['angles_sin_cos'], [batch_size, -1, num_res, 7, 2])
+    pred_angles = paddle.reshape(value['sidechains']['angles_sin_cos'], [-1, batch_size, num_res, 7, 2])
+    pred_angles = pred_angles.transpose([1, 0, 2, 3, 4])
     pred_angles = pred_angles[:, :, :, 3:]
 
     residue_type_one_hot = paddle.nn.functional.one_hot(batch['aatype_index'], 
