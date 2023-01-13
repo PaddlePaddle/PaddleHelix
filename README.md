@@ -12,10 +12,11 @@ English | [简体中文](README_cn.md)
 
 
 ## Latest News
+`2022.12.08` Paper "HelixMO: Sample-Efficient Molecular Optimization in Scene-Sensitive Latent Space" is accepted by **BIBM 2022**. Please refere to [link1](https://www.computer.org/csdl/proceedings-article/bibm/2022/09995561/1JC23yWxizC) or [link2](https://aps.arxiv.org/abs/2112.00905) for more We also deployed the drug design service on the website [PaddleHelix](https://paddlehelix.baidu.com/app/drug/drugdesign/forecast).
+
 `2022.08.11` PaddleHelix released the codes of HelixGEM-2, a novel Molecular Property Prediction Network that models full-range many-body interactions. And it ranked 1st in the OGB [PCQM4Mv2](https://ogb.stanford.edu/docs/lsc/leaderboards/) leaderboard. Please refer to [paper](https://arxiv.org/abs/2208.05863) and [codes](./apps/pretrained_compound/ChemRL/GEM-2) for more details.
 
-`2022.07.29` PaddleHelix released the codes of HelixFold-Single, an **MSA-free** protein structure prediction pipeline relying on only the primary sequences, which can **predict the protein structures within seconds**. Please refer to [paper](https://arxiv.org/abs/2207.13921) and [codes](./apps/protein_folding/helixfold-single) for more details. Welcome to [PaddleHelix website](https://paddlehelix.baidu.com/app/drug/protein-single/forecast
-) to try out the structure prediction online service.
+`2022.07.29` PaddleHelix released the codes of HelixFold-Single, an **MSA-free** protein structure prediction pipeline relying on only the primary sequences, which can **predict the protein structures within seconds**. Please refer to [paper](https://arxiv.org/abs/2207.13921) and [codes](./apps/protein_folding/helixfold-single) for more details. Welcome to [PaddleHelix website](https://paddlehelix.baidu.com/app/drug/protein-single/forecast) to try out the structure prediction online service.
 
 `2022.07.18` PaddleHelix fully released HelixFold including training and inference pipeline. **The complete training time are optimized from 11 days to 7.5 days**. Please refer to [paper](https://arxiv.org/abs/2207.05477) and [codes](./apps/protein_folding/helixfold) for more details.
 
