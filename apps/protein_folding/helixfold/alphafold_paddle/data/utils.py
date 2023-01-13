@@ -114,13 +114,16 @@ batched_keys = [
 
 # keys that should be ignored when conducting crop & pad
 def is_ignored_key(k):
+    """tbd."""
     return k in ignored_keys
 
 # keys that have batch dim, e.g. msa features which have shape [N_msa, N_res, ...]
 def is_batched_key(k):
+    """tbd."""
     return k in batched_keys
 
 def align_feat(feat, size):
+    """Align feature."""
     # get num res from aatype
     assert 'aatype' in feat.keys(), \
         "'aatype' missing from batch, which is not expected."
@@ -148,7 +151,32 @@ def align_feat(feat, size):
     return feat
 
 
+def align_label(label, size):
+    """Align label."""
+    num_res = label['all_atom_mask'].shape[1]
+
+    if num_res % size != 0:
+        align_size = (num_res // size + 1) * size
+
+        def pad(key, array, start_axis, align_size, num_res):
+            if is_ignored_key(key):
+                return array
+            d_seq = start_axis      # choose the dim to crop / pad
+            if is_batched_key(key):
+                d_seq += 1
+            pad_shape = list(array.shape)
+            pad_shape[d_seq] = align_size - num_res
+            pad_array = paddle.zeros(pad_shape, dtype=array.dtype)
+            array = paddle.concat([array, pad_array], axis=d_seq)
+            return array
+
+        label = {k: pad(k, v, 1, align_size, num_res) for k, v in label.items()}
+
+    return label
+
+
 def unpad_prediction(feat, pred):
+    """Unpad prediction."""
     unpad_pred = deepcopy(pred)
     n = feat['aatype'].shape[0]
 

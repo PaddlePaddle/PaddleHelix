@@ -39,7 +39,7 @@ from utils.clip_grad import clip_grad_norm_
 from utils.init_env import init_seed, init_distributed_env
 from utils.misc import TrainLogger, set_logging_level
 from alphafold_paddle.model import config
-from alphafold_paddle.data.utils import align_feat
+from alphafold_paddle.data.utils import align_feat, align_label
 from ppfleetx.distributed.protein_folding import dap, bp, dp
 from ppfleetx.distributed.protein_folding.scg import scg
 
@@ -164,6 +164,7 @@ def eval(args, model, eval_dataset, compute_loss, cache_dir=None):
         s1 = time_me()
         if args.dap_degree > 1:
             batch['feat'] = align_feat(batch['feat'], args.dap_degree)
+            batch['label'] = align_label(batch['label'], args.dap_degree)
         
         res = model(batch, compute_loss=compute_loss)
         if compute_loss:

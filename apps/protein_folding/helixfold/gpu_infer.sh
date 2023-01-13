@@ -58,6 +58,7 @@ else
           --model_names=${MODELS} \
           --output_dir=${OUTPUT_DIR} \
           --disable_amber_relax \
+          --seed 2022 \
           --preset='reduced_dbs' \
           --random_seed=0 \
           ${@:2}
