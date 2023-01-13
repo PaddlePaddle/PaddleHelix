@@ -414,16 +414,27 @@ def rots_from_two_vecs(e0_unnormalized: Vecs, e1_unnormalized: Vecs) -> Rots:
 
 
 def broadcast_shape(x_shape, y_shape):
-    assert len(x_shape), len(y_shape)
-    out_shape = []
-    for i in range(len(x_shape)):
-        if x_shape[i] == y_shape[i] or y_shape[i] == 1:
-            out_shape.append(x_shape[i])
-        elif x_shape[i] == 1:
-            out_shape.append(y_shape[i])
-        else:
-            raise ValueError("{} and {} cannot braodcast.".format(x_shape, y_shape))
+    if len(x_shape) > len(y_shape):
+        out_shape = x_shape
+    elif len(y_shape) > len(x_shape):
+        out_shape = y_shape
+    else:
+        out_shape = []
+        for i in range(len(x_shape)):
+            if x_shape[i] == y_shape[i] or y_shape[i] == 1:
+                out_shape.append(x_shape[i])
+            elif x_shape[i] == 1:
+                out_shape.append(y_shape[i])
+            else:
+                raise ValueError("{} and {} cannot braodcast.".format(x_shape, y_shape))
     return out_shape
+
+
+def broadcast_to(x, broadcast_shape):
+    if x.shape == broadcast_shape:
+        return x
+    else:
+        return paddle.expand(x, broadcast_shape)
 
 
 def rots_mul_rots(a: Rots, b: Rots) -> Rots:
@@ -434,15 +445,8 @@ def rots_mul_rots(a: Rots, b: Rots) -> Rots:
         return Rots(paddle.matmul(a_rot, b_rot))
     else:
         out_shape = broadcast_shape(a_rot.shape, b_rot.shape)
-        zeros = paddle.zeros(shape=out_shape, dtype=a_rot.dtype)
-        if a_rot.shape != out_shape:
-            broadcasted_a = a_rot + zeros
-        else:
-            broadcasted_a = a_rot
-        if b.shape != out_shape:
-            broadcasted_b = b_rot + zeros
-        else:
-            broadcasted_b = b_rot
+        broadcasted_a = broadcast_to(a_rot, out_shape)
+        broadcasted_b = broadcast_to(b_rot, out_shape)
         out = Rots(paddle.matmul(broadcasted_a, broadcasted_b))
     return out
 
@@ -455,19 +459,9 @@ def rots_mul_vecs(m: Rots, v: Vecs) -> Vecs:
         out = Vecs(paddle.matmul(m_rot, v_trans.unsqueeze(axis=-1)).squeeze(axis=-1))
     else:
         out_shape = broadcast_shape(m_rot.shape[:-2], v_trans.shape[:-1])
-        broadcasted_m_shape = out_shape + [3, 3]
-        if m_rot.shape != broadcasted_m_shape:
-            m_zeros = paddle.zeros(shape=broadcasted_m_shape, dtype=m_rot.dtype)
-            broadcasted_m = m_rot + m_zeros
-        else:
-            broadcasted_m = m_rot
-        broadcasted_v_shape = out_shape + [3]
-        if v_trans.shape != broadcasted_v_shape:
-            v_zeros = paddle.zeros(shape=broadcasted_v_shape, dtype=v_trans.dtype)
-            broadcasted_v = v_trans + v_zeros
-        else:
-            broadcasted_v = v_trans
-        return Vecs(paddle.matmul(broadcasted_m, broadcasted_v.unsqueeze(axis=-1)).squeeze(axis=-1))
+        broadcasted_m = broadcast_to(m_rot, out_shape + [3, 3])
+        broadcasted_v = broadcast_to(v_trans, out_shape + [3])
+        return Vecs(paddle.matmul(broadcasted_m, broadcasted_v.unsqueeze_(axis=-1)).squeeze_(axis=-1))
     return out
 
 
@@ -524,7 +518,7 @@ def vecs_robust_norm(v: Vecs, epsilon: float = 1e-8) -> paddle.Tensor:
 
 def vecs_sub(v1: Vecs, v2: Vecs) -> Vecs:
     """Computes v1 - v2."""
-    return Vecs(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z)
+    return Vecs(v1.translation - v2.translation)
 
 
 def vecs_squared_distance(v1: Vecs, v2: Vecs) -> paddle.Tensor:
@@ -537,4 +531,4 @@ def vecs_squared_distance(v1: Vecs, v2: Vecs) -> paddle.Tensor:
 def vecs_to_tensor(v: Vecs  # shape (...)
                   ) -> paddle.Tensor:  # shape(..., 3)
     """Converts 'v' to tensor with shape 3, inverse of 'vecs_from_tensor'."""
-    return paddle.stack([v.x, v.y, v.z], axis=-1)
+    return v.translation
