@@ -414,7 +414,7 @@ def rots_from_two_vecs(e0_unnormalized: Vecs, e1_unnormalized: Vecs) -> Rots:
 
 
 def broadcast_shape(x_shape, y_shape):
-    if len(x_shape) > len(y_shape):
+    if x_shape == y_shape or len(x_shape) > len(y_shape):
         out_shape = x_shape
     elif len(y_shape) > len(x_shape):
         out_shape = y_shape
@@ -439,30 +439,22 @@ def broadcast_to(x, broadcast_shape):
 
 def rots_mul_rots(a: Rots, b: Rots) -> Rots:
     """Composition of rotations 'a' and 'b'."""
-    a_rot = a.rotation
-    b_rot = b.rotation
-    if a.shape == b.shape:
-        return Rots(paddle.matmul(a_rot, b_rot))
-    else:
-        out_shape = broadcast_shape(a_rot.shape, b_rot.shape)
-        broadcasted_a = broadcast_to(a_rot, out_shape)
-        broadcasted_b = broadcast_to(b_rot, out_shape)
-        out = Rots(paddle.matmul(broadcasted_a, broadcasted_b))
-    return out
+    out_shape = broadcast_shape(a.shape, b.shape)
+    broadcasted_a = broadcast_to(a.rotation, out_shape)
+    broadcasted_b = broadcast_to(b.rotation, out_shape)
+    return Rots(paddle.matmul(broadcasted_a, broadcasted_b))
 
 
 def rots_mul_vecs(m: Rots, v: Vecs) -> Vecs:
     """Apply rotations 'm' to vectors 'v'."""
-    m_rot = m.rotation
-    v_trans = v.translation
-    if m_rot.shape[:-2] == v_trans.shape[:-1]:
-        out = Vecs(paddle.matmul(m_rot, v_trans.unsqueeze(axis=-1)).squeeze(axis=-1))
+    if m.shape[:-2] == v.shape[:-1]:
+        broadcasted_m = m.rotation
+        broadcasted_v = v.translation
     else:
-        out_shape = broadcast_shape(m_rot.shape[:-2], v_trans.shape[:-1])
-        broadcasted_m = broadcast_to(m_rot, out_shape + [3, 3])
-        broadcasted_v = broadcast_to(v_trans, out_shape + [3])
-        return Vecs(paddle.matmul(broadcasted_m, broadcasted_v.unsqueeze_(axis=-1)).squeeze_(axis=-1))
-    return out
+        out_shape = broadcast_shape(m.shape[:-2], v.shape[:-1])
+        broadcasted_m = broadcast_to(m.rotation, out_shape + [3, 3])
+        broadcasted_v = broadcast_to(v.translation, out_shape + [3])
+    return Vecs(paddle.matmul(broadcasted_m, broadcasted_v.unsqueeze_(axis=-1)).squeeze_(axis=-1))
 
 
 def vecs_add(v1: Vecs, v2: Vecs) -> Vecs:
