@@ -29,7 +29,7 @@ PRECISION='bf16'
 
 if [ $distributed == 1 ]
 then
-  python_cmd="python -m paddle.distributed.launch --log_dir=${log_dir} "
+  python_cmd="python -m paddle.distributed.launch --log_dir=${log_dir} --gpus=0,1,2,3,4,5,6,7 "
   distributed_flag="--distributed"
 else
   python_cmd="CUDA_VISIBLE_DEVICES=0 python "
@@ -37,7 +37,6 @@ else
 fi
 
 $python_cmd \
-  --gpus="0,1,2,3,4,5,6,7" \
   run_helixfold.py \
   ${distributed_flag} \
   --dap_degree=${DAP_DEGREE} \
