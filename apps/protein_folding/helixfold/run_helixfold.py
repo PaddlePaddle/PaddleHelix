@@ -35,6 +35,8 @@ from alphafold_paddle.data import pipeline, templates
 from alphafold_paddle.data.utils import align_feat, unpad_prediction
 
 from utils.init_env import init_seed, init_distributed_env
+from ppfleetx.distributed.protein_folding import dp, dap, bp
+from utils.utils import get_bf16_op_list
 
 logging.basicConfig()
 logger = logging.getLogger(__file__)
@@ -48,8 +50,6 @@ RELAX_MAX_OUTER_ITERATIONS = 20
 
 
 def predict_structure(
-        dp_rank: int,
-        dp_nranks: int,
         fasta_path: str,
         fasta_name: str,
         output_dir_base: str,
@@ -57,6 +57,13 @@ def predict_structure(
         model_runners: Dict[str, model.RunModel],
         amber_relaxer: relax.AmberRelaxation,
         random_seed: int):
+    
+    dap_rank = 0
+    bp_rank = 0
+    if args.distributed and args.dap_degree > 1:
+        dap_rank = dap.get_rank_in_group() if dap.get_world_size() > 1 else 0
+        bp_rank = bp.get_rank_in_group() if bp.get_world_size() > 1 else 0
+    
     timings = dict()
     output_dir = pathlib.Path(output_dir_base).joinpath(fasta_name)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -75,18 +82,22 @@ def predict_structure(
         logger.info('Use cached features.pkl')
         with open(features_pkl, 'rb') as f:
             feature_dict = pickle.load(f)
-    elif dp_rank == 0:
-        t0 = time.time()
-        feature_dict = data_pipeline.process(
-            input_fasta_path=fasta_path,
-            msa_output_dir=msa_output_dir)
-        timings['features'] = time.time() - t0
+    else:
+        if dap_rank == 0 and bp_rank == 0:
+            t0 = time.time()
+            feature_dict = data_pipeline.process(
+                input_fasta_path=fasta_path,
+                msa_output_dir=msa_output_dir)
+            timings['features'] = time.time() - t0
 
-        with open(features_pkl, 'wb') as f:
-            pickle.dump(feature_dict, f, protocol=4)
+            with open(features_pkl, 'wb') as f:
+                pickle.dump(feature_dict, f, protocol=4)
 
-    if args.distributed:
-        dist.barrier()
+        if args.distributed:
+            dist.barrier()
+            
+        with open(features_pkl, 'rb') as f:
+            feature_dict = pickle.load(f)
 
     relaxed_pdbs, plddts = dict(), dict()
     for model_name, model_runner in model_runners.items():
@@ -96,37 +107,42 @@ def predict_structure(
         has_cache = input_features_pkl.exists()
 
         t0 = time.time()
-        if dp_rank == 0:
-            processed_feature_dict = model_runner.preprocess(
-                feature_dict, random_seed, input_features_pkl)
-            if not has_cache and dp_rank == 0:
-                timings[f'process_features_{model_name}'] = time.time() - t0
 
-            if args.distributed and args.dap_degree > 1:
-                processed_feature_dict = align_feat(
-                    processed_feature_dict, args.dap_degree)
-        else:
-            processed_feature_dict = dict()
+        processed_feature_dict = model_runner.preprocess(
+            feature_dict, random_seed, input_features_pkl)
+        if not has_cache and dap_rank == 0 and bp_rank == 0:
+            timings[f'process_features_{model_name}'] = time.time() - t0
 
-        if args.distributed:
-            for _, tensor in processed_feature_dict.items():
-                dist.broadcast(tensor, 0)
+        if args.distributed and args.dap_degree > 1:
+            processed_feature_dict = align_feat(
+                processed_feature_dict, args.dap_degree)
 
-            dist.barrier()
+        def _forward_with_precision(processed_feature_dict):
+            if args.precision == "bf16":
+                black_list, white_list = get_bf16_op_list()
+                with paddle.amp.auto_cast(level='O1', custom_white_list=white_list, custom_black_list=black_list, dtype='bfloat16'):
+                    return model_runner.predict(
+                                processed_feature_dict,
+                                ensemble_representations=True,
+                                return_representations=True)
+            elif args.precision == "fp32":
+                return model_runner.predict(
+                                processed_feature_dict,
+                                ensemble_representations=True,
+                                return_representations=True)
+            else:
+                raise ValueError("Please choose precision from bf16 and fp32! ")
 
         t0 = time.time()
-        prediction = model_runner.predict(
-            processed_feature_dict,
-            ensemble_representations=True,
-            return_representations=True)
+        prediction = _forward_with_precision(processed_feature_dict)
 
-        if args.distributed and dp_rank == 0 and args.dap_degree > 1:
+        if args.distributed and args.dap_degree > 1:
             prediction = unpad_prediction(feature_dict, prediction)
 
         print('########## prediction shape ##########')
         model.print_shape(prediction)
 
-        if dp_rank == 0:
+        if dap_rank == 0 and bp_rank == 0:
             timings[f'predict_{model_name}'] = time.time() - t0
 
             aatype = feature_dict['aatype'].argmax(axis=-1)
@@ -136,7 +152,7 @@ def predict_structure(
                 output_dir, 0, timings)
             plddts[model_name] = np.mean(prediction['plddt'])
 
-    if dp_rank == 0:
+    if dap_rank == 0 and bp_rank == 0:
         # Rank by pLDDT and write out relaxed PDBs in rank order.
         ranked_order = []
         for idx, (model_name, _) in enumerate(
@@ -247,8 +263,6 @@ def main(args):
 
     for fasta_path, fasta_name in zip(args.fasta_paths.split(','), fasta_names):
         predict_structure(
-            dp_rank=dp_rank,
-            dp_nranks=dp_nranks,
             fasta_path=fasta_path,
             fasta_name=fasta_name,
             output_dir_base=args.output_dir,
@@ -336,7 +350,7 @@ if __name__ == '__main__':
     parser.add_argument('--random_seed', type=int,
                         help='The random seed for the data pipeline. '
                         'By default, this is randomly generated.')
-
+    parser.add_argument("--precision", type=str, choices=['fp32', 'bf16'], default='fp32')
     parser.add_argument('--distributed',
                         action='store_true', default=False,
                         help='Whether to use distributed DAP inference')

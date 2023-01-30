@@ -30,6 +30,7 @@ from paddle import distributed as dist
 from tensorboardX import SummaryWriter
 
 from utils.utils import get_model_parameter_size, add_to_data_writer, upload_to_hadoop, csv_print
+from utils.utils import get_bf16_op_list
 from utils.metric import ResultsCollect
 from utils.model import RunModel
 from utils.exponential_moving_average import ExponentialMovingAverage, EMA
@@ -97,15 +98,6 @@ def get_optimizer(opt_config, model):
             parameters = parameters
         )
     return optimizer, lr_scheduler
-
-def get_bf16_op_list():
-    """tbd."""
-
-    black_list = {"reduce_sum"}
-    white_list = {"concat", "elementwise_add", "elementwise_div", "elementwise_mul", "elementwise_sub", "fill_any_like", "fill_constant", "gather", "gaussian_random",
-        "softmax", "layer_norm", "log_softmax", "matmul_v2", "p_norm", "py_layer", "relu", "scale", "sigmoid", "slice", "softplus", "split", "sqrt", "square", "stack",
-        "sum", "transpose2", "fused_gate_attention", "dropout_nd"}
-    return black_list, white_list
 
 
 def add_dyna_features(train_config, model_config, batch, step):
