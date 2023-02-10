@@ -98,7 +98,6 @@ mkdir -p debug_log debug_models
         log_step="--log_step=20"
         eval_step="--eval_step=1000"
         save_step="--save_step=1000"
-        # init_model="$root_path/data/pd_params/model_5.pdparams"
         train_af2_single
     fi
 }
@@ -120,7 +119,7 @@ mkdir -p debug_log debug_models
         log_step="--log_step=20"
         eval_step="--eval_step=1000"
         save_step="--save_step=1000"
-        # init_model="$root_path/data/params/params_model_5.npz"
+        # init_model="$root_path/data/pd_params/model_5.pdparams"
         train_af2_single
     fi
 }
@@ -143,7 +142,6 @@ mkdir -p debug_log debug_models
         log_step="--log_step=20"
         eval_step="--eval_step=1000"
         save_step="--save_step=1000"
-        # init_model="$root_path/data/af2_pd_params/model_5.pdparams"
         train_af2_distributed
     fi
 }
@@ -168,7 +166,7 @@ mkdir -p debug_log debug_models
         log_step="--log_step=20"
         eval_step="--eval_step=1000"
         save_step="--save_step=1000"
-        # init_model="$root_path/data/af2_pd_params/model_5.pdparams"
+        # init_model="$root_path/data/pd_params/model_5.pdparams"
         train_af2_distributed
     fi
 }
@@ -191,7 +189,6 @@ mkdir -p debug_log debug_models
         log_step="--log_step=20"
         eval_step="--eval_step=1000"
         save_step="--save_step=1000"
-        # init_model="$root_path/data/af2_pd_params/model_5.pdparams"
         train_af2_distributed
     fi
 }
@@ -216,7 +213,7 @@ mkdir -p debug_log debug_models
         log_step="--log_step=20"
         eval_step="--eval_step=1000"
         save_step="--save_step=1000"
-        # init_model="$root_path/data/af2_pd_params/model_5.pdparams"
+        # init_model="$root_path/data/pd_params/model_5.pdparams"
         train_af2_distributed
     fi
 }
@@ -233,8 +230,8 @@ mkdir -p debug_log debug_models
         train_config="./train_configs/demo.json"
         data_config="./data_configs/demo.json"
         model_name="initial"
-        # init_model="$root_path/data/pd_params/model_5.pdparams"
         precision="bf16"
+        # precision="fp32"
         log_step="--log_step=20"
         eval_step="--eval_step=1000"
         save_step="--save_step=1000"
@@ -255,6 +252,7 @@ mkdir -p debug_log debug_models
         data_config="./data_configs/demo.json"
         model_name="initial"
         precision="bf16"
+        # precision="fp32"
         log_step="--log_step=20"
         eval_step="--eval_step=1000"
         save_step="--save_step=1000"
@@ -275,6 +273,7 @@ mkdir -p debug_log debug_models
         data_config="./data_configs/demo.json"
         model_name="initial"
         precision="bf16"
+        # precision="fp32"
         log_step="--log_step=20"
         eval_step="--eval_step=1000"
         save_step="--save_step=1000"

@@ -3,8 +3,8 @@
 AlphaFold2 is an accurate protein structure prediction pipeline. [HelixFold](https://arxiv.org/abs/2207.05477) provides an efficient and improved implementation of the complete training and inference pipelines of AlphaFold2 in GPU and DCU. Compared with the computational performance of AlphaFold2 reported in the paper, OpenFold and Uni-Fold implemented through PyTorch, HelixFold reduces the training time from about 11 days originally to 5.12 days, and only 2.89 days when using hybrid parallelism. Training HelixFold from scratch can achieve competitive accuracy with AlphaFold2.
 
 <p align="center">
-<img src="../../../.github/HelixFold_computational_performance.png" align="middle" height="50%" width="50%" />
-<img src="../../../.github/HelixFold_accuracy.png" align="middle" height="60%" width="60%" />
+<img src="../../../.github/HelixFold_computational_perf.png" align="middle" height="50%" width="50%" />
+<img src="../../../.github/HelixFold_infer_accuracy.png" align="middle" height="60%" width="60%" />
 </p>
 
 ## Instruction
