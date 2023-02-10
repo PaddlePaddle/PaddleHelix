@@ -351,7 +351,15 @@ def main(args):
     # ema = ExponentialMovingAverage(model, 0.999)
     ema = EMA(optimizer._param_groups, 0.999)
     ema.register()
-    
+
+    if args.precision == "bf16" and args.amp_level == "O2":
+        submodel, optimizer = paddle.amp.decorate(
+            models=model.alphafold.alphafold_iteration.evoformer,
+            dtype='bfloat16',
+            optimizers=optimizer,
+            level=args.amp_level)
+        model.alphafold.alphafold_iteration.evoformer = submodel
+        
     ### load dataset
     if not args.only_test:
         train_dataset = AF2Dataset(
