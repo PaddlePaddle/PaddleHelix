@@ -48,7 +48,7 @@ class Vecs:
                 self.translation = paddle.stack(args[0], axis=-1)
             elif len(args[0]) == 1:
                 self.translation = args[0]
-            elif args[0].shape[-1]==3:
+            elif args[0].shape[-1] == 3:
                 self.translation = args[0]
             else:
                 raise ValueError('Invalid number of inputs')
@@ -86,8 +86,10 @@ class Vecs:
 
     def __getitem__(self,index):
         return Vecs(self.translation[index])
+
     def __str__(self):
         return str(self.translation.shape)
+
     def __repr__(self):
         return str(self.translation.shape)
 
@@ -172,10 +174,13 @@ class Rots:
 
     def __getitem__(self,index):
         return Rots(self.rotation[index])
+
     def __str__(self):
         return str(self.rotation.shape)
+
     def __repr__(self):
         return str(self.rotation.shape)
+
     def reshape(self,*argv):
         return self.rotation.reshape(*argv)
 
@@ -188,7 +193,7 @@ def invert_rigids(r: Rigids) -> Rigids:
     """Computes group inverse of rigid transformations 'r'."""
     inv_rots = invert_rots(r.rot)
     t = rots_mul_vecs(inv_rots, r.trans)
-    inv_trans = Vecs(-t.x, -t.y, -t.z)
+    inv_trans = Vecs(-1 * t.translation)
     return Rigids(inv_rots, inv_trans)
 
 
@@ -297,11 +302,9 @@ def rigids_from_tensor4x4(m: paddle.Tensor) -> Rigids:
     """
     assert m.shape[-1] == 4
     assert m.shape[-2] == 4
-    return Rigids(
-      Rots(m[..., 0, 0], m[..., 0, 1], m[..., 0, 2],
-           m[..., 1, 0], m[..., 1, 1], m[..., 1, 2],
-           m[..., 2, 0], m[..., 2, 1], m[..., 2, 2]),
-      Vecs(m[..., 0, 3], m[..., 1, 3], m[..., 2, 3]))
+    sliced_m = m[..., 0:3, :] # shape is [..., 3, 4]
+    outs = paddle.split(sliced_m, num_or_sections=[3, 1], axis=-1)
+    return Rigids(Rots(outs[0]), Vecs(outs[1].squeeze_(axis=-1)))
 
 
 def rigids_from_tensor_flat9(m: paddle.Tensor) -> Rigids:
@@ -364,7 +367,6 @@ def rigids_to_tensor_flat12(
     r: Rigids  # shape (...)
     ) -> paddle.Tensor:  # shape (..., 12)
     """Flat12 encoding: rotation matrix (9 floats) + translation (3 floats)."""
-    
     return paddle.stack([r.rot.xx, r.rot.yx, r.rot.zx, r.rot.xy, r.rot.yy, r.rot.zy, r.rot.xz, r.rot.yz, r.rot.zz]
                         + [r.trans.x, r.trans.y, r.trans.z], axis=-1)
 
@@ -375,9 +377,7 @@ def rots_from_tensor3x3(
     """Convert rotations represented as (3, 3) array to Rots."""
     assert m.shape[-1] == 3
     assert m.shape[-2] == 3
-    return Rots(m[..., 0, 0], m[..., 0, 1], m[..., 0, 2],
-                m[..., 1, 0], m[..., 1, 1], m[..., 1, 2],
-                m[..., 2, 0], m[..., 2, 1], m[..., 2, 2])
+    return Rots(m)
 
 
 def rots_from_two_vecs(e0_unnormalized: Vecs, e1_unnormalized: Vecs) -> Rots:
@@ -397,35 +397,62 @@ def rots_from_two_vecs(e0_unnormalized: Vecs, e1_unnormalized: Vecs) -> Rots:
 
     # make e1 perpendicular to e0.
     c = vecs_dot_vecs(e1_unnormalized, e0)
-    e1 = Vecs(e1_unnormalized.x - c * e0.x,
-              e1_unnormalized.y - c * e0.y,
-              e1_unnormalized.z - c * e0.z)
+    e1 = Vecs(e1_unnormalized.translation - c.unsqueeze_(axis=-1) * e0.translation)
     e1 = vecs_robust_normalize(e1)
 
     # Compute e2 as cross product of e0 and e1.
     e2 = vecs_cross_vecs(e0, e1)
 
-    return Rots(e0.x, e1.x, e2.x, e0.y, e1.y, e2.y, e0.z, e1.z, e2.z)
+    return Rots(paddle.stack([e0.translation, e1.translation, e2.translation], axis=-1))
+
+
+def broadcast_shape(x_shape, y_shape):
+    if x_shape == y_shape or len(x_shape) > len(y_shape):
+        out_shape = x_shape
+    elif len(y_shape) > len(x_shape):
+        out_shape = y_shape
+    else:
+        out_shape = []
+        for i in range(len(x_shape)):
+            if x_shape[i] == y_shape[i] or y_shape[i] == 1:
+                out_shape.append(x_shape[i])
+            elif x_shape[i] == 1:
+                out_shape.append(y_shape[i])
+            else:
+                raise ValueError("{} and {} cannot braodcast.".format(x_shape, y_shape))
+    return out_shape
+
+
+def broadcast_to(x, broadcast_shape):
+    if x.shape == broadcast_shape:
+        return x
+    else:
+        return paddle.expand(x, broadcast_shape)
 
 
 def rots_mul_rots(a: Rots, b: Rots) -> Rots:
     """Composition of rotations 'a' and 'b'."""
-    c0 = rots_mul_vecs(a, Vecs(b.xx, b.yx, b.zx))
-    c1 = rots_mul_vecs(a, Vecs(b.xy, b.yy, b.zy))
-    c2 = rots_mul_vecs(a, Vecs(b.xz, b.yz, b.zz))
-    return Rots(c0.x, c1.x, c2.x, c0.y, c1.y, c2.y, c0.z, c1.z, c2.z)
+    out_shape = broadcast_shape(a.shape, b.shape)
+    broadcasted_a = broadcast_to(a.rotation, out_shape)
+    broadcasted_b = broadcast_to(b.rotation, out_shape)
+    return Rots(paddle.matmul(broadcasted_a, broadcasted_b))
 
 
 def rots_mul_vecs(m: Rots, v: Vecs) -> Vecs:
     """Apply rotations 'm' to vectors 'v'."""
-    return Vecs(m.xx * v.x + m.xy * v.y + m.xz * v.z,
-                m.yx * v.x + m.yy * v.y + m.yz * v.z,
-                m.zx * v.x + m.zy * v.y + m.zz * v.z)
+    if m.shape[:-2] == v.shape[:-1]:
+        broadcasted_m = m.rotation
+        broadcasted_v = v.translation
+    else:
+        out_shape = broadcast_shape(m.shape[:-2], v.shape[:-1])
+        broadcasted_m = broadcast_to(m.rotation, out_shape + [3, 3])
+        broadcasted_v = broadcast_to(v.translation, out_shape + [3])
+    return Vecs(paddle.matmul(broadcasted_m, broadcasted_v.unsqueeze(axis=-1)).squeeze_(axis=-1))
 
 
 def vecs_add(v1: Vecs, v2: Vecs) -> Vecs:
     """Add two vectors 'v1' and 'v2'."""
-    return Vecs(v1.x + v2.x, v1.y + v2.y, v1.z + v2.z)
+    return Vecs(v1.translation + v2.translation)
 
 
 def vecs_dot_vecs(v1: Vecs, v2: Vecs) -> paddle.Tensor:
@@ -435,17 +462,14 @@ def vecs_dot_vecs(v1: Vecs, v2: Vecs) -> paddle.Tensor:
 
 def vecs_cross_vecs(v1: Vecs, v2: Vecs) -> Vecs:
     """Cross product of vectors 'v1' and 'v2'."""
-    return Vecs(v1.y * v2.z - v1.z * v2.y,
-                v1.z * v2.x - v1.x * v2.z,
-                v1.x * v2.y - v1.y * v2.x)
+    return Vecs(paddle.cross(v1.translation, v2.translation, axis=-1))
 
 
 def vecs_from_tensor(x: paddle.Tensor  # shape (..., 3)
                     ) -> Vecs:  # shape (...)
     """Converts from tensor of shape (3,) to Vecs."""
-    num_components = x.shape[-1]
-    assert num_components == 3
-    return Vecs(x[..., 0], x[..., 1], x[..., 2])
+    assert x.shape[-1] == 3
+    return Vecs(x)
 
 
 def vecs_robust_normalize(v: Vecs, epsilon: float = 1e-8) -> Vecs:
@@ -458,7 +482,7 @@ def vecs_robust_normalize(v: Vecs, epsilon: float = 1e-8) -> Vecs:
         normalized vectors
     """
     norms = vecs_robust_norm(v, epsilon)
-    return Vecs(v.x / norms, v.y / norms, v.z / norms)
+    return Vecs(v.translation / norms.unsqueeze_(axis=-1))
 
 
 def vecs_robust_norm(v: Vecs, epsilon: float = 1e-8) -> paddle.Tensor:
@@ -477,7 +501,7 @@ def vecs_robust_norm(v: Vecs, epsilon: float = 1e-8) -> paddle.Tensor:
 
 def vecs_sub(v1: Vecs, v2: Vecs) -> Vecs:
     """Computes v1 - v2."""
-    return Vecs(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z)
+    return Vecs(v1.translation - v2.translation)
 
 
 def vecs_squared_distance(v1: Vecs, v2: Vecs) -> paddle.Tensor:
@@ -490,4 +514,4 @@ def vecs_squared_distance(v1: Vecs, v2: Vecs) -> paddle.Tensor:
 def vecs_to_tensor(v: Vecs  # shape (...)
                   ) -> paddle.Tensor:  # shape(..., 3)
     """Converts 'v' to tensor with shape 3, inverse of 'vecs_from_tensor'."""
-    return paddle.stack([v.x, v.y, v.z], axis=-1)
+    return v.translation
