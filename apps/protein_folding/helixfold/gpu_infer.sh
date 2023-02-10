@@ -11,34 +11,46 @@ DATA_DIR="/root/paddlejob/workspace/env_run/alphafold_data"
 fasta_file="$root_path/demo_data/casp14_demo/fasta/${demo}.fasta"
 OUTPUT_DIR="$root_path/demo_data/casp14_demo/output"
 log_dir="$root_path/demo_data/casp14_demo/demo_log"
-MODELS="model_1,model_5"
+MODELS="model_5"   # 'model_1', 'model_2', 'model_3', 'model_4', 'model_5'
 SUBBATCH_SIZE=48
 
-distributed=true
+# Use DAP
+distributed=false
 
 # 'fp32' or 'bf16'
 PRECISION='bf16'
 
+# Disable C++ enisum, using python enisum
+export FLAGS_new_einsum=0
+
+# Enable bf16 optimization
+export FLAGS_use_autotune=1
+
 if [ $distributed == true ]
 then
-  # enable dap for EXTREMELY LONG SEQUENCE PROTEIN
+  # Enable unified memory for EXTREMELY LONG SEQUENCE PROTEIN
+  # export FLAGS_use_cuda_managed_memory=true
+
+  # Enable DAP for EXTREMELY LONG SEQUENCE PROTEIN
   python_cmd="python -m paddle.distributed.launch --log_dir=${log_dir} --gpus=0,1,2,3,4,5,6,7 "
   distributed_flag="--distributed"
   DAP_DEGREE=8
+
   # Reduce the size of subbatch_size when the gpu memory is not enough 
   # SUBBATCH_SIZE=1
 else
-  # enable unified memory for EXTREMELY LONG SEQUENCE PROTEIN
+  # Enable unified memory for EXTREMELY LONG SEQUENCE PROTEIN
   # export FLAGS_use_cuda_managed_memory=true
+
   python_cmd="CUDA_VISIBLE_DEVICES=0 python "
   distributed_flag=""
   DAP_DEGREE=1
+
   # Reduce the size of subbatch_size when the gpu memory is not enough 
   # SUBBATCH_SIZE=1
 fi
 
-$python_cmd \
-  run_helixfold.py \
+$python_cmd run_helixfold.py \
   ${distributed_flag} \
   --dap_degree=${DAP_DEGREE} \
   --fasta_paths=${fasta_file} \
