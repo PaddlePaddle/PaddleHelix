@@ -498,6 +498,7 @@ if __name__ == '__main__':
     parser.add_argument("--model_name", type=str, help='used to choose model config')
     parser.add_argument("--init_model", type=str, default='')
     parser.add_argument("--precision", type=str, choices=['fp32', 'bf16'], default='fp32')
+    parser.add_argument("--amp_level", type=str, default='O1')
     parser.add_argument("--start_step", type=int, default=0)
     parser.add_argument("--train_step", type=int, default=1000)
     parser.add_argument("--batch_size", type=int, default=1)
