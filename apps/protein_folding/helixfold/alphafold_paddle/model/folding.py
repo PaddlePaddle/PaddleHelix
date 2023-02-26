@@ -854,10 +854,10 @@ def supervised_chi_loss(ret, batch, value, config):
 
     residue_type_one_hot = paddle.nn.functional.one_hot(batch['aatype_index'], 
                             num_classes=residue_constants.restype_num + 1)
-    chi_pi_periodic = paddle.einsum('nijk,nkl->nijl', residue_type_one_hot[:, None, ...], 
+    chi_pi_periodic = paddle.einsum('nijk,nkl->nijl', residue_type_one_hot.unsqueeze(axis=1),
                             paddle.to_tensor(residue_constants.chi_pi_periodic)[None])
 
-    sin_cos_true_chi = batch['chi_angles_sin_cos'][:, None, ...]
+    sin_cos_true_chi = batch['chi_angles_sin_cos'].unsqueeze(axis=1) # [:, None, ...]
 
     # This is -1 if chi is pi-periodic and +1 if it's 2pi-periodic
     shifted_mask = (1 - 2 * chi_pi_periodic)[..., None]
@@ -906,7 +906,7 @@ def l2_normalize(x, axis=-1, epsilon=1e-12):
     return x / paddle.sqrt(
         paddle.maximum(
             paddle.sum(paddle.square(x), axis=axis, keepdim=True),
-            paddle.to_tensor([epsilon], dtype='float32')))
+            paddle.full(shape=[1], fill_value=epsilon, dtype='float32')))
 
 
 class MultiRigidSidechain(nn.Layer):

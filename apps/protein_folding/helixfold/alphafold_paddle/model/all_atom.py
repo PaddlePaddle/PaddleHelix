@@ -300,7 +300,7 @@ def atom37_to_torsion_angles(
     """
 
     # Map aatype > 20 to 'Unknown' (20).
-    aatype = paddle.minimum(aatype.astype('int'), paddle.to_tensor([20]).astype('int'))
+    aatype = paddle.minimum(aatype.astype('int'), paddle.full(shape=[1], fill_value=20, dtype="int"))
     
     num_batch, num_temp, num_res = aatype.shape
 
@@ -375,18 +375,18 @@ def atom37_to_torsion_angles(
     # Stack all torsion angle atom positions.
     # Shape (B, T, N, torsions=7, atoms=4, xyz=3)
     torsions_atom_pos = paddle.concat(
-        [pre_omega_atom_pos[:, :, :, None, :, :],
-        phi_atom_pos[:, :, :, None, :, :],
-        psi_atom_pos[:, :, :, None, :, :],
+        [pre_omega_atom_pos.unsqueeze(axis=-3), # [:, :, :, None, :, :]
+        phi_atom_pos.unsqueeze(axis=-3), # [:, :, :, None, :, :]
+        psi_atom_pos.unsqueeze(axis=-3), # [:, :, :, None, :, :]
         chis_atom_pos
         ], axis=3)
 
     # Stack up masks for all torsion angles.
     # shape (B, T, N, torsions=7)
     torsion_angles_mask = paddle.concat(
-        [pre_omega_mask[..., None],
-        phi_mask[..., None],
-        psi_mask[..., None],
+        [pre_omega_mask.unsqueeze(axis=-1), # [..., None]
+        phi_mask.unsqueeze(axis=-1), # [..., None]
+        psi_mask.unsqueeze(axis=-1), # [..., None]
         chis_mask
         ], axis=-1)
 
@@ -417,7 +417,7 @@ def atom37_to_torsion_angles(
 
     # Mirror psi, because we computed it from the Oxygen-atom.
     torsion_angles_sin_cos *= paddle.to_tensor(
-        [1., 1., -1., 1., 1., 1., 1.])[None, None, None, :, None]
+        [1., 1., -1., 1., 1., 1., 1.]).reshape([1, 1, 1, 7, 1]) # [None, None, None, :, None]
 
     # Create alternative angles for ambiguous atom names.
     chi_is_ambiguous = utils.batched_gather(
@@ -428,7 +428,7 @@ def atom37_to_torsion_angles(
         1.0 - 2.0 * chi_is_ambiguous], axis=-1)
     # mirror_torsion_angles (B, T, N, torsions=7)
     alt_torsion_angles_sin_cos = (
-        torsion_angles_sin_cos * mirror_torsion_angles[:, :, :, :, None])
+        torsion_angles_sin_cos * mirror_torsion_angles.unsqueeze(axis=-1))
 
     if placeholder_for_undefined:
         # Add placeholder torsions in place of undefined torsion angles
@@ -437,10 +437,8 @@ def atom37_to_torsion_angles(
             paddle.ones(torsion_angles_sin_cos.shape[:-1]),
             paddle.zeros(torsion_angles_sin_cos.shape[:-1])
         ], axis=-1)
-        torsion_angles_sin_cos = torsion_angles_sin_cos * torsion_angles_mask[
-            ..., None] + placeholder_torsions * (1 - torsion_angles_mask[..., None])
-        alt_torsion_angles_sin_cos = alt_torsion_angles_sin_cos * torsion_angles_mask[
-            ..., None] + placeholder_torsions * (1 - torsion_angles_mask[..., None])
+        torsion_angles_sin_cos = torsion_angles_sin_cos * torsion_angles_mask.unsqueeze(axis=-1) + placeholder_torsions * (1 - torsion_angles_mask.unsqueeze(axis=-1))
+        alt_torsion_angles_sin_cos = alt_torsion_angles_sin_cos * torsion_angles_mask.unsqueeze(axis=-1) + placeholder_torsions * (1 - torsion_angles_mask.unsqueeze(axis=-1))
 
     return {
         'torsion_angles_sin_cos': torsion_angles_sin_cos,  # (B, T, N, 7, 2)
@@ -579,7 +577,7 @@ def frames_and_literature_positions_to_atom14_pos(
     """
     # Pick the appropriate transform for every atom.
     restype_atom14_to_rigid_group = paddle.to_tensor(
-        residue_constants.restype_atom14_to_rigid_group)[None, ...]
+        residue_constants.restype_atom14_to_rigid_group).unsqueeze(axis=0)
     
     # [1, 21, 14] -> # [n_batch, 21, 14]
     n_batch = aatype.shape[0]
@@ -612,7 +610,7 @@ def frames_and_literature_positions_to_atom14_pos(
     # Gather the literature atom positions for each residue.
     # r3.Vecs with shape (B, N, 14)
     restype_atom14_rigid_group_positions = paddle.to_tensor(
-        residue_constants.restype_atom14_rigid_group_positions)[None, ...]
+        residue_constants.restype_atom14_rigid_group_positions).unsqueeze(axis=0)
     # [1, 21, 14, 3] -> [B, 21, 14, 3]
     if n_batch > 1:
         restype_atom14_rigid_group_positions = paddle.tile(
@@ -629,7 +627,7 @@ def frames_and_literature_positions_to_atom14_pos(
 
     # Mask out non-existing atoms.
     restype_atom14_mask = paddle.to_tensor(
-        residue_constants.restype_atom14_mask)[None, ...]
+        residue_constants.restype_atom14_mask).unsqueeze(axis=0)
     # [1, 21, 14] -> [B, 21, 14]
     if n_batch > 1:
         restype_atom14_mask = paddle.tile(

@@ -111,7 +111,7 @@ def quat_to_rot(normalized_quat):
     mat = paddle.unsqueeze(normalized_quat, [-1, -3]) # normalized_quat[..., None, :, None]
     rot_tensor = paddle.sum(
         paddle.to_tensor(np.reshape(QUAT_TO_ROT, (4, 4, 9))) *
-        normalized_quat[..., :, None, None] *
+        normalized_quat.unsqueeze(axis=[-1, -2]) * # [..., :, None, None]
         mat,
         axis=(-3, -2)) # (..., 4, 4, 9) -> (..., 9)
     t_shape = rot_tensor.shape[:-1]
@@ -124,7 +124,7 @@ def quat_multiply_by_vec(quat, vec):
     mat = paddle.unsqueeze(vec, [-1, -3]) # vec[..., None, :, None]
     return paddle.sum(
         paddle.to_tensor(QUAT_MULTIPLY_BY_VEC) *
-        quat[..., :, None, None] *
+        quat.unsqueeze(axis=[-1, -2]) * # [..., :, None, None]
         mat,
         axis=(-3, -2))
 
@@ -133,7 +133,7 @@ def quat_multiply(quat1, quat2):
     mat = paddle.unsqueeze(quat2, [-1, -3]) # quat2[..., None, :, None]
     return paddle.sum(
         paddle.to_tensor(QUAT_MULTIPLY) *
-        quat1[..., :, None, None] *
+        quat1.unsqueeze(axis=[-1, -2]) * # [..., :, None, None]
         mat,
         axis=(-3, -2))
 

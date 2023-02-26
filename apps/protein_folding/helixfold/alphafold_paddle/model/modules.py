@@ -193,19 +193,16 @@ class AlphaFold(nn.Layer):
 
         if self.config.num_recycle:
             # aatype: (B, E, N), zeros_bn: (B, N)
-            zeros_bn = paddle.zeros_like(batch['aatype'][:, 0], dtype='float32')
+            zeros_bn_shape = batch['aatype'].shape[0:1] + batch['aatype'].shape[2:]
 
             emb_config = self.config.embeddings_and_evoformer
             prev = {
-                'prev_pos': paddle.tile(
-                    zeros_bn[..., None, None],
-                    [1, 1, residue_constants.atom_type_num, 3]),
-                'prev_msa_first_row': paddle.tile(
-                    zeros_bn[..., None],
-                    [1, 1, emb_config.msa_channel]),
-                'prev_pair': paddle.tile(
-                    zeros_bn[..., None, None],
-                    [1, 1, num_residues, emb_config.pair_channel]),
+                'prev_pos': paddle.zeros(
+                    zeros_bn_shape + [residue_constants.atom_type_num, 3], dtype="float32"),
+                'prev_msa_first_row': paddle.zeros(
+                    zeros_bn_shape + [emb_config.msa_channel], dtype="float32"),
+                'prev_pair': paddle.zeros(
+                    zeros_bn_shape + [num_residues, emb_config.pair_channel], dtype="float32"),
             }
 
             if 'num_iter_recycling' in batch:
@@ -903,7 +900,7 @@ class PredictedLDDTHead(nn.Layer):
         bin_index = paddle.floor(lddt_ca * num_bins)
 
         # protect against out of range for lddt_ca == 1
-        bin_index = paddle.minimum(bin_index, paddle.to_tensor(num_bins - 1, dtype='float32'))
+        bin_index = paddle.minimum(bin_index, paddle.full(shape=[1], fill_value=num_bins - 1, dtype='float32'))
         lddt_ca_one_hot = paddle.nn.functional.one_hot(paddle.cast(bin_index, 'int64'), num_classes=num_bins)
 
         # Shape (n_batch, num_res, num_channel)
@@ -972,7 +969,8 @@ class PredictedAlignedErrorHead(nn.Layer):
         # Shape (B, num_res)
         mask = batch['backbone_affine_mask']
         # Shape (B, num_res, num_res)
-        square_mask = mask[..., None] * mask[:, None, :]
+        # mask[..., None] * mask[:, None, :]
+        square_mask = mask.unsqueeze(axis=-1) * mask.squeeze(axis=-2)
         num_bins = self.config.num_bins
         # (num_bins - 1)
         breaks = value['predicted_aligned_error']['breaks']
@@ -994,7 +992,7 @@ class PredictedAlignedErrorHead(nn.Layer):
         error_dist2 = error_dist2.detach()
 
         sq_breaks = paddle.square(breaks)
-        true_bins = paddle.sum(paddle.cast((error_dist2[..., None] > sq_breaks), 'int32'), axis=-1)
+        true_bins = paddle.sum(paddle.cast((error_dist2.unsqueeze(axis=-1) > sq_breaks), 'int32'), axis=-1)
 
         errors = softmax_cross_entropy(
             labels=paddle.nn.functional.one_hot(true_bins, num_classes=num_bins), logits=logits)
@@ -1097,8 +1095,7 @@ class DistogramHead(nn.Layer):
         logits = half_logits + paddle.transpose(half_logits, perm=[0, 2, 1, 3])
         breaks = paddle.linspace(self.config.first_break, self.config.last_break,
                           self.config.num_bins - 1)
-        breaks = paddle.tile(breaks[None, :],
-                            repeat_times=[logits.shape[0], 1])
+        breaks = paddle.broadcast_to(breaks, [logits.shape[0]] + breaks.shape)
 
         return {
             'logits': logits, 
@@ -1145,7 +1142,7 @@ def dgram_from_positions(positions, num_bins, min_bin, max_bin):
     lower_breaks = paddle.linspace(min_bin, max_bin, num_bins)
     lower_breaks = paddle.square(lower_breaks)
     upper_breaks = paddle.concat([lower_breaks[1:],
-                                    paddle.to_tensor([1e8], dtype='float32')])
+        paddle.full(shape=[1], fill_value=1e8, dtype='float32')])
 
     def _squared_difference(x, y):
         return paddle.square(x - y)
@@ -1826,7 +1823,15 @@ class OuterProductMean(nn.Layer):
             # but faster. maybe for subbatch inference?
             
             left_act = left_act.transpose([0, 1, 3, 2])
-            act = paddle.einsum('nacb,nade->ndceb', left_act, right_act)
+            # act = paddle.einsum('nacb,nade->ndceb', left_act, right_act)
+            tmp = paddle.matmul(
+                x=paddle.reshape(right_act, [right_act.shape[0], right_act.shape[1], -1]),  # na(de)
+                y=paddle.reshape(left_act, [left_act.shape[0], left_act.shape[1], -1]),     # na(cb)
+                transpose_x=True,
+                transpose_y=False)  # n(de)(cb)
+            tmp = paddle.reshape(tmp, [left_act.shape[0], right_act.shape[2], right_act.shape[3], left_act.shape[2], left_act.shape[3]])
+            act = paddle.transpose(tmp, perm=[0, 1, 3, 2, 4])
+ 
             act = paddle.einsum('ndceb,cef->ndbf', act, self.output_w) + self.output_b
             return act.transpose([0, 2, 1, 3])
 
@@ -2145,7 +2150,8 @@ class SingleTemplateEmbedding(nn.Layer):
         dtype = query_embedding.dtype
         num_res = batch['template_aatype'].shape[1]
         template_mask = batch['template_pseudo_beta_mask']
-        template_mask_2d = template_mask[..., None] * template_mask[..., None, :]
+        # template_mask[..., None] * template_mask[..., None, :]
+        template_mask_2d = template_mask.unsqueeze(axis=-1) * template_mask.unsqueeze(axis=-2)
         template_mask_2d = template_mask_2d.astype(dtype)
 
         template_dgram = dgram_from_positions(
@@ -2156,10 +2162,10 @@ class SingleTemplateEmbedding(nn.Layer):
         aatype = nn.functional.one_hot(batch['template_aatype'], 22)
         aatype = aatype.astype(dtype)
 
-        to_concat = [template_dgram, template_mask_2d[..., None]]
-        to_concat.append(paddle.tile(aatype[..., None, :, :],
+        to_concat = [template_dgram, template_mask_2d.unsqueeze(axis=-1)]
+        to_concat.append(paddle.tile(aatype.unsqueeze(axis=-3), # aatype[..., None, :, :],
                                      [1, num_res, 1, 1]))
-        to_concat.append(paddle.tile(aatype[..., None, :],
+        to_concat.append(paddle.tile(aatype.unsqueeze(axis=-2), # aatype[..., None, :],
                                      [1, 1, num_res, 1]))
 
         n, ca, c = [residue_constants.atom_order[a]
@@ -2185,22 +2191,23 @@ class SingleTemplateEmbedding(nn.Layer):
             batch['template_all_atom_masks'][..., n] *
             batch['template_all_atom_masks'][..., ca] *
             batch['template_all_atom_masks'][..., c])
-        template_mask_2d = template_mask[..., None] * template_mask[..., None, :]
+        # template_mask[..., None] * template_mask[..., None, :]
+        template_mask_2d = template_mask.unsqueeze(axis=-1) * template_mask.unsqueeze(axis=-2)
         inv_distance_scalar *= template_mask_2d.astype(inv_distance_scalar.dtype)
 
-        unit_vector = [(x * inv_distance_scalar)[..., None] for x in affine_vec]
+        unit_vector = [(x * inv_distance_scalar).unsqueeze(axis=-1) for x in affine_vec]
         unit_vector = [x.astype(dtype) for x in unit_vector]
         if not self.config.use_template_unit_vector:
             unit_vector = [paddle.zeros_like(x) for x in unit_vector]
         to_concat.extend(unit_vector)
 
         template_mask_2d = template_mask_2d.astype(dtype)
-        to_concat.append(template_mask_2d[..., None])
+        to_concat.append(template_mask_2d.unsqueeze(axis=-1))
 
         act = paddle.concat(to_concat, axis=-1)
         # Mask out non-template regions so we don't get arbitrary values in the
         # distogram for these regions.
-        act *= template_mask_2d[..., None]
+        act *= template_mask_2d.unsqueeze(axis=-1)
 
         act = self.embedding2d(act)
 

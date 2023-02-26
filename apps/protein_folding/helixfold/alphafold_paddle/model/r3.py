@@ -427,7 +427,7 @@ def broadcast_to(x, broadcast_shape):
     if x.shape == broadcast_shape:
         return x
     else:
-        return paddle.expand(x, broadcast_shape)
+        return paddle.broadcast_to(x, broadcast_shape)
 
 
 def rots_mul_rots(a: Rots, b: Rots) -> Rots:
