@@ -536,7 +536,6 @@ def make_canonical_transform_np(
     c2_rot_matrix = np.stack([np.array([cos_c2,  zeros, sin_c2]),
                               np.array([zeros,    ones,  zeros]),
                               np.array([-sin_c2, zeros, cos_c2])])
-    
     c_rot_matrix = np.matmul(c2_rot_matrix, c1_rot_matrix)
     n_xyz = np.stack(apply_rot_to_vec_np(c_rot_matrix, n_xyz, unstack=True)).T
 
