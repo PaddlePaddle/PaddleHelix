@@ -14,6 +14,7 @@
 
 """Modules and utilities for the structure module."""
 
+import gc
 import ml_collections
 import numpy as np
 import paddle
@@ -457,13 +458,16 @@ class StructureModule(nn.Layer):
         init_single_act = single_act
         single_act = self.initial_projection(single_act)
         pair_act = self.pair_layer_norm(representations['pair'])
+        pair_act_cpu = pair_act.cpu()
+        del pair_act
+        gc.collect()
         affine = generate_new_affine(seq_mask)
 
         outputs = []
         activations = {'act': single_act, 'affine': affine.to_tensor()}
         for _ in range(self.config.num_layer):
             activations, output = self.fold_iteration(
-                activations, init_single_act, pair_act,
+                activations, init_single_act, pair_act_cpu,
                 seq_mask, batch['aatype'])
             outputs.append(output)
 

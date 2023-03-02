@@ -49,6 +49,7 @@ RELAX_EXCLUDE_RESIDUES = []
 RELAX_MAX_OUTER_ITERATIONS = 20
 
 
+@paddle.no_grad()
 def predict_structure(
         fasta_path: str,
         fasta_name: str,
