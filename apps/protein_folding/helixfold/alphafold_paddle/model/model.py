@@ -105,9 +105,6 @@ class RunModel(object):
         fused_parameters = get_fused_param_groups(self.alphafold, config.model.global_config.get('dist_model', False))
         self.init_params(str(params_path))
         self.alphafold.eval()
-        
-        register_hooks_recursively(self.alphafold)
-        
 
     def init_params(self, params_path: str):
         if params_path.endswith('.npz'):
