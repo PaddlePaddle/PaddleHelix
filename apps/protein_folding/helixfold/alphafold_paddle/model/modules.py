@@ -198,17 +198,31 @@ class AlphaFold(nn.Layer):
             zeros_bn = paddle.zeros_like(batch['aatype'][:, 0], dtype='float32')
 
             emb_config = self.config.embeddings_and_evoformer
-            prev = {
-                'prev_pos': paddle.tile(
-                    zeros_bn[..., None, None],
-                    [1, 1, residue_constants.atom_type_num, 3]),
-                'prev_msa_first_row': paddle.tile(
-                    zeros_bn[..., None],
-                    [1, 1, emb_config.msa_channel]),
-                'prev_pair': paddle.tile(
-                    zeros_bn[..., None, None].cpu(),
-                    [1, 1, num_residues, emb_config.pair_channel]).astype(paddle.bfloat16),
-            }
+
+            if not self.training: # for inference
+                prev = {
+                    'prev_pos': paddle.tile(
+                        zeros_bn[..., None, None],
+                        [1, 1, residue_constants.atom_type_num, 3]),
+                    'prev_msa_first_row': paddle.tile(
+                        zeros_bn[..., None],
+                        [1, 1, emb_config.msa_channel]),
+                    'prev_pair': paddle.tile(
+                        zeros_bn[..., None, None].cpu(),
+                        [1, 1, num_residues, emb_config.pair_channel]).astype(paddle.bfloat16),
+                }
+            else:
+                prev = {
+                    'prev_pos': paddle.tile(
+                        zeros_bn[..., None, None],
+                        [1, 1, residue_constants.atom_type_num, 3]),
+                    'prev_msa_first_row': paddle.tile(
+                        zeros_bn[..., None],
+                        [1, 1, emb_config.msa_channel]),
+                    'prev_pair': paddle.tile(
+                        zeros_bn[..., None, None],
+                        [1, 1, num_residues, emb_config.pair_channel]),
+                }
 
             if 'num_iter_recycling' in batch:
                 # Training trick: dynamic recycling number
@@ -220,8 +234,9 @@ class AlphaFold(nn.Layer):
             for recycle_idx in range(num_iter):
                 ret = _run_single_recycling(prev, recycle_idx, compute_loss=False)
                 prev = _get_prev(ret)
-                del ret
-                gc.collect()
+                if not self.training:
+                    del ret
+                    gc.collect()
 
         else:
             prev = {}
@@ -372,32 +387,29 @@ class AlphaFoldIteration(nn.Layer):
                     total_loss += loss(head_name_, head_config, ret, head_name, filter_ret=False)
 
             return ret, total_loss
-        
-        black_list, white_list = get_structure_module_bf16_op_list()
-        with paddle.amp.auto_cast(level='O1', custom_white_list=white_list, custom_black_list=black_list, dtype='bfloat16'):
-            ret, total_loss = _forward_heads(representations, ret, batch0)
 
-#         tracer = _dygraph_tracer()
-#         if tracer._amp_dtype == "bfloat16":
-#             with paddle.amp.auto_cast(enable=False):
-#                 for key, value in representations.items():
-#                     print('before cast representations', key, value.shape, value.place, value.dtype)
-#                     if value.dtype in [paddle.fluid.core.VarDesc.VarType.BF16]:
-#                         temp_value = value.cast('float32')
-#                         temp_value.stop_gradient = value.stop_gradient
-#                         representations[key] = temp_value
-#                         print('before cast representations', key, temp_value.shape, temp_value.place)
-#                 for key, value in batch0.items():
-#                     print('before cast batch0', key, value.shape, value.place, value.dtype)
-#                     if value.dtype in [paddle.fluid.core.VarDesc.VarType.BF16]:
-#                         temp_value = value.cast('float32')
-#                         temp_value.stop_gradient = value.stop_gradient
-#                         batch0[key] = temp_value
-#                         print('after cast batch0', key, temp_value.shape, temp_value.place)
-#                 ret, total_loss = _forward_heads(representations, ret, batch0)
+        if not self.training:
+            black_list, white_list = get_structure_module_bf16_op_list()
+            with paddle.amp.auto_cast(level='O1', custom_white_list=white_list, custom_black_list=black_list, dtype='bfloat16'):
+                ret, total_loss = _forward_heads(representations, ret, batch0)
+        else:
+            tracer = _dygraph_tracer()
+            if tracer._amp_dtype == "bfloat16":
+                with paddle.amp.auto_cast(enable=False):
+                    for key, value in representations.items():
+                        if value.dtype in [paddle.fluid.core.VarDesc.VarType.BF16]:
+                            temp_value = value.cast('float32')
+                            temp_value.stop_gradient = value.stop_gradient
+                            representations[key] = temp_value
+                    for key, value in batch0.items():
+                        if value.dtype in [paddle.fluid.core.VarDesc.VarType.BF16]:
+                            temp_value = value.cast('float32')
+                            temp_value.stop_gradient = value.stop_gradient
+                            batch0[key] = temp_value
+                    ret, total_loss = _forward_heads(representations, ret, batch0)
 
-#         else:
-#             ret, total_loss = _forward_heads(representations, ret, batch0)
+            else:
+                ret, total_loss = _forward_heads(representations, ret, batch0)
 
         if compute_loss:
             return ret, total_loss
@@ -1112,8 +1124,11 @@ class DistogramHead(nn.Layer):
         breaks = paddle.tile(breaks[None, :],
                             repeat_times=[logits.shape[0], 1])
 
+        if not self.training:
+            logits_cpu = logits.cpu()
+            del logits
         return {
-            'logits': logits, 
+            'logits': logits_cpu if not self.training else logits, 
             'bin_edges': breaks}
 
     def loss(self, value, batch):
@@ -1319,7 +1334,7 @@ class EvoformerIteration(nn.Layer):
         residual = self.outer_product_mean(msa_act, msa_mask)
         residual = self.outer_product_mean_dropout(residual)
         pair_act = pair_act + residual
-        
+
         residual = self.triangle_multiplication_outgoing(pair_act, pair_mask)
         residual = self.triangle_outgoing_dropout(residual)
         pair_act = pair_act + residual
@@ -1965,27 +1980,6 @@ class TriangleMultiplication(nn.Layer):
         mask = paddle.unsqueeze(mask, axis=-1) # [batch, N_res, N_res, 1]
 
         act = self.layer_norm_input(act) # line 1
-        
-#         if not self.training:
-#             # Note(GuoxiaWang): using inplace version to save memory(low_mem=True).
-#             left_proj_act = self.left_gate(act)
-#             left_proj_act.sigmoid_()
-#             left_proj_act.multiply_(self.left_projection(act))
-#             left_proj_act.multiply_(mask)
-            
-#             right_proj_act = self.right_gate(act)
-#             right_proj_act.sigmoid_()
-#             right_proj_act.multiply_(self.right_projection(act))
-#             right_proj_act.multiply_(mask)
-            
-#         else:
-#             left_proj_act = mask * self.left_projection(act)
-#             right_proj_act = mask * self.right_projection(act)
-#             left_gate_values = nn.functional.sigmoid(self.left_gate(act))
-#             right_gate_values = nn.functional.sigmoid(self.right_gate(act))
-
-#             left_proj_act = left_proj_act * left_gate_values
-#             right_proj_act = right_proj_act * right_gate_values
 
         left_proj_act = mask * self.left_projection(act)
         right_proj_act = mask * self.right_projection(act)

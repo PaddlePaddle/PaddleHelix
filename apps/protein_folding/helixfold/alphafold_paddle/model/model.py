@@ -31,6 +31,7 @@ from alphafold_paddle.relax import relax
 from alphafold_paddle.model import modules
 from alphafold_paddle.common import protein
 from alphafold_paddle.common import residue_constants
+from utils.param_fuse import get_fused_param_groups
 
 try:
   import tensorflow.compat.v1 as tf
@@ -100,8 +101,13 @@ class RunModel(object):
             'msa_feat': MSA_FEAT_DIM,
         }
         self.alphafold = modules.AlphaFold(channel_num, config.model)
+        # just only fuse param for inference
+        fused_parameters = get_fused_param_groups(self.alphafold, config.model.global_config.get('dist_model', False))
         self.init_params(str(params_path))
         self.alphafold.eval()
+        
+        register_hooks_recursively(self.alphafold)
+        
 
     def init_params(self, params_path: str):
         if params_path.endswith('.npz'):
