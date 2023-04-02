@@ -1,5 +1,5 @@
-import os 
-import glob 
+import os
+import glob
 from concurrent import futures
 from functools import partial
 from collections import defaultdict
@@ -14,7 +14,7 @@ from Bio.Data.SCOPData import protein_letters_3to1 as scop_3to1
 
 
 _aa3to1_dict = {**iupac_3to1_ext, **scop_3to1}
-aa_codes = { aa: code for code, aa in 
+aa_codes = { aa: code for code, aa in
             enumerate(['-', 'D', 'G', 'U', 'L', 'N', 'T', 'K', 'H', 'Y', 'W', 'C', 'P',
                     'V', 'S', 'O', 'I', 'E', 'F', 'X', 'Q', 'A', 'B', 'Z', 'R', 'M'])}
 
@@ -22,7 +22,7 @@ prot_map = {i.split(',')[0]: i.split(',')[1] for i in open('/home/ssd2/v_kazadia
 
 
 def get_C_beta_coords(residue):
-    if residue.has_id('CB'): 
+    if residue.has_id('CB'):
         return residue['CB'].get_coord()
     n = residue["N"].get_vector()
     c = residue["C"].get_vector()
@@ -47,16 +47,16 @@ def process_structrure(pdb_file_chains, save_dir):
     try:
         model = parser.get_structure(None, pdb_file)[0]
     except PDB.PDBExceptions.PDBConstructionException:
-        return 
+        return
 
     for c_id in set(chain_ids):
     # for chain in parser.get_structure(None, pdb_file)[0]:
         try:
             chain = model[c_id]
         except KeyError:
-            return 
+            return
 
-        # In order to retrieve torsion angles 
+        # In order to retrieve torsion angles
         # chain.atom_to_internal_coordinates()
 
         seq = []
@@ -74,8 +74,8 @@ def process_structrure(pdb_file_chains, save_dir):
         for residue in chain.get_unpacked_list():
             if residue.has_id('CA'):
                 xyz = residue['CA'].get_coord()
-                if coords and np.allclose(coords[-1], xyz): 
-                    continue 
+                if coords and np.allclose(coords[-1], xyz):
+                    continue
 
                 try:
                     c = residue['C'].get_coord()
@@ -113,11 +113,11 @@ def process_structrure(pdb_file_chains, save_dir):
                 #         and np.allclose(y_axis @ z_axis, 0), print(x_axis, y_axis, z_axis, x_axis @ y_axis, x_axis @ z_axis, y_axis @ z_axis)
                 local_sys.append(l_sys)
 
-                #Normal vector involving C-beta 
+                #Normal vector involving C-beta
                 c_b = get_C_beta_coords(residue)
                 assert len(c_b) == 3, c_b
                 c_a_axis = c_a - c_b
-                n_axis = n - c_b  
+                n_axis = n - c_b
                 cross_vec = np.cross(c_a_axis, n_axis)
                 ortho_vecs.append(cross_vec)
                 cb_coords.append(c_b)
@@ -139,7 +139,7 @@ def process_structrure(pdb_file_chains, save_dir):
             npz_filename = os.path.join(save_dir, f'{prot}-{chain.id}.npz')
             if os.path.exists(npz_filename):
                 print(f'{prot}-{c_id} exists already!')
-                return 
+                return
             np.savez_compressed(
                 npz_filename,
                 seq=seq,
@@ -174,7 +174,7 @@ if __name__ == '__main__':
 
     try:
         os.makedirs(save_dir)
-    except FileExistsError: pass 
+    except FileExistsError: pass
 
     with futures.ProcessPoolExecutor() as executor:
         results = executor.map(partial(process_structrure, save_dir=save_dir), selected_chains.items())

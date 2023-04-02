@@ -81,7 +81,7 @@ class Meta_Trainer(nn.Layer):
             self.preload_valid_data = preload_val_data
 
         self.train_epoch = 0
-        self.best_auc=0 
+        self.best_auc=0
         
         self.res_logs=[]
 
@@ -190,11 +190,11 @@ class Meta_Trainer(nn.Layer):
         n_support_test = self.args.n_shot_test
         n_query = self.args.n_query
         if not train:
-            losses_adapt = self.criterion(pred_dict['s_logits'].reshape((2*n_support_test*n_query,2)), 
+            losses_adapt = self.criterion(pred_dict['s_logits'].reshape((2*n_support_test*n_query,2)),
                                           paddle.expand(batch_data['s_label'],[n_query,n_support_test*2]).reshape((1,2*n_support_test*n_query)).squeeze(0))
         else:
             if flag:
-                losses_adapt = self.criterion(pred_dict['s_logits'].reshape((2*n_support_train*n_query,2)), 
+                losses_adapt = self.criterion(pred_dict['s_logits'].reshape((2*n_support_train*n_query,2)),
                                               paddle.expand(batch_data['s_label'],[n_query,n_support_train*2]).reshape((1,2*n_support_train*n_query)).squeeze(0))
             else:
                 losses_adapt = self.criterion(pred_dict['q_logits'], batch_data['q_label'])

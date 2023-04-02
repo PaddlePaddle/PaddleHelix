@@ -62,7 +62,7 @@ def load_labels(cif_path: str, pdb_id: str, chain_id: str = 'A') -> FeatureDict:
     if mmcif_obj is not None:
         all_atom_positions, all_atom_mask = get_atom_positions(mmcif_obj, chain_id, max_ca_ca_distance=float('inf'))
         # directly parses sequence from fasta, should be consistent to 'aatype' in input features (from .fasta or .pkl)
-        sequence = cif_to_fasta(mmcif_obj, chain_id)           
+        sequence = cif_to_fasta(mmcif_obj, chain_id)
         aatype_idx = np.array([restype_order_with_x[rn] for rn in sequence])
         resolution = np.array([mmcif_obj.header['resolution']])
     return {
@@ -108,7 +108,7 @@ batched_keys = [
     'extra_has_deletion',
     'extra_deletion_value',
     'msa_feat',
-    'template_pseudo_beta', 
+    'template_pseudo_beta',
     'template_pseudo_beta_mask',
 ]
 

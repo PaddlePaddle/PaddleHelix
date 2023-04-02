@@ -351,5 +351,5 @@ def can_assemble(node_x, node_y):
     singletons = [nei for nei in neis if nei.mol.GetNumAtoms() == 1]
     neighbors = singletons + neighbors
     cands, aroma_scores = enum_assemble(node_x, neighbors, [], [])
-    return len(cands) > 0 
+    return len(cands) > 0
 

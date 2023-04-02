@@ -17,7 +17,7 @@ from paddle import Model
 from paddle.nn import Linear, Conv2D, Conv1D, MaxPool1D, MaxPool2D, AvgPool1D
 from paddle.nn import Dropout, Flatten, BatchNorm1D, BatchNorm
 import paddle.nn.functional as F
-from paddle.nn import TransformerEncoderLayer, TransformerEncoder 
+from paddle.nn import TransformerEncoderLayer, TransformerEncoder
 from transformer import TransformerDecoder, TransformerDecoderLayer
 import pgl
 
@@ -33,11 +33,11 @@ class CDRModel(paddle.nn.Layer):
         self.use_mut = args.use_mut
         self.use_gexp = args.use_gexp
         self.use_methy = args.use_methy
-        self.units_list = args.units_list  
+        self.units_list = args.units_list
         self.gnn_type = args.gnn_type
         self.act = args.act
         self.layer_num = args.layer_num
-        self.pool_type = args.pool_type 
+        self.pool_type = args.pool_type
 
         self.gnn_layers = paddle.nn.LayerList()
         self.bns = paddle.nn.LayerList()
@@ -166,13 +166,13 @@ class CDRModel(paddle.nn.Layer):
             feat_list.append(h)
         x_drug = self.graph_pooling(graph, h)
 
-        x_mut = self.Conv1(mutation_input)  
+        x_mut = self.Conv1(mutation_input)
         x_mut = self.tanhs[0](x_mut)
         x_mut = self.MP2(x_mut)
-        x_mut = self.Conv2(x_mut) 
+        x_mut = self.Conv2(x_mut)
         x_mut = self.relus[0](x_mut)
         x_mut = self.MP3(x_mut)
-        x_mut = self.flat[1](x_mut)  
+        x_mut = self.flat[1](x_mut)
         x_mut = self.fc1(x_mut)
         x_mut = self.relus[1](x_mut)
         x_mut = self.dropout1[3](x_mut)
@@ -233,11 +233,11 @@ class STRModel(paddle.nn.Layer):
         self.use_mut = args.use_mut
         self.use_gexp = args.use_gexp
         self.use_methy = args.use_methy
-        self.units_list = args.units_list  
-        self.gnn_type = args.gnn_type  
+        self.units_list = args.units_list
+        self.gnn_type = args.gnn_type
         self.act = args.act
-        self.layer_num = args.layer_num 
-        self.pool_type = args.pool_type  
+        self.layer_num = args.layer_num
+        self.pool_type = args.pool_type
         self.gnn_layers = paddle.nn.LayerList()
         self.bns = paddle.nn.LayerList()
         self.dropout = paddle.nn.LayerList()
@@ -361,13 +361,13 @@ class STRModel(paddle.nn.Layer):
         x_drug = self.graph_pooling(graph, h)
 
         # mutation feature
-        x_mut = self.Conv1(mutation_input) 
+        x_mut = self.Conv1(mutation_input)
         x_mut = self.tanhs[0](x_mut)
         x_mut = self.MP2(x_mut)
-        x_mut = self.Conv2(x_mut) 
+        x_mut = self.Conv2(x_mut)
         x_mut = self.relus[0](x_mut)
         x_mut = self.MP3(x_mut)
-        x_mut = self.flat[1](x_mut)  
+        x_mut = self.flat[1](x_mut)
         x_mut = self.fc1(x_mut)
         x_mut = self.relus[1](x_mut)
         x_mut = self.dropout1[3](x_mut)

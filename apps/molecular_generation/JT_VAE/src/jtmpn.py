@@ -62,8 +62,8 @@ class JTMPN(nn.Layer):
         self.W_h = nn.Linear(hidden_size, hidden_size, bias_attr=False)
         self.W_o = nn.Linear(ATOM_FDIM + hidden_size, hidden_size)
 
-    def forward(self, fatoms, fbonds, agraph, bgraph, scope, tree_message): 
-        """Forward""" 
+    def forward(self, fatoms, fbonds, agraph, bgraph, scope, tree_message):
+        """Forward"""
         fatoms = paddle.to_tensor(fatoms)
         fbonds = paddle.to_tensor(fbonds)
         agraph = paddle.to_tensor(agraph)
@@ -75,7 +75,7 @@ class JTMPN(nn.Layer):
         for i in range(self.depth - 1):
             message = paddle.concat([tree_message, graph_message], axis=0)
             nei_message = index_select_ND(message, 0, bgraph)
-            nei_message = paddle.sum(nei_message, axis=1)  
+            nei_message = paddle.sum(nei_message, axis=1)
             nei_message = self.W_h(nei_message)
             graph_message = F.relu(binput + nei_message)
 
@@ -99,11 +99,11 @@ class JTMPN(nn.Layer):
         fatoms, fbonds = [], []
         in_bonds, all_bonds = [], []
         total_atoms = 0
-        total_mess = len(mess_dict) + 1  
+        total_mess = len(mess_dict) + 1
         scope = []
         for smiles, all_nodes, ctr_node in cand_batch:
             mol = Chem.MolFromSmiles(smiles)
-            Chem.Kekulize(mol)  
+            Chem.Kekulize(mol)
             n_atoms = mol.GetNumAtoms()
             ctr_bid = ctr_node.idx
 
@@ -122,7 +122,7 @@ class JTMPN(nn.Layer):
 
                 bfeature = bond_features(bond)
 
-                b = total_mess + len(all_bonds)  
+                b = total_mess + len(all_bonds)
                 all_bonds.append((x, y))
                 fbonds.append(np.concatenate([fatoms[x], bfeature], 0))
                 in_bonds[y].append(b)
@@ -155,13 +155,13 @@ class JTMPN(nn.Layer):
 
         for b1 in range(total_bonds):
             x, y = all_bonds[b1]
-            for i, b2 in enumerate(in_bonds[x]):  
+            for i, b2 in enumerate(in_bonds[x]):
                 if b2 < total_mess or all_bonds[b2 - total_mess][0] != y:
                     bgraph[b1, i] = b2
 
-        return {'fatoms': fatoms, 
-                'fbonds':fbonds, 
-                'agraph': agraph, 
-                'bgraph': bgraph, 
+        return {'fatoms': fatoms,
+                'fbonds':fbonds,
+                'agraph': agraph,
+                'bgraph': bgraph,
                 'scope': scope}
 

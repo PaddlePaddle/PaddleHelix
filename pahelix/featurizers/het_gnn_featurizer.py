@@ -38,13 +38,13 @@ class DDiFeaturizer(object):
         drug_feat = drug_feat.fillna(0)
         drug_feat.replace([np.inf, -np.inf], 0, inplace=True)
 
-        nm = StandardScaler() 
+        nm = StandardScaler()
         scaled_feat = pd.DataFrame(nm.fit_transform(drug_feat))
         scaled_feat = scaled_feat.fillna(0)
         scaled_feat.index = drug_feat.index
 
         edges = {'dds': [], 'dti': [], 'ppi': []}
-        ddi_nn, ddi_nodes = num_nodes_stat(ddi_data) 
+        ddi_nn, ddi_nodes = num_nodes_stat(ddi_data)
         selected_drugs_feat = scaled_feat[scaled_feat.index.isin(ddi_nodes)]
         ddi_nodes = set(selected_drugs_feat.index)
         total_nodes = set()
@@ -68,13 +68,13 @@ class DDiFeaturizer(object):
 
         for d in ppi_data:
             edges['ppi'].append((d['pair'][0], d['pair'][1]))
-            edges['ppi'].append((d['pair'][1], d['pair'][0]))  
+            edges['ppi'].append((d['pair'][1], d['pair'][0]))
             total_nodes.add(d['pair'][0])
             total_nodes.add(d['pair'][1])
 
-        num_nodes = len(total_nodes)   
-        nodes_dict = dict(zip(total_nodes, range(num_nodes)))  
-        node_feat = np.zeros((num_nodes, 2325)).astype('float32')  
+        num_nodes = len(total_nodes)
+        nodes_dict = dict(zip(total_nodes, range(num_nodes)))
+        node_feat = np.zeros((num_nodes, 2325)).astype('float32')
         selected_drugs_feat.index = [nodes_dict[x] for x in selected_drugs_feat.index]
         
         for d in selected_drugs_feat.index:

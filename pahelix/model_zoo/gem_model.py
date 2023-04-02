@@ -214,8 +214,8 @@ class GeoPredModel(nn.Layer):
 
     def _get_Fg_loss(self, feed_dict, graph_repr):
         fg_label = paddle.concat(
-                [feed_dict['Fg_morgan'], 
-                feed_dict['Fg_daylight'], 
+                [feed_dict['Fg_morgan'],
+                feed_dict['Fg_daylight'],
                 feed_dict['Fg_maccs']], 1)
         logits = self.Fg_linear(graph_repr)
         loss = self.Fg_loss(logits, fg_label)

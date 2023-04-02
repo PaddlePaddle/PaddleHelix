@@ -60,16 +60,16 @@ def get_optimizer(opt_config, model):
         grad_clip = paddle.nn.ClipGradByGlobalNorm(clip_norm=float(opt_config.grad_clip))
     if 'decay' in opt_config:
         second_scheduler = paddle.optimizer.lr.StepDecay(
-                learning_rate=opt_config.lr, 
+                learning_rate=opt_config.lr,
                 step_size=opt_config.decay.step_size,
                 gamma=opt_config.decay.gamma)
     else:
         second_scheduler = opt_config.lr
     lr_scheduler = paddle.optimizer.lr.LinearWarmup(
-            learning_rate=second_scheduler, 
-            warmup_steps=opt_config.warmup_steps, 
-            start_lr=opt_config.lr * 0.01, 
-            end_lr=opt_config.lr, 
+            learning_rate=second_scheduler,
+            warmup_steps=opt_config.warmup_steps,
+            start_lr=opt_config.lr * 0.01,
+            end_lr=opt_config.lr,
             verbose=False)
 
     evoformer_params = []
@@ -92,7 +92,7 @@ def get_optimizer(opt_config, model):
         parameters.append({'params': get_fused_params(other_params + evoformer_params + template_and_pair_transition_params)})
 
     optimizer = paddle.optimizer.Adam(
-            learning_rate=lr_scheduler, 
+            learning_rate=lr_scheduler,
             epsilon=1e-06,
             grad_clip=grad_clip,
             parameters = parameters
@@ -122,7 +122,7 @@ def check_batch(batch, max_length=None):
         if k in d:
             logging.debug(f'\t{k}: {d[k].shape}')
 
-    logging.debug(f'Get protein_name: {batch["name"]}')    
+    logging.debug(f'Get protein_name: {batch["name"]}')
     for k in ['aatype', 'msa_feat', 'extra_msa', 'masked_msa_only']:
         _print(k, batch["feat"])
     for k in ['all_atom_positions']:
@@ -145,7 +145,7 @@ def eval(args, model, eval_dataset, compute_loss, cache_dir=None):
             drop_last=False,
             num_workers=0)
     res_collect = ResultsCollect(
-            eval_tm_score=True, 
+            eval_tm_score=True,
             tm_score_bin=args.tm_score_bin,
             lddt_score_bin=args.lddt_score_bin,
             cache_dir=cache_dir, distributed=args.distributed)
@@ -180,8 +180,8 @@ def full_eval(args, cur_step, model, valid_dataset, test_dataset_dict, data_writ
         logging.info(f'[Main] Train_step: {cur_step} evaluate valid set ==========')
         valid_results = eval(
                 args,
-                model, 
-                valid_dataset, 
+                model,
+                valid_dataset,
                 compute_loss=False,
                 cache_dir=f'{args.log_dir}/valid_pdbs/{cur_step}')
         add_to_data_writer(data_writer, cur_step, valid_results, prefix='valid')
@@ -193,8 +193,8 @@ def full_eval(args, cur_step, model, valid_dataset, test_dataset_dict, data_writ
     for name, test_dataset in test_dataset_dict.items():
         test_result = eval(
                 args,
-                model, 
-                test_dataset, 
+                model,
+                test_dataset,
                 compute_loss=False,
                 cache_dir=f'{args.log_dir}/test_pdbs-{name}/{cur_step}')
         add_to_data_writer(data_writer, cur_step, test_result, prefix='test-' + name)
@@ -207,13 +207,13 @@ def full_eval(args, cur_step, model, valid_dataset, test_dataset_dict, data_writ
     for name, test_dataset in test_dataset_dict.items():
         test_ema_result = eval(
                 args,
-                model, 
-                test_dataset, 
+                model,
+                test_dataset,
                 compute_loss=False,
                 cache_dir=f'{args.log_dir}/test_pdbs-ema-{name}/{cur_step}')
         add_to_data_writer(data_writer, cur_step, test_ema_result, prefix='test-ema-' + name)
         csv_print({**test_ema_result, f'0-TEST-ema-{name}': f'0-TEST-ema-{name}'})
-    logging.info(f'[Main] Train_step: {cur_step} evaluate test-ema finish ==========')   
+    logging.info(f'[Main] Train_step: {cur_step} evaluate test-ema finish ==========')
     ema.restore()
 
 
@@ -404,7 +404,7 @@ def main(args):
         train_dataset = AF2Dataset(
                 model_config=model_config,
                 data_config=data_config.train,
-                trainer_id=dp_rank, 
+                trainer_id=dp_rank,
                 trainer_num=dp_nranks,
                 crop_size=train_config.crop_size,
                 is_pad_if_crop=True,
@@ -414,7 +414,7 @@ def main(args):
         valid_dataset = AF2Dataset(
                 model_config=model_config,
                 data_config=data_config.valid,
-                trainer_id=dp_rank, 
+                trainer_id=dp_rank,
                 trainer_num=dp_nranks,
                 is_shuffle=False)
     else:
@@ -425,7 +425,7 @@ def main(args):
             test_dataset_dict[test_name] = AF2TestDataset(
                     model_config=model_config,
                     data_config=data_config.test[test_name],
-                    trainer_id=dp_rank, 
+                    trainer_id=dp_rank,
                     trainer_num=dp_nranks)
     distill_dataset = None
     if 'distill' in data_config:
@@ -449,9 +449,9 @@ def main(args):
     train_loader = paddle.io.DataLoader(
             dataset=train_dataset,
             batch_sampler=LoopedBatchSampler(
-                dataset=train_dataset, 
-                shuffle=True, 
-                batch_size=args.batch_size, 
+                dataset=train_dataset,
+                shuffle=True,
+                batch_size=args.batch_size,
                 drop_last=False),
             num_workers=args.num_workers,
             worker_init_fn=worker_init_fn if args.seed is not None else None)

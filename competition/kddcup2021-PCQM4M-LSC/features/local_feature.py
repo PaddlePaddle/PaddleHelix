@@ -1,4 +1,4 @@
-# allowable multiple choice node and edge features 
+# allowable multiple choice node and edge features
 allowable_features = {
     'possible_atomic_num_list' : list(range(1, 119)) + ['misc'],
     'possible_chirality_list' : [
@@ -30,7 +30,7 @@ allowable_features = {
         'STEREOCIS',
         'STEREOTRANS',
         'STEREOANY',
-    ], 
+    ],
     'possible_is_conjugated_list': [False, True],
     'possible_in_num_ring_size_list': [0, 1, 2, 3, 4, 5, 6, 7, 8, 'misc'],
     'possible_valence_out_shell_list': [0, 1, 2, 3, 4, 5, 6, 7, 8, 'misc'],
@@ -124,7 +124,7 @@ def get_bond_feature_dims():
     return [i + 1 for i in bare_bond_feature_dims]
 
 def atom_feature_vector_to_dict(atom_feature):
-    [atomic_num_idx, 
+    [atomic_num_idx,
     chirality_idx,
     degree_idx,
     formal_charge_idx,
@@ -160,7 +160,7 @@ def atom_feature_vector_to_dict(atom_feature):
 # assert atom_feature_dict['is_in_ring'] == False
 
 def bond_feature_vector_to_dict(bond_feature):
-    [bond_type_idx, 
+    [bond_type_idx,
     bond_stereo_idx,
     is_conjugated_idx] = bond_feature
 

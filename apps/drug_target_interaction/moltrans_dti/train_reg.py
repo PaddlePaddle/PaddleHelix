@@ -30,7 +30,7 @@ from argparse import ArgumentParser
 
 from double_towers import MolTransModel
 from preprocess import DataEncoder, concordance_index1
-from util_function import (load_DAVIS, data_process, load_KIBA, load_ChEMBL_kd, load_ChEMBL_pkd, 
+from util_function import (load_DAVIS, data_process, load_KIBA, load_ChEMBL_kd, load_ChEMBL_pkd,
                            load_BindingDB_kd, load_davis_dataset, load_kiba_dataset)
 # Set seed for reproduction
 paddle.seed(2)
@@ -96,7 +96,7 @@ def reg_test(data_generator, model):
     y_pred = []
     y_label = []
 
-    model.eval()    
+    model.eval()
     for _, data in enumerate(data_generator):
         d_out, mask_d_out, t_out, mask_t_out, label = data
         temp = model(d_out.long().cuda(), t_out.long().cuda(), mask_d_out.long().cuda(), mask_t_out.long().cuda())
@@ -138,7 +138,7 @@ def main(args):
     # model.set_dict(params_dict)
 
     # Optimizer
-    # scheduler = paddle.optimizer.lr.LinearWarmup(learning_rate=args.lr, warmup_steps=50, start_lr=0, 
+    # scheduler = paddle.optimizer.lr.LinearWarmup(learning_rate=args.lr, warmup_steps=50, start_lr=0,
     #                                             end_lr=args.lr, verbose=False)
     optim = utils.Adam(parameters=model.parameters(), learning_rate=args.lr) # Adam
     #optim = paddle.optimizer.AdamW(learning_rate=scheduler, parameters=model.parameters(), weight_decay=0.01) # AdamW
@@ -146,20 +146,20 @@ def main(args):
     # Data Preparation
     # Regression Task - Raw Dataset
     # X_drugs, X_targets, y = get_raw_db(args.dataset)
-    # reg_training_set, reg_validation_set, reg_testing_set = data_process(X_drugs, X_targets, y, 
-    #                     frac=[0.8,0.1,0.1], drug_encoding='Transformer', target_encoding='Transformer', 
+    # reg_training_set, reg_validation_set, reg_testing_set = data_process(X_drugs, X_targets, y,
+    #                     frac=[0.8,0.1,0.1], drug_encoding='Transformer', target_encoding='Transformer',
     #                     split_method='random_split', random_seed=1)
-    # reg_training_data = DataEncoder(reg_training_set.index.values, 
+    # reg_training_data = DataEncoder(reg_training_set.index.values,
     #                     reg_training_set.Label.values, reg_training_set)
-    # reg_train_loader = utils.BaseDataLoader(reg_training_data, batch_size=args.batchsize, 
+    # reg_train_loader = utils.BaseDataLoader(reg_training_data, batch_size=args.batchsize,
     #                     shuffle=True, drop_last=False, num_workers=args.workers)
-    # reg_validation_data = DataEncoder(reg_validation_set.index.values, 
+    # reg_validation_data = DataEncoder(reg_validation_set.index.values,
     #                     reg_validation_set.Label.values, reg_validation_set)
-    # reg_validation_loader = utils.BaseDataLoader(reg_validation_data, batch_size=args.batchsize, 
+    # reg_validation_loader = utils.BaseDataLoader(reg_validation_data, batch_size=args.batchsize,
     #                     shuffle=False, drop_last=False, num_workers=args.workers)
-    # reg_testing_data = DataEncoder(reg_testing_set.index.values, 
+    # reg_testing_data = DataEncoder(reg_testing_set.index.values,
     #                     reg_testing_set.Label.values, reg_testing_set)
-    # reg_testing_loader = utils.BaseDataLoader(reg_testing_data, batch_size=args.batchsize, 
+    # reg_testing_loader = utils.BaseDataLoader(reg_testing_data, batch_size=args.batchsize,
     #                     shuffle=False, drop_last=False, num_workers=args.workers)
 
     # Regression Task - Benchmark Dataset
@@ -178,13 +178,13 @@ def main(args):
     df_data_tt.rename(columns={0:'SMILES', 1: 'Target Sequence', 2: 'Label'}, inplace=True)
 
     reg_training_data = DataEncoder(df_data_t.index.values, df_data_t.Label.values, df_data_t)
-    reg_train_loader = utils.BaseDataLoader(reg_training_data, batch_size=args.batchsize, 
+    reg_train_loader = utils.BaseDataLoader(reg_training_data, batch_size=args.batchsize,
                                     shuffle=True, drop_last=False, num_workers=args.workers)
     reg_validation_data = DataEncoder(df_data_tt.index.values, df_data_tt.Label.values, df_data_tt)
-    reg_validation_loader = utils.BaseDataLoader(reg_validation_data, batch_size=args.batchsize, 
+    reg_validation_loader = utils.BaseDataLoader(reg_validation_data, batch_size=args.batchsize,
                                     shuffle=False, drop_last=False, num_workers=args.workers)
 
-    # Initial Testing    
+    # Initial Testing
     print("=====Go for Initial Testing=====")
     with paddle.no_grad():
         mse, CI, reg_loss = reg_test(reg_validation_loader, model)
@@ -194,7 +194,7 @@ def main(args):
     # Training
     for epoch in range(args.epochs):
         print("=====Go for Training=====")
-        model.train()        
+        model.train()
         # Regression Task
         for batch_id, data in enumerate(reg_train_loader):
             d_out, mask_d_out, t_out, mask_t_out, label = data
@@ -261,8 +261,8 @@ if __name__ == "__main__":
     parser.add_argument('-b', '--batchsize', default=64, type=int, metavar='N', help='Batch size')
     parser.add_argument('-j', '--workers', default=0, type=int, metavar='N', help='Number of workers')
     parser.add_argument('--epochs', default=200, type=int, metavar='N', help='Number of total epochs')
-    parser.add_argument('--dataset', choices=['raw_chembl_pkd', 'raw_chembl_kd', 'raw_bindingdb_kd', 'raw_davis', 
-                        'raw_kiba', 'benchmark_davis', 'benchmark_kiba'], default='benchmark_davis', type=str, 
+    parser.add_argument('--dataset', choices=['raw_chembl_pkd', 'raw_chembl_kd', 'raw_bindingdb_kd', 'raw_davis',
+                        'raw_kiba', 'benchmark_davis', 'benchmark_kiba'], default='benchmark_davis', type=str,
                         metavar='DATASET', help='Select specific dataset for your task')
     parser.add_argument('--lr', default=5e-4, type=float, metavar='LR', help='Initial learning rate', dest='lr')
     parser.add_argument('--model_config', default='./config.json', type=str)

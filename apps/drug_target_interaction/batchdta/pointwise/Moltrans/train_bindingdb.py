@@ -206,7 +206,7 @@ def main(args):
             t_result[t_gl]+=1
 
     t_lens = []
-    t_lens.extend(t_result.values())    
+    t_lens.extend(t_result.values())
         
     # Skip len=1 data
     t_k = 0
@@ -234,7 +234,7 @@ def main(args):
     test_weight_ci, test_average_ci = np.sum(t_w_ci)/np.sum(t_new_lens), np.mean(t_a_ci)
 
     # Save the testing result
-    files.write("test_MSE:" + str(test_MSE) + ", test_averageCI:" + 
+    files.write("test_MSE:" + str(test_MSE) + ", test_averageCI:" +
                 str(test_average_ci) + ", test_weightedCI:" + str(test_weight_ci) + ", test_overallCI:" + str(test_CI) + "\n")
     files.write("best_epoch:" + str(best_epoch + 1) + ", best_train_loss:" + str(best_train_loss) + "\n")
 

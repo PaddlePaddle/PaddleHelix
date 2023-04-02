@@ -26,8 +26,8 @@ from rdkit.Chem import AllChem
 
 from sklearn.metrics import pairwise_distances
 import hashlib
-from pahelix.utils.compound_tools import mol_to_geognn_graph_data_MMFF3d 
-from pahelix.utils.compound_tools import Compound3DKit 
+from pahelix.utils.compound_tools import mol_to_geognn_graph_data_MMFF3d
+from pahelix.utils.compound_tools import Compound3DKit
 
 
 def md5_hash(string):
@@ -37,11 +37,11 @@ def md5_hash(string):
 
 
 def mask_context_of_geognn_graph(
-        g, 
+        g,
         superedge_g,
-        target_atom_indices=None, 
-        mask_ratio=None, 
-        mask_value=0, 
+        target_atom_indices=None,
+        mask_ratio=None,
+        mask_value=0,
         subgraph_num=None,
         version='gem'):
     """tbd"""
@@ -120,7 +120,7 @@ def get_pretrain_bond_angle(edges, atom_poses):
         angle = np.arccos(np.dot(vec1, vec2))
         return angle
     def _add_item(
-            node_i_indices, node_j_indices, node_k_indices, bond_angles, 
+            node_i_indices, node_j_indices, node_k_indices, bond_angles,
             node_i_index, node_j_index, node_k_index):
         node_i_indices += [node_i_index, node_k_index]
         node_j_indices += [node_j_index, node_j_index]
@@ -220,11 +220,11 @@ class GeoPredCollateFn(object):
     """tbd"""
     def __init__(self,
              atom_names,
-             bond_names, 
+             bond_names,
              bond_float_names,
              bond_angle_float_names,
-             pretrain_tasks, 
-             mask_ratio, 
+             pretrain_tasks,
+             mask_ratio,
              Cm_vocab):
         self.atom_names = atom_names
         self.bond_names = bond_names
@@ -302,7 +302,7 @@ class GeoPredCollateFn(object):
 
             node_count += N
 
-        graph_dict = {}    
+        graph_dict = {}
         feed_dict = {}
         
         atom_bond_graph = pgl.Graph.batch(atom_bond_graph_list)
@@ -322,7 +322,7 @@ class GeoPredCollateFn(object):
 
         masked_bond_angle_graph = pgl.Graph.batch(masked_bond_angle_graph_list)
         self._flat_shapes(masked_bond_angle_graph.node_feat)
-        self._flat_shapes(masked_bond_angle_graph.edge_feat)         
+        self._flat_shapes(masked_bond_angle_graph.edge_feat)
         graph_dict['masked_bond_angle_graph'] = masked_bond_angle_graph
 
         if 'Cm' in self.pretrain_tasks:

@@ -1,5 +1,5 @@
-#!/usr/bin/python3                                                                                                
-#-*-coding:utf-8-*- 
+#!/usr/bin/python3
+#-*-coding:utf-8-*-
 #   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -104,7 +104,7 @@ def weights_init(m):
             
                 getattr(p, 'bias_ih_l%d' % k).set_value(paddle.zeros(shape=getattr(p, 'bias_ih_l%d' % k).shape))
                 getattr(p, 'bias_hh_l%d' % k).set_value(paddle.zeros(shape=getattr(p, 'bias_hh_l%d' % k).shape))
-                glorot_uniform(getattr(p, 'weight_ih_l%d' % k))            
+                glorot_uniform(getattr(p, 'weight_ih_l%d' % k))
                 orthogonal_gru(getattr(p, 'weight_hh_l%d' % k))
                 print('a GRU inited')
             

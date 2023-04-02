@@ -185,10 +185,10 @@ def _load_chembl_filtered_dataset(data_path):
     targetMatTransposed = targetMat[sampleAnnInd[list(chain(*folds))]].T.tocsr()
     targetMatTransposed.sort_indices()
     # # num positive examples in each of the 1310 targets
-    trainPosOverall = np.array([np.sum(targetMatTransposed[x].data > 0.5) 
+    trainPosOverall = np.array([np.sum(targetMatTransposed[x].data > 0.5)
             for x in range(targetMatTransposed.shape[0])])
     # # num negative examples in each of the 1310 targets
-    trainNegOverall = np.array([np.sum(targetMatTransposed[x].data < -0.5) 
+    trainNegOverall = np.array([np.sum(targetMatTransposed[x].data < -0.5)
             for x in range(targetMatTransposed.shape[0])])
     # dense array containing the labels for the 456331 molecules and 1310 targets
     denseOutputData = targetMat.A # possible values are {-1, 0, 1}

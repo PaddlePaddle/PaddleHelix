@@ -840,7 +840,7 @@ class MCRMSE(Metrics):
 #        dic = {}
 #        for qid, vec, type_id in self.saver():
 #            dic.setdefault(i, {}).setdefault(k, []).append(vec)
-#        
+#
 #        for qid in dic:
 #            assert len(dic[qid]) == 3
 #            qvec = np.arrray(dic[qid][0])
@@ -850,4 +850,4 @@ class MCRMSE(Metrics):
 #
 #            np.matmul(qvec, np.transpose(ptvec))
 #            np.matmul(qvec, np.transpose(ntvec))
-#            
+#

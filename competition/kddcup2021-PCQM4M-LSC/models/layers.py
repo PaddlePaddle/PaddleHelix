@@ -121,13 +121,13 @@ class CatGINConv(paddle.nn.Layer):
 
         self.with_efeat = with_efeat
 
-        self.mlp = nn.Sequential(Linear(emb_dim, emb_dim), 
-                                 batch_norm_1d(emb_dim), 
-                                 nn.Swish(), 
+        self.mlp = nn.Sequential(Linear(emb_dim, emb_dim),
+                                 batch_norm_1d(emb_dim),
+                                 nn.Swish(),
                                  Linear(emb_dim, emb_dim))
 
-        self.send_mlp = nn.Sequential(nn.Linear(2*emb_dim, 2*emb_dim), 
-                                 nn.Swish(), 
+        self.send_mlp = nn.Sequential(nn.Linear(2*emb_dim, 2*emb_dim),
+                                 nn.Swish(),
                                  Linear(2*emb_dim, emb_dim))
 
         self.eps = self.create_parameter(
@@ -154,7 +154,7 @@ class CatGINConv(paddle.nn.Layer):
     def forward(self, graph, feature, edge_feat=None):
 
         if self.with_efeat:
-            edge_embedding = self.bond_encoder(edge_feat)    
+            edge_embedding = self.bond_encoder(edge_feat)
 
             msg = graph.send(src_feat={"x": feature},
                     dst_feat={"x": feature},
@@ -180,9 +180,9 @@ class GINConv(paddle.nn.Layer):
         self.config = config
         self.with_efeat = with_efeat
         emb_dim = self.config.emb_dim
-        self.mlp = nn.Sequential(Linear(emb_dim, emb_dim), 
-                                 batch_norm_1d(emb_dim), 
-                                 nn.Swish(), 
+        self.mlp = nn.Sequential(Linear(emb_dim, emb_dim),
+                                 batch_norm_1d(emb_dim),
+                                 nn.Swish(),
                                  Linear(emb_dim, emb_dim))
         
         self.eps = self.create_parameter(
@@ -200,7 +200,7 @@ class GINConv(paddle.nn.Layer):
         return msg.reduce_sum(msg["h"])
 
     def forward(self, graph, feature, edge_feat):
-        edge_embedding = self.bond_encoder(edge_feat)    
+        edge_embedding = self.bond_encoder(edge_feat)
 
         msg = graph.send(src_feat={"x": feature},
                 edge_feat={"e": edge_embedding},
@@ -221,9 +221,9 @@ class NormGINConv(paddle.nn.Layer):
         self.config = config
         self.with_efeat = with_efeat
         emb_dim = self.config.emb_dim
-        self.mlp = nn.Sequential(Linear(emb_dim, emb_dim), 
-                                 batch_norm_1d(emb_dim), 
-                                 nn.Swish(), 
+        self.mlp = nn.Sequential(Linear(emb_dim, emb_dim),
+                                 batch_norm_1d(emb_dim),
+                                 nn.Swish(),
                                  Linear(emb_dim, emb_dim))
         
         self.eps = self.create_parameter(
@@ -246,7 +246,7 @@ class NormGINConv(paddle.nn.Layer):
 
     def forward(self, graph, feature, edge_feat):
         if self.with_efeat:
-            edge_embedding = self.bond_encoder(edge_feat)    
+            edge_embedding = self.bond_encoder(edge_feat)
 
             msg = graph.send(src_feat={"x": feature},
                     edge_feat={"e": edge_embedding},

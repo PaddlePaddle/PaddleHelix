@@ -2,7 +2,7 @@ import paddle
 from paddle import nn
 import paddle.nn.functional as F
 from utils import _norm_no_nan
-import pgl 
+import pgl
 import pgl.math as math
 
 
@@ -15,8 +15,8 @@ class GVP(nn.Layer):
         super().__init__()
         self.si, self.vi = in_dims
         self.so, self.vo = out_dims
-        if self.vi: 
-            self.h_dim = h_dim or max(self.vi, self.vo) 
+        if self.vi:
+            self.h_dim = h_dim or max(self.vi, self.vo)
             self.wh = Linear(self.vi, self.h_dim, bias_attr=False)
             self.ws = Linear(self.h_dim + self.si, self.so)
             if self.vo:
@@ -30,11 +30,11 @@ class GVP(nn.Layer):
         if self.vi:
             s, v = x
             v = paddle.transpose(v, [0, 2, 1])
-            vh = self.wh(v)    
+            vh = self.wh(v)
             vn = _norm_no_nan(vh, axis=-2)
             s = self.ws(paddle.concat([s, vn], -1))
-            if self.vo: 
-                v = self.wv(vh) 
+            if self.vo:
+                v = self.wv(vh)
                 v = paddle.transpose(v, [0, 2, 1])
                 if self.vector_act:
                     v = v * self.vector_act(_norm_no_nan(v, axis=-1, keepdim=True))
@@ -55,7 +55,7 @@ class RR_VPConv(nn.Layer):
         self.si, self.vi = in_dims
         self.so, self.vo = out_dims
         
-        self.vp_layer = GVP((in_dims[0], in_dims[1]), 
+        self.vp_layer = GVP((in_dims[0], in_dims[1]),
                             out_dims, h_dim=out_dims[1], activations=activations)
 
     def forward(self, graph, x, local_sys):

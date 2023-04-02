@@ -1,5 +1,5 @@
-#!/usr/bin/python3                                                                                                
-#-*-coding:utf-8-*- 
+#!/usr/bin/python3
+#-*-coding:utf-8-*-
 #   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,7 @@ from args import *
 from pahelix.model_zoo.seq_vae_model import VAE
 from utils import *
 import paddle
-from paddle.io import Dataset 
+from paddle.io import Dataset
 import numpy as np
 import paddle.fluid as fluid
 import pdb
@@ -80,7 +80,7 @@ def train_epoch(model, data_loader, epoch, kl_weight, config, optimizer=None):
             'loss': np.mean(loss_values),
             'mode': 'Eval' if optimizer is None else 'Train'}
     
-    return postfix  
+    return postfix
 
 
 def train_model(config, train_dataloader, model):
@@ -94,7 +94,7 @@ def train_model(config, train_dataloader, model):
 
     kl_annealer = KLAnnealer(n_epoch, config)
 
-    # start to train 
+    # start to train
     for epoch in range(n_epoch):
         kl_weight = kl_annealer(epoch)
 
@@ -120,14 +120,14 @@ def main(config):
     # load model config
     model_config = json.load(open(config.model_config, 'r'))
     
-    # load data    
+    # load data
     dataset_file = config.dataset_dir
     src_data = load_zinc_dataset(dataset_file)
-    # load vocabulary and prepare dataloader    
+    # load vocabulary and prepare dataloader
     vocab = OneHotVocab.from_data(src_data)
     max_length = model_config["max_length"]
     train_dataset = StringDataset(vocab, src_data, max_length)
-    train_dataloader = paddle.io.DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True)    
+    train_dataloader = paddle.io.DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True)
 
     # set GPU
     paddle.set_device(config.device)
@@ -137,7 +137,7 @@ def main(config):
     # pickle.dump(config, open(config.config_save+'config.pkl', 'wb'))
     
     # build the model
-    model = VAE(vocab, model_config)   
+    model = VAE(vocab, model_config)
     ##################################### train the model #####################################
     model = train_model(config,train_dataloader,model)
 

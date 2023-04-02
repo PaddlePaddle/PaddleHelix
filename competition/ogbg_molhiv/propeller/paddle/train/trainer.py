@@ -276,7 +276,7 @@ class Learner(object):
             warm_start_setting=self.warm_start_setting)
 
         distribution.init_distribuition_env(
-            train_program)  #only initialize distribute training with 
+            train_program)  #only initialize distribute training with
         mon_exe.init_or_restore_variables()
         if distribution.status.is_master:
             mon_exe._hooks.append(
@@ -321,7 +321,7 @@ class Learner(object):
             run_hooks=eval_run_hooks,
             warm_start_setting=self.warm_start_setting)
         distribution.init_distribuition_env(
-            program)  #only initialize distribute training with 
+            program)  #only initialize distribute training with
         mon_exe.init_or_restore_variables()
 
         try:

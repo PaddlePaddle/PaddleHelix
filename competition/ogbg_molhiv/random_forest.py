@@ -54,7 +54,7 @@ def main(args):
     outcomes = df_smi.set_index("smiles").drop(["mol_id"], axis=1)
 
     feat = np.concatenate([mgf_feat, soft_mgf_feat, maccs_feat], axis=1)
-    X =  pd.DataFrame(feat, 
+    X =  pd.DataFrame(feat,
             index=smiles,
             columns=[i for i in range(feat.shape[1])])
 

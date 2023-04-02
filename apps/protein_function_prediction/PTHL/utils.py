@@ -1,6 +1,6 @@
 import os
 
-import paddle 
+import paddle
 
 
 def print_metrics(loss, f_max, auprc):

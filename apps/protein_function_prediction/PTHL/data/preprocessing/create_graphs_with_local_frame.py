@@ -1,5 +1,5 @@
-import os 
-import glob 
+import os
+import glob
 import argparse
 from concurrent import futures
 from functools import partial
@@ -17,20 +17,20 @@ def generate_contact_graph(chain_file, cmap_thresh, save_dir):
 
     if os.path.exists(save_file_name):
         print(f'Chain graph exists: {save_file_name}')
-        return 
+        return
     
  
 
     try:
         os.makedirs(save_dir)
-    except FileExistsError: pass 
+    except FileExistsError: pass
 
     chain_seq_coords = np.load(chain_file)
     coords = chain_seq_coords['coords']
     dist = distance_matrix(coords, coords)
     # temp_idx = np.arange(dist.shape[0])
-    # dist[temp_idx, temp_idx]= 2 * cmap_thresh 
-    np.fill_diagonal(dist, np.inf)# To remove self-loop   
+    # dist[temp_idx, temp_idx]= 2 * cmap_thresh
+    np.fill_diagonal(dist, np.inf)# To remove self-loop
     n2n_edges = np.stack((dist <= cmap_thresh).nonzero(), axis=1)
     n2n_edge_dist = dist[n2n_edges[:, 0], n2n_edges[:, 1]]
 
@@ -40,9 +40,9 @@ def generate_contact_graph(chain_file, cmap_thresh, save_dir):
     assert np.all(n2n_edges[:, 0] != n2n_edges[:, 1])
     assert len(n2n_edges) == len(n2n_edge_dist)
 
-    # compute polar angle using cosine formula between two vectors. 
+    # compute polar angle using cosine formula between two vectors.
     v = chain_seq_coords['ortho_vecs']
-    cos_theta = ((v[n2n_edges[:, 1]] * v[n2n_edges[:, 0]]).sum(axis=-1) / 
+    cos_theta = ((v[n2n_edges[:, 1]] * v[n2n_edges[:, 0]]).sum(axis=-1) /
                     (LA.norm(v[n2n_edges[:, 1]]) * LA.norm(v[n2n_edges[:, 0]])))
     
     # assert np.all(-1 < cos_theta) and np.all(cos_theta < 1)
@@ -80,9 +80,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # print('running main')
-    try: 
+    try:
         os.makedirs(args.save_dir)
-    except FileExistsError: pass 
+    except FileExistsError: pass
 
     input_data_files = glob.glob(args.input_dir+'/*')
 
@@ -92,4 +92,4 @@ if __name__ == '__main__':
     with futures.ProcessPoolExecutor() as executor:
         results = executor.map(partial(generate_contact_graph, cmap_thresh=args.cmap_thresh, save_dir=args.save_dir), input_data_files)
         
-        for r in results: pass # Simply for retrieving raised exception from threads. 
+        for r in results: pass # Simply for retrieving raised exception from threads.

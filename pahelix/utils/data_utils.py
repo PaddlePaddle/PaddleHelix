@@ -69,12 +69,12 @@ def load_npz_to_data_list(npz_file):
         return res
 
     merged_data = np.load(npz_file, allow_pickle=True)
-    names = [name for name in merged_data.keys() 
+    names = [name for name in merged_data.keys()
             if not name.endswith('.seq_len') and not name.endswith('.singular')]
     data_dict = {}
     for name in names:
         data_dict[name] = _split_data(
-                merged_data[name], 
+                merged_data[name],
                 merged_data[name + '.seq_len'],
                 merged_data[name + '.singular'])
 

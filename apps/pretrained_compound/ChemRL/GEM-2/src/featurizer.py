@@ -1,5 +1,5 @@
-#!/usr/bin/python                                                                                                                                                                                             
-#-*-coding:utf-8-*- 
+#!/usr/bin/python
+#-*-coding:utf-8-*-
 #   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -85,7 +85,7 @@ class OptimusCollateFn(object):
         self.is_inference = is_inference
         
     def _get_node_num_list(self, data_list):
-        return [len(x[self.encoder_config.embedding_layer.atom_names[0]]) 
+        return [len(x[self.encoder_config.embedding_layer.atom_names[0]])
                 for x in data_list]
 
     def _get_max_node_num(self, data_list):
@@ -111,7 +111,7 @@ class OptimusCollateFn(object):
                 continue
             
             value_list = [x[name] for x in data_list]
-            pair_list = [edge_to_pair(e, v, max_len) for e, v in zip(edges_list, value_list)]    
+            pair_list = [edge_to_pair(e, v, max_len) for e, v in zip(edges_list, value_list)]
             features[name] = pair_pad(pair_list, max_len).astype('int64')
         return features
     
@@ -158,12 +158,12 @@ if __name__ == "__main__":
 
     model_config = "configs/model_configs/mol_regr-optimus-mae.json"
     model_config = make_updated_config(
-            MOL_REGRESSION_MODEL_CONFIG, 
+            MOL_REGRESSION_MODEL_CONFIG,
             json.load(open(model_config, 'r')))
 
     encoder_config = "configs/model_configs/opt3d_l12_c128.json"
     encoder_config = make_updated_config(
-            OPTIMUS_MODEL_CONFIG, 
+            OPTIMUS_MODEL_CONFIG,
             json.load(open(encoder_config, 'r')))
     transform_fn = LiteOptimusTransformFn(model_config, encoder_config)
     collate_fn = LiteOptimusCollateFn(model_config, encoder_config)

@@ -70,9 +70,9 @@ class GoTermDataset(Dataset):
         predecessor = np.clip(predecessor, 0, predecessor.shape[0]-1)
         successor = np.arange(len(n_seq)) + 1
         successor = np.clip(successor, 0, successor.shape[0] - 1)
-        forward_v = coords[successor] - coords 
+        forward_v = coords[successor] - coords
         forward_v = normalize(forward_v, axis=1)
-        reverse_v = coords[predecessor] - coords 
+        reverse_v = coords[predecessor] - coords
         reverse_v = normalize(reverse_v, axis=1)
         v_feats = np.stack([forward_v, reverse_v], axis=1)
         n_graph.node_feat['v_feats'] = paddle.to_tensor(v_feats, dtype='float32')

@@ -23,7 +23,7 @@ from collections import defaultdict
 import random
 import paddle
 from pgl.utils.data import Dataset as BaseDataset
-from pgl.utils.data import Dataloader 
+from pgl.utils.data import Dataloader
 from pgl.utils.data.dataloader import  _DataLoaderIter
 import pgl
 from pgl.utils.logger import log
@@ -280,7 +280,7 @@ class Dataloader_sampler(object):
             raise "StreamDataset has no length"
 
     def __iter__(self):
-        # random seed will be fixed when using multiprocess, 
+        # random seed will be fixed when using multiprocess,
         # so set seed explicitly every time
         np.random.seed()
         if self.num_workers == 1:

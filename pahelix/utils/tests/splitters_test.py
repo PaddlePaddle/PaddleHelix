@@ -22,7 +22,7 @@ from pahelix.utils.splitters import \
 from pahelix.datasets.inmemory_dataset import InMemoryDataset
 
 
-class RandomSplitterTest(unittest.TestCase):  
+class RandomSplitterTest(unittest.TestCase):
     def test_split(self):
         raw_data_list = [
             {'smiles': 'CCOc1ccc2nc(S(N)(=O)=O)sc2c1'},
@@ -47,7 +47,7 @@ class RandomSplitterTest(unittest.TestCase):
         self.assertEqual(n, len(dataset))
 
 
-class IndexSplitterTest(unittest.TestCase):  
+class IndexSplitterTest(unittest.TestCase):
     def test_split(self):
         raw_data_list = [
             {'smiles': 'CCOc1ccc2nc(S(N)(=O)=O)sc2c1'},
@@ -72,7 +72,7 @@ class IndexSplitterTest(unittest.TestCase):
         self.assertEqual(n, len(dataset))
 
 
-class ScaffoldSplitterTest(unittest.TestCase):  
+class ScaffoldSplitterTest(unittest.TestCase):
     def test_split(self):
         raw_data_list = [
             {'smiles': 'CCOc1ccc2nc(S(N)(=O)=O)sc2c1'},
@@ -97,7 +97,7 @@ class ScaffoldSplitterTest(unittest.TestCase):
         self.assertEqual(n, len(dataset))
 
 
-class RandomScaffoldSplitterTest(unittest.TestCase):  
+class RandomScaffoldSplitterTest(unittest.TestCase):
     def test_split(self):
         raw_data_list = [
             {'smiles': 'CCOc1ccc2nc(S(N)(=O)=O)sc2c1'},

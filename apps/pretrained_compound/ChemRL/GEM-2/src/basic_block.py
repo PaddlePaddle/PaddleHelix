@@ -1,5 +1,5 @@
-#!/usr/bin/python                                                                                                
-#-*-coding:utf-8-*- 
+#!/usr/bin/python
+#-*-coding:utf-8-*-
 #   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -75,7 +75,7 @@ class LnDropWrapper(nn.Layer):
         super(LnDropWrapper, self).__init__()
         self.norm = nn.LayerNorm(embed_dim)
         self.layer = layer
-        self.dropout_module = nn.Dropout(dropout_rate) 
+        self.dropout_module = nn.Dropout(dropout_rate)
 
     def forward(self, x, *args, **kwargs):
         x = self.norm(x)
@@ -105,7 +105,7 @@ class IntEmbedding(nn.Layer):
         for name in self.names:
             embed = nn.Embedding(
                     embed_params[name]['vocab_size'],
-                    embed_dim, 
+                    embed_dim,
                     weight_attr=nn.initializer.XavierUniform())
             self.embed_dict[name] = embed
 

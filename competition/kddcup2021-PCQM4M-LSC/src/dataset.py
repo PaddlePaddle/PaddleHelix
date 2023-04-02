@@ -217,7 +217,7 @@ class AuxDataset(Dataset):
         return split_idx
 
     def __getitem__(self, idx):
-        num_nodes = self.graph._graph_node_index[idx + 1] - self.graph._graph_node_index[idx]        
+        num_nodes = self.graph._graph_node_index[idx + 1] - self.graph._graph_node_index[idx]
         node_shift = self.graph._graph_node_index[idx]
         edges = self.graph.edges[self.graph._graph_edge_index[idx]:self.graph._graph_edge_index[idx + 1]]
         edges = edges - node_shift
@@ -330,7 +330,7 @@ class CollateFn(object):
 
             num_nodes = gdata['junction_tree']['num_nodes']
             if num_nodes > 0:
-                nfeat = np.array(gdata['junction_tree']['junc_dict'], 
+                nfeat = np.array(gdata['junction_tree']['junc_dict'],
                         dtype="int64").reshape(-1, 1)
                 junc_g = pgl.Graph(edges=gdata['junction_tree']['edge_index'].T,
                         num_nodes=num_nodes,
@@ -373,7 +373,7 @@ class CollateFn(object):
 
             num_nodes = gdata['junction_tree']['num_nodes']
             if num_nodes > 0:
-                nfeat = np.array(gdata['junction_tree']['junc_dict'], 
+                nfeat = np.array(gdata['junction_tree']['junc_dict'],
                         dtype="int64").reshape(-1, 1)
                 junc_g = pgl.Graph(edges=gdata['junction_tree']['edge_index'].T,
                         num_nodes=num_nodes,

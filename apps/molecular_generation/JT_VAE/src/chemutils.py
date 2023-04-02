@@ -104,14 +104,14 @@ def get_clique_mol(mol, atoms):
     smiles = Chem.MolFragmentToSmiles(mol, atoms, kekuleSmiles=True)
     new_mol = Chem.MolFromSmiles(smiles, sanitize=False)
     new_mol = copy_edit_mol(new_mol).GetMol()
-    new_mol = sanitize(new_mol)  
+    new_mol = sanitize(new_mol)
     return new_mol
 
 
 def tree_decomp(mol):
     """Decompose a mol object into a tree"""
     n_atoms = mol.GetNumAtoms()
-    if n_atoms == 1:  
+    if n_atoms == 1:
         return [[0]], []
 
     cliques = []
@@ -155,12 +155,12 @@ def tree_decomp(mol):
         bonds = [c for c in cnei if len(cliques[c]) == 2]
         rings = [c for c in cnei if len(cliques[c]) > 4]
         if len(bonds) > 2 or (len(bonds) == 2 and len(
-                cnei) > 2):  
+                cnei) > 2):
             cliques.append([atom])
             c2 = len(cliques) - 1
             for c1 in cnei:
                 edges[(c1, c2)] = 1
-        elif len(rings) > 2:  
+        elif len(rings) > 2:
             cliques.append([atom])
             c2 = len(cliques) - 1
             for c1 in cnei:
@@ -171,7 +171,7 @@ def tree_decomp(mol):
                     c1, c2 = cnei[i], cnei[j]
                     inter = set(cliques[c1]) & set(cliques[c2])
                     if edges[(c1, c2)] < len(inter):
-                        edges[(c1, c2)] = len(inter)  
+                        edges[(c1, c2)] = len(inter)
 
     edges = [u + (MST_MAX_WEIGHT - v,) for u, v in edges.items()]
     if len(edges) == 0:
@@ -248,7 +248,7 @@ def enum_attach(ctr_mol, nei_node, amap, singletons):
     ctr_atoms = [atom for atom in ctr_mol.GetAtoms() if atom.GetIdx() not in black_list]
     ctr_bonds = [bond for bond in ctr_mol.GetBonds()]
 
-    if nei_mol.GetNumBonds() == 0: 
+    if nei_mol.GetNumBonds() == 0:
         nei_atom = nei_mol.GetAtomWithIdx(0)
         used_list = [atom_idx for _, atom_idx, _ in amap]
         for atom in ctr_atoms:
@@ -256,7 +256,7 @@ def enum_attach(ctr_mol, nei_node, amap, singletons):
                 new_amap = amap + [(nei_idx, atom.GetIdx(), 0)]
                 att_confs.append(new_amap)
 
-    elif nei_mol.GetNumBonds() == 1:  
+    elif nei_mol.GetNumBonds() == 1:
         bond = nei_mol.GetBondWithIdx(0)
         bond_val = int(bond.GetBondTypeAsDouble())
         b1, b2 = bond.GetBeginAtom(), bond.GetEndAtom()
@@ -363,13 +363,13 @@ def check_singleton(cand_mol, ctr_node, nei_nodes):
 def check_aroma(cand_mol, ctr_node, nei_nodes):
     """check aroma"""
     rings = [node for node in nei_nodes + [ctr_node] if node.mol.GetNumAtoms() >= 3]
-    if len(rings) < 2: return 0  
+    if len(rings) < 2: return 0
 
     get_nid = lambda x: 0 if x.is_leaf else x.nid
     benzynes = [get_nid(node) for node in nei_nodes + [ctr_node] if node.smiles in Vocab.benzynes]
     penzynes = [get_nid(node) for node in nei_nodes + [ctr_node] if node.smiles in Vocab.penzynes]
     if len(benzynes) + len(penzynes) == 0:
-        return 0  
+        return 0
 
     n_aroma_atoms = 0
     for atom in cand_mol.GetAtoms():
@@ -405,7 +405,7 @@ def dfs_assemble(cur_mol, global_amap, fa_amap, cur_node, fa_node):
             continue
         global_amap[nei_id][nei_atom] = global_amap[cur_node.nid][ctr_atom]
 
-    cur_mol = attach_mols(cur_mol, children, [], global_amap)  
+    cur_mol = attach_mols(cur_mol, children, [], global_amap)
     for nei_node in children:
         if not nei_node.is_leaf:
             dfs_assemble(cur_mol, global_amap, label_amap, nei_node, cur_node)

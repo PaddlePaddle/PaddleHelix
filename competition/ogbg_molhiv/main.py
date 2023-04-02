@@ -22,7 +22,7 @@ import re
 import io
 import json
 import yaml
-import time 
+import time
 import logging
 from tqdm import tqdm
 import numpy as np
@@ -71,7 +71,7 @@ def train(args, pretrained_model_config=None):
 
     fn = MgfCollateFn(args)
 
-    train_loader = Dataloader(train_ds, 
+    train_loader = Dataloader(train_ds,
                          batch_size=args.batch_size,
                          num_workers=args.num_workers,
                          shuffle=args.shuffle,
@@ -137,7 +137,7 @@ def infer(args):
 
     fn = MgfCollateFn(args, mode="test")
 
-    test_loader = Dataloader(test_ds, 
+    test_loader = Dataloader(test_ds,
                          batch_size=args.batch_size,
                          num_workers=1,
                          collate_fn=fn)

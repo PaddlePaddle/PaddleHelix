@@ -1,5 +1,5 @@
-#!/usr/bin/python                                                                                  
-#-*-coding:utf-8-*- 
+#!/usr/bin/python
+#-*-coding:utf-8-*-
 #   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,8 +44,8 @@ def train(args, model, train_dataset, collate_fn, opt):
         the average of the list loss.
     """
     data_gen = train_dataset.get_data_loader(
-            batch_size=args.batch_size, 
-            num_workers=args.num_workers, 
+            batch_size=args.batch_size,
+            num_workers=args.num_workers,
             shuffle=True,
             collate_fn=collate_fn)
     list_loss = []
@@ -69,8 +69,8 @@ def evaluate(args, model, test_dataset, collate_fn):
     to help eliminate these blank labels in both training and evaluation phase.
     """
     data_gen = test_dataset.get_data_loader(
-            batch_size=args.batch_size, 
-            num_workers=args.num_workers, 
+            batch_size=args.batch_size,
+            num_workers=args.num_workers,
             shuffle=False,
             collate_fn=collate_fn)
     list_loss = []
@@ -134,7 +134,7 @@ def main(args):
 
     ### start train
     collate_fn = AttrmaskCollateFn(
-            atom_names=compound_encoder_config['atom_names'], 
+            atom_names=compound_encoder_config['atom_names'],
             bond_names=compound_encoder_config['bond_names'],
             mask_ratio=model_config['mask_ratio'])
     for epoch_id in range(args.max_epoch):
@@ -143,9 +143,9 @@ def main(args):
         if not args.dist or dist.get_rank() == 0:
             print("epoch:%d train/loss:%s" % (epoch_id, train_loss))
             print("epoch:%d test/loss:%s" % (epoch_id, test_loss))
-            paddle.save(compound_encoder.state_dict(), 
+            paddle.save(compound_encoder.state_dict(),
                     '%s/epoch%d/compound_encoder.pdparams' % (args.model_dir, epoch_id))
-            paddle.save(model.state_dict(), 
+            paddle.save(model.state_dict(),
                     '%s/epoch%d/model.pdparams' % (args.model_dir, epoch_id))
 
 

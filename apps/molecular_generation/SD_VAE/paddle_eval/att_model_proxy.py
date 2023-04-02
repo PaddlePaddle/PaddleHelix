@@ -1,5 +1,5 @@
-#!/usr/bin/python3                                                                                                
-#-*-coding:utf-8-*- 
+#!/usr/bin/python3
+#-*-coding:utf-8-*-
 #   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -57,7 +57,7 @@ class AttMolProxy(object):
         model_config = json.load(open(cmd_args.model_config, 'r'))
         self.ae = MolVAE(model_config)
             
-        # load model weights    
+        # load model weights
         model_weights = paddle.load(cmd_args.saved_model)
         self.ae.set_state_dict(model_weights)
 
@@ -173,7 +173,7 @@ def parse(chunk, grammar):
 
     return_list = []
     for _0 in result_list:
-        for _1 in _0: 
+        for _1 in _0:
             return_list.append(_1)
 
     return return_list
@@ -183,7 +183,7 @@ def decode_chunk(raw_logits, use_random, decode_times):
     """
     tbd
     """
-    tree_decoder = create_tree_decoder()    
+    tree_decoder = create_tree_decoder()
     chunk_result = [[] for _ in range(raw_logits.shape[1])]
     
     for i in tqdm(range(raw_logits.shape[1])):
@@ -225,7 +225,7 @@ def batch_decode(raw_logits, use_random, decode_times):
 
     return_list = []
     for _0 in result_list:
-        for _1 in _0: 
+        for _1 in _0:
             return_list.append(_1)
 
     return return_list

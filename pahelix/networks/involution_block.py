@@ -45,7 +45,7 @@ class Involution2D(nn.Layer):
     [1] Involution: Inverting the Inherence of Convolution for Visual Recognition. https://arxiv.org/abs/2103.06255
 
     """
-    def __init__(self, in_channel, out_channel, sigma_mapping=None, kernel_size=7, stride=1, 
+    def __init__(self, in_channel, out_channel, sigma_mapping=None, kernel_size=7, stride=1,
                  groups=1, reduce_ratio=1, dilation=1, padding=3):
         """
         Initialization
@@ -63,13 +63,13 @@ class Involution2D(nn.Layer):
             nn.BatchNorm2D(num_features=self.out_channel // self.reduce_ratio),
             nn.ReLU()
         )
-        self.initial_mapping = nn.Conv2D(in_channels=self.in_channel, out_channels=self.out_channel, 
+        self.initial_mapping = nn.Conv2D(in_channels=self.in_channel, out_channels=self.out_channel,
                                         kernel_size=1, stride=1, padding=0)
         self.o_mapping = nn.AvgPool2D(kernel_size=self.stride, stride=self.stride)
-        self.reduce_mapping = nn.Conv2D(in_channels=self.in_channel, out_channels=self.out_channel // self.reduce_ratio, 
+        self.reduce_mapping = nn.Conv2D(in_channels=self.in_channel, out_channels=self.out_channel // self.reduce_ratio,
                                     kernel_size=1, stride=1, padding=0)
-        self.span_mapping = nn.Conv2D(in_channels=self.out_channel // self.reduce_ratio, 
-                                    out_channels=self.kernel_size * self.kernel_size * self.groups, 
+        self.span_mapping = nn.Conv2D(in_channels=self.out_channel // self.reduce_ratio,
+                                    out_channels=self.kernel_size * self.kernel_size * self.groups,
                                     kernel_size=1, stride=1, padding=0)
 
     def forward(self, x):
@@ -79,9 +79,9 @@ class Involution2D(nn.Layer):
         batch_size, _, height, width = x.shape
 
         temp_mapping = self.initial_mapping(x)
-        input_unfolded = F.unfold(temp_mapping, self.kernel_size, strides=self.stride, 
+        input_unfolded = F.unfold(temp_mapping, self.kernel_size, strides=self.stride,
                                 paddings=self.padding, dilations=self.dilation)
-        input_unfolded = input_unfolded.view(batch_size, self.groups, self.out_channel // self.groups, 
+        input_unfolded = input_unfolded.view(batch_size, self.groups, self.out_channel // self.groups,
                                             self.kernel_size * self.kernel_size, height, width)
         kernel = self.span_mapping(self.sigma_mapping(self.reduce_mapping(self.o_mapping(x))))
         kernel = kernel.view(batch_size, self.groups, self.kernel_size * self.kernel_size, height, width).unsqueeze(2)

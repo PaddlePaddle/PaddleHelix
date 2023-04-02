@@ -38,11 +38,11 @@ def mp_pool_map(list_input, func, num_workers):
 
     # add index
     list_new_input = [(index, x) for index, x in enumerate(list_input)]
-    data_gen = Dataloader(list_new_input, 
-            batch_size=8, 
-            num_workers=num_workers, 
+    data_gen = Dataloader(list_new_input,
+            batch_size=8,
+            num_workers=num_workers,
             shuffle=False,
-            collate_fn=_CollateFn(func))  
+            collate_fn=_CollateFn(func))
 
     list_output = []
     for sub_outputs in data_gen:

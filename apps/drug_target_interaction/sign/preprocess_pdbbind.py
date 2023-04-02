@@ -113,7 +113,7 @@ def gen_pocket_graph(pocket):
         edge_l_new.append((a1_,a2_,t))
     return edge_l_new
 
-def dist_filter(dist_matrix, theta): 
+def dist_filter(dist_matrix, theta):
     pos = np.where(dist_matrix<=theta)
     ligand_list, pocket_list = pos
     return ligand_list, pocket_list

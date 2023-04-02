@@ -42,7 +42,7 @@ class PretrainMetric(object):
         Update results.
         """
         logit = paddle.to_tensor(logit)
-        pred = F.softmax(logit) 
+        pred = F.softmax(logit)
         pred = pred.numpy()
         example_n = np.sum(np.where(label != -1, 1, 0))
         self.example_n += example_n

@@ -95,7 +95,7 @@ class LnDropWrapper(nn.Layer):
         super(LnDropWrapper, self).__init__()
         self.norm = nn.LayerNorm(embed_dim)
         self.layer = layer
-        self.dropout_module = nn.Dropout(dropout_rate) 
+        self.dropout_module = nn.Dropout(dropout_rate)
 
     def forward(self, x, *args, **kwargs):
         x = self.norm(x)

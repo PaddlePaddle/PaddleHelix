@@ -145,7 +145,7 @@ def multi_head_attention(queries,
         select_k = layers.reshape(select_k, shape=[0, 0, d_key * n_head])
         select_v = layers.reshape(select_v, shape=[0, 0, d_value * n_head])
         if store:
-            k = layers.concat([select_k, k], axis=1) 
+            k = layers.concat([select_k, k], axis=1)
             v = layers.concat([select_v, v], axis=1)
             layers.assign(k, cache["k"])
             layers.assign(v, cache["v"])

@@ -1,7 +1,7 @@
-import paddle 
-from paddle import nn 
-from paddle.nn import functional as F 
-import pgl 
+import paddle
+from paddle import nn
+from paddle.nn import functional as F
+import pgl
 import pgl.math as math
 from layers import GVP, RR_VPConv, Linear
 
@@ -18,8 +18,8 @@ class PTHL(nn.Layer):
         self.num_convs = args.num_convs
         self.n_channels = args.n_channels
         self.n_labels = args.n_labels
-        self.t_out_dim = args.t_out_dim 
-        self.t_n_layers = args.t_n_layers 
+        self.t_out_dim = args.t_out_dim
+        self.t_n_layers = args.t_n_layers
         self.t_n_heads = args.t_n_heads
         self.n_emb = nn.Embedding(self.n_channels, self.s_h_dim)
 
@@ -29,7 +29,7 @@ class PTHL(nn.Layer):
         for i in range(self.num_convs):
             in_dims = [self.s_h_dim, self.v_h_dim]
             if i == 0:
-                in_dims[1] = self.v_n_feats 
+                in_dims[1] = self.v_n_feats
             self.conv_layers.append(PG_GNN_Layer(in_dims, out_dims))
 
         self.output_gvp = GVP((self.s_h_dim, self.v_h_dim), (self.n_h_dim, 0), activations=(None, None))
@@ -57,7 +57,7 @@ class PTHL(nn.Layer):
 class PG_GNN_Layer(nn.Layer):
     def __init__(self, in_dims, out_dims):
         super().__init__()
-        self.self_vp_layer = GVP(in_dims, out_dims, h_dim=out_dims[1]) 
+        self.self_vp_layer = GVP(in_dims, out_dims, h_dim=out_dims[1])
         self.rr_layer = nn.LayerList(
             RR_VPConv(in_dims, out_dims) for _ in range(2)
         )
@@ -84,7 +84,7 @@ class PG_GNN_Layer(nn.Layer):
 class AggregationLayer(nn.Layer):
     def __init__(self, in_dims, out_dims):
         super().__init__()
-        self.s_i, self.v_i = in_dims 
+        self.s_i, self.v_i = in_dims
         self.s_o, self.v_o = out_dims
 
         self.s_ln = nn.LayerList(
@@ -102,7 +102,7 @@ class AggregationLayer(nn.Layer):
             ang_s = self.s_ln[i](s_feats[:, i])
             ang_v = self.v_ln[i](v_feats[:, i])
             s_h = ang_s if i == 0 else s_h + ang_s
-            v_h = ang_v if i == 0 else v_h + ang_v 
+            v_h = ang_v if i == 0 else v_h + ang_v
         v_h = paddle.transpose(v_h, [0, 2, 1])
 
         return (s_h, v_h)
@@ -133,7 +133,7 @@ class PT_Encoder(nn.Layer):
         attn_mask_expand = paddle.unsqueeze(attn_mask_expand, 1)
         
         prot_emb = self.transformer_encoder_layer(seqs, src_mask=attn_mask_expand)
-        # prot_emb = seqs 
+        # prot_emb = seqs
         prot_emb = prot_emb * paddle.unsqueeze(paddle.cast(attn_mask, 'float32'), -1)
         prot_emb = paddle.sum(prot_emb, 1)
 

@@ -286,7 +286,7 @@ class TransformerEncoder(Layer):
         if self.norm is not None:
             output = self.norm(output)
 
-        return output 
+        return output
 
 
 
@@ -394,7 +394,7 @@ class DisentangledSelfAttention(Layer):
         scale_factor = 2 if self.only_c2p else 3
         scale = math.sqrt(query_layer.shape[-1] * scale_factor)
         attention_scores = paddle.scale(layers.matmul(x=query_layer, y=key_layer, transpose_y=True), 1/scale)
-        rel_embeddings = F.dropout(rel_embeddings, p=0.1, training=self.training) 
+        rel_embeddings = F.dropout(rel_embeddings, p=0.1, training=self.training)
         rel_att = self.disentangled_attention_bias(query_layer, key_layer, relative_pos, rel_embeddings, scale_factor)
         attention_scores = paddle.add(attention_scores, rel_att)
 
@@ -521,18 +521,18 @@ class DeBERTaEncoder(Layer):
         for i, mod in enumerate(self.layers):
             return_weight = (i >= self.num_layers - return_last_n_weight)
             if paddle.in_dynamic_mode():
-                outputs = recompute_wrapper(mod, 
-                        output, 
-                        src_mask, 
-                        relative_pos, 
-                        rel_embeddings, 
-                        return_weight, 
+                outputs = recompute_wrapper(mod,
+                        output,
+                        src_mask,
+                        relative_pos,
+                        rel_embeddings,
+                        return_weight,
                         is_recompute=self.training)
             else:
                 outputs = mod(
-                        output, 
-                        src_mask=src_mask, 
-                        relative_pos=relative_pos, 
+                        output,
+                        src_mask=src_mask,
+                        relative_pos=relative_pos,
                         rel_embeddings=rel_embeddings,
                         return_weight=return_weight)
             if return_weight:

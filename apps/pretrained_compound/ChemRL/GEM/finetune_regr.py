@@ -1,5 +1,5 @@
-#!/usr/bin/python                                                                                                                                  
-#-*-coding:utf-8-*- 
+#!/usr/bin/python
+#-*-coding:utf-8-*-
 #   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,9 +37,9 @@ from src.utils import get_dataset, create_splitter, get_downstream_task_names, g
 
 
 def train(
-        args, 
+        args,
         model, label_mean, label_std,
-        train_dataset, collate_fn, 
+        train_dataset, collate_fn,
         criterion, encoder_opt, head_opt):
     """
     Define the train function 
@@ -49,8 +49,8 @@ def train(
         the average of the list loss
     """
     data_gen = train_dataset.get_data_loader(
-            batch_size=args.batch_size, 
-            num_workers=args.num_workers, 
+            batch_size=args.batch_size,
+            num_workers=args.num_workers,
             shuffle=True,
             collate_fn=collate_fn)
     list_loss = []
@@ -74,7 +74,7 @@ def train(
 
 
 def evaluate(
-        args, 
+        args,
         model, label_mean, label_std,
         test_dataset, collate_fn, metric):
     """
@@ -83,8 +83,8 @@ def evaluate(
     to help eliminate these blank labels in both training and evaluation phase.
     """
     data_gen = test_dataset.get_data_loader(
-            batch_size=args.batch_size, 
-            num_workers=args.num_workers, 
+            batch_size=args.batch_size,
+            num_workers=args.num_workers,
             shuffle=False,
             collate_fn=collate_fn)
     total_pred = []
@@ -172,7 +172,7 @@ def main(args):
         compound_encoder.set_state_dict(paddle.load(args.init_model))
         print('Load state_dict from %s' % args.init_model)
 
-    ### load data    
+    ### load data
     if args.task == 'data':
         print('Preprocessing data...')
         dataset = get_dataset(args.dataset_name, args.data_path, task_names)
@@ -202,21 +202,21 @@ def main(args):
     ### start train
     list_val_metric, list_test_metric = [], []
     collate_fn = DownstreamCollateFn(
-            atom_names=compound_encoder_config['atom_names'], 
+            atom_names=compound_encoder_config['atom_names'],
             bond_names=compound_encoder_config['bond_names'],
             bond_float_names=compound_encoder_config['bond_float_names'],
             bond_angle_float_names=compound_encoder_config['bond_angle_float_names'],
             task_type=task_type)
     for epoch_id in range(args.max_epoch):
         train_loss = train(
-                args, model, label_mean, label_std, 
-                train_dataset, collate_fn, 
+                args, model, label_mean, label_std,
+                train_dataset, collate_fn,
                 criterion, encoder_opt, head_opt)
         val_metric = evaluate(
-                args, model, label_mean, label_std, 
+                args, model, label_mean, label_std,
                 valid_dataset, collate_fn, metric)
         test_metric = evaluate(
-                args, model, label_mean, label_std, 
+                args, model, label_mean, label_std,
                 test_dataset, collate_fn, metric)
 
         list_val_metric.append(val_metric)
@@ -226,16 +226,16 @@ def main(args):
         print("epoch:%s val/%s:%s" % (epoch_id, metric, val_metric))
         print("epoch:%s test/%s:%s" % (epoch_id, metric, test_metric))
         print("epoch:%s test/%s_by_eval:%s" % (epoch_id, metric, test_metric_by_eval))
-        paddle.save(compound_encoder.state_dict(), 
+        paddle.save(compound_encoder.state_dict(),
                 '%s/epoch%d/compound_encoder.pdparams' % (args.model_dir, epoch_id))
-        paddle.save(model.state_dict(), 
+        paddle.save(model.state_dict(),
                 '%s/epoch%d/model.pdparams' % (args.model_dir, epoch_id))
 
     outs = {
         'model_config': basename(args.model_config).replace('.json', ''),
         'metric': '',
-        'dataset': args.dataset_name, 
-        'split_type': args.split_type, 
+        'dataset': args.dataset_name,
+        'split_type': args.split_type,
         'batch_size': args.batch_size,
         'dropout_rate': args.dropout_rate,
         'encoder_lr': args.encoder_lr,
@@ -257,12 +257,12 @@ if __name__ == '__main__':
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--num_workers", type=int, default=4)
     parser.add_argument("--max_epoch", type=int, default=100)
-    parser.add_argument("--dataset_name", 
-            choices=['esol', 'freesolv', 'lipophilicity', 
+    parser.add_argument("--dataset_name",
+            choices=['esol', 'freesolv', 'lipophilicity',
                 'qm7', 'qm8', 'qm9', 'qm9_gdb'])
     parser.add_argument("--data_path", type=str, default=None)
     parser.add_argument("--cached_data_path", type=str, default=None)
-    parser.add_argument("--split_type", 
+    parser.add_argument("--split_type",
             choices=['random', 'scaffold', 'random_scaffold', 'index'])
 
     parser.add_argument("--compound_encoder_config", type=str)

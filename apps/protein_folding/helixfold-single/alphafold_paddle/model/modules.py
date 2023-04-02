@@ -93,7 +93,7 @@ class Dropout(nn.Layer):
         if self.p == 0:
             return input
 
-        if self.axis == None: 
+        if self.axis == None:
             out = nn.functional.dropout(input,
                             p=self.p,
                             axis=self.axis,
@@ -496,7 +496,7 @@ class Attention(nn.Layer):
                 weighted_avg *= gate_values
 
             output = paddle.einsum('nbqhc,hco->nbqo', weighted_avg,
-                                self.output_w) + self.output_b 
+                                self.output_w) + self.output_b
         return output
 
 
@@ -989,7 +989,7 @@ class PredictedAlignedErrorHead(nn.Layer):
 
         # Compute the squared error for each alignment.
         def _local_frame_points(affine):
-            points = [paddle.unsqueeze(x, axis=-2) for x in 
+            points = [paddle.unsqueeze(x, axis=-2) for x in
                             paddle.unstack(affine.translation, axis=-1)]
             return affine.invert_point(points, extra_dims=1)
         error_dist2_xyz = [
@@ -1109,7 +1109,7 @@ class DistogramHead(nn.Layer):
                             repeat_times=[logits.shape[0], 1])
 
         return {
-            'logits': logits, 
+            'logits': logits,
             'bin_edges': breaks}
 
     def loss(self, value, batch):
@@ -1145,7 +1145,7 @@ def _distogram_log_loss(logits, bin_edges, batch, num_bins):
         (1e-6 + paddle.sum(square_mask, axis=[-2, -1])))
     dist2 = dist2[..., 0]
     return {
-        'loss': avg_error, 
+        'loss': avg_error,
         'true_dist': paddle.sqrt(1e-6 + dist2)}
 
 
@@ -2076,7 +2076,7 @@ class TriangleMultiplication(nn.Layer):
         Outputs, same shape/type as act.
         """
         # Outgoing [batch, N_res//dap_size, N_res] => [batch, N_res//dap_size, N_res, 1]
-        # Incoming [batch, N_res, N_res//dap_size] => [batch, N_res, N_res//dap_size, 1] 
+        # Incoming [batch, N_res, N_res//dap_size] => [batch, N_res, N_res//dap_size, 1]
         mask = paddle.unsqueeze(mask, axis=-1) # [batch, N_res, N_res, 1]
 
         # Outgoing [B, N_res//dap_size, N_res, c_z]
@@ -2118,7 +2118,7 @@ class TriangleMultiplication(nn.Layer):
         
         
         # Outgoing [B, N_res//dap_size, N_res, c_z]
-        # Incoming [B, N_res, N_res//dap_size, c_z]        
+        # Incoming [B, N_res, N_res//dap_size, c_z]
         gate_values = nn.functional.sigmoid(self.gating_linear(act)) # line 3
 
         if self.config.equation == 'ikc,jkc->ijc':
@@ -2249,7 +2249,7 @@ class TemplatePair(nn.Layer):
         residual = self.triangle_starting_dropout(residual)
         pair_act = pair_act + residual
 
-        pair_act = dap.row_to_col(pair_act) 
+        pair_act = dap.row_to_col(pair_act)
         residual = self.triangle_attention_ending_node(pair_act, pair_mask_col)
         residual = self.triangle_ending_dropout(residual)
         pair_act = pair_act + residual

@@ -21,7 +21,7 @@ import pgl
 
 from extended_feature import smiles2graph,mol2graph
 
-MST_MAX_WEIGHT = 100 
+MST_MAX_WEIGHT = 100
 
 def copy_atom(atom):
     new_atom = Chem.Atom(atom.GetSymbol())
@@ -61,7 +61,7 @@ def get_clique_mol(mol, atoms):
 
 def get_mol(smiles):
     mol = Chem.MolFromSmiles(smiles)
-    if mol is None: 
+    if mol is None:
         return None
     return mol
 
@@ -83,7 +83,7 @@ def smiles_to_moltree(smiles):
     ssr = [list(x) for x in Chem.GetSymmSSSR(mol)]
     cliques.extend(ssr)
 
-    # which clique the atom belongs 
+    # which clique the atom belongs
     nei_list = [[] for i in range(n_atoms)]
     for i, clique in enumerate(cliques):
         for atom in clique:
@@ -93,7 +93,7 @@ def smiles_to_moltree(smiles):
     edges = defaultdict(int)
 
     for atom in range(n_atoms):
-        if len(nei_list[atom]) <= 1: 
+        if len(nei_list[atom]) <= 1:
             continue
         cnei = nei_list[atom]
 
@@ -148,11 +148,11 @@ def smiles2graph_and_junction_tree(smiles_string, y):
     #g_dict = dict()
     #g_dict["mol_graph"] = graph
     #g_dict["junction_tree"] = dict()
-    #g_dict["junction_tree"]["num_nodes"] = len(cliques) 
-    #g_dict["junction_tree"]["edge_index"] = np.array(edges, dtype="int64").T   
-    #g_dict["junction_tree"]["junc_dict"] = [] 
-    #g_dict["mol2juct"] = []   
-    #for cli_id, clique in enumerate(cliques): 
+    #g_dict["junction_tree"]["num_nodes"] = len(cliques)
+    #g_dict["junction_tree"]["edge_index"] = np.array(edges, dtype="int64").T
+    #g_dict["junction_tree"]["junc_dict"] = []
+    #g_dict["mol2juct"] = []
+    #for cli_id, clique in enumerate(cliques):
     #    for atom in clique:
     #        g_dict["mol2juct"].append((atom, cli_id))
     #g_dict["mol2juct"] = np.array(g_dict["mol2juct"], dtype="int64")
@@ -170,10 +170,10 @@ def smiles2graph_and_junction_tree(smiles_string, y):
     new_graph["node_feat_float"] = np.array(graph["node_feat_float"], dtype="float32")
     new_graph["edge_feat"] = graph["edge_feat"]
     #  new_graph["mol_coord"] = graph["mol_coord"]
-    new_graph["label"] = y 
+    new_graph["label"] = y
     #  if new_graph["mol_coord"].shape[0] != new_graph["num_nodes"]:
     #      graph["mol_coord"] = np.zeros([graph["num_nodes"], 3], dtype="float32")
-    return new_graph 
+    return new_graph
 
 
 def smile_func(mol_homo):
@@ -189,7 +189,7 @@ def smile_func(mol_homo):
 #     new_graph["node_feat_float"] = np.array(graph["node_feat_float"], dtype="float32")
 #     new_graph["edge_feat"] = graph["edge_feat"]
 #     #  new_graph["mol_coord"] = graph["mol_coord"]
-#     new_graph["label"] = y 
+#     new_graph["label"] = y
 #     #  if new_graph["mol_coord"].shape[0] != new_graph["num_nodes"]:
 #     #      graph["mol_coord"] = np.zeros([graph["num_nodes"], 3], dtype="float32")
 #     return new_graph, graph
@@ -211,7 +211,7 @@ def mol2data(mol_homo, khop=1):
     new_graph["node_feat_float"] = np.array(graph["node_feat_float"], dtype="float32")
     new_graph["edge_feat"] = graph["edge_feat"]
     #  new_graph["mol_coord"] = graph["mol_coord"]
-    new_graph["label"] = homolumogap 
+    new_graph["label"] = homolumogap
     #  if new_graph["mol_coord"].shape[0] != new_graph["num_nodes"]:
     #      graph["mol_coord"] = np.zeros([graph["num_nodes"], 3], dtype="float32")
     return new_graph, graph
@@ -251,7 +251,7 @@ if __name__ == "__main__":
     parser.add_argument("--debug",action='store_true')
     args = parser.parse_args()
 
-    lg = rdkit.RDLogger.logger() 
+    lg = rdkit.RDLogger.logger()
     lg.setLevel(rdkit.RDLogger.CRITICAL)
 
 #     dataset = PCQM4MDataset(root = args.data_path, only_smiles = True)
@@ -281,7 +281,7 @@ if __name__ == "__main__":
         if item == 0:                      # 0 means lost
             filled_sdf_list[i] = list(data_df.iloc[i])+[None]
             
-    if args.debug: 
+    if args.debug:
         filled_sdf_list = filled_sdf_list[:12_000]
     print(f'number of molecules: {len(filled_sdf_list)}')
     graph_list = []
@@ -309,7 +309,7 @@ if __name__ == "__main__":
     if not os.path.exists(processed_path):
         os.makedirs(processed_path)
     graph_list.dump(os.path.join(processed_path, "mmap_graph"))
-    np.save(os.path.join(processed_path, "label.npy"), np.array(labels, dtype="float32")) 
+    np.save(os.path.join(processed_path, "label.npy"), np.array(labels, dtype="float32"))
     pkl.dump(aux_data_list, open(os.path.join(processed_path, "mol_tree_aux.pkl"),"wb"))
     print("total data process time: %s" % (time.time() -  start))
 

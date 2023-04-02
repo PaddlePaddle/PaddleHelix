@@ -97,7 +97,7 @@ class GIN(nn.Layer):
             return msg.reduce_sum(msg['h'])
 
         msg = graph.send(
-                message_func=_send_func, 
+                message_func=_send_func,
                 node_feat={'h': node_feat},
                 edge_feat={'h': edge_feat})
         node_feat = graph.recv(reduce_func=_recv_func, msg=msg)

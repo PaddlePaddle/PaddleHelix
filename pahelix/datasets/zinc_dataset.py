@@ -65,7 +65,7 @@ def load_zinc_dataset(data_path):
     data_list = []
     for i in range(len(smiles_list)):
         data = {}
-        data['smiles'] = smiles_list[i]        
+        data['smiles'] = smiles_list[i]
         data_list.append(data)
     dataset = InMemoryDataset(data_list)
     return dataset

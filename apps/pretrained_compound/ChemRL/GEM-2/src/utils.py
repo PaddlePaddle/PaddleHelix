@@ -117,7 +117,7 @@ def pair_pad(pair_list, max_len=None, pad_value=0):
     return (B, N, N, *)
     """
     if max_len is None:
-        max_len = np.max([len(x) for x in pair_list])    
+        max_len = np.max([len(x) for x in pair_list])
 
     pad_pair_list = []
     for pair in pair_list:
@@ -184,7 +184,7 @@ def write_to_csv(csv_name, value_dict):
         csv_writer = csv.DictWriter(f, fieldnames=list(value_dict.keys()))
         if value_dict['epoch'] == 0:
             csv_writer.writeheader()
-        csv_writer.writerow(value_dict) 
+        csv_writer.writerow(value_dict)
 
 
 def set_logging_level(level):
@@ -228,7 +228,7 @@ class ResultsCollect(object):
         keys = list(self.dict_to_mean_list[0].keys())
         for k in keys:
             result[k] = dist_mean(
-                    [d[k] for d in self.dict_to_mean_list], 
+                    [d[k] for d in self.dict_to_mean_list],
                     distributed=distributed)
         return result
     
@@ -239,7 +239,7 @@ class ResultsCollect(object):
         keys = list(self.dict_to_sum_list[0].keys())
         for k in keys:
             result[k] = dist_sum(
-                    [d[k] for d in self.dict_to_sum_list], 
+                    [d[k] for d in self.dict_to_sum_list],
                     distributed=distributed)
         return result
 

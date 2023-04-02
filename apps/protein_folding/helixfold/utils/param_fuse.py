@@ -468,7 +468,7 @@ def flatten_dense_tensors(parameters):
 
     param_storage.add_rank_params(parameters, _param2align)
 
-    # process gradient 
+    # process gradient
     # grad_storage = None
     grad_storage = GradStorage(
         size=_buffer_size,

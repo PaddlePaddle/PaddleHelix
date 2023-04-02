@@ -220,7 +220,7 @@ def main(args):
     test_weight_ci, test_average_ci = np.sum(w_ci)/t_lens, np.mean(a_ci)
 
     # Save the testing result
-    files.write("test_MSE:" + str(test_MSE) + ", test_averageCI:" + str(test_average_ci) + 
+    files.write("test_MSE:" + str(test_MSE) + ", test_averageCI:" + str(test_average_ci) +
                 ", test_weightedCI:" + str(test_weight_ci) + ", test_overallCI:" + str(test_CI) + "\n")
     files.write("best_epoch:" + str(best_epoch + 1) + ", best_train_loss:" + str(best_train_loss) + "\n")
 

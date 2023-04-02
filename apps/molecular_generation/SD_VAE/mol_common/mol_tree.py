@@ -1,5 +1,5 @@
-#!/usr/bin/python3                                                                                                
-#-*-coding:utf-8-*- 
+#!/usr/bin/python3
+#-*-coding:utf-8-*-
 #   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,7 +32,7 @@ class Node(object):
     def __init__(self,s, father = None):
         self.symbol = s
         self.children = []
-        self.rule_used = None    
+        self.rule_used = None
         self.init_atts()
         self.father = father
         if self.father is None:
@@ -109,7 +109,7 @@ def _AnnotatedTree2MolTree(annotated_root, bond_set, father):
     tbd
     """
     n = Node(str(annotated_root.symbol), father=father)
-    n.rule_used = annotated_root.rule_selection_id    
+    n.rule_used = annotated_root.rule_selection_id
     for c in annotated_root.children:
         new_c = _AnnotatedTree2MolTree(c, bond_set, n)
         n.children.append(new_c)
@@ -126,13 +126,13 @@ def _AnnotatedTree2MolTree(annotated_root, bond_set, father):
         else:
             bond_set.add(idx)
             n.bond_idx = MAX_NESTED_BONDS
-    if isinstance(annotated_root.symbol, cfg_parser.Nonterminal): # it is a non-terminal        
+    if isinstance(annotated_root.symbol, cfg_parser.Nonterminal): # it is a non-terminal
         assert len(n.children)
         assert n.is_created()
     else:
         assert isinstance(annotated_root.symbol, str)
-        assert len(n.symbol) < 3 or (n.symbol[0] != '\'' and n.symbol[-1] != '\'')        
-        n.symbol = '\'' + n.symbol + '\''        
+        assert len(n.symbol) < 3 or (n.symbol[0] != '\'' and n.symbol[-1] != '\'')
+        n.symbol = '\'' + n.symbol + '\''
     return n
 
 

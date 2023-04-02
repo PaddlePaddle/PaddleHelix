@@ -85,24 +85,24 @@ def upload_to_hadoop(args, cur_step):
         file_name = basename(local_file)
         os.system(f"{hadoop_fs} -mkdir {hadoop_dir}")
         os.system(f"{hadoop_fs} -rmr {hadoop_dir}/{file_name}")
-        os.system(f"{hadoop_fs} -put {local_file} {hadoop_dir}/{file_name}")    
+        os.system(f"{hadoop_fs} -put {local_file} {hadoop_dir}/{file_name}")
 
     hadoop_fs = os.environ["HADOOP_FS"]
     output_path = os.environ["OUTPUT_PATH"]
 
     # upload models
     _upload_file(
-            f'{args.model_dir}/step_{cur_step}.pdparams', 
+            f'{args.model_dir}/step_{cur_step}.pdparams',
             f'{output_path}/models')
     _upload_file(
-            f'{args.model_dir}/step_{cur_step}_ema.pdparams', 
+            f'{args.model_dir}/step_{cur_step}_ema.pdparams',
             f'{output_path}/models')
 
     # upload tensorboard log
     files = os.listdir(f'{args.log_dir}/tensorboard_log_dir')
     for file in files:
         _upload_file(
-                f'{args.log_dir}/tensorboard_log_dir/{file}', 
+                f'{args.log_dir}/tensorboard_log_dir/{file}',
                 f'{output_path}/log/tensorboard_log_dir')
 
 

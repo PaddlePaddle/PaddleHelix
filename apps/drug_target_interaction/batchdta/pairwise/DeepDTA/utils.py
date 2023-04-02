@@ -59,7 +59,7 @@ def sample_index(pairs,sampling_method = None):
 
     for i_data in pairs:
         if sampling_method == '500 times':
-            sampled_data = pd.DataFrame(i_data).sample(n=500,replace=True)            
+            sampled_data = pd.DataFrame(i_data).sample(n=500,replace=True)
         if sampling_method == None:
             sampled_data = pd.DataFrame(i_data)
         
@@ -75,7 +75,7 @@ def get_pairs(scores,K,eps=0.2,seed=0):
     :param K: times of sampling
     :return: ordered pairs.  List of tuple, like [(1,2), (2,3), (1,3)]
     """
-    pairs = []  
+    pairs = []
     random.seed(seed)
     for i in range(len(scores)):
         #for j in range(len(scores)):
@@ -89,7 +89,7 @@ def get_pairs(scores,K,eps=0.2,seed=0):
             idx = random.randint(0, len(scores) - 1)
             score_diff = float(scores[i]) - float(scores[idx])
             if abs(score_diff) >  eps:
-                pairs.append((i, idx, score_diff, len(scores))) 
+                pairs.append((i, idx, score_diff, len(scores)))
 
     if K < 1:
         N_pairs = len(pairs)
@@ -129,15 +129,15 @@ def split_pairs(order_pairs, true_scores):
 
 
 def filter_pairs(data,order_paris,threshold):
-    # filterred the pairs which have score diff less than 0.2 
+    # filterred the pairs which have score diff less than 0.2
     order_paris_filtered = []
     for i_pairs in order_paris:
-        pairs1_score = data[pd.DataFrame(i_pairs).iloc[:,0].values][:,1].astype('float32') 
+        pairs1_score = data[pd.DataFrame(i_pairs).iloc[:,0].values][:,1].astype('float32')
         pairs2_score = data[pd.DataFrame(i_pairs).iloc[:,1].values][:,1].astype('float32')
 
         # filtered |score|<threshold
         score = pairs1_score-pairs2_score
-        temp_mask = abs(score) > threshold # 0.2 threshold    
+        temp_mask = abs(score) > threshold # 0.2 threshold
         i_pairs_filtered = np.array(i_pairs)[temp_mask].tolist()
         if len(i_pairs_filtered)>0:
             order_paris_filtered.append(i_pairs_filtered)
@@ -159,13 +159,13 @@ def sample_pairs(true_scores,K,eps,seed):
     return x1_index, x2_index, train_scores, Y
 
 
-drug_dic = {"#": 29, "%": 30, ")": 31, "(": 1, "+": 32, "-": 33, "/": 34, ".": 2, 
-				"1": 35, "0": 3, "3": 36, "2": 4, "5": 37, "4": 5, "7": 38, "6": 6, 
-				"9": 39, "8": 7, "=": 40, "A": 41, "@": 8, "C": 42, "B": 9, "E": 43, 
-				"D": 10, "G": 44, "F": 11, "I": 45, "H": 12, "K": 46, "M": 47, "L": 13, 
-				"O": 48, "N": 14, "P": 15, "S": 49, "R": 16, "U": 50, "T": 17, "W": 51, 
-				"V": 18, "Y": 52, "[": 53, "Z": 19, "]": 54, "\\": 20, "a": 55, "c": 56, 
-				"b": 21, "e": 57, "d": 22, "g": 58, "f": 23, "i": 59, "h": 24, "m": 60, 
+drug_dic = {"#": 29, "%": 30, ")": 31, "(": 1, "+": 32, "-": 33, "/": 34, ".": 2,
+				"1": 35, "0": 3, "3": 36, "2": 4, "5": 37, "4": 5, "7": 38, "6": 6,
+				"9": 39, "8": 7, "=": 40, "A": 41, "@": 8, "C": 42, "B": 9, "E": 43,
+				"D": 10, "G": 44, "F": 11, "I": 45, "H": 12, "K": 46, "M": 47, "L": 13,
+				"O": 48, "N": 14, "P": 15, "S": 49, "R": 16, "U": 50, "T": 17, "W": 51,
+				"V": 18, "Y": 52, "[": 53, "Z": 19, "]": 54, "\\": 20, "a": 55, "c": 56,
+				"b": 21, "e": 57, "d": 22, "g": 58, "f": 23, "i": 59, "h": 24, "m": 60,
 				"l": 25, "o": 61, "n": 26, "s": 62, "r": 27, "u": 63, "t": 28, "y": 64}
 
 def encodeDrug(drug_seq, drug_dic):
@@ -197,7 +197,7 @@ def encodePro(protein_seq, pro_dic):
     return p_seq
 
 class Data_Encoder_flow(Dataset):
-    def __init__(self, X1_index, X2_index,Y,data):        
+    def __init__(self, X1_index, X2_index,Y,data):
         super(Data_Encoder_flow, self).__init__()
         self.X1_index = X1_index
         self.X2_index = X2_index
@@ -205,9 +205,9 @@ class Data_Encoder_flow(Dataset):
         self.data = data
 
     def __len__(self):
-        return len(self.X1_index)       
+        return len(self.X1_index)
     
-    def __getitem__(self, idx):   
+    def __getitem__(self, idx):
 
         return_x1_index = self.X1_index[idx]
         return_x2_index = self.X2_index[idx]
@@ -244,9 +244,9 @@ class Data_test(Dataset):
         self.max_len = max([len(i) for i in self.test_index])
 
     def __len__(self):
-        return len(self.test_index)       
+        return len(self.test_index)
     
-    def __getitem__(self, idx):  
+    def __getitem__(self, idx):
 
         return_test_index = self.test_index[idx]
         return_data = self.processed_data.iloc[return_test_index,:]
@@ -255,7 +255,7 @@ class Data_test(Dataset):
         
         # get scores
         return_y= return_data.iloc[:,-1].values.astype('float32')
-        return_y = paddle.to_tensor(return_y)   
+        return_y = paddle.to_tensor(return_y)
         # get featueres
         return_d = return_data['SMILES'].values
         return_t = return_data['Target'].values
@@ -263,8 +263,8 @@ class Data_test(Dataset):
         #Encode Label
         return_d = [encodeDrug(data_d,drug_dic) for data_d in return_d]
         return_t = [encodePro(data_t,pro_dic) for data_t in return_t]
-        return_d = paddle.to_tensor(return_d) 
-        return_t = paddle.to_tensor(return_t) 
+        return_d = paddle.to_tensor(return_d)
+        return_t = paddle.to_tensor(return_t)
 
         # pad the dataset
         if self.max_len != return_data.shape[0]:
@@ -287,9 +287,9 @@ class Data_Encoder(Dataset):
         self.Y = Y
 
     def __len__(self):
-        return len(self.X1)       
+        return len(self.X1)
     
-    def __getitem__(self, idx):        
+    def __getitem__(self, idx):
         return_x1 = self.X1[idx]
         return_x2 = self.X2[idx]
         return_y = self.Y[idx]

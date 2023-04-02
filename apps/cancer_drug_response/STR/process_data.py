@@ -220,7 +220,7 @@ def gen_omics_feature(data_idx, mutation_feature, gexpr_feature, methylation_fea
 def main(args):
     """Entry for data preprocessing."""
 
-    processed_name = args.save_dir 
+    processed_name = args.save_dir
     os.makedirs(os.path.join(data_dir, processed_name), exist_ok=True)
     processed_dir = os.path.join(data_dir, processed_name)
 

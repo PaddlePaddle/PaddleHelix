@@ -20,7 +20,7 @@ import re
 import io
 import json
 import yaml
-import time 
+import time
 import logging
 from tqdm import tqdm
 import numpy as np

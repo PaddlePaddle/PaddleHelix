@@ -34,7 +34,7 @@ from alphafold_paddle.data.utils import generate_pkl_features_from_fasta
 #### USER CONFIGURATION ####
 
 # Default paths. Note that these arguments can be set directly by flags from command line.
-default_database_dir = '.' 
+default_database_dir = '.'
 default_fasta_dir = './example_data/fasta/'
 default_output_dir = './out/features/'
 
@@ -68,7 +68,7 @@ obsolete_pdbs_path = os.path.join(default_database_dir, 'pdb_mmcif', 'obsolete.d
 #### END OF USER CONFIGURATION ####
 
 # Define flags.
-flags.DEFINE_string('fasta_dir', default_fasta_dir, 
+flags.DEFINE_string('fasta_dir', default_fasta_dir,
                     'Paths to FASTA files, each containing one sequence. '
                     'Paths should be separated by commas. All FASTA paths '
                     'must have a unique basename as the basename is used to '
@@ -89,7 +89,7 @@ flags.DEFINE_string('uniref90_database_path', uniref90_database_path,
                     'Path to the Uniref90 database for use by JackHMMER.')
 flags.DEFINE_string('mgnify_database_path', mgnify_database_path,
                     'Path to the MGnify database for use by JackHMMER.')
-flags.DEFINE_string('bfd_database_path', bfd_database_path, 
+flags.DEFINE_string('bfd_database_path', bfd_database_path,
                     'Path to the BFD database for use by HHblits.')
 flags.DEFINE_string('uniclust30_database_path', uniclust30_database_path,
                     'Path to the Uniclust30 database for use by HHblits.')

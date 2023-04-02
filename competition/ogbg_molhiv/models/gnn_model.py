@@ -7,7 +7,7 @@ import re
 import io
 import json
 import yaml
-import time 
+import time
 import logging
 from tqdm import tqdm
 import numpy as np
@@ -67,8 +67,8 @@ class GNNModel(object):
             return L.reduce_sum(self.feature_list, axis=0)
 
     def get_pooled_repr(self):
-        feature = pgl.layers.graph_pooling(self.gw, 
-                                           self.feature_list[-1], 
+        feature = pgl.layers.graph_pooling(self.gw,
+                                           self.feature_list[-1],
                                            self.config.graph_pool_type)
         return feature
 
@@ -96,7 +96,7 @@ class DeeperGCNModel(object):
         nfeat = self.atom_encoder(gw.node_feat['nfeat'])
         efeat = self.bond_encoder(gw.edge_feat['efeat'])
 
-        feature = GNNlayers.gen_layer(gw, nfeat, efeat, 
+        feature = GNNlayers.gen_layer(gw, nfeat, efeat,
                 self.config.hidden_size, name="_gen_conv_0")
 
         for layer in range(1, self.config.num_layers):
@@ -112,14 +112,14 @@ class DeeperGCNModel(object):
             feature = L.relu(feature)
 
             #3. dropout
-            feature = L.dropout(feature, 
+            feature = L.dropout(feature,
                     dropout_prob=self.config.dropout_rate,
                     dropout_implementation="upscale_in_train")
 
             #4 gen_conv
             #  feature = pgl.layers.gen_conv(gw, feature,
             #          name="%s_gen_conv_%d" % (self.model_name, layer), beta=beta)
-            feature = GNNlayers.gen_layer(gw, feature, efeat, 
+            feature = GNNlayers.gen_layer(gw, feature, efeat,
                 self.config.hidden_size, name="_gen_conv_%s" % layer)
             
             #5 res
@@ -139,7 +139,7 @@ class DeeperGCNModel(object):
             feature = GNNlayers.layer_norm(feature,
                     "norm_scale_%s_%s" % (self.model_name, self.config.num_layers))
         #  feature = L.relu(feature)
-        feature = L.dropout(feature, 
+        feature = L.dropout(feature,
                 dropout_prob=self.config.dropout_rate,
                 dropout_implementation="upscale_in_train")
 
@@ -155,7 +155,7 @@ class DeeperGCNModel(object):
         return self.feature
 
     def get_pooled_repr(self):
-        feature = pgl.layers.graph_pooling(self.gw, 
+        feature = pgl.layers.graph_pooling(self.gw,
                                            self.feature,
                                            self.config.graph_pool_type)
         return feature
@@ -210,8 +210,8 @@ class GraphTransformerModel(object):
             return L.reduce_sum(self.feature_list, axis=0)
 
     def get_pooled_repr(self):
-        feature = pgl.layers.graph_pooling(self.gw, 
-                                           self.feature_list[-1], 
+        feature = pgl.layers.graph_pooling(self.gw,
+                                           self.feature_list[-1],
                                            self.config.graph_pool_type)
         return feature
 

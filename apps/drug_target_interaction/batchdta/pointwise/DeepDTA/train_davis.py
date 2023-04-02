@@ -161,7 +161,7 @@ def main(args):
     test_average_ci = np.mean([concordance_index(test_G[x*68:(x+1)*68],test_P[x*68:(x+1)*68]) for x in range(0,t_lens)])
 
     # Save the testing result
-    files.write("test_MSE:" + str(test_MSE) + ", test_averageCI:" + str(test_average_ci) + 
+    files.write("test_MSE:" + str(test_MSE) + ", test_averageCI:" + str(test_average_ci) +
                 ", test_weightedCI:" + str(test_average_ci) + ", test_overallCI:" + str(test_CI) + "\n")
     files.write("best_epoch:" + str(best_epoch + 1) + ", best_train_loss:" + str(best_train_loss) + "\n")
 

@@ -167,7 +167,7 @@ class TMScore(object):
                 exp_pdb_file = f'{self.output_dir}/exp-{name}.pdb'
                 self._result_to_pdb_file(res_dict, exp_pdb_file)
 
-            # update 
+            # update
             self._update_results(name, pred_pdb_file, exp_pdb_file, msa_depth, seq_len)
         
     def get_proteins(self):
@@ -199,11 +199,11 @@ class TMScore(object):
 
 
 class ResultsCollect(object):
-    def __init__(self, 
-            eval_tm_score=False, 
+    def __init__(self,
+            eval_tm_score=False,
             tm_score_bin=None,
             lddt_score_bin=None,
-            cache_dir=None, 
+            cache_dir=None,
             distributed=False):
         self.eval_tm_score = eval_tm_score
         self.distributed = distributed
@@ -266,7 +266,7 @@ class ResultsCollect(object):
                     avg_score, num = dist_all_reduce(
                             l, return_num=True, distributed=self.distributed)
                     res.update({
-                        f'{prefix}-{k}': avg_score, 
+                        f'{prefix}-{k}': avg_score,
                         f'{prefix}-sample_num': num
                     })
             
@@ -279,7 +279,7 @@ class ResultsCollect(object):
                     avg_score, num = dist_all_reduce(
                             l, return_num=True, distributed=self.distributed)
                     res.update({
-                        f'{prefix}-{k}': avg_score, 
+                        f'{prefix}-{k}': avg_score,
                         f'{prefix}-sample_num': num
                     })
         return res

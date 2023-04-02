@@ -17,7 +17,7 @@ https://github.com/ molecularsets/moses
 """
 
 import paddle
-from paddle.io import Dataset 
+from paddle.io import Dataset
 import numpy as np
 import paddle.fluid as fluid
 import paddle.fluid.dygraph as dg
@@ -48,14 +48,14 @@ class VAE(nn.Layer):
         n_vocab, d_emb = len(vocab), vocab.vectors.shape[1]
         self.x_emb = nn.Embedding(n_vocab, d_emb, self.pad)
         self.x_emb.weight.set_value(paddle.to_tensor(vocab.vectors))
-        if self.config['freeze_embeddings']:        
+        if self.config['freeze_embeddings']:
             self.x_emb.weight.stop_gradient=True
                        
         # encoder
         self.encoder_rnn = nn.GRU(
                 d_emb,
                 self.config['q_d_h'],
-                num_layers=self.config['q_n_layers'],                
+                num_layers=self.config['q_n_layers'],
                 dropout=self.config['q_dropout'] if self.config['q_n_layers'] > 1 else 0,
                 direction= 'bidirectional'  if self.config['q_bidir'] else 'forward'
             )
@@ -64,7 +64,7 @@ class VAE(nn.Layer):
         self.q_mu = nn.Linear(q_d_last, self.config['d_z'])
         self.q_logvar = nn.Linear(q_d_last, self.config['d_z'])
                
-        # decoder        
+        # decoder
         self.decoder_rnn = nn.GRU(
                 d_emb + self.config['d_z'],
                 self.config['d_d_h'],
@@ -86,7 +86,7 @@ class VAE(nn.Layer):
         # Decoder: x, z -> recon_loss
         recon_loss = self.forward_decoder(x, z)
 
-        return kl_loss, recon_loss 
+        return kl_loss, recon_loss
         
     def forward_encoder(self, x):
         """
@@ -103,12 +103,12 @@ class VAE(nn.Layer):
         ######### GRU encoder
         _, h = self.encoder_rnn(embedding_data, sequence_length=data_length)
         
-        h = h[-(1 + int(self.config['q_bidir'])):]       
+        h = h[-(1 + int(self.config['q_bidir'])):]
         h = paddle.concat(h.split(1 + int(self.config['q_bidir'])), axis=-1).squeeze(0)
                 
-        mu, logvar = self.q_mu(h), self.q_logvar(h)           
-        eps = paddle.randn(shape=mu.shape) 
-        z = mu + (logvar / 2).exp() * eps                
+        mu, logvar = self.q_mu(h), self.q_logvar(h)
+        eps = paddle.randn(shape=mu.shape)
+        z = mu + (logvar / 2).exp() * eps
                 
         kl_loss = 0.5 * (logvar.exp() + mu ** 2 - 1 - logvar).sum(1).mean()
 
@@ -130,7 +130,7 @@ class VAE(nn.Layer):
         x_input = paddle.concat([embedding_data, z_0], axis=-1)
         
         
-        h_0 = self.decoder_lat(z)                
+        h_0 = self.decoder_lat(z)
         h_0 = paddle.expand(h_0.unsqueeze(0), \
             shape=[self.decoder_rnn.num_layers, h_0.unsqueeze(0).shape[1], h_0.unsqueeze(0).shape[2]])
         
@@ -197,7 +197,7 @@ class VAE(nn.Layer):
         
         # Generating cycle
         for i in range(1, max_len):
-            x_emb = self.x_emb(w).unsqueeze(1)            
+            x_emb = self.x_emb(w).unsqueeze(1)
             x_input = paddle.concat([x_emb, z_0], axis=-1)
             
             o, h = self.decoder_rnn(x_input, h)

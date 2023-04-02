@@ -21,10 +21,10 @@ from pahelix.utils.data_utils import load_npz_to_data_list
 from pahelix.utils.data_utils import save_data_list_to_npz
 
 
-class DataUtilsTest(unittest.TestCase):  
+class DataUtilsTest(unittest.TestCase):
     def test_data_list_to_npz(self):
         data_list = [
-            {"a": np.array([1,23,4])}, 
+            {"a": np.array([1,23,4])},
             {"a": np.array([2,34,5])}
         ]
         npz_file = 'tmp.npz'

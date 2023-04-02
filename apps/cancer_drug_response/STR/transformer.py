@@ -890,7 +890,7 @@ class TransformerDecoderLayer(Layer):
                                                 memory_mask, cache[1])
         # import pdb
         # pdb.set_trace()
-        # get attention weights 
+        # get attention weights
         if self.cross_attn.need_weights:
             self.attention_weights = tgt[1]
 

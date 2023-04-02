@@ -32,13 +32,13 @@ class RunModel(nn.Layer):
 
         # channel_num = {k: v.shape[-1] for k, v in self.batch.items()}
         # pylint: disable=
-        channel_num = {'aatype': 106, 'residue_index': 106, 'seq_length': 1, 
-            'is_distillation': 1, 'seq_mask': 106, 'msa_mask': 106, 
-            'msa_row_mask': 512, 'random_crop_to_size_seed': 2, 
-            'atom14_atom_exists': 14, 'residx_atom14_to_atom37': 14, 
-            'residx_atom37_to_atom14': 37, 'atom37_atom_exists': 37, 
-            'extra_msa': 106, 'extra_msa_mask': 106, 'extra_msa_row_mask': 1024, 
-            'bert_mask': 106, 'true_msa': 106, 'extra_has_deletion': 106, 
+        channel_num = {'aatype': 106, 'residue_index': 106, 'seq_length': 1,
+            'is_distillation': 1, 'seq_mask': 106, 'msa_mask': 106,
+            'msa_row_mask': 512, 'random_crop_to_size_seed': 2,
+            'atom14_atom_exists': 14, 'residx_atom14_to_atom37': 14,
+            'residx_atom37_to_atom14': 37, 'atom37_atom_exists': 37,
+            'extra_msa': 106, 'extra_msa_mask': 106, 'extra_msa_row_mask': 1024,
+            'bert_mask': 106, 'true_msa': 106, 'extra_has_deletion': 106,
             'extra_deletion_value': 106, 'msa_feat': 49, 'target_feat': 22}
         self.alphafold = modules.AlphaFold(channel_num, model_config.model)
 

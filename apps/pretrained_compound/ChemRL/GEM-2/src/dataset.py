@@ -1,5 +1,5 @@
-#!/usr/bin/python                                                                                                
-#-*-coding:utf-8-*- 
+#!/usr/bin/python
+#-*-coding:utf-8-*-
 #   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -51,7 +51,7 @@ class PCQMv2Dataset(paddle.io.Dataset):
         data_list = []
         for i in range(len(smiles_list)):
             data = {}
-            data['smiles'] = smiles_list[i]        
+            data['smiles'] = smiles_list[i]
             data['label'] = labels.values[i]
             if self.load_sdf and i < len(suppl):
                 data['mol'] = suppl[i]

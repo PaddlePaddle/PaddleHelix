@@ -131,7 +131,7 @@ def main(config):
         scheduler = paddle.optimizer.lr.StepDecay(
                 learning_rate=config.lr, step_size=config.step_size, gamma=config.gamma)
     elif config.lr_mode == "multistep":
-        scheduler = paddle.optimizer.lr.MultiStepDecay(learning_rate=config.lr, 
+        scheduler = paddle.optimizer.lr.MultiStepDecay(learning_rate=config.lr,
                 milestones=config.milestones,
                 gamma=config.gamma)
     elif config.lr_mode == "piecewise":
@@ -189,7 +189,7 @@ def main(config):
     valid_loader = Dataloader(valid_ds, batch_size=config.valid_batch_size, shuffle=False,
             num_workers=1, collate_fn=DS.CollateFn(config))
 
-    left_valid_loader = Dataloader(left_valid_ds, batch_size=config.valid_batch_size, 
+    left_valid_loader = Dataloader(left_valid_ds, batch_size=config.valid_batch_size,
             shuffle=False, num_workers=1, collate_fn=DS.CollateFn(config))
 
     test_loader = Dataloader(test_ds, batch_size=config.valid_batch_size, shuffle=False,

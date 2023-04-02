@@ -167,7 +167,7 @@ def collate(batch):
     join_cells = np.array(cells)
     labels = np.array(lbs)
         
-    return join_graph1, join_graph2, join_mask1, join_mask2, join_cells, labels 
+    return join_graph1, join_graph2, join_mask1, join_mask2, join_cells, labels
 
 def join_cell(ddi, cell):
     """join all cell feature vectors in a batch"""

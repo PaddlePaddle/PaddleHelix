@@ -1,5 +1,5 @@
-#!/usr/bin/python3                                                                                                
-#-*-coding:utf-8-*- 
+#!/usr/bin/python3
+#-*-coding:utf-8-*-
 #   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -40,7 +40,7 @@ from attribute_tree_decoder import create_tree_decoder,batch_make_att_masks
 sys.path.append('../cfg_parser')
 import cfg_parser as parser
 
-import pickle 
+import pickle
 from tqdm import tqdm
 
 def parse_single(smiles, grammar):
@@ -77,7 +77,7 @@ def parse(chunk, grammar):
 
 
 if __name__ == '__main__':
-    smiles_file = cmd_args.smiles_file 
+    smiles_file = cmd_args.smiles_file
     fname = '.'.join(smiles_file.split('.')[0:-1]) + '.cfg_dump'
     fout = open(fname, 'wb')
     grammar = parser.Grammar(cmd_args.grammar_file)

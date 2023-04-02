@@ -1,5 +1,5 @@
-#!/usr/bin/python3                                                                                                
-#-*-coding:utf-8-*- 
+#!/usr/bin/python3
+#-*-coding:utf-8-*-
 #   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,25 +38,25 @@ def get_parser(parser=None):
     
     # Train
     train_arg = parser.add_argument_group('Train')
-    train_arg.add_argument('--max_epoch', 
-                           type=int, default=1000,       
+    train_arg.add_argument('--max_epoch',
+                           type=int, default=1000,
                            help='Batch size')
-    train_arg.add_argument('--batch_size', 
-                           type=int, default=1000,      
+    train_arg.add_argument('--batch_size',
+                           type=int, default=1000,
                            help='Batch size')
-    train_arg.add_argument('--lr_start', 
-                           type=float, default=3 * 1e-4, 
+    train_arg.add_argument('--lr_start',
+                           type=float, default=3 * 1e-4,
                            help='Initial lr value')
     
     # kl annealing
-    train_arg.add_argument('--kl_start', 
-                           type=int, default=0, 
+    train_arg.add_argument('--kl_start',
+                           type=int, default=0,
                            help='Epoch to start change kl weight from')
-    train_arg.add_argument('--kl_w_start', 
-                           type=float, default=0, 
+    train_arg.add_argument('--kl_w_start',
+                           type=float, default=0,
                            help='Initial kl weight value')
-    train_arg.add_argument('--kl_w_end', 
-                           type=float, default=0.05, 
+    train_arg.add_argument('--kl_w_end',
+                           type=float, default=0.05,
                            help='Maximum kl weight value')
 
     return parser

@@ -88,7 +88,7 @@ def load_hiv_dataset(data_path, task_names=None):
     data_list = []
     for i in range(len(smiles_list)):
         data = {}
-        data['smiles'] = smiles_list[i]        
+        data['smiles'] = smiles_list[i]
         data['label'] = labels.values[i]
         data_list.append(data)
     dataset = InMemoryDataset(data_list)

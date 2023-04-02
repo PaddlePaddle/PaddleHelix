@@ -89,7 +89,7 @@ class AF2Dataset(paddle.io.Dataset):
             crop_size=None,
             is_pad_if_crop=False,
             delete_msa_block=False,
-            trainer_id=0, 
+            trainer_id=0,
             trainer_num=1,
             is_shuffle=False):
         """
@@ -157,7 +157,7 @@ class AF2Dataset(paddle.io.Dataset):
     
     def _get_protein_feature_file(self, protein):
         """tbd."""
-        return os.path.join(self.data_config.feature_dir, 
+        return os.path.join(self.data_config.feature_dir,
                 self.protein2seq_map[protein], 'features.pkl.gz')
     
     def _get_protein_struct_file(self, protein):
@@ -166,7 +166,7 @@ class AF2Dataset(paddle.io.Dataset):
         protein_name, chain_id = protein.split('_')
         protein_label_file = os.path.join(
                 self.data_config.structure_dir, protein_name + '.cif')
-        return protein_label_file 
+        return protein_label_file
 
     def get_input_feat(self, protein):
         """tbd."""
@@ -254,7 +254,7 @@ class AF2DistillDataset(paddle.io.Dataset):
             crop_size=None,
             is_pad_if_crop=False,
             delete_msa_block=False,
-            trainer_id=0, 
+            trainer_id=0,
             trainer_num=1,
             is_shuffle=False):
         """
@@ -322,7 +322,7 @@ class AF2DistillDataset(paddle.io.Dataset):
     
     def _get_protein_feature_file(self, protein):
         """tbd."""
-        return os.path.join(self.data_config.feature_dir, 
+        return os.path.join(self.data_config.feature_dir,
                 self.protein2seq_map[protein], 'features.pkl.gz')
     
     def _get_protein_struct_file(self, protein):
@@ -331,7 +331,7 @@ class AF2DistillDataset(paddle.io.Dataset):
         protein_name = protein
         protein_label_file = os.path.join(
                 self.data_config.structure_dir, protein_name + '.pdb.gz')
-        return protein_label_file 
+        return protein_label_file
 
     def get_input_feat(self, protein):
         """tbd."""
@@ -438,7 +438,7 @@ class AF2TestDataset(IterableDataset):
             model_config,
             data_config,
             delete_msa_block=False,
-            trainer_id=0, 
+            trainer_id=0,
             trainer_num=1):
         """
         Iterate over clusts, where proteins in each clust
@@ -479,7 +479,7 @@ class AF2TestDataset(IterableDataset):
     def _get_protein_struct_file(self, protein):
         """tbd."""
         cif_file = join(self.data_config.structure_dir, protein + '.pdb')
-        return cif_file 
+        return cif_file
 
     def get_input_feat(self, protein):
         """tbd."""
@@ -540,7 +540,7 @@ def demo_af2():
         crop_size=100,
         is_pad_if_crop=True,
         delete_msa_block=True,
-        trainer_id=0, 
+        trainer_id=0,
         trainer_num=1)
 
     dataloader = DataLoader(
@@ -581,7 +581,7 @@ def demo_af2_test():
         config=model_config,
         data_path=data_path,
         delete_msa_block=True,
-        trainer_id=0, 
+        trainer_id=0,
         trainer_num=1,
     )
 

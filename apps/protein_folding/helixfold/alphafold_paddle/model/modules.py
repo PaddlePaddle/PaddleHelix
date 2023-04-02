@@ -91,7 +91,7 @@ class Dropout(nn.Layer):
         if self.p == 0:
             return input
 
-        if self.axis == None: 
+        if self.axis == None:
             out = nn.functional.dropout(input,
                             p=self.p,
                             axis=self.axis,
@@ -250,7 +250,7 @@ class AlphaFoldIteration(nn.Layer):
         self.channel_num['seq_channel'] = config.embeddings_and_evoformer.seq_channel
 
         if self.global_config.get('dist_model', False):
-            from ppfleetx.models.protein_folding.evoformer import DistEmbeddingsAndEvoformer 
+            from ppfleetx.models.protein_folding.evoformer import DistEmbeddingsAndEvoformer
             self.evoformer = DistEmbeddingsAndEvoformer(
                 self.channel_num, self.config.embeddings_and_evoformer,
                 self.global_config)
@@ -503,7 +503,7 @@ class Attention(nn.Layer):
                 weighted_avg *= gate_values
 
             output = paddle.einsum('nbqhc,hco->nbqo', weighted_avg,
-                                self.output_w) + self.output_b 
+                                self.output_w) + self.output_b
         return output
 
 
@@ -981,7 +981,7 @@ class PredictedAlignedErrorHead(nn.Layer):
 
         # Compute the squared error for each alignment.
         def _local_frame_points(affine):
-            points = [paddle.unsqueeze(x, axis=-2) for x in 
+            points = [paddle.unsqueeze(x, axis=-2) for x in
                             paddle.unstack(affine.translation, axis=-1)]
             return affine.invert_point(points, extra_dims=1)
         error_dist2_xyz = [
@@ -1101,7 +1101,7 @@ class DistogramHead(nn.Layer):
                             repeat_times=[logits.shape[0], 1])
 
         return {
-            'logits': logits, 
+            'logits': logits,
             'bin_edges': breaks}
 
     def loss(self, value, batch):
@@ -1137,7 +1137,7 @@ def _distogram_log_loss(logits, bin_edges, batch, num_bins):
         (1e-6 + paddle.sum(square_mask, axis=[-2, -1])))
     dist2 = dist2[..., 0]
     return {
-        'loss': avg_error, 
+        'loss': avg_error,
         'true_dist': paddle.sqrt(1e-6 + dist2)}
 
 
@@ -1328,7 +1328,7 @@ class EvoformerIteration(nn.Layer):
         residual = self.pair_transition_dropout(residual)
         pair_act = pair_act + residual
 
-        return msa_act, pair_act 
+        return msa_act, pair_act
 
     def outer_product_mean_first(self, msa_act, pair_act, masks):
         msa_mask, pair_mask = masks['msa'], masks['pair']

@@ -60,8 +60,8 @@ class EdgeAggConv(nn.Layer):
 
 
 class Angle2DConv(nn.Layer):
-    def __init__(self, in_dim, hidden_dim, activation=F.relu, dropout=0.0):     
-        super(Angle2DConv, self).__init__()    
+    def __init__(self, in_dim, hidden_dim, activation=F.relu, dropout=0.0):
+        super(Angle2DConv, self).__init__()
         self.feat_drop = nn.Dropout(dropout)
         # parameters for message construction
         self.G = nn.Linear(hidden_dim, hidden_dim, bias_attr=False)
@@ -212,7 +212,7 @@ class AttentivePooling(nn.Layer):
         node_h = self.project_nodes(node_feat)
         context = self.pool(graph, node_h * node_a) ## NOTE
         graph_h, _ = self.gru(context, graph_feat) ## NOTE
-        return graph_h 
+        return graph_h
 
 
 class DistRBF(nn.Layer):

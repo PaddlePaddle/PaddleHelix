@@ -58,7 +58,7 @@ def update_pos(mol, dft_matrix):
     for i, atom in enumerate(dft_matrix):
         conf.SetAtomPosition(i, dft_matrix[i])
 
-def flatten_sdf_string(sdf_string):  
+def flatten_sdf_string(sdf_string):
     return sdf_string.replace('\n', ';;;')
 
 def deflatten_sdf_string(sdf_string):

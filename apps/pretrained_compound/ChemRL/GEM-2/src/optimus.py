@@ -191,7 +191,7 @@ class FirstBodyAxialAttention(nn.Layer):
 
         v = self.v_proj(node_acts).reshape([B, N, H, d]).transpose([0, 2, 1, 3])  # (B, H, N, d)
         v_n = v.unsqueeze([3]) #(B, H, N, 1, d)
-        v_r = v.reshape([B, H, 1, N, d])  
+        v_r = v.reshape([B, H, 1, N, d])
         v_e = self.v_e_proj(pair_acts).reshape([B, N, N, H, d]).transpose([0, 3, 1, 2, 4]) # (B, H, N, N, d)
         v_final = self.add_mlp(v_n + v_r + v_e) # (B, H, N, N, d)
 
@@ -204,7 +204,7 @@ class FirstBodyAxialAttention(nn.Layer):
                 v_node /= (paddle.sum(v_mask, -2) + 1e-6)
                 v_node_repr = self.virtual_node_mlp(v_node) # (B, H, d)
                 output += v_node_repr.unsqueeze(-2)         # (B, H, N, d)
-            else:    
+            else:
                 v_mask = node_mask.unsqueeze([1, 2, 4])     # (B, 1, 1, N, 1)
                 v_node = paddle.sum(v_final * v_mask, -2)   # (B, H, N, d)
                 v_node /= (paddle.sum(v_mask, -2) + 1e-6)
@@ -323,7 +323,7 @@ class SecondBodyAxialAttentionWithAngle(nn.Layer):
         k_e = k_e.unsqueeze([-3])                       # (B, N, H, 1, d, N)
         k_a = self.k_a_proj(triple_acts).reshape(shape=[0, 0, 0, 0, H, d])  # (B, N, N, N, H, d)
         k_a = k_a.transpose(perm=[0, 1, 4, 2, 5, 3])    # (B, N, H, N, d, N)
-        k = k_e + k_a                                   # (B, N, H, N, d, N) 
+        k = k_e + k_a                                   # (B, N, H, N, d, N)
 
         v_e = self.v_proj(pair_acts).reshape(shape=[0, 0, 0, H, d])     # (B, N, N, H, d)
         v_a = self.v_a_proj(triple_acts).reshape(shape=[0, 0, 0, 0, H, d])  # (B, N, N, N, H, d)
@@ -549,7 +549,7 @@ class Optimus(nn.Layer):
         pair_mask = node_mask.unsqueeze(-1) * node_mask.unsqueeze(-2)   # (B, N, N)
         if self.model_config.attention_max_hop_clip >= 0:
             pair_mask = paddle.logical_and(
-                    paddle.cast(pair_mask, 'bool'), 
+                    paddle.cast(pair_mask, 'bool'),
                     batch['hop_num'] <= self.model_config.attention_max_hop_clip)
             pair_mask = paddle.cast(pair_mask, 'float32')
 
@@ -580,7 +580,7 @@ class Optimus(nn.Layer):
         mask_dict = self._create_mask(batch)
         node_acts = self.dropout(self.layer_norm_before(node_acts))
         for block_i, block in enumerate(self.optimus_blocks):
-            node_acts, pair_acts = recompute_wrapper(block, 
+            node_acts, pair_acts = recompute_wrapper(block,
                     node_acts, pair_acts, triple_acts, mask_dict,
                     is_recompute=self.training)
         results = {

@@ -1,5 +1,5 @@
-#!/usr/bin/python3                                                                                                
-#-*-coding:utf-8-*- 
+#!/usr/bin/python3
+#-*-coding:utf-8-*-
 #   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -204,7 +204,7 @@ class StringDataset(Dataset):
                 EOS (end of a sentence) token
             * smiles is an original SMILES from the dataset
         """
-        tokens = self.tokens[index]        
+        tokens = self.tokens[index]
         return_data = paddle.to_tensor([self.bos] + tokens + [self.eos], dtype='int64')
 
         padded_return_data = paddle.concat([return_data, \

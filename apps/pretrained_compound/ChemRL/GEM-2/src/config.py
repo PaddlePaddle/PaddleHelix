@@ -63,8 +63,8 @@ OPTIMUS_MODEL_CONFIG = ml_collections.ConfigDict({
     "triple_channel": 128,
 
     "embedding_layer": {
-        "atom_names": ["atomic_num", "formal_charge", "degree", 
-            "chiral_tag", "total_numHs", "is_aromatic", 
+        "atom_names": ["atomic_num", "formal_charge", "degree",
+            "chiral_tag", "total_numHs", "is_aromatic",
             "hybridization"],
         "bond_names": ["bond_dir", "bond_type", "is_in_ring", "hop_num"],
         "bond_float_names": ["bond_length"],

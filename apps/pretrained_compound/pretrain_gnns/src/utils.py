@@ -50,17 +50,17 @@ def get_downstream_task_names(dataset_name, data_path):
     elif dataset_name == 'bbbp':
         task_name = get_default_bbbp_task_names()
     elif dataset_name == 'clintox':
-        task_name = get_default_clintox_task_names() 
+        task_name = get_default_clintox_task_names()
     elif dataset_name == 'hiv':
-        task_name = get_default_hiv_task_names() 
+        task_name = get_default_hiv_task_names()
     elif dataset_name == 'muv':
-        task_name = get_default_muv_task_names() 
+        task_name = get_default_muv_task_names()
     elif dataset_name == 'sider':
         task_name = get_default_sider_task_names()
     elif dataset_name == 'tox21':
         task_name = get_default_tox21_task_names()
     elif dataset_name == 'toxcast':
-        task_name = get_default_toxcast_task_names(data_path)   
+        task_name = get_default_toxcast_task_names(data_path)
     else:
         raise ValueError('%s not supported' % dataset_name)
 

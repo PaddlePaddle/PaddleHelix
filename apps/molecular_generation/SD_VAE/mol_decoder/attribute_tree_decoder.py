@@ -1,5 +1,5 @@
-#!/usr/bin/python3                                                                                                
-#-*-coding:utf-8-*- 
+#!/usr/bin/python3
+#-*-coding:utf-8-*-
 #   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -152,10 +152,10 @@ class AttMolGraphDecoder(object):
                         return ans
         return ans
             
-    def tree_generator(self, node, left_conn=False, right_conn=False, cap_remain=None, ref_symbol=None, is_last=None):  
+    def tree_generator(self, node, left_conn=False, right_conn=False, cap_remain=None, ref_symbol=None, is_last=None):
         """
         tbd
-        """      
+        """
         assert is_last is not None
         if node.symbol in ['bond', 'BB', 'branch', 'BAC', 'BAH', 'charge', 'hcount']:
             assert cap_remain is not None
@@ -217,7 +217,7 @@ class AttMolGraphDecoder(object):
             self.atom_num += 1
         elif node.symbol == 'bond':
             candidates = []
-            assert cap_remain            
+            assert cap_remain
             rr = range(len(bond_types))
             if hasattr(node, 'allowed'):
                 rr = node.allowed
@@ -269,7 +269,7 @@ class AttMolGraphDecoder(object):
 
             rule = self.rand_rule(node, list(candidates))
 
-            if rule > 1: # branched_atom -> atom RB | atom RB BB                        
+            if rule > 1: # branched_atom -> atom RB | atom RB BB
                 r = self.get_node(node, 'RB', 1)
                 if rule == 2 and is_last:
                     r.task = True
@@ -291,7 +291,7 @@ class AttMolGraphDecoder(object):
         elif node.symbol == 'RB':
             assert cap_remain
             b = self.get_node(node, 'ringbond', 0)
-            b.task = node.task            
+            b.task = node.task
             cap_remain = self.tree_generator(b, cap_remain=cap_remain, is_last=is_last)
             node.add_child(b)
             
@@ -307,7 +307,7 @@ class AttMolGraphDecoder(object):
             
             rule = self.rand_rule(node, candidates)
 
-            if rule == 1: # RB -> ringbond RB                
+            if rule == 1: # RB -> ringbond RB
                 assert cap_remain > 0
                 r = self.get_node(node, 'RB', 1)
                 r.task = node.task
@@ -332,7 +332,7 @@ class AttMolGraphDecoder(object):
                 node.add_child(b)
 
             cap_remain = rest
-        elif node.symbol == 'ringbond':            
+        elif node.symbol == 'ringbond':
             pre_idx = node.get_pre()
             mm = self.maximum_match(pre_idx, cap_remain)
             if node.task:
@@ -346,7 +346,7 @@ class AttMolGraphDecoder(object):
                         candidates.append(r)
             # whether to create bond
             if mm == 0 or (not node.task and len(self.open_rings) < MAX_NESTED_BONDS):
-                assert len(self.open_rings) < MAX_NESTED_BONDS                
+                assert len(self.open_rings) < MAX_NESTED_BONDS
                 candidates.append(MAX_NESTED_BONDS)
             
             r = self.rand_att(node, candidates)
@@ -416,7 +416,7 @@ class AttMolGraphDecoder(object):
             cap_remain -= cost
         elif node.symbol == 'BAI':
             rule = self.rand_rule(node)
-            if rule % 2 == 0: # BAI -> isotope xxx 
+            if rule % 2 == 0: # BAI -> isotope xxx
                 i = self.get_node(node, 'isotope', 0)
                 self.tree_generator(i, is_last=is_last)
                 node.add_child(i)
@@ -431,7 +431,7 @@ class AttMolGraphDecoder(object):
             if rule <= 1: # BAI -> isotope aliphatic_organic BAC | aliphatic_organic BAC
                 b = self.get_node(node, 'BAC', -1)
                 cap = self.tree_generator(b, cap_remain=cap, ref_symbol=s.children[0].symbol, is_last=is_last)
-                node.add_child(b)            
+                node.add_child(b)
             node.left_remain = cap
             node.right_remain = cap
             node.single_atom = True
@@ -457,7 +457,7 @@ class AttMolGraphDecoder(object):
                     borrow = 1
                 cap_remain = self.tree_generator(c, cap_remain=cap_remain - borrow, \
                                                     ref_symbol=ref_symbol, is_last=is_last)
-                cap_remain += borrow                
+                cap_remain += borrow
                 node.add_child(c)
             if rule % 2 == 0: # BAH -> hcount charge | hcount
                 assert cap_remain > 0
@@ -475,8 +475,8 @@ class AttMolGraphDecoder(object):
                 self.tree_generator(d, cap_remain=cap_remain, is_last=is_last)
                 cost = int(d.children[0].symbol[1: -1])
                 node.add_child(d)
-            cap_remain -= cost            
-        elif node.symbol == 'charge':            
+            cap_remain -= cost
+        elif node.symbol == 'charge':
             if cap_remain == 0:
                 rule = self.rand_rule(node, [2, 3])
             else:
@@ -494,20 +494,20 @@ class AttMolGraphDecoder(object):
                 cap_remain -= cost
             else: # charge -> '+' | '+' DIGIT
                 p = self.get_node(node, '\'+\'', 0)
-                node.add_child(p)                
+                node.add_child(p)
                 delta = 1
                 if rule == 1: # charge -> '+' DIGIT
                     d1 = self.get_node(node, 'DIGIT', -1)
                     self.tree_generator(d1, is_last=is_last)
                     delta = int(d1.children[0].symbol[1: -1])
                     node.add_child(d1)
-                cap_remain += delta            
+                cap_remain += delta
             assert ref_symbol is not None and ref_symbol != '\'B\''
         elif node.symbol == 'DIGIT':
             if cap_remain is None or cap_remain > len(prod[node.symbol]):
                 rule = self.rand_rule(node)
             else:
-                rule = self.rand_rule(node, range(cap_remain))                
+                rule = self.rand_rule(node, range(cap_remain))
 
             d = self.get_node(node, '\'%d\'' % (rule + 1), 0)
             node.add_child(d)
@@ -523,12 +523,12 @@ class AttMolGraphDecoder(object):
                                                 ref_symbol=ref_symbol, is_last=is_last)
                     node.left_remain = c.left_remain
                     node.right_remain = c.right_remain
-                    node.single_atom = c.single_atom                    
+                    node.single_atom = c.single_atom
                     node.atom_pos = c.atom_pos
                     node.is_aromatic = c.is_aromatic
                     if t >= 0:
                         cap_remain = t
-                node.add_child(c)                
+                node.add_child(c)
 
         if cap_remain is not None:
             assert cap_remain >= 0

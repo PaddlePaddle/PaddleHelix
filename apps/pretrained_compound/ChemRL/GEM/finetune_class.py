@@ -1,5 +1,5 @@
-#!/usr/bin/python                                                                                                                                  
-#-*-coding:utf-8-*- 
+#!/usr/bin/python
+#-*-coding:utf-8-*-
 #   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -45,8 +45,8 @@ def train(args, model, train_dataset, collate_fn, criterion, encoder_opt, head_o
         the average of the list loss
     """
     data_gen = train_dataset.get_data_loader(
-            batch_size=args.batch_size, 
-            num_workers=args.num_workers, 
+            batch_size=args.batch_size,
+            num_workers=args.num_workers,
             shuffle=True,
             collate_fn=collate_fn)
     list_loss = []
@@ -77,8 +77,8 @@ def evaluate(args, model, test_dataset, collate_fn):
     to help eliminate these blank labels in both training and evaluation phase.
     """
     data_gen = test_dataset.get_data_loader(
-            batch_size=args.batch_size, 
-            num_workers=args.num_workers, 
+            batch_size=args.batch_size,
+            num_workers=args.num_workers,
             shuffle=False,
             collate_fn=collate_fn)
     total_pred = []
@@ -149,10 +149,10 @@ def main(args):
     #     Collate features about the graph data and return the feed dictionary.
     # splitter:
     #     split type of the dataset:random,scaffold,random with scaffold. Here is randomsplit.
-    #     `ScaffoldSplitter` will firstly order the compounds according to Bemis-Murcko scaffold, 
-    #     then take the first `frac_train` proportion as the train set, the next `frac_valid` proportion as the valid set 
-    #     and the rest as the test set. `ScaffoldSplitter` can better evaluate the generalization ability of the model on 
-    #     out-of-distribution samples. Note that other splitters like `RandomSplitter`, `RandomScaffoldSplitter` 
+    #     `ScaffoldSplitter` will firstly order the compounds according to Bemis-Murcko scaffold,
+    #     then take the first `frac_train` proportion as the train set, the next `frac_valid` proportion as the valid set
+    #     and the rest as the test set. `ScaffoldSplitter` can better evaluate the generalization ability of the model on
+    #     out-of-distribution samples. Note that other splitters like `RandomSplitter`, `RandomScaffoldSplitter`
     #     and `IndexSplitter` is also available."
     
     if args.task == 'data':
@@ -181,13 +181,13 @@ def main(args):
 
     ### start train
     # Load the train function and calculate the train loss in each epoch.
-    # Here we set the epoch is in range of max epoch,you can change it if you want. 
+    # Here we set the epoch is in range of max epoch,you can change it if you want.
 
     # Then we will calculate the train loss ,valid auc,test auc and print them.
     # Finally we save it to the model according to the dataset.
     list_val_auc, list_test_auc = [], []
     collate_fn = DownstreamCollateFn(
-            atom_names=compound_encoder_config['atom_names'], 
+            atom_names=compound_encoder_config['atom_names'],
             bond_names=compound_encoder_config['bond_names'],
             bond_float_names=compound_encoder_config['bond_float_names'],
             bond_angle_float_names=compound_encoder_config['bond_angle_float_names'],
@@ -204,16 +204,16 @@ def main(args):
         print("epoch:%s val/auc:%s" % (epoch_id, val_auc))
         print("epoch:%s test/auc:%s" % (epoch_id, test_auc))
         print("epoch:%s test/auc_by_eval:%s" % (epoch_id, test_auc_by_eval))
-        paddle.save(compound_encoder.state_dict(), 
+        paddle.save(compound_encoder.state_dict(),
                 '%s/epoch%d/compound_encoder.pdparams' % (args.model_dir, epoch_id))
-        paddle.save(model.state_dict(), 
+        paddle.save(model.state_dict(),
                 '%s/epoch%d/model.pdparams' % (args.model_dir, epoch_id))
 
     outs = {
         'model_config': basename(args.model_config).replace('.json', ''),
         'metric': '',
-        'dataset': args.dataset_name, 
-        'split_type': args.split_type, 
+        'dataset': args.dataset_name,
+        'split_type': args.split_type,
         'batch_size': args.batch_size,
         'dropout_rate': args.dropout_rate,
         'encoder_lr': args.encoder_lr,
@@ -237,12 +237,12 @@ if __name__ == '__main__':
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--num_workers", type=int, default=2)
     parser.add_argument("--max_epoch", type=int, default=100)
-    parser.add_argument("--dataset_name", 
-            choices=['bace', 'bbbp', 'clintox', 'hiv', 
+    parser.add_argument("--dataset_name",
+            choices=['bace', 'bbbp', 'clintox', 'hiv',
                 'muv', 'sider', 'tox21', 'toxcast'])
     parser.add_argument("--data_path", type=str, default=None)
     parser.add_argument("--cached_data_path", type=str, default=None)
-    parser.add_argument("--split_type", 
+    parser.add_argument("--split_type",
             choices=['random', 'scaffold', 'random_scaffold', 'index'])
 
     parser.add_argument("--compound_encoder_config", type=str)

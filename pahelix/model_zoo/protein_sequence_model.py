@@ -197,7 +197,7 @@ class TransformerEncoderModel(nn.Layer):
 
         self.dropout = nn.Dropout(p=dropout_rate)
         self.transformer_encoder_layer = nn.TransformerEncoderLayer(emb_dim, n_heads, dim_feedforward=hidden_size * 4, \
-                                                dropout=0.1, activation='gelu', attn_dropout=0.1, act_dropout=0) 
+                                                dropout=0.1, activation='gelu', attn_dropout=0.1, act_dropout=0)
         self.transformer_encoder = nn.TransformerEncoder(self.transformer_encoder_layer, n_layers)
         self.layer_norm = nn.LayerNorm(hidden_size)
         self.dropout = nn.Dropout(dropout_rate)
@@ -274,7 +274,7 @@ class PretrainTaskModel(nn.Layer):
         encoder_output = self.encoder_model(input, pos)
         decoder_output = self.conv_decoder(encoder_output)
 
-        return decoder_output 
+        return decoder_output
 
 
 class SeqClassificationTaskModel(nn.Layer):
@@ -316,7 +316,7 @@ class SeqClassificationTaskModel(nn.Layer):
         encoder_output = self.encoder_model(input, pos)
         decoder_output = self.conv_decoder(encoder_output)
 
-        return decoder_output 
+        return decoder_output
 
 
 class ClassificationTaskModel(nn.Layer):

@@ -37,7 +37,7 @@ class AtomEmbedding(nn.Layer):
         for name in self.atom_names:
             embed = nn.Embedding(
                     CompoundKit.get_atom_feature_size(name) + 5,
-                    embed_dim, 
+                    embed_dim,
                     weight_attr=nn.initializer.XavierUniform())
             self.embed_list.append(embed)
 
@@ -103,7 +103,7 @@ class AngleEmbedding(nn.Layer):
         for i in range(3):
             embed = nn.Embedding(
                     CompoundKit.get_bond_feature_size('dist_matrix') + 5,
-                    embed_dim, 
+                    embed_dim,
                     weight_attr=nn.initializer.XavierUniform())
             self.embed_list.append(embed)
 
@@ -130,7 +130,7 @@ class BondEmbedding(nn.Layer):
         for name in self.bond_names:
             embed = nn.Embedding(
                     CompoundKit.get_bond_feature_size(name) + 5,
-                    embed_dim, 
+                    embed_dim,
                     weight_attr=nn.initializer.XavierUniform())
             self.embed_list.append(embed)
 

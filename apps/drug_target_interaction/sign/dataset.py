@@ -138,7 +138,7 @@ class ComplexDataset(BaseDataset):
         ############################
         bond_graph_base = assignment_b2a @ assignment_a2b
         np.fill_diagonal(bond_graph_base, 0) # eliminate self connections
-        bond_graph_base[range(num_bonds), [indices.index([x[1],x[0]]) for x in indices]] = 0 
+        bond_graph_base[range(num_bonds), [indices.index([x[1],x[0]]) for x in indices]] = 0
         x, y = np.where(bond_graph_base > 0)
         num_edges = len(x)
 

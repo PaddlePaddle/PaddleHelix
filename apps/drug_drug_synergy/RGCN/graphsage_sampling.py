@@ -60,13 +60,13 @@ def subgraph_gen(hg, label_idx, neighbours=[10, 10]):
     """
     nt = hg.node_types
     drugs_idx = np.where(nt == 'drug')[0]
-    layer1_neighs, layer1_eids = graphsage_sampling(hg, 
-                                                drugs_idx, 
-                                                num_neighbours = neighbours[0], 
+    layer1_neighs, layer1_eids = graphsage_sampling(hg,
+                                                drugs_idx,
+                                                num_neighbours = neighbours[0],
                                                 etype='dti')
-    layer2_neighs, layer2_eids = graphsage_sampling(hg, 
-                                                layer1_neighs, 
-                                                num_neighbours = neighbours[1], 
+    layer2_neighs, layer2_eids = graphsage_sampling(hg,
+                                                layer1_neighs,
+                                                num_neighbours = neighbours[1],
                                                 etype='ppi')
     sub_nodes = drugs_idx.tolist() + layer1_neighs + layer2_neighs
     sub_nodes_reidx = dict(zip(sub_nodes, range(len(sub_nodes))))

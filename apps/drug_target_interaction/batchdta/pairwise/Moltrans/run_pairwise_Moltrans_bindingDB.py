@@ -77,7 +77,7 @@ def sample_index(pairs,sampling_method = None):
 
     for i_data in pairs:
         if sampling_method == '500 times':
-            sampled_data = pd.DataFrame(i_data).sample(n=500,replace=True)            
+            sampled_data = pd.DataFrame(i_data).sample(n=500,replace=True)
         if sampling_method == None:
             sampled_data = pd.DataFrame(i_data)
         
@@ -93,7 +93,7 @@ def get_pairs(scores,K,eps=0.2,seed=0):
     :param K: times of sampling
     :return: ordered pairs.  List of tuple, like [(1,2), (2,3), (1,3)]
     """
-    pairs = []  
+    pairs = []
     random.seed(seed)
     for i in range(len(scores)):
         #for j in range(len(scores)):
@@ -107,7 +107,7 @@ def get_pairs(scores,K,eps=0.2,seed=0):
             idx = random.randint(0, len(scores) - 1)
             score_diff = float(scores[i]) - float(scores[idx])
             if abs(score_diff) >  eps:
-                pairs.append((i, idx, score_diff, len(scores))) 
+                pairs.append((i, idx, score_diff, len(scores)))
 
     if K < 1:
         N_pairs = len(pairs)
@@ -150,15 +150,15 @@ def split_pairs(order_pairs, true_scores):
 
 
 def filter_pairs(data,order_paris,threshold):
-    # filterred the pairs which have score diff less than 0.2 
+    # filterred the pairs which have score diff less than 0.2
     order_paris_filtered = []
     for i_pairs in order_paris:
-        pairs1_score = data[pd.DataFrame(i_pairs).iloc[:,0].values][:,1].astype('float32') 
+        pairs1_score = data[pd.DataFrame(i_pairs).iloc[:,0].values][:,1].astype('float32')
         pairs2_score = data[pd.DataFrame(i_pairs).iloc[:,1].values][:,1].astype('float32')
 
         # filtered |score|<threshold
         score = pairs1_score-pairs2_score
-        temp_mask = abs(score) > threshold # 0.2 threshold    
+        temp_mask = abs(score) > threshold # 0.2 threshold
         i_pairs_filtered = np.array(i_pairs)[temp_mask].tolist()
         if len(i_pairs_filtered)>0:
             order_paris_filtered.append(i_pairs_filtered)
@@ -190,9 +190,9 @@ class Data_Encoder(Dataset):
         self.Y = Y
 
     def __len__(self):
-        return len(self.X1)       
+        return len(self.X1)
     
-    def __getitem__(self, idx):        
+    def __getitem__(self, idx):
         return_x1 = self.X1[idx]
         return_x2 = self.X2[idx]
         return_x1_mask = self.X1_mask[idx]
@@ -203,7 +203,7 @@ class Data_Encoder(Dataset):
 
 
 class Data_Encoder_flow(Dataset):
-    def __init__(self, X1_index, X2_index,Y,data):        
+    def __init__(self, X1_index, X2_index,Y,data):
         super(Data_Encoder_flow, self).__init__()
         self.X1_index = X1_index
         self.X2_index = X2_index
@@ -211,9 +211,9 @@ class Data_Encoder_flow(Dataset):
         self.data = data
 
     def __len__(self):
-        return len(self.X1_index)       
+        return len(self.X1_index)
     
-    def __getitem__(self, idx):   
+    def __getitem__(self, idx):
         return_x1_index = self.X1_index[idx]
         return_x2_index = self.X2_index[idx]
         return_x1 = self.data[return_x1_index][2:].astype(int)
@@ -232,9 +232,9 @@ class Data_test(Dataset):
         self.max_len = max([len(i) for i in self.test_index])
 
     def __len__(self):
-        return len(self.test_index)       
+        return len(self.test_index)
     
-    def __getitem__(self, idx):        
+    def __getitem__(self, idx):
         return_test_index = self.test_index[idx]
         return_data_x = self.processed_data[return_test_index]
         
@@ -242,7 +242,7 @@ class Data_test(Dataset):
         
         # get scores
         return_data_x_y = return_data_x[:,1].astype('float32')
-        return_y = paddle.to_tensor(return_data_x_y)        
+        return_y = paddle.to_tensor(return_data_x_y)
         # get featueres
         return_x = return_data_x[:,2:].astype('int')
         return_x = paddle.to_tensor(return_x)
@@ -275,7 +275,7 @@ def model_eval(model,val_dataloader,len_SMILES,len_target):
 
         # split to smiles and protein
         batch_x_smiles = batch_x[:,:,0:len_SMILES].astype('int64')
-        batch_x_protein = batch_x[:,:,len_SMILES:len_SMILES+len_target].astype('int64')  
+        batch_x_protein = batch_x[:,:,len_SMILES:len_SMILES+len_target].astype('int64')
         batch_x_smiles_mask = batch_x[:,:,len_SMILES+len_target:len_SMILES+len_target+len_SMILES].astype('int64')
         batch_x_protein_mask = batch_x[:,:,len_SMILES+len_target+len_SMILES:].astype('int64')
 
@@ -340,11 +340,11 @@ def run(args):
 
     # load the data
     r_train = pd.read_csv(data_path  + train_file)
-    r_train = r_train.reset_index(drop = True) 
+    r_train = r_train.reset_index(drop = True)
     r_val = pd.read_csv(data_path  + val_file)
-    r_val = r_val.reset_index(drop = True) 
+    r_val = r_val.reset_index(drop = True)
     r_test = pd.read_csv(data_path  + test_file)
-    r_test = r_test.reset_index(drop = True) 
+    r_test = r_test.reset_index(drop = True)
 
 
     # load the mixed data
@@ -369,7 +369,7 @@ def run(args):
     LEN_train = len(r_train)
 
 
-    print('number of train samples are {}'.format(len(r_train)))  
+    print('number of train samples are {}'.format(len(r_train)))
     print('number of val samples are {}'.format(len(r_val)))
     print('number of test samples are {}'.format(len(r_test)))
     if args.is_mixed:
@@ -416,14 +416,14 @@ def run(args):
     
     ###### get val/test dataloader
     val_index = []
-    for qid in val_keys:    
-        val_index.append(qid_doc_map_val[qid])        
+    for qid in val_keys:
+        val_index.append(qid_doc_map_val[qid])
     val_dataset = Data_test(val_index,r_val)
     val_dataloader = paddle.io.DataLoader(val_dataset, batch_size=args.test_batch_size, shuffle=False)
 
     test_index = []
-    for qid in test_keys:    
-        test_index.append(qid_doc_map_test[qid])        
+    for qid in test_keys:
+        test_index.append(qid_doc_map_test[qid])
     test_dataset = Data_test(test_index,r_test)
     test_dataloader = paddle.io.DataLoader(test_dataset, batch_size=args.test_batch_size, shuffle=False)
 
@@ -434,8 +434,8 @@ def run(args):
         del r_mixed1
 
 
-    for fold in range(args.N_runs):        
-        # Load model 
+    for fold in range(args.N_runs):
+        # Load model
         model_config = json.load(open(args.model_config_path, 'r'))
         model = MolTransModel(model_config)
 
@@ -470,14 +470,14 @@ def run(args):
                 # mixed all pairs from train and mixed dataset
                 temp = LEN_train
                 temp1 = LEN_mixed0
-                mixed_x1_index = [i + temp for i in mixed_x1_index] 
-                mixed_x2_index = [i + temp for i in mixed_x2_index] 
-                mixed_x1_index1 = [i + temp + temp1 for i in mixed_x1_index1] 
-                mixed_x2_index1 = [i + temp + temp1 for i in mixed_x2_index1] 
+                mixed_x1_index = [i + temp for i in mixed_x1_index]
+                mixed_x2_index = [i + temp for i in mixed_x2_index]
+                mixed_x1_index1 = [i + temp + temp1 for i in mixed_x1_index1]
+                mixed_x2_index1 = [i + temp + temp1 for i in mixed_x2_index1]
                 
 
-                train_x1_index = train_x1_index + mixed_x1_index + mixed_x1_index1 
-                train_x2_index = train_x2_index + mixed_x2_index + mixed_x2_index1 
+                train_x1_index = train_x1_index + mixed_x1_index + mixed_x1_index1
+                train_x2_index = train_x2_index + mixed_x2_index + mixed_x2_index1
 
                 Y_train = np.concatenate((Y_train,Y_mixed,Y_mixed1))
 
@@ -505,8 +505,8 @@ def run(args):
                 loss_ = nn.BCEWithLogitsLoss()
             
                 # split to smiles and protein
-                batch_x1_smiles = batch_x1[:,0:len_SMILES].astype('int64') 
-                batch_x1_protein = batch_x1[:,len_SMILES:len_SMILES+len_target].astype('int64')  
+                batch_x1_smiles = batch_x1[:,0:len_SMILES].astype('int64')
+                batch_x1_protein = batch_x1[:,len_SMILES:len_SMILES+len_target].astype('int64')
                 batch_x1_smiles_mask = batch_x1[:,len_SMILES+len_target:len_SMILES+len_target+len_SMILES].astype('int64')
                 batch_x1_protein_mask = batch_x1[:,len_SMILES+len_target+len_SMILES:].astype('int64')
 
@@ -566,7 +566,7 @@ def run(args):
 
                     text_file.write("test Average CI is {}".format(test_average_CI) + '\n')
                     text_file.write("test weighted CI is {}".format(test_weighted_CI) + '\n')
-                    text_file.write('##############################################' + '\n') 
+                    text_file.write('##############################################' + '\n')
 
         print('###############################################################')
 

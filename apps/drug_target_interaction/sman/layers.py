@@ -225,7 +225,7 @@ def sgat(gw,
                 edge_feat,
                 dropout_prob=feat_drop,
                 is_test=is_test,
-                dropout_implementation='upscale_in_train') 
+                dropout_implementation='upscale_in_train')
 
     ft = L.fc(node_feat,
                          hidden_size * num_heads,
@@ -334,7 +334,7 @@ def gat(gw,
                        dist_feat,
                        dropout_prob=feat_drop,
                        is_test=is_test,
-                       dropout_implementation='upscale_in_train') 
+                       dropout_implementation='upscale_in_train')
 
     ft = L.fc(feature,
                          hidden_size * num_heads,

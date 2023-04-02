@@ -24,7 +24,7 @@ from rdkit import Chem
 import pandas as pd
 import numpy as np
 
-from sklearn.metrics import (roc_auc_score, average_precision_score, f1_score, roc_curve,  
+from sklearn.metrics import (roc_auc_score, average_precision_score, f1_score, roc_curve,
                              precision_score, recall_score, auc, cohen_kappa_score,
                              balanced_accuracy_score, precision_recall_curve, accuracy_score)
 from scipy.stats import pearsonr
@@ -147,10 +147,10 @@ def main(args):
     
     ddi_train = ddi.copy()
     train_cell = join_cell(ddi_train, rna)
-    bt_tr = DDsData(ddi_train['drug1'].values, 
-                        ddi_train['drug2'].values, 
-                        train_cell, 
-                        ddi_train['label'].values)  
+    bt_tr = DDsData(ddi_train['drug1'].values,
+                        ddi_train['drug2'].values,
+                        train_cell,
+                        ddi_train['label'].values)
 
     """test_cell = join_cell(ddi_test, rna)
             #test_pta, test_ptb = join_pert(ddi_test, drugs_pert)
@@ -165,11 +165,11 @@ def main(args):
     #loader_test = Dataloader(bt_test, batch_size=args.batch_size, num_workers=4, collate_fn=collate)
     #loader_val = Dataloader(bt_val, batch_size=args.batch_size, num_workers=1, collate_fn=collate)
 
-    model = TSNet(num_drug_feat=78, 
+    model = TSNet(num_drug_feat=78,
                         num_L_feat=978,
-                        num_cell_feat=rna.shape[1], 
-                        num_drug_out=128, 
-                        coarsed_heads=4, 
+                        num_cell_feat=rna.shape[1],
+                        num_drug_out=128,
+                        coarsed_heads=4,
                         fined_heads=4,
                         coarse_hidd=64,
                         fine_hidd=64,
@@ -199,7 +199,7 @@ if __name__ == '__main__':
     parser.add_argument("--lincs", type=str, default='../data/gene_vector.csv')
     parser.add_argument("--ddi", type=str, help='using SMILES represent drugs', default='../data/ddi_dupave.csv')
     parser.add_argument("--ddi_test", type=str)
-    parser.add_argument("--rna", type=str, default='../rna.csv')  
+    parser.add_argument("--rna", type=str, default='../rna.csv')
 
     args = parser.parse_args()
     print(args)

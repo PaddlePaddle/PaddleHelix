@@ -63,10 +63,10 @@ class RandomSplitter(Splitter):
     def __init__(self):
         super(RandomSplitter, self).__init__()
 
-    def split(self, 
-            dataset, 
-            frac_train=None, 
-            frac_valid=None, 
+    def split(self,
+            dataset,
+            frac_train=None,
+            frac_valid=None,
             frac_test=None,
             seed=None):
         """
@@ -101,10 +101,10 @@ class IndexSplitter(Splitter):
     def __init__(self):
         super(IndexSplitter, self).__init__()
 
-    def split(self, 
-            dataset, 
-            frac_train=None, 
-            frac_valid=None, 
+    def split(self,
+            dataset,
+            frac_train=None,
+            frac_valid=None,
             frac_test=None):
         """
         Args:
@@ -135,10 +135,10 @@ class ScaffoldSplitter(Splitter):
     def __init__(self):
         super(ScaffoldSplitter, self).__init__()
     
-    def split(self, 
-            dataset, 
-            frac_train=None, 
-            frac_valid=None, 
+    def split(self,
+            dataset,
+            frac_train=None,
+            frac_valid=None,
             frac_test=None):
         """
         Args:
@@ -215,10 +215,10 @@ class RandomScaffoldSplitter(Splitter):
     def __init__(self):
         super(RandomScaffoldSplitter, self).__init__()
     
-    def split(self, 
-            dataset, 
-            frac_train=None, 
-            frac_valid=None, 
+    def split(self,
+            dataset,
+            frac_train=None,
+            frac_valid=None,
             frac_test=None,
             seed=None):
         """

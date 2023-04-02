@@ -45,7 +45,7 @@ def train(num_subgraph, graph, label_idx, epochs, sub_neighbours=[10, 10], init=
     """
     Model training for one epoch and return training loss and validation loss.
     """
-    sub_graph_paras = subgraph_gen(graph, label_idx, sub_neighbours) 
+    sub_graph_paras = subgraph_gen(graph, label_idx, sub_neighbours)
     sg, num_nodes, sg_eids, sg_nfeat, sub_label = sub_graph_paras['sub_graph']
     model = DDs(num_nodes, sg.node_feat['features'].shape[1], sg.edge_types, 8, num_nodes)
     model.train()
@@ -59,10 +59,10 @@ def train(num_subgraph, graph, label_idx, epochs, sub_neighbours=[10, 10], init=
         if init:
             init = False
         else:
-            sub_graph_paras = subgraph_gen(graph, label_idx, sub_neighbours) 
-            sg, num_nodes, sg_eids, sg_nfeat, sub_label = sub_graph_paras['sub_graph'] 
+            sub_graph_paras = subgraph_gen(graph, label_idx, sub_neighbours)
+            sg, num_nodes, sg_eids, sg_nfeat, sub_label = sub_graph_paras['sub_graph']
 
-        mask = np.zeros((num_nodes, num_nodes)).astype('float32') 
+        mask = np.zeros((num_nodes, num_nodes)).astype('float32')
         label = paddle.to_tensor(sub_label)
 
         for epoch in range(1, epochs + 1):
@@ -96,7 +96,7 @@ def eval(model, graph, label, sub_neighbours, criterion):
     """
     Model evaluation  and return testing loss.
     """
-    sub_graph_paras = subgraph_gen(graph, label_idx, sub_neighbours) 
+    sub_graph_paras = subgraph_gen(graph, label_idx, sub_neighbours)
     sg, num_nodes, sg_eids, sg_nfeat, sub_label = sub_graph_paras['sub_graph']
     model.eval()
     pred = model(graph, paddle.to_tensor(graph.node_feat['features']))
@@ -112,7 +112,7 @@ def train_val_plot(training_loss, val_loss, figure_name='loss_figure.pdf'):
     fig, axx = plt.subplots(1, 1, figsize=(10, 6))
     axx.plot(training_loss)
     axx.plot(val_loss)
-    axx.legend(['training loss', 'val loss']) 
+    axx.legend(['training loss', 'val loss'])
     fig.savefig(figure_name)
 
 
@@ -140,7 +140,7 @@ def main(ddi, dti, ppi, d_feat, epochs=10, num_subgraph=20, sub_neighbours=[10, 
 
     drug_feat = het_gnn_featurizer.DDiFeaturizer()
     value = drug_feat.collate_fn(ddi, dti, ppi, d_feat)
-    hg, nodes_dict, label, label_idx = value['rt'] 
+    hg, nodes_dict, label, label_idx = value['rt']
     
     trained_model = train(args.num_subgraph, hg, label_idx, epochs, args.sub_neighbours)
 

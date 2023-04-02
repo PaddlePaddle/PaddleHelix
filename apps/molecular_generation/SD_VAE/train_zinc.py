@@ -1,5 +1,5 @@
-#!/usr/bin/python3                                                                                                
-#-*-coding:utf-8-*- 
+#!/usr/bin/python3
+#-*-coding:utf-8-*-
 #   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -142,7 +142,7 @@ def _train_epoch(model, data_loader, epoch, kl_weight, optimizer=None):
             'loss': np.mean(loss_values),
             'mode': 'Eval' if optimizer is None else 'Train'}
     
-    return postfix      
+    return postfix
 
 
 def _train(model, train_dataloader):
@@ -153,11 +153,11 @@ def _train(model, train_dataloader):
     n_epoch = cmd_args.num_epochs
 
     clip_grad = nn.ClipGradByNorm(clip_norm=cmd_args.clip_grad)
-    optimizer = paddle.optimizer.Adam(parameters=model.parameters(), 
-                                learning_rate=cmd_args.learning_rate, 
+    optimizer = paddle.optimizer.Adam(parameters=model.parameters(),
+                                learning_rate=cmd_args.learning_rate,
                                 grad_clip=clip_grad)
 
-    # start to train 
+    # start to train
     for epoch in range(n_epoch):
         #kl_weight = kl_annealer(epoch)
         kl_weight = cmd_args.kl_coeff

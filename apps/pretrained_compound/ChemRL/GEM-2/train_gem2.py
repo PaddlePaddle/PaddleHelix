@@ -1,5 +1,5 @@
-#!/usr/bin/python                                                                                                                                  
-#-*-coding:utf-8-*- 
+#!/usr/bin/python
+#-*-coding:utf-8-*-
 #   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -52,14 +52,14 @@ from src.config import make_updated_config, OPTIMUS_MODEL_CONFIG, MOL_REGRESSION
 
 def get_optimizer(args, train_config, model):
     milestones = [
-            train_config.mid_step, 
-            train_config.mid_step + 12, 
-            train_config.mid_step + 18, 
-            train_config.mid_step + 24, 
+            train_config.mid_step,
+            train_config.mid_step + 12,
+            train_config.mid_step + 18,
+            train_config.mid_step + 24,
             train_config.mid_step + 30]
     gamma = 0.5
     second_scheduler = paddle.optimizer.lr.MultiStepDecay(
-            learning_rate=train_config.lr, 
+            learning_rate=train_config.lr,
             milestones=milestones,
             gamma=gamma)
     scheduler = paddle.optimizer.lr.LinearWarmup(
@@ -69,7 +69,7 @@ def get_optimizer(args, train_config, model):
             end_lr=train_config.lr,
             verbose=True)
     optimizer = paddle.optimizer.Adam(
-            scheduler, 
+            scheduler,
             epsilon=1e-06,
             parameters=model.parameters())
     return optimizer, scheduler
@@ -95,7 +95,7 @@ def get_featurizer(model_config, encoder_config):
 
 def create_model_config(args):
     model_config = make_updated_config(
-            MOL_REGRESSION_MODEL_CONFIG, 
+            MOL_REGRESSION_MODEL_CONFIG,
             json.load(open(args.model_config, 'r')))
 
     encoder_config_dict = {
@@ -103,7 +103,7 @@ def create_model_config(args):
         'lite_optimus': OPTIMUS_MODEL_CONFIG,
     }
     encoder_config = make_updated_config(
-            encoder_config_dict[model_config.model.encoder_type], 
+            encoder_config_dict[model_config.model.encoder_type],
             json.load(open(args.encoder_config, 'r')))
     return model_config, encoder_config
 
@@ -137,7 +137,7 @@ def load_data(args, trainer_id, trainer_num, model_config, dataset_config, trans
         train_dataset = []
     else:
         train_dataset = InMemoryDataset(npz_data_files=train_npz_files[trainer_id::trainer_num])
-    valid_dataset = InMemoryDataset(npz_data_files=valid_npz_files[trainer_id::trainer_num]) 
+    valid_dataset = InMemoryDataset(npz_data_files=valid_npz_files[trainer_id::trainer_num])
     if model_config.data.get('post_transform', False):
         logging.info('post transform')
         train_dataset.transform(transform_fn, num_workers=args.num_workers)
@@ -151,8 +151,8 @@ def train(args, epoch_id, model, train_dataset, collate_fn, optimizer, train_ste
     """
     model.train()
     data_gen = train_dataset.get_data_loader(
-            batch_size=args.batch_size, 
-            num_workers=args.num_workers, 
+            batch_size=args.batch_size,
+            num_workers=args.num_workers,
             shuffle=True,
             collate_fn=collate_fn)
 
@@ -207,15 +207,15 @@ def evaluate(args, epoch_id, model, test_dataset, collate_fn):
     """
     model.eval()
     data_gen = test_dataset.get_data_loader(
-            batch_size=args.batch_size, 
-            num_workers=args.num_workers, 
+            batch_size=args.batch_size,
+            num_workers=args.num_workers,
             shuffle=False,
             collate_fn=collate_fn)
 
     total_pred = []
     total_label = []
     for batch in data_gen:
-        batch = tree_map(lambda x: paddle.to_tensor(x), batch) 
+        batch = tree_map(lambda x: paddle.to_tensor(x), batch)
         results = model(batch)
         total_pred.append(results['pred'].numpy().flatten())
         total_label.append(batch['label'].numpy().flatten())
@@ -259,7 +259,7 @@ def main(args):
         trainer_num = dist.get_world_size()
     
     # recompute dropout config
-    ### IMPORTANT: in order to correctly recover dropout in paddle.distributed.fleet.utils.recompute 
+    ### IMPORTANT: in order to correctly recover dropout in paddle.distributed.fleet.utils.recompute
     paddle.seed(10000 + trainer_id)
 
     ### load data
@@ -313,7 +313,7 @@ def main(args):
         ## train
         s_time = time.time()
         scheduler.step()
-        train_results = train(args, epoch_id, model, train_dataset, collate_fn, 
+        train_results = train(args, epoch_id, model, train_dataset, collate_fn,
                 optimizer, train_steps, ema)
 
         ## evaluate
@@ -325,7 +325,7 @@ def main(args):
             ema_mean_mae = evaluate(args, epoch_id, model, valid_dataset, collate_fn)
             ema.restore()
         
-        ## logging        
+        ## logging
         if trainer_id == 0:
             train_results.update({
                 'total_batch_size': args.batch_size * trainer_num,
@@ -358,7 +358,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--distributed", action='store_true', default=False)
     parser.add_argument("--DEBUG", action='store_true', default=False)
-    parser.add_argument("--logging_level", type=str, default="DEBUG", 
+    parser.add_argument("--logging_level", type=str, default="DEBUG",
             help="NOTSET, DEBUG, INFO, WARNING, ERROR, CRITICAL")
 
     parser.add_argument("--batch_size", type=int, default=32)

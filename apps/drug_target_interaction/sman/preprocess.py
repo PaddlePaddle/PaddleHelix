@@ -158,13 +158,13 @@ def gen_feature(path, name):
     ligand_coords, ligand_features = featurizer.get_features(ligand, molcode=1)
     assert (ligand_features[:, charge_idx] != 0).any()
     pocket_coords, pocket_features = featurizer.get_features(pocket, molcode=-1)
-    assert (pocket_features[:, charge_idx] != 0).any() 
+    assert (pocket_features[:, charge_idx] != 0).any()
     ligand_edges = gen_pocket_graph(ligand)
     pocket_edges = gen_pocket_graph(pocket)
     return {'lig_co': ligand_coords, 'lig_fea': ligand_features, 'lig_eg': ligand_edges, 'pock_co': pocket_coords, 'pock_fea': pocket_features, 'pock_eg': pocket_edges}
 
 
-## function -- generate molecular graph 
+## function -- generate molecular graph
 def gen_pocket_graph(pocket):
     """
     generate molecular graph 

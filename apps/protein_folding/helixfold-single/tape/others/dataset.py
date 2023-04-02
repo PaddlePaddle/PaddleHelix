@@ -42,7 +42,7 @@ def sequence_pad(items, max_len, pad_id):
         else:
             crop_start = np.random.randint(seq_len - max_len)
             crop_end = crop_start + max_len
-            item = item[crop_start:crop_end] 
+            item = item[crop_start:crop_end]
         new_items.append(item)
     return np.array(new_items)
 

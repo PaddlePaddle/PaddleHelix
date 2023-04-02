@@ -47,12 +47,12 @@ class TransformerEncoderModel(nn.Layer):
                                           padding_idx=padding_idx)
 
         self.dropout = nn.Dropout(p=dropout_rate)
-        self.transformer_encoder_layer = TransformerEncoderLayer(hidden_size, n_heads, 
-                                                                 dim_feedforward=feedforward_size, 
-                                                                 dropout=0.1, activation='gelu', 
+        self.transformer_encoder_layer = TransformerEncoderLayer(hidden_size, n_heads,
+                                                                 dim_feedforward=feedforward_size,
+                                                                 dropout=0.1, activation='gelu',
                                                                  attn_dropout=0.1, act_dropout=0,
                                                                  normalize_before=True)
-        self.transformer_encoder = TransformerEncoder(self.transformer_encoder_layer, n_layers, 
+        self.transformer_encoder = TransformerEncoder(self.transformer_encoder_layer, n_layers,
                                                       norm=nn.LayerNorm(hidden_size))
 
         self.layer_norm = nn.LayerNorm(hidden_size)
@@ -113,14 +113,14 @@ class RotaryEncoderModel(nn.Layer):
                                           padding_idx=padding_idx)
 
         self.dropout = nn.Dropout(p=dropout_rate)
-        rotary_encoder_layer = TransformerEncoderLayerWithRotary(hidden_size, n_heads, 
-                                                                 dim_feedforward=feedforward_size, 
-                                                                 dropout=0.1, activation='gelu', 
+        rotary_encoder_layer = TransformerEncoderLayerWithRotary(hidden_size, n_heads,
+                                                                 dim_feedforward=feedforward_size,
+                                                                 dropout=0.1, activation='gelu',
                                                                  attn_dropout=0.1, act_dropout=0,
                                                                  normalize_before=True,
                                                                  rotary_value=True,
                                                                  max_position_embeddings=max_pos_len)
-        self.rotary_encoder = TransformerEncoder(rotary_encoder_layer, n_layers, 
+        self.rotary_encoder = TransformerEncoder(rotary_encoder_layer, n_layers,
                                                       norm=nn.LayerNorm(hidden_size))
 
         self.layer_norm = nn.LayerNorm(hidden_size)
@@ -180,8 +180,8 @@ class DeBERTaEncoderModel(nn.Layer):
         self.rel_embeddings = nn.Embedding(max_pos_len, hidden_size).weight
 
         self.dropout = nn.Dropout(p=dropout_rate)
-        deberta_encoder_layer = DeBERTaEncoderLayer(hidden_size, n_heads, dim_feedforward=intermediate_size, 
-                                                         dropout=0.1, activation='gelu', attn_dropout=0.1, 
+        deberta_encoder_layer = DeBERTaEncoderLayer(hidden_size, n_heads, dim_feedforward=intermediate_size,
+                                                         dropout=0.1, activation='gelu', attn_dropout=0.1,
                                                          act_dropout=0, normalize_before=True, only_c2p=only_c2p)
         # Todos: 返回倒数第二层DeBERTaEncoderLayer的输出作为1D蛋白质表示
         self.deberta_encoder = DeBERTaEncoder(deberta_encoder_layer, n_layers, norm=nn.LayerNorm(hidden_size))
@@ -214,7 +214,7 @@ class DeBERTaEncoderModel(nn.Layer):
         rel_embeddings = self.rel_embeddings
 
         results = self.deberta_encoder(
-                embed, attention_mask, relative_pos, rel_embeddings, 
+                embed, attention_mask, relative_pos, rel_embeddings,
                 return_last_n_weight=return_last_n_weight)
 
         if not paddle.in_dynamic_mode():
@@ -297,14 +297,14 @@ class ProteinEncoderModel(nn.Layer):
                                                          n_layers=n_layers,
                                                          n_heads=n_heads)
         elif model_type == "deberta":
-            self.encoder_model = DeBERTaEncoderModel(vocab_size=len(ProteinTokenizer.vocab), 
+            self.encoder_model = DeBERTaEncoderModel(vocab_size=len(ProteinTokenizer.vocab),
                                                      hidden_size=hidden_size,
                                                      intermediate_size=intermediate_size,
                                                      n_layers=n_layers,
                                                      n_heads=n_heads,
                                                      only_c2p=only_c2p)
         elif model_type == "rotary":
-            self.encoder_model = RotaryEncoderModel(vocab_size=len(ProteinTokenizer.vocab), 
+            self.encoder_model = RotaryEncoderModel(vocab_size=len(ProteinTokenizer.vocab),
                                                      hidden_size=hidden_size,
                                                      feedforward_size=intermediate_size,
                                                      n_layers=n_layers,
@@ -326,8 +326,8 @@ class ProteinModel(nn.Layer):
         self.checkpoints = []
         task = model_config.get('task', 'pretrain')
         if task == 'pretrain':
-            self.model = PretrainTaskModel(class_num=len(ProteinTokenizer.vocab), 
-                                           model_config=model_config, 
+            self.model = PretrainTaskModel(class_num=len(ProteinTokenizer.vocab),
+                                           model_config=model_config,
                                            encoder_model=encoder_model)
         
         self.criterion = paddle.nn.CrossEntropyLoss(ignore_index=-1)

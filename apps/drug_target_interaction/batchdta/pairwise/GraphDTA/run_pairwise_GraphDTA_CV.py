@@ -59,7 +59,7 @@ def sample_index(pairs,sampling_method = None):
 
     for i_data in pairs:
         if sampling_method == '500 times':
-            sampled_data = pd.DataFrame(i_data).sample(n=500,replace=True)            
+            sampled_data = pd.DataFrame(i_data).sample(n=500,replace=True)
         if sampling_method == None:
             sampled_data = pd.DataFrame(i_data)
         
@@ -75,7 +75,7 @@ def get_pairs(scores,K,eps=0.2,seed=0):
     :param K: times of sampling
     :return: ordered pairs.  List of tuple, like [(1,2), (2,3), (1,3)]
     """
-    pairs = []  
+    pairs = []
     random.seed(seed)
     for i in range(len(scores)):
         #for j in range(len(scores)):
@@ -84,7 +84,7 @@ def get_pairs(scores,K,eps=0.2,seed=0):
             idx = random.randint(0, len(scores) - 1)
             score_diff = float(scores[i]) - float(scores[idx])
             if abs(score_diff) >  eps:
-                pairs.append((i, idx, score_diff, len(scores))) 
+                pairs.append((i, idx, score_diff, len(scores)))
 
     return pairs
 
@@ -121,15 +121,15 @@ def split_pairs(order_pairs, true_scores):
 
 
 def filter_pairs(data,order_paris,threshold):
-    # filterred the pairs which have score diff less than 0.2 
+    # filterred the pairs which have score diff less than 0.2
     order_paris_filtered = []
     for i_pairs in order_paris:
-        pairs1_score = data[pd.DataFrame(i_pairs).iloc[:,0].values][:,1].astype('float32') 
+        pairs1_score = data[pd.DataFrame(i_pairs).iloc[:,0].values][:,1].astype('float32')
         pairs2_score = data[pd.DataFrame(i_pairs).iloc[:,1].values][:,1].astype('float32')
 
         # filtered |score|<threshold
         score = pairs1_score-pairs2_score
-        temp_mask = abs(score) > threshold # 0.2 threshold    
+        temp_mask = abs(score) > threshold # 0.2 threshold
         i_pairs_filtered = np.array(i_pairs)[temp_mask].tolist()
         if len(i_pairs_filtered)>0:
             order_paris_filtered.append(i_pairs_filtered)
@@ -146,8 +146,8 @@ class hinge_loss(nn.Module):
         score_diff = predicted_score*true_score
         loss = self.threshold -  score_diff
         
-        loss = torch.clip(loss,min=0)  
-        loss = torch.square(loss) 
+        loss = torch.clip(loss,min=0)
+        loss = torch.square(loss)
 
         if not self.weight is None:
             loss = loss * self.weight
@@ -169,10 +169,10 @@ def sample_pairs(true_scores,K,eps,seed):
 
     return x1_index, x2_index, train_scores, Y
 
-def distributed_concat(tensor, num_total_examples):    
-	output_tensors = [tensor.clone() for _ in range(torch.distributed.get_world_size())]    
-	torch.distributed.all_gather(output_tensors, tensor)    
-	concat = torch.cat(output_tensors, dim=0)    # truncate the dummy elements added by SequentialDistributedSampler    
+def distributed_concat(tensor, num_total_examples):
+	output_tensors = [tensor.clone() for _ in range(torch.distributed.get_world_size())]
+	torch.distributed.all_gather(output_tensors, tensor)
+	concat = torch.cat(output_tensors, dim=0)    # truncate the dummy elements added by SequentialDistributedSampler
 	return concat[:num_total_examples]
 
 
@@ -191,11 +191,11 @@ def model_eval(model,val_dataloader,device):
             i_target_y_label = []
 
             # loop over all the D-T pairs in one group(T group)
-            for i_data in data:            
-                i_data = i_data.to(device)                    
+            for i_data in data:
+                i_data = i_data.to(device)
                 pred_scores = model.forward_single(i_data)
                 # get the predicted labels
-                i_target_pred_scores.append(float(pred_scores))              
+                i_target_pred_scores.append(float(pred_scores))
                 # get the true labels
                 i_target_y_label.append(float(i_data.y.cpu()))
 
@@ -287,14 +287,14 @@ def dist_run(rank, args, world_size, train_set,mixed_set,val_set,test_set,model,
 
     # ###### get val/test dataloader
     val_index = []
-    for qid in val_keys:    
-        val_index.append(qid_doc_map_val[qid])        
+    for qid in val_keys:
+        val_index.append(qid_doc_map_val[qid])
     val_dataset = TestDataset(test_index=val_index,xd=val_d,xt=val_t,y=val_y,smile_graph=val_smiles_graph)
     val_dataloader = DataLoader(val_dataset, batch_size=args.test_batch_size,shuffle=False)
     
     test_index = []
-    for qid in test_keys:    
-        test_index.append(qid_doc_map_test[qid])        
+    for qid in test_keys:
+        test_index.append(qid_doc_map_test[qid])
     test_dataset = TestDataset(test_index=test_index,xd=test_d,xt=test_t,y=test_y,smile_graph=test_smiles_graph)
     test_dataloader = DataLoader(test_dataset, batch_size=args.test_batch_size,shuffle=False)
 
@@ -330,8 +330,8 @@ def dist_run(rank, args, world_size, train_set,mixed_set,val_set,test_set,model,
 
         if args.is_mixed:
             temp = len(train_d)
-            mixed_x1_index = [i + temp for i in mixed_x1_index] 
-            mixed_x2_index = [i + temp for i in mixed_x2_index] 
+            mixed_x1_index = [i + temp for i in mixed_x1_index]
+            mixed_x2_index = [i + temp for i in mixed_x2_index]
 
             train_x1_index = train_x1_index + mixed_x1_index
             train_x2_index = train_x2_index + mixed_x2_index
@@ -357,7 +357,7 @@ def dist_run(rank, args, world_size, train_set,mixed_set,val_set,test_set,model,
             data1 = data[0].to(rank)
             data2 = data[1].to(rank)
 
-            batch_train_mixed = data1.train_mixed 
+            batch_train_mixed = data1.train_mixed
 
             optimizer.zero_grad()
 
@@ -423,7 +423,7 @@ def dist_run(rank, args, world_size, train_set,mixed_set,val_set,test_set,model,
 
                     text_file.write("test Average CI is {}".format(test_average_CI) + '\n')
                     text_file.write("test weighted CI is {}".format(test_weighted_CI) + '\n')
-                    text_file.write('##############################################' + '\n') 
+                    text_file.write('##############################################' + '\n')
     
 
 
@@ -466,12 +466,12 @@ def run(args):
             mixed_t = mixed_data['Target Sequence'].unique()
             filter1 = list((set(val_t).intersection(set(mixed_t))))
             mixed_data = mixed_data[~mixed_data['Target Sequence'].isin(filter1)]
-            mixed_set = process_data(mixed_data) 
+            mixed_set = process_data(mixed_data)
         else:
             mixed_set = None
              
         # pre-processing the data
-        train_set = process_data(train_data)        
+        train_set = process_data(train_data)
         val_set = process_data(val_data)
         test_set = process_data(test_data)
        

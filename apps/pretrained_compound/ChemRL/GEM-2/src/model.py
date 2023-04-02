@@ -1,5 +1,5 @@
-#!/usr/bin/python                                                                                                
-#-*-coding:utf-8-*- 
+#!/usr/bin/python
+#-*-coding:utf-8-*-
 #   Copyright (c) 2022 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -123,7 +123,7 @@ class MolRegressionModel(nn.Layer):
         self.heads = nn.LayerDict()
         for name in self.model_config.heads:
             self.heads[name] = head_dict[name](
-                    self.model_config.heads[name], self.encoder_config) 
+                    self.model_config.heads[name], self.encoder_config)
 
     def forward(self, batch):
         if self.model_config.atom_pos_source == 'rdkit3d':

@@ -115,8 +115,8 @@ class PretrainGNNModel(nn.Layer):
         for layer_id in range(self.layer_num):
             edge_features = self.bond_embedding_list[layer_id](graph.edge_feat)
             node_feat = self.gnn_list[layer_id](
-                    graph, 
-                    node_feat_list[layer_id], 
+                    graph,
+                    node_feat_list[layer_id],
                     edge_features)
             node_feat = self.norm_list[layer_id](node_feat)
             if self.graph_norm:

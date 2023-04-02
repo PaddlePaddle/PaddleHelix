@@ -120,7 +120,7 @@ class MoleculeDataset(InMemoryDataset):
             self.read()
         self.smiles_list = paddle.load(self.root + "/new/smiles.pdparams")[1]
         data_list = paddle.load(self.root + "/new/data.pdparams")[1]
-        self.data_list = [G.Graph(i['edge_index'],i['x'].shape[0], 
+        self.data_list = [G.Graph(i['edge_index'],i['x'].shape[0],
                         {'feature':i['x']}, {'feature':i['edge_attr']}) for i in data_list]
         for i in range(len(self.data_list)):
             self.data_list[i].y = data_list[i]['y']
@@ -232,7 +232,7 @@ def _load_tox21_dataset(input_path):
             smiles_list.append(i)
     rdkit_mol_objs_list = [AllChem.MolFromSmiles(s) for s in smiles_list]
     labels = np.zeros((len(smiles_list),1), dtype=int)
-    labels[len(binary_list[0]):,0] = 1 
+    labels[len(binary_list[0]):,0] = 1
 
     return smiles_list, rdkit_mol_objs_list, labels
 
@@ -265,7 +265,7 @@ def _load_muv_dataset(input_path):
             smiles_list.append(i)
     rdkit_mol_objs_list = [AllChem.MolFromSmiles(s) for s in smiles_list]
     labels = np.zeros((len(smiles_list),1), dtype=int)
-    labels[len(binary_list[0]):,0] = 1 
+    labels[len(binary_list[0]):,0] = 1
     
     return smiles_list, rdkit_mol_objs_list, labels
 
@@ -286,7 +286,7 @@ def _load_sider_dataset(input_path):
             smiles_list.append(i)
     rdkit_mol_objs_list = [AllChem.MolFromSmiles(s) for s in smiles_list]
     labels = np.zeros((len(smiles_list),1), dtype=int)
-    labels[len(binary_list[0]):,0] = 1 
+    labels[len(binary_list[0]):,0] = 1
     # print(smiles_list)
     # print(labels)
     # raise TypeError
@@ -336,7 +336,7 @@ def _load_toxcast_dataset(input_path):
             smiles_list.append(i)
     rdkit_mol_objs_list = [AllChem.MolFromSmiles(s) for s in smiles_list]
     labels = np.zeros((len(smiles_list),1), dtype=int)
-    labels[len(binary_list[0]):,0] = 1 
+    labels[len(binary_list[0]):,0] = 1
 
     return smiles_list, rdkit_mol_objs_list, labels
     # input_df = pd.read_csv(input_path, sep=',')

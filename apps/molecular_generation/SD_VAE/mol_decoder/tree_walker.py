@@ -1,5 +1,5 @@
-#!/usr/bin/python3                                                                                                
-#-*-coding:utf-8-*- 
+#!/usr/bin/python3
+#-*-coding:utf-8-*-
 #   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -125,7 +125,7 @@ class OnehotBuilder(TreeWalker):
 class ConditionalDecoder(TreeWalker):
     """
     tbd
-    """ 
+    """
     def __init__(self, raw_logits, use_random):
         super(ConditionalDecoder, self).__init__()
         self.raw_logits = raw_logits
@@ -166,10 +166,10 @@ class ConditionalDecoder(TreeWalker):
         
         return self._get_idx(cur_logits)
 
-    def sample_att(self, node, candidates):    
+    def sample_att(self, node, candidates):
         """
         tbd
-        """    
+        """
         if self.num_steps >= self.raw_logits.shape[0]:
             raise DecodingLimitExceeded()
         cur_logits = self.raw_logits[self.num_steps][np.array(candidates) + TOTAL_NUM_RULES]

@@ -30,7 +30,7 @@ def get_parser(root_dir='.'):
 
     # training
     parser.add_argument("--meta-lr", type=float, default=0.001,# 0.003, 0.001, 0.0006
-                        help="Training: Meta learning rate")  
+                        help="Training: Meta learning rate")
     parser.add_argument("--weight_decay", type=float, default=5e-5,
                         help="Training: Meta learning weight_decay")  #5e-5
     parser.add_argument("--inner-lr", type=float, default=0.1, help="Training: Inner loop learning rate")  # 0.01 0.5
@@ -65,7 +65,7 @@ def get_parser(root_dir='.'):
                         default=os.path.join(root_dir,'chem_lib/model_gin/supervised_contextpred.pdparams'), help='pretrained path')
     ## context map
     parser.add_argument('--map_dim', type=int, default=128, help='map dimensions ')
-    parser.add_argument('--map_layer', type=int, default=2, help='map layer ') 
+    parser.add_argument('--map_layer', type=int, default=2, help='map layer ')
     parser.add_argument('--map_pre_fc', type=int, default=0, help='pre fc layer ')
     parser.add_argument("--map-dropout", type=float, default=0.1, help="map dropout")
     parser.add_argument('--ctx_head', type=int, default=2, help='context layer ')####2
@@ -107,10 +107,10 @@ def get_args(root_dir='.',is_save=True):
     if args.pretrained:
         args.enc_layer = 5
         args.emb_dim =300
-        args.dropout = 0.5 
+        args.dropout = 0.5
     if  args.enc_layer<=3:
         args.emb_dim =200
-        args.dropout = 0.1   
+        args.dropout = 0.1
 
     if args.test_dataset == args.dataset:
         args.test_dataset = None

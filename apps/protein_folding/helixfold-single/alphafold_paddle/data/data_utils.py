@@ -53,12 +53,12 @@ def Msas_to_features(Msas):
 
     msa_features = make_msa_features(
             msas=(
-                uniref90_msa.sequences, 
-                bfd_msa.sequences, 
+                uniref90_msa.sequences,
+                bfd_msa.sequences,
                 mgnify_msa.sequences),
             deletion_matrices=(
-                uniref90_msa.deletion_matrix, 
-                bfd_msa.deletion_matrix, 
+                uniref90_msa.deletion_matrix,
+                bfd_msa.deletion_matrix,
                 mgnify_msa.deletion_matrix))
 
     raw_features = {**sequence_features, **msa_features, **template_features}
@@ -92,7 +92,7 @@ def a3m_to_features(a3m_string_list):
 
 def aatype_to_sequence(aatype):
     return ''.join([
-        residue_constants.restypes_with_x[aatype[i]] 
+        residue_constants.restypes_with_x[aatype[i]]
         for i in range(len(aatype))
     ])
 
@@ -126,7 +126,7 @@ def load_chain(mmcif_obj, chain_id='A'):
     """Load chain info."""
     all_atom_positions, all_atom_mask = get_atom_positions(mmcif_obj, chain_id, max_ca_ca_distance=float('inf'))
     # Directly parses sequence from fasta, should be consistent to 'aatype' in input features (from .fasta or .pkl)
-    sequence = mmcif_obj.chain_to_seqres[chain_id]           
+    sequence = mmcif_obj.chain_to_seqres[chain_id]
     order_map = residue_constants.restype_order_with_x
     aatype_idx = np.array([order_map.get(rn, order_map['X']) for rn in sequence], dtype=np.int32)
     resolution = np.array([mmcif_obj.header['resolution']], dtype=np.float32)
@@ -201,7 +201,7 @@ def sample_raw_msa(raw_features, data_config):
     """
     D = len(raw_features['msa'])
     new_depth = np.random.randint(
-            data_config.msa_sample.min_depth, 
+            data_config.msa_sample.min_depth,
             data_config.msa_sample.max_depth + 1)
     new_depth = min(new_depth, D)
     if new_depth == 1:
@@ -466,7 +466,7 @@ def generate_pseudo_beta(protein):
 @curry1
 def compose(x, fs):
   """tbd."""
-  for f in fs:    
+  for f in fs:
       x = f(x)
   return x
 

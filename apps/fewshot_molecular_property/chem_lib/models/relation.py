@@ -63,11 +63,11 @@ class ContextMLP(nn.Layer):
         self.pre_fc = pre_fc #0, 1
         if self.pre_fc:
             hidden_dim=int(hidden_dim//2)
-            self.attn_layer = Attention(hidden_dim,num_heads=ctx_head,attention_dropout=dropout)        
+            self.attn_layer = Attention(hidden_dim,num_heads=ctx_head,attention_dropout=dropout)
             self.mlp_proj = MLP(inp_dim=inp_dim, hidden_dim=hidden_dim, num_layers=num_layers,
                 batch_norm=batch_norm, dropout=dropout)
         else:
-            self.attn_layer = Attention(inp_dim)    
+            self.attn_layer = Attention(inp_dim)
             inp_dim=int(inp_dim*2)
             self.mlp_proj = MLP(inp_dim=inp_dim, hidden_dim=hidden_dim, num_layers=num_layers,
                 batch_norm=batch_norm, dropout=dropout)

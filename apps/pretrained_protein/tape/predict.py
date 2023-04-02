@@ -62,7 +62,7 @@ def main(args):
             examples.append(line.strip())
 
     example_ids = [tokenizer.gen_token_ids(example) for example in examples]
-    max_seq_len = max([len(example_id) for example_id in example_ids]) 
+    max_seq_len = max([len(example_id) for example_id in example_ids])
     pos = [list(range(1, len(example_id) + 1)) for example_id in example_ids]
     pad_to_max_seq_len(example_ids, max_seq_len)
     pad_to_max_seq_len(pos, max_seq_len)

@@ -56,7 +56,7 @@ class InMemoryDataset(object):
             dataset2 = InMemoryDataset(npz_data_path='./cached_npz')    # will load the saved `data_list`
             print(len(dataset))
     """
-    def __init__(self, 
+    def __init__(self,
             data_list=None,
             npz_data_path=None,
             npz_data_files=None):
@@ -161,8 +161,8 @@ class InMemoryDataset(object):
         Yields:
             the batch data processed by ``collate_fn``.
         """
-        return Dataloader(self, 
-                batch_size=batch_size, 
-                num_workers=num_workers, 
+        return Dataloader(self,
+                batch_size=batch_size,
+                num_workers=num_workers,
                 shuffle=shuffle,
                 collate_fn=collate_fn)

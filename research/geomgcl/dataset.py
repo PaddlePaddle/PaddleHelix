@@ -302,7 +302,7 @@ class Molecule3DView(MoleculeDataset):
         # edge-to-edge graphs
         edge_graph_base = assignment_e2a @ assignment_a2e
         np.fill_diagonal(edge_graph_base, 0) # eliminate self connections
-        edge_graph_base[range(num_edges), [indices.index([x[1],x[0]]) for x in indices]] = 0 
+        edge_graph_base[range(num_edges), [indices.index([x[1],x[0]]) for x in indices]] = 0
         x, y = np.where(edge_graph_base > 0)
 
         # calculate angle

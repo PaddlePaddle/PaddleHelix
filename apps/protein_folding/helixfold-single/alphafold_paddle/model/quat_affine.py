@@ -355,7 +355,7 @@ def _multiply(a, b):
         paddle.stack([
         a21*b1 + a22*b2+ a23*b12,
         a21*b3 + a22*b11 + a23*b22,
-        a21*b13 + a22*b21 + a23*b23], axis=-1)], 
+        a21*b13 + a22*b21 + a23*b23], axis=-1)],
         axis=-2)
 
 

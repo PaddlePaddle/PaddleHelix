@@ -46,7 +46,7 @@ from loss import ranking_loss
 def main(args):
     """
     Model training for one epoch and return the average loss and model evaluating to monitor pcc.
-    """ 
+    """
     t0 = time.time()
     logging.basicConfig(level = logging.DEBUG , filename = os.path.join(args.output_path, args.task + '_log.txt'), filemode='a')
     logging.info(args)
@@ -108,7 +108,7 @@ def train(args, model, train_ds, test_ds, logging, max_min_dic):
     lamda = args.lamda
     print('lamda:',lamda)
 
-    for epoch in range(args.start_epoch, args.epoch_num + 1): 
+    for epoch in range(args.start_epoch, args.epoch_num + 1):
         model.train()
         for idx, batch_data in enumerate(train_loader):
             graphs, mut, gexpr, met, label, _ = batch_data
@@ -120,16 +120,16 @@ def train(args, model, train_ds, test_ds, logging, max_min_dic):
 
             pred = model([g, mut, gexpr, met])
             if args.sampler == 'sampler':
-                ccle_loss = criterion(pred[:args.batch_size//2, 0], label[:args.batch_size//2])[0]  # same ccle 
+                ccle_loss = criterion(pred[:args.batch_size//2, 0], label[:args.batch_size//2])[0]  # same ccle
                 drug_loss = criterion(pred[args.batch_size//2:, 0], label[args.batch_size//2:])[0] # same drug
-                train_loss = ccle_loss + lamda * drug_loss 
+                train_loss = ccle_loss + lamda * drug_loss
             else:
                 ccle_loss, drug_loss = 0, 0
                 train_loss = paddle.pow(criterion(pred[:, 0], label)[0], 0.5)
 
             if args.use_rankloss:
                 num_pairs = label.shape[0]//2
-                rank_loss = ranking_loss(pred,label,num_pairs)  
+                rank_loss = ranking_loss(pred,label,num_pairs)
                 train_loss = args.beta*train_loss + (1-args.beta)*rank_loss
             train_loss.backward()
             train_pcc = pearsonr(pred[:, 0].numpy(), label.numpy())[0]
@@ -174,7 +174,7 @@ def test_pcc(args, model, test_ds, max_min_dic):
     print('load best model params ...')
     model.eval()
     best_model = os.path.join(args.output_path, 'STR_best_model.pdparams')
-    end_model = os.path.join(args.output_path, args.task + '_end_model.pdparams') 
+    end_model = os.path.join(args.output_path, args.task + '_end_model.pdparams')
     model.set_state_dict(paddle.load(best_model))
     print(best_model,'loaded!')
     preds = []
@@ -297,24 +297,24 @@ def evaluate(args, model, loader, criterion, max_min_dic, epoch):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_path', type=str, default='./data/processed_inference/') 
+    parser.add_argument('--data_path', type=str, default='./data/processed_inference/')
     parser.add_argument('--output_path', type=str, default='./output/')
     parser.add_argument('--lr', type=float, default=0.00001)
     parser.add_argument('--epoch_num', type=int, default=100)
     parser.add_argument('--batch_size', type=int, default=64)
-    # train 
+    # train
     parser.add_argument('--task', type=str, default='debug')
     parser.add_argument('--mode', type=str, default='train',choices=["train", "test", 'continue','train_ml'])
-    parser.add_argument('--model', type=str, default='STR',choices=["CDR", "STR"]) 
-    parser.add_argument('--sampler', type=str, default='sampler',choices=["sampler", 'None']) 
+    parser.add_argument('--model', type=str, default='STR',choices=["CDR", "STR"])
+    parser.add_argument('--sampler', type=str, default='sampler',choices=["sampler", 'None'])
     parser.add_argument('--use_cuda', type=bool, default=False)
     parser.add_argument('--device', type=int, default=0)
-    # data 
+    # data
     parser.add_argument('--use_mut', type=bool, default=False)
     parser.add_argument('--use_gexp', type=bool, default=True)
     parser.add_argument('--use_methy', type=bool, default=False)
     parser.add_argument('--data_norm', type=str, default='None',choices=["norm", 'None'])
-    parser.add_argument('--split_mode', type=str, default='mix',choices=["mix", "mix_rand", "drug", "ccle", 'drug_ccle','all']) 
+    parser.add_argument('--split_mode', type=str, default='mix',choices=["mix", "mix_rand", "drug", "ccle", 'drug_ccle','all'])
     parser.add_argument('--split_ratio', type=float, default=0.8)
     parser.add_argument('--cross_val_num', type=int, default=0, choices=[0,1,2,3,4])
     # loss

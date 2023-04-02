@@ -559,7 +559,7 @@ def backbone_loss(ret, batch, value, config):
         'traj', a trajectory of rigids.
         config: Configuration of loss, should contain 'fape.clamp_distance' and
         'fape.loss_unit_distance'.
-    """    
+    """
     affine_trajectory = quat_affine.QuatAffine.from_tensor(value['traj'])
     rigid_trajectory = r3.rigids_from_quataffine(affine_trajectory)
 
@@ -571,7 +571,7 @@ def backbone_loss(ret, batch, value, config):
         rotation=gt_rot)
     gt_rigid = r3.rigids_from_quataffine(gt_affine)
     backbone_mask = batch['backbone_affine_mask']
-    backbone_mask = paddle.to_tensor(backbone_mask) 
+    backbone_mask = paddle.to_tensor(backbone_mask)
 
     fape_loss_fn = functools.partial(
         all_atom.frame_aligned_point_error,
@@ -643,7 +643,7 @@ def sidechain_loss(batch, value, config):
     tmp_rots = paddle.reshape(pred_frames_rot[-1], [batch_size, -1, 3, 3])
     tmp_vecs = paddle.reshape(pred_frames_trans[-1], [batch_size, -1, 3])
     tmp_rots = r3.rots_from_tensor3x3(tmp_rots)
-    tmp_vecs = r3.vecs_from_tensor(tmp_vecs) 
+    tmp_vecs = r3.vecs_from_tensor(tmp_vecs)
     flat_pred_frames = r3.Rigids(rot=tmp_rots, trans=tmp_vecs)
 
     pred_positions = value['sidechains']['atom_pos']
@@ -785,41 +785,41 @@ def compute_violation_metrics(
 
     violations_between_residue_bond_tmp = []
     for i in range(batch_size):
-        violations_between_residue_bond_i = utils.mask_mean(mask=batch['seq_mask'][i], 
+        violations_between_residue_bond_i = utils.mask_mean(mask=batch['seq_mask'][i],
                     value=violations['between_residues']['connections_per_residue_violation_mask'][i])
         violations_between_residue_bond_tmp.append(violations_between_residue_bond_i)
-    violations_between_residue_bond = paddle.to_tensor(violations_between_residue_bond_tmp, 
+    violations_between_residue_bond = paddle.to_tensor(violations_between_residue_bond_tmp,
                     stop_gradient=False)
     violations_between_residue_bond = paddle.squeeze(violations_between_residue_bond, axis=-1)
     ret['violations_between_residue_bond'] = violations_between_residue_bond
 
     violations_between_residue_clash_tmp = []
     for i in range(batch_size):
-        violations_between_residue_clash_i = utils.mask_mean(mask=batch['seq_mask'][i], 
+        violations_between_residue_clash_i = utils.mask_mean(mask=batch['seq_mask'][i],
                     value=paddle.max(violations['between_residues']['clashes_per_atom_clash_mask'],
                     axis=-1)[i])
         violations_between_residue_clash_tmp.append(violations_between_residue_clash_i)
-    violations_between_residue_clash = paddle.to_tensor(violations_between_residue_clash_tmp, 
+    violations_between_residue_clash = paddle.to_tensor(violations_between_residue_clash_tmp,
                     stop_gradient=False)
     violations_between_residue_clash = paddle.squeeze(violations_between_residue_clash, axis=-1)
     ret['violations_between_residue_clash'] = violations_between_residue_clash
 
     violations_within_residue_tmp = []
     for i in range(batch_size):
-        violations_within_residue_i = utils.mask_mean(mask=batch['seq_mask'][i], 
+        violations_within_residue_i = utils.mask_mean(mask=batch['seq_mask'][i],
                     value=paddle.max(violations['within_residues']['per_atom_violations'], axis=-1)[i])
         violations_within_residue_tmp.append(violations_within_residue_i)
-    violations_within_residue = paddle.to_tensor(violations_within_residue_tmp, 
+    violations_within_residue = paddle.to_tensor(violations_within_residue_tmp,
                     dtype='float32', stop_gradient=False)
     violations_within_residue = paddle.squeeze(violations_within_residue, axis=-1)
     ret['violations_within_residue'] = violations_within_residue
 
     violations_per_residue_tmp = []
     for i in range(batch_size):
-        violations_per_residue_i = utils.mask_mean(mask=batch['seq_mask'][i], 
+        violations_per_residue_i = utils.mask_mean(mask=batch['seq_mask'][i],
                     value=violations['total_per_residue_violations_mask'][i])
         violations_per_residue_tmp.append(violations_per_residue_i)
-    violations_per_residue = paddle.to_tensor(violations_per_residue_tmp, 
+    violations_per_residue = paddle.to_tensor(violations_per_residue_tmp,
                     dtype='float32', stop_gradient=False)
     violations_per_residue = paddle.squeeze(violations_per_residue, axis=-1)
     ret['violations_per_residue'] = violations_per_residue
@@ -852,9 +852,9 @@ def supervised_chi_loss(ret, batch, value, config):
     pred_angles = pred_angles.transpose([1, 0, 2, 3, 4])
     pred_angles = pred_angles[:, :, :, 3:]
 
-    residue_type_one_hot = paddle.nn.functional.one_hot(batch['aatype_index'], 
+    residue_type_one_hot = paddle.nn.functional.one_hot(batch['aatype_index'],
                             num_classes=residue_constants.restype_num + 1)
-    chi_pi_periodic = paddle.einsum('nijk,nkl->nijl', residue_type_one_hot[:, None, ...], 
+    chi_pi_periodic = paddle.einsum('nijk,nkl->nijl', residue_type_one_hot[:, None, ...],
                             paddle.to_tensor(residue_constants.chi_pi_periodic)[None])
 
     sin_cos_true_chi = batch['chi_angles_sin_cos'][:, None, ...]

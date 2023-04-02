@@ -46,25 +46,25 @@ class Momentum(Base_Momentum):
     """
     Momentum
     """
-    def __init__(self, 
-                 learning_rate=0.001, 
-                 momentum=0.9, 
-                 parameters=None, 
-                 use_nesterov=False, 
+    def __init__(self,
+                 learning_rate=0.001,
+                 momentum=0.9,
+                 parameters=None,
+                 use_nesterov=False,
                  weight_decay=None,
-                 grad_clip=None, 
+                 grad_clip=None,
                  name=None):
         """
         Initialization
         """
         parameters_list = update_parameters(parameters)
         super().__init__(
-             learning_rate=learning_rate, 
-             momentum=momentum, 
-             parameters=parameters, 
-             use_nesterov=use_nesterov, 
+             learning_rate=learning_rate,
+             momentum=momentum,
+             parameters=parameters,
+             use_nesterov=use_nesterov,
              weight_decay=weight_decay,
-             grad_clip=grad_clip, 
+             grad_clip=grad_clip,
              name=name)
 
 
@@ -72,15 +72,15 @@ class Adam(Base_Adam):
     """
     Adam
     """
-    def __init__(self, 
-                 learning_rate=0.001, 
-                 beta1=0.9, 
-                 beta2=0.999, 
-                 epsilon=1e-08, 
-                 parameters=None, 
-                 weight_decay=None, 
-                 grad_clip=None, 
-                 name=None, 
+    def __init__(self,
+                 learning_rate=0.001,
+                 beta1=0.9,
+                 beta2=0.999,
+                 epsilon=1e-08,
+                 parameters=None,
+                 weight_decay=None,
+                 grad_clip=None,
+                 name=None,
                  lazy_mode=False):
         """
         Initialization
@@ -95,4 +95,4 @@ class Adam(Base_Adam):
             weight_decay=weight_decay,
             grad_clip=grad_clip,
             name=name,
-            lazy_mode=lazy_mode)        
+            lazy_mode=lazy_mode)

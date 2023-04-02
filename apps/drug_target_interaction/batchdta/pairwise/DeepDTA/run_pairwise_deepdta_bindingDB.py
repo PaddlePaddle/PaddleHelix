@@ -45,7 +45,7 @@ def run (args):
         if args.is_parallel == 1:
             dist.init_parallel_env()
 
-        for fold in range(args.N_runs): 
+        for fold in range(args.N_runs):
 
             print('><<><><><><><><><><><><><><><><><><><><><><><><><<><><><><><>')
 
@@ -100,14 +100,14 @@ def run (args):
                     
             ###### get val/test dataloader
             val_index = []
-            for qid in val_keys:    
-                val_index.append(qid_doc_map_val[qid])        
+            for qid in val_keys:
+                val_index.append(qid_doc_map_val[qid])
             val_dataset = Data_test(val_index,val_data)
             val_dataloader = paddle.io.DataLoader(val_dataset, batch_size=args.test_batch_size, shuffle=False)
 
             test_index = []
-            for qid in test_keys:    
-                test_index.append(qid_doc_map_test[qid])        
+            for qid in test_keys:
+                test_index.append(qid_doc_map_test[qid])
             test_dataset = Data_test(test_index,test_data)
             test_dataloader = paddle.io.DataLoader(test_dataset, batch_size=args.test_batch_size, shuffle=False)
 
@@ -117,7 +117,7 @@ def run (args):
                 train_data = train_data.reset_index(drop=True)
 
             
-            # Load model 
+            # Load model
             model = Model()
 
             if args.is_parallel == 1:
@@ -139,10 +139,10 @@ def run (args):
                     # mixed all pairs from train and mixed dataset
                     temp = LEN_train
                     temp1 = LEN_mixed0
-                    mixed_x1_index = [i + temp for i in mixed_x1_index] 
-                    mixed_x2_index = [i + temp for i in mixed_x2_index] 
-                    mixed_x1_index1 = [i + temp + temp1 for i in mixed_x1_index1] 
-                    mixed_x2_index1 = [i + temp + temp1 for i in mixed_x2_index1] 
+                    mixed_x1_index = [i + temp for i in mixed_x1_index]
+                    mixed_x2_index = [i + temp for i in mixed_x2_index]
+                    mixed_x1_index1 = [i + temp + temp1 for i in mixed_x1_index1]
+                    mixed_x2_index1 = [i + temp + temp1 for i in mixed_x2_index1]
 
                     rain_x1_index = train_x1_index + mixed_x1_index + mixed_x1_index1
                     train_x2_index = train_x2_index + mixed_x2_index + mixed_x2_index1
@@ -195,7 +195,7 @@ def run (args):
                 print('epoch {}: loss: {} '.format(epoch,np.mean(LOSS)))
 
                 # test
-                print('val......') 
+                print('val......')
                 val_average_CI, val_weighted_CI = model_eval(model,val_dataloader)
                 
 
@@ -224,7 +224,7 @@ def run (args):
                         text_file.write("val weighted CI is {}".format(val_weighted_CI) + '\n')
                         text_file.write("test Average CI is {}".format(test_average_CI) + '\n')
                         text_file.write("test weighted CI is {}".format(test_weighted_CI) + '\n')
-                        text_file.write('##############################################' + '\n') 
+                        text_file.write('##############################################' + '\n')
 
             print('###############################################################')
 

@@ -87,9 +87,9 @@ def load_clintox_dataset(data_path, task_names=None):
     smiles_list = input_df['smiles']
     from rdkit.Chem import AllChem
     rdkit_mol_objs_list = [AllChem.MolFromSmiles(s) for s in smiles_list]
-    preprocessed_rdkit_mol_objs_list = [m if not m is None else None 
+    preprocessed_rdkit_mol_objs_list = [m if not m is None else None
             for m in rdkit_mol_objs_list]
-    smiles_list = [AllChem.MolToSmiles(m) if not m is None else None 
+    smiles_list = [AllChem.MolToSmiles(m) if not m is None else None
             for m in preprocessed_rdkit_mol_objs_list]
     labels = input_df[task_names]
     # convert 0 to -1
@@ -101,7 +101,7 @@ def load_clintox_dataset(data_path, task_names=None):
         if smiles_list[i] is None:
             continue
         data = {}
-        data['smiles'] = smiles_list[i]        
+        data['smiles'] = smiles_list[i]
         data['label'] = labels.values[i]
         data_list.append(data)
     dataset = InMemoryDataset(data_list)

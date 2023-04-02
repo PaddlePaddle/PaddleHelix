@@ -23,11 +23,11 @@ import pgl
 
 
 class TSNet(paddle.nn.Layer):
-    def __init__(self, num_drug_feat=78, 
-                        num_L_feat=978, 
-                        num_cell_feat=954, 
-                        num_drug_out=128, 
-                        coarsed_heads=4, 
+    def __init__(self, num_drug_feat=78,
+                        num_L_feat=978,
+                        num_cell_feat=954,
+                        num_drug_out=128,
+                        coarsed_heads=4,
                         fined_heads=4,
                         coarse_hidd=64,
                         fine_hidd=64,
@@ -67,7 +67,7 @@ class TSNet(paddle.nn.Layer):
 
         self.fc = paddle.nn.Sequential(
                   paddle.nn.Flatten(),
-                  paddle.nn.Linear(1181 * 128, 512), 
+                  paddle.nn.Linear(1181 * 128, 512),
                   paddle.nn.ReLU(),
                   paddle.nn.Linear(512, 2)
                 )
@@ -83,7 +83,7 @@ class TSNet(paddle.nn.Layer):
         drug2 = self.relu(drug2)
         drug2 = self.drug2_conv3(dg2, drug2)
         drug2 = self.relu(drug2)
-        dp2 = self.drug_pool(dg2, drug2) 
+        dp2 = self.drug_pool(dg2, drug2)
         
         ccle = paddle.nn.functional.normalize(ccle, 2, 1)
 

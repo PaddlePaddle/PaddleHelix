@@ -179,7 +179,7 @@ class CNNEncoder(nn.Layer):
         batch_input = x
 
         h1 = self.conv1(batch_input)
-        h1 = F.relu(h1)        
+        h1 = F.relu(h1)
         h2 = self.conv2(h1)
         h2 = F.relu(h2)
         h3 = self.conv3(h2)
@@ -226,13 +226,13 @@ class MolVAE(nn.Layer):
         """
         reparameterize trick
         """
-        eps = paddle.normal(mean=0, std=self.model_config['eps_std'], shape=mu.shape)            
-        return mu + (logvar / 2).exp() * eps   
+        eps = paddle.normal(mean=0, std=self.model_config['eps_std'], shape=mu.shape)
+        return mu + (logvar / 2).exp() * eps
 
-    def forward(self, x_inputs, true_binary, rule_masks):    
+    def forward(self, x_inputs, true_binary, rule_masks):
         """
         MOL VAE forward
-        """    
+        """
         z_mean, z_log_var = self.encoder(x_inputs)
 
         z = self.reparameterize(z_mean, z_log_var)

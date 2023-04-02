@@ -1,5 +1,5 @@
-#!/usr/bin/python3                                                                                                
-#-*-coding:utf-8-*- 
+#!/usr/bin/python3
+#-*-coding:utf-8-*-
 #   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -67,7 +67,7 @@ if __name__ == '__main__':
 
     f_smiles = '.'.join(cmd_args.smiles_file.split('/')[-1].split('.')[0:-1])
 
-    out_file = '%s/%s.h5' % (cmd_args.save_dir, f_smiles)    
+    out_file = '%s/%s.h5' % (cmd_args.save_dir, f_smiles)
     h5f = h5py.File(out_file, 'w')
 
     h5f.create_dataset('x', data=all_true_binary)

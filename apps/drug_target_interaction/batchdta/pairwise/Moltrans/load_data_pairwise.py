@@ -30,7 +30,7 @@ def convert_y_unit(y, from_, to_):
     if isinstance(y, (int, float)):
         y = np.array([y])
         array_flag = True
-    y = y.astype(float)    
+    y = y.astype(float)
     # basis as nM
     if from_ == 'nM':
         y = y
@@ -150,7 +150,7 @@ def data_process(X_drug=None, X_target=None, y=None, drug_encoding='Transformer'
     df_data['target_encoding'] = df_data['Target Sequence'].apply(target_encoder)
     
     # dti split
-    if split_method == 'random_split': 
+    if split_method == 'random_split':
         train, val, test = random_split_dataset(df_data, random_seed, frac)
     elif split_method == 'drug_split':
         train, val, test = drug_split_dataset(df_data, random_seed, frac)
@@ -242,7 +242,7 @@ def process_data_pairwise(dataset):
     
     return r_train, r_val, r_test
 
-def load_customised_Davis(r_train):   
+def load_customised_Davis(r_train):
     # apply BPE encoder for d and t
     r_train['drug_encoding'] = r_train['SMILES'].apply(drug_encoder)
     r_train['target_encoding'] = r_train['Target Sequence'].apply(target_encoder)
@@ -285,7 +285,7 @@ def load_customised_KIBA():
 
     return r_train, r_val, r_test
 
-def load_customised_BindingDB(r_train,groupID='groupID'):    
+def load_customised_BindingDB(r_train,groupID='groupID'):
     #
     
     # apply BPE encoder for d and t
@@ -294,7 +294,7 @@ def load_customised_BindingDB(r_train,groupID='groupID'):
     r_train['BPE_dt'] = r_train['drug_encoding'].apply(lambda x: x[0].tolist()) + r_train['target_encoding'].apply(lambda x: x[0].tolist())
     r_train['BPE_dt_mask'] = r_train['drug_encoding'].apply(lambda x: x[1].tolist()) + r_train['target_encoding'].apply(lambda x: x[1].tolist())
 
-    label =   r_train.columns[4]  
+    label =   r_train.columns[4]
 
     r_train = results_prepare_pairwise(r_train,groupID=groupID,label=label,BPE='BPE_dt')
 

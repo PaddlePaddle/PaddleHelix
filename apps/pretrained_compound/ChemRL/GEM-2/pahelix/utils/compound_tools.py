@@ -589,8 +589,8 @@ def mol_to_graph_data(mol):
         return None
 
     atom_id_names = [
-        "atomic_num", "chiral_tag", "degree", "explicit_valence", 
-        "formal_charge", "hybridization", "implicit_valence", 
+        "atomic_num", "chiral_tag", "degree", "explicit_valence",
+        "formal_charge", "hybridization", "implicit_valence",
         "is_aromatic", "total_numHs",
     ]
     bond_id_names = [
@@ -742,7 +742,7 @@ def mol_to_trans_data_w_meta_path(mol, max_hop):
     max_dist = np.max(shortest_path_result)
     all_path = algos.get_all_path(path, max_dist)   # (N, N, max_dist), -1 as invalid
 
-    data['path'] = np.full([N, N, max_hop], fill_value=-1, dtype='int64') 
+    data['path'] = np.full([N, N, max_hop], fill_value=-1, dtype='int64')
     end_index = min(max_hop, all_path.shape[-1])
     data['path'][..., :end_index] = all_path[..., :end_index]
     return data

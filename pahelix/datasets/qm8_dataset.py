@@ -28,8 +28,8 @@ from pahelix.datasets.inmemory_dataset import InMemoryDataset
 
 def get_default_qm8_task_names():
     """Get that default freesolv task names and return measured expt"""
-    return ['E1-CC2', 'E2-CC2', 'f1-CC2', 'f2-CC2', 
-            'E1-PBE0', 'E2-PBE0', 'f1-PBE0', 'f2-PBE0', 
+    return ['E1-CC2', 'E2-CC2', 'f1-CC2', 'f2-CC2',
+            'E1-PBE0', 'E2-PBE0', 'f1-PBE0', 'f2-PBE0',
             'E1-CAM', 'E2-CAM', 'f1-CAM', 'f2-CAM']
 
 

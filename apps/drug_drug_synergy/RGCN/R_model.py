@@ -52,7 +52,7 @@ def decagon_norm(graph, feature, edges):
                 D2[i, j] = 1
             
             else:
-                D3[i, j] = 1            
+                D3[i, j] = 1
         r += 1
 
     diag1 = np.sum(D1, axis = 1)
@@ -159,7 +159,7 @@ class BilinearDecoder(paddle.nn.Layer):
         self.input_size1 = input_size1
         self.input_size2 = input_size2
         self.output_size = output_size
-        self.w = np.random.random((self.output_size, self.input_size1, self.input_size2)).astype('float32')    
+        self.w = np.random.random((self.output_size, self.input_size1, self.input_size2)).astype('float32')
 
         self.bilinear = paddle.nn.Bilinear(in1_features=self.input_size1,
                                           in2_features=self.input_size2,

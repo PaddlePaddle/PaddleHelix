@@ -141,7 +141,7 @@ CONFIG_DIFFS = {
         'model.embeddings_and_evoformer.evoformer.mute_msa_column': True,
         'model.embeddings_and_evoformer.evoformer.triangle_multiplication_outgoing.num_intermediate_channel': 64,
         'model.embeddings_and_evoformer.evoformer.triangle_multiplication_incoming.num_intermediate_channel': 64,
-        'model.heads.structure_module.structural_violation_loss_weight': 0.0,  
+        'model.heads.structure_module.structural_violation_loss_weight': 0.0,
     },
     'seq512_pair64_l24_vio0': {
         'data.common.max_extra_msa': 1,
@@ -153,7 +153,7 @@ CONFIG_DIFFS = {
         'model.embeddings_and_evoformer.evoformer.mute_msa_column': True,
         'model.embeddings_and_evoformer.evoformer.triangle_multiplication_outgoing.num_intermediate_channel': 64,
         'model.embeddings_and_evoformer.evoformer.triangle_multiplication_incoming.num_intermediate_channel': 64,
-        'model.heads.structure_module.structural_violation_loss_weight': 0.0,  
+        'model.heads.structure_module.structural_violation_loss_weight': 0.0,
     },
     'seq512_pair128_l48_vio0': {
         'data.common.max_extra_msa': 1,
@@ -163,7 +163,7 @@ CONFIG_DIFFS = {
         'model.embeddings_and_evoformer.mute_extra_msa': True,
         'model.embeddings_and_evoformer.evoformer.mute_msa_column': True,
         'model.global_config.subbatch_size': 4,
-        'model.heads.structure_module.structural_violation_loss_weight': 0.0,  
+        'model.heads.structure_module.structural_violation_loss_weight': 0.0,
     },
 
     # The following models are fine-tuned from the corresponding models above

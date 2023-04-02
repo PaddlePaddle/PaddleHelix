@@ -1,5 +1,5 @@
-#!/usr/bin/python                                                                                  
-#-*-coding:utf-8-*- 
+#!/usr/bin/python
+#-*-coding:utf-8-*-
 #   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -59,7 +59,7 @@ def train(args, model, optimizer, data_gen):
         step += 1
         if step > steps:
             print("jumpping out")
-            break         
+            break
     return np.mean(list_loss)
 
 
@@ -68,9 +68,9 @@ def evaluate(args, model, test_dataset, collate_fn):
     """tbd"""
     model.eval()
     data_gen = test_dataset.get_data_loader(
-            batch_size=args.batch_size, 
-            num_workers=args.num_workers, 
-            shuffle=True, 
+            batch_size=args.batch_size,
+            num_workers=args.num_workers,
+            shuffle=True,
             collate_fn=collate_fn)
 
     dict_loss = {'loss': []}
@@ -158,16 +158,16 @@ def main(args):
 
     collate_fn = GeoPredCollateFn(
             atom_names=compound_encoder_config['atom_names'],
-            bond_names=compound_encoder_config['bond_names'], 
+            bond_names=compound_encoder_config['bond_names'],
             bond_float_names=compound_encoder_config['bond_float_names'],
             bond_angle_float_names=compound_encoder_config['bond_angle_float_names'],
             pretrain_tasks=model_config['pretrain_tasks'],
             mask_ratio=model_config['mask_ratio'],
             Cm_vocab=model_config['Cm_vocab'])
     train_data_gen = train_dataset.get_data_loader(
-            batch_size=args.batch_size, 
-            num_workers=args.num_workers, 
-            shuffle=True, 
+            batch_size=args.batch_size,
+            num_workers=args.num_workers,
+            shuffle=True,
             collate_fn=collate_fn)
     
     list_test_loss = []
@@ -176,7 +176,7 @@ def main(args):
         train_loss = train(args, model, opt, train_data_gen)
         test_loss = evaluate(args, model, test_dataset, collate_fn)
         if not args.distributed or dist.get_rank() == 0:
-            paddle.save(compound_encoder.state_dict(), 
+            paddle.save(compound_encoder.state_dict(),
                 '%s/epoch%d.pdparams' % (args.model_dir, epoch_id))
             list_test_loss.append(test_loss['loss'])
             print("epoch:%d train/loss:%s" % (epoch_id, train_loss))

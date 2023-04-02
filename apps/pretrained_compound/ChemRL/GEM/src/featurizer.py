@@ -1,5 +1,5 @@
-#!/usr/bin/python                                                                                                                                                                                             
-#-*-coding:utf-8-*- 
+#!/usr/bin/python
+#-*-coding:utf-8-*-
 #   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -52,9 +52,9 @@ class DownstreamTransformFn(object):
 
 class DownstreamCollateFn(object):
     """CollateFn for downstream model"""
-    def __init__(self, 
-            atom_names, 
-            bond_names, 
+    def __init__(self,
+            atom_names,
+            bond_names,
             bond_float_names,
             bond_angle_float_names,
             task_type,

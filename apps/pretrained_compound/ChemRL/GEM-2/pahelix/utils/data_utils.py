@@ -70,7 +70,7 @@ def load_npz_to_data_list(npz_file):
         for shape_str in shape_strs:
             if len(shape_str) == 0:
                 l = 1
-                res.append(flat_value[s])    
+                res.append(flat_value[s])
             else:
                 shape = list(map(int, shape_str.split('_')))
                 l = np.prod(shape)

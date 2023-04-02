@@ -48,7 +48,7 @@ def divide(numerator, denominator):
 
 
 @paddle.no_grad()
-def _gather(tensor, axis=-1):    
+def _gather(tensor, axis=-1):
     tensor_list = []
     dist.all_gather(tensor_list,
                     tensor,

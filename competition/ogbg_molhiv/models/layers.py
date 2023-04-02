@@ -29,7 +29,7 @@ def linear(X, hidden_size, name, with_bias=True, init_type=None):
     if init_type == 'gcn':
         fc_w_attr = F.ParamAttr(initializer=F.initializer.XavierInitializer(),
                                 name="%s_w" % name)
-        fc_bias_attr = F.ParamAttr(initializer=F.initializer.ConstantInitializer(0.0), 
+        fc_bias_attr = F.ParamAttr(initializer=F.initializer.ConstantInitializer(0.0),
                                 name="%s_b" % name)
     else:
         fan_in = X.shape[-1]
@@ -63,7 +63,7 @@ def layer_norm(feature, name=""):
             name="bias_%s" % name,
             initializer=F.initializer.ConstantInitializer(value=0))
 
-    feature = L.layer_norm(feature, 
+    feature = L.layer_norm(feature,
                            param_attr=lay_norm_attr,
                            bias_attr=lay_norm_bias)
 
@@ -131,14 +131,14 @@ def graph_transformer(
         feature,
         edge_feature,
         hidden_size,
-        name, 
+        name,
         num_heads=4,
         attn_drop=False,
         concat=True,
         skip_feat=True,
         gate=False,
-        norm=True, 
-        relu=True, 
+        norm=True,
+        relu=True,
         is_test=False):
     """Implementation of graph Transformer from UniMP
 
@@ -261,14 +261,14 @@ def graph_linformer(
         feature,
         edge_feature,
         hidden_size,
-        name, 
+        name,
         num_heads=4,
         attn_drop=False,
         concat=True,
         skip_feat=True,
         gate=False,
-        norm=True, 
-        relu=True, 
+        norm=True,
+        relu=True,
         k_hop=2,
         is_test=False):
     """Implementation of graph Transformer from UniMP
@@ -323,7 +323,7 @@ def graph_linformer(
         sum_k = L.reshape(k_h, [-1, num_heads * hidden_size])
         sum_kTv = L.reshape(sum_kTv, [-1, num_heads * hidden_size * hidden_size])
         
-        return {"sum_k": sum_k, "sum_kTv": sum_kTv} 
+        return {"sum_k": sum_k, "sum_kTv": sum_kTv}
 
     def send_copy(src_feat, dst_feat, edge_feat):
         return src_feat
@@ -350,7 +350,7 @@ def graph_linformer(
     sum_kTv = gw.recv(msg["sum_kTv"], reduce_sum)
 
     for i in range(1, k_hop):
-        msg = gw.send(send_copy, nfeat_list=[("sum_k", sum_k), ("sum_kTv", sum_kTv)])            
+        msg = gw.send(send_copy, nfeat_list=[("sum_k", sum_k), ("sum_kTv", sum_kTv)])
         sum_k = gw.recv(msg["sum_k"], reduce_sum)
         sum_kTv = gw.recv(msg["sum_kTv"], reduce_sum)
         # sum_k: [-1, num_heads * hidden_size]

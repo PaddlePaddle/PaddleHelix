@@ -57,7 +57,7 @@ def smile_to_graph(smile):
  
 def seq_cat(prot):
     x = np.zeros(max_seq_len)
-    for i, ch in enumerate(prot[:max_seq_len]): 
+    for i, ch in enumerate(prot[:max_seq_len]):
         x[i] = seq_dict[ch]
 
     return x

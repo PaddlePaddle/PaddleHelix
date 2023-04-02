@@ -86,7 +86,7 @@ def atom14_to_atom37(atom14_data: paddle.Tensor,  # (B, N, 14, ...)
     if len(atom14_data.shape) == 3:
         atom37_data *= batch['atom37_atom_exists']
     elif len(atom14_data.shape) == 4:
-        atom37_data *= batch['atom37_atom_exists'][:, :, :, 
+        atom37_data *= batch['atom37_atom_exists'][:, :, :,
                                             None].astype(atom37_data.dtype)
     return atom37_data
 
@@ -788,7 +788,7 @@ def between_residue_bond_loss(
 
     # Compute a per residue loss (equally distribute the loss to both
     # neighbouring residues).
-    tmpsum = paddle.zeros(shape=[batch_size, 1])    
+    tmpsum = paddle.zeros(shape=[batch_size, 1])
     per_residue_loss_sum = (c_n_loss_per_residue + ca_c_n_loss_per_residue + c_n_ca_loss_per_residue)
     tmp_per_residue_loss1 = paddle.concat(x=[per_residue_loss_sum, tmpsum], axis=-1)
     tmp_per_residue_loss2 = paddle.concat(x=[tmpsum, per_residue_loss_sum], axis=-1)
@@ -1085,12 +1085,12 @@ def find_optimal_renaming(
 
 
 def frame_aligned_point_error(
-    pred_frames: r3.Rigids, 
-    target_frames: r3.Rigids,  
-    frames_mask: paddle.Tensor,  
-    pred_positions: r3.Vecs,  
-    target_positions: r3.Vecs,  
-    positions_mask: paddle.Tensor,  
+    pred_frames: r3.Rigids,
+    target_frames: r3.Rigids,
+    frames_mask: paddle.Tensor,
+    pred_positions: r3.Vecs,
+    target_positions: r3.Vecs,
+    positions_mask: paddle.Tensor,
     length_scale: float,
     l1_clamp_distance: Optional[float] = None,
     epsilon=1e-4) -> paddle.Tensor:
@@ -1151,7 +1151,7 @@ def frame_aligned_point_error(
 
     # Compute errors between the structures.
     # paddle.Tensor (num_frames, num_positions)
-    error_dist = paddle.sqrt(r3.vecs_squared_distance(local_pred_pos, local_target_pos) + epsilon)        
+    error_dist = paddle.sqrt(r3.vecs_squared_distance(local_pred_pos, local_target_pos) + epsilon)
 
     if l1_clamp_distance:
         error_dist = paddle.clip(error_dist, min=0, max=l1_clamp_distance)

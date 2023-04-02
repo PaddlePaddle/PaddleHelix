@@ -1,5 +1,5 @@
-#!/usr/bin/python3                                                                                                
-#-*-coding:utf-8-*- 
+#!/usr/bin/python3
+#-*-coding:utf-8-*-
 #   Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,7 +35,7 @@ from cmd_args import cmd_args
 
 sys.path.append('../mol_decoder')
 from attribute_tree_decoder import create_tree_decoder, batch_make_att_masks
-from tree_walker import OnehotBuilder 
+from tree_walker import OnehotBuilder
 
 sys.path.append('../cfg_parser')
 import cfg_parser as parser

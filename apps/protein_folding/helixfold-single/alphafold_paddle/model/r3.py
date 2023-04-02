@@ -201,7 +201,7 @@ def invert_rots(m: Rots) -> Rots:
 
 def rigids_from_3_points_vecs(
     point_on_neg_x_axis: Vecs,
-    origin: Vecs, 
+    origin: Vecs,
     point_on_xy_plane: Vecs,
 ) -> Rigids:
   """Create Rigids from 3 points.

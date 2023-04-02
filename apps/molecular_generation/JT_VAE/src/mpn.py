@@ -115,8 +115,8 @@ class MPN(nn.Layer):
         """
         padding = np.zeros([ATOM_FDIM + BOND_FDIM]).astype('int64')
 
-        fatoms, fbonds = [], [padding]  
-        in_bonds, all_bonds = [], [(-1, -1)]  
+        fatoms, fbonds = [], [padding]
+        in_bonds, all_bonds = [], [(-1, -1)]
         scope = []
         total_atoms = 0
 
@@ -162,9 +162,9 @@ class MPN(nn.Layer):
                 if all_bonds[b2][0] != y:
                     bgraph[b1, i] = b2
 
-        return {'fatoms': fatoms, 
-                'fbonds': fbonds, 
-                'agraph': agraph, 
-                'bgraph': bgraph, 
+        return {'fatoms': fatoms,
+                'fbonds': fbonds,
+                'agraph': agraph,
+                'bgraph': bgraph,
                 'scope': scope}
 

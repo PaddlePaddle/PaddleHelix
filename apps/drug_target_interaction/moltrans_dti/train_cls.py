@@ -26,7 +26,7 @@ import json
 import os
 import random
 from time import time
-from sklearn.metrics import (roc_auc_score, average_precision_score, f1_score, roc_curve, confusion_matrix, 
+from sklearn.metrics import (roc_auc_score, average_precision_score, f1_score, roc_curve, confusion_matrix,
                              precision_score, recall_score, auc, mean_squared_error)
 from argparse import ArgumentParser
 
@@ -75,7 +75,7 @@ def cls_test(data_generator, model):
     loss_res = 0.0
     count = 0.0
 
-    model.eval()    
+    model.eval()
     for _, data in enumerate(data_generator):
         d_out, mask_d_out, t_out, mask_t_out, label = data
         temp = model(d_out.long().cuda(), t_out.long().cuda(), mask_d_out.long().cuda(), mask_t_out.long().cuda())
@@ -116,7 +116,7 @@ def cls_test(data_generator, model):
     specificity = cf_mat[1, 1] / (cf_mat[1, 0] + cf_mat[1, 1])
     print("Specificity: {}".format(specificity))
     outputs = np.asarray([(1 if i else 0) for i in np.asarray(y_pred) >= 0.5])
-    return (roc_auc_score(y_label, y_pred), 
+    return (roc_auc_score(y_label, y_pred),
             f1_score(y_label, outputs), loss.item())
 
 
@@ -139,7 +139,7 @@ def main(args):
     # model.set_dict(params_dict)
 
     # Optimizer
-    # scheduler = paddle.optimizer.lr.LinearWarmup(learning_rate=args.lr, warmup_steps=50, start_lr=0, 
+    # scheduler = paddle.optimizer.lr.LinearWarmup(learning_rate=args.lr, warmup_steps=50, start_lr=0,
     #                                             end_lr=args.lr, verbose=False)
     optim = utils.Adam(parameters=model.parameters(), learning_rate=args.lr) # Adam
     #optim = paddle.optimizer.AdamW(learning_rate=scheduler, parameters=model.parameters(), weight_decay=0.01) # AdamW
@@ -151,19 +151,19 @@ def main(args):
     testing_set = pd.read_csv(data_path + '/test.csv')
 
     training_data = DataEncoder(training_set.index.values, training_set.Label.values, training_set)
-    train_loader = utils.BaseDataLoader(training_data, batch_size=args.batchsize, shuffle=True, 
+    train_loader = utils.BaseDataLoader(training_data, batch_size=args.batchsize, shuffle=True,
                                         drop_last=False, num_workers=args.workers)
     validation_data = DataEncoder(validation_set.index.values, validation_set.Label.values, validation_set)
-    validation_loader = utils.BaseDataLoader(validation_data, batch_size=args.batchsize, shuffle=False, 
+    validation_loader = utils.BaseDataLoader(validation_data, batch_size=args.batchsize, shuffle=False,
                                              drop_last=False, num_workers=args.workers)
     testing_data = DataEncoder(testing_set.index.values, testing_set.Label.values, testing_set)
-    testing_loader = utils.BaseDataLoader(testing_data, batch_size=args.batchsize, shuffle=False, 
+    testing_loader = utils.BaseDataLoader(testing_data, batch_size=args.batchsize, shuffle=False,
                                           drop_last=False, num_workers=args.workers)
     # Initial Testing
     print("=====Start Initial Testing=====")
     with paddle.no_grad():
         auroc, f1, loss = cls_test(testing_loader, model)
-        print("Initial testing set: AUROC: {}, F1: {}, Testing loss: {}".format(auroc, f1, loss))    
+        print("Initial testing set: AUROC: {}, F1: {}, Testing loss: {}".format(auroc, f1, loss))
     
     # Training
     for epoch in range(args.epochs):
@@ -185,12 +185,12 @@ def main(args):
                 print("Training at epoch: {}, step: {}, loss is: {}"
                       .format(epoch, batch_id, loss.cpu().detach().numpy()))
                 log_writer.add_scalar(tag="train/loss", step=log_step, value=loss.cpu().detach().numpy())
-                log_step += 1       
+                log_step += 1
 
         # Validation
         print("=====Start Validation=====")
         with paddle.no_grad():
-            auroc, f1, loss = cls_test(validation_loader, model) 
+            auroc, f1, loss = cls_test(validation_loader, model)
             print("Validation at epoch: {}, AUROC: {}, F1: {}, loss is: {}"
                   .format(epoch, auroc, f1, loss))
             log_writer.add_scalar(tag="dev/loss", step=log_step, value=loss)
@@ -200,7 +200,7 @@ def main(args):
                 optimal_auc = auroc
                 print("Saving the best_model...")
                 print("Best AUROC: {}".format(optimal_auc))
-                paddle.save(model.state_dict(), 'DAVIS_bestAUC_model_cls1')             
+                paddle.save(model.state_dict(), 'DAVIS_bestAUC_model_cls1')
     
     print("Final AUROC: {}".format(optimal_auc))
     paddle.save(model.state_dict(), 'DAVIS_final_model_cls1')
@@ -224,7 +224,7 @@ if __name__ == "__main__":
     parser.add_argument('-b', '--batchsize', default=64, type=int, metavar='N', help='Batch size')
     parser.add_argument('-j', '--workers', default=0, type=int, metavar='N', help='Number of workers')
     parser.add_argument('--epochs', default=200, type=int, metavar='N', help='Number of total epochs')
-    parser.add_argument('--dataset', choices=['cls_davis', 'cls_biosnap', 'cls_bindingdb'], default='cls_davis', 
+    parser.add_argument('--dataset', choices=['cls_davis', 'cls_biosnap', 'cls_bindingdb'], default='cls_davis',
                         type=str, metavar='DATASET', help='Select specific dataset for your task')
     parser.add_argument('--lr', default=5e-4, type=float, metavar='LR', help='Initial learning rate', dest='lr')
     parser.add_argument('--model_config', default='./config.json', type=str)

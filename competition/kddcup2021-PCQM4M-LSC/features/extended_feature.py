@@ -4,8 +4,8 @@ from rdkit import Chem
 from rdkit.Chem import AllChem
 import rdkit.Chem.rdPartialCharges
 
-from ogb.utils.features import (allowable_features, atom_to_feature_vector, 
-                                atom_feature_vector_to_dict, bond_feature_vector_to_dict) 
+from ogb.utils.features import (allowable_features, atom_to_feature_vector,
+                                atom_feature_vector_to_dict, bond_feature_vector_to_dict)
 from local_feature import bond_to_feature_vector, get_bond_feature_dims
 from copy import deepcopy
 import hashlib
@@ -347,8 +347,8 @@ def get_valence_of_out_shell(mol):
         valence_list.append(valence_out_shell)
     return valence_list
 
-# edge feature 
-# TODO: shortest path bonds; top_path_length: dimension handling ; 
+# edge feature
+# TODO: shortest path bonds; top_path_length: dimension handling ;
 def edge_same_ring(mol):
     rings = mol.GetRingInfo()
     bonds = mol.GetBonds()

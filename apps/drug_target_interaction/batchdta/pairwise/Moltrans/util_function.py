@@ -33,7 +33,7 @@ def convert_y_unit(y, from_, to_):
     if isinstance(y, (int, float)):
         y = np.array([y])
         array_flag = True
-    y = y.astype(float)    
+    y = y.astype(float)
     # basis as nM
     if from_ == 'nM':
         y = y
@@ -81,7 +81,7 @@ def load_davis_dataset():
         open(os.path.join('dataset', 'regression', 'benchmark', 'DAVIStest', 'proteins.txt')),
         object_pairs_hook=OrderedDict)
     
-    affinity = pickle.load(open(os.path.join('dataset', 'regression', 'benchmark', 'DAVIStest', 'Y'), 
+    affinity = pickle.load(open(os.path.join('dataset', 'regression', 'benchmark', 'DAVIStest', 'Y'),
                                 'rb'), encoding='latin1')
     smiles_lst, protein_lst = [], []
 
@@ -137,7 +137,7 @@ def load_kiba_dataset():
         open(os.path.join('dataset', 'regression', 'benchmark', 'KIBAtest', 'proteins.txt')),
         object_pairs_hook=OrderedDict)
     
-    affinity = pickle.load(open(os.path.join('dataset', 'regression', 'benchmark', 'KIBAtest', 'Y'), 
+    affinity = pickle.load(open(os.path.join('dataset', 'regression', 'benchmark', 'KIBAtest', 'Y'),
                                 'rb'), encoding='latin1')
     smiles_lst, protein_lst = [], []
 
@@ -381,7 +381,7 @@ def load_BindingDB_kd():
     return np.array(smiles_res), np.array(target_res), np.array(y_res)
 
 
-def data_process(X_drug, X_target, y, frac, drug_encoding='Transformer', target_encoding='Transformer', 
+def data_process(X_drug, X_target, y, frac, drug_encoding='Transformer', target_encoding='Transformer',
                  split_method='protein_split', random_seed=1, sample_frac=1, mode='DTI'):
     """
     Raw data preprocessing
@@ -410,7 +410,7 @@ def data_process(X_drug, X_target, y, frac, drug_encoding='Transformer', target_
     df_data['target_encoding'] = df_data['Target Sequence'].apply(target_encoder)
     
     # DTI split
-    if split_method == 'random_split': 
+    if split_method == 'random_split':
         train, val, test = random_split_dataset(df_data, random_seed, frac)
     elif split_method == 'drug_split':
         train, val, test = drug_split_dataset(df_data, random_seed, frac)
@@ -423,7 +423,7 @@ def data_process(X_drug, X_target, y, frac, drug_encoding='Transformer', target_
     return train.reset_index(drop=True), val.reset_index(drop=True), test.reset_index(drop=True)
 
 
-def data_process_whole(X_drug, X_target, y, drug_encoding='Transformer', 
+def data_process_whole(X_drug, X_target, y, drug_encoding='Transformer',
                        target_encoding='Transformer', mode='DTI'):
     """
     Raw test data preprocessing
@@ -473,7 +473,7 @@ def drug_split_dataset(df, fold_seed, frac):
     test = df[df['SMILES'].isin(drug_drop)]
     train_val = df[~df['SMILES'].isin(drug_drop)]
     
-    drug_drop_val = train_val['SMILES'].drop_duplicates().sample(frac=val_frac / (1 - test_frac), 
+    drug_drop_val = train_val['SMILES'].drop_duplicates().sample(frac=val_frac / (1 - test_frac),
                         replace=False, random_state=fold_seed).values
     val = train_val[train_val['SMILES'].isin(drug_drop_val)]
     train = train_val[~train_val['SMILES'].isin(drug_drop_val)]
@@ -486,12 +486,12 @@ def protein_split_dataset(df, fold_seed, frac):
     Split by protein
     """
     _, val_frac, test_frac = frac
-    gene_drop = df['Target Sequence'].drop_duplicates().sample(frac=test_frac, replace=False, 
+    gene_drop = df['Target Sequence'].drop_duplicates().sample(frac=test_frac, replace=False,
                                                                random_state=fold_seed).values
     test = df[df['Target Sequence'].isin(gene_drop)]
     train_val = df[~df['Target Sequence'].isin(gene_drop)]
     
-    gene_drop_val = train_val['Target Sequence'].drop_duplicates().sample(frac=val_frac / (1 - test_frac), 
+    gene_drop_val = train_val['Target Sequence'].drop_duplicates().sample(frac=val_frac / (1 - test_frac),
                                                                 replace=False, random_state=fold_seed).values
     val = train_val[train_val['Target Sequence'].isin(gene_drop_val)]
     train = train_val[~train_val['Target Sequence'].isin(gene_drop_val)]

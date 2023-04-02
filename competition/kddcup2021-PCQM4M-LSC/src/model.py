@@ -60,7 +60,7 @@ class PretrainBondLength(paddle.nn.Layer):
             L.batch_norm_1d(hidden_size // 4),
             nn.Swish(),
             L.Linear(hidden_size//4, 1)
-        ) 
+        )
         self.loss = nn.SmoothL1Loss(reduction='none')
 
     def forward(self, node_repr, bond_length_index, bond_length, mask):
@@ -76,7 +76,7 @@ class PretrainBondLength(paddle.nn.Layer):
         loss = self.loss(bond_length_pred,
                          bond_length)
         loss = paddle.mean(loss)
-        return loss    
+        return loss
     
 class MeanGlobalPool(paddle.nn.Layer):
     def __init__(self, pool_type=None):
@@ -86,7 +86,7 @@ class MeanGlobalPool(paddle.nn.Layer):
 
     def forward(self, graph, nfeat):
         sum_pooled = self.pool_fun(graph, nfeat)
-        ones_sum_pooled = self.pool_fun(graph, 
+        ones_sum_pooled = self.pool_fun(graph,
                 paddle.ones_like(nfeat, dtype="float32"))
         pooled = sum_pooled / ones_sum_pooled
         return pooled
@@ -242,7 +242,7 @@ class MLP(paddle.nn.Layer):
         self.atom_encoder = getattr(ME, self.config.atom_enc_type, ME.AtomEncoder)(
                 emb_dim=self.emb_dim)
 
-        self.mlp = L.MLP([self.emb_dim, 2 * self.emb_dim, self.emb_dim], 
+        self.mlp = L.MLP([self.emb_dim, 2 * self.emb_dim, self.emb_dim],
                        norm=self.config.norm,
                        last_lin=True)
 

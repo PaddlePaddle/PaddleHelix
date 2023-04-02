@@ -51,8 +51,8 @@ if args.load_epoch > 0:
 
 
 scheduler = paddle.optimizer.lr.ExponentialDecay(
-    learning_rate=config['lr'], 
-    gamma=config['anneal_rate'], 
+    learning_rate=config['lr'],
+    gamma=config['anneal_rate'],
     verbose=True)
 clip = paddle.nn.ClipGradByNorm(clip_norm=config['clip_norm'])
 optimizer = paddle.optimizer.Adam(
@@ -79,8 +79,8 @@ for epoch in range(args.epoch):
         res = model(batch, beta)
         loss = res['loss']
         kl_div = res['kl_div']
-        wacc = res['word_acc'] 
-        tacc = res['topo_acc'] 
+        wacc = res['word_acc']
+        tacc = res['topo_acc']
         sacc = res['assm_acc']
         loss.backward()
         optimizer.step()

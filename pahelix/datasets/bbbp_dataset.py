@@ -99,7 +99,7 @@ def load_bbbp_dataset(data_path, task_names=None):
         if smiles_list[i] is None:
             continue
         data = {}
-        data['smiles'] = smiles_list[i]        
+        data['smiles'] = smiles_list[i]
         data['label'] = labels.values[i]
         data_list.append(data)
     dataset = InMemoryDataset(data_list)

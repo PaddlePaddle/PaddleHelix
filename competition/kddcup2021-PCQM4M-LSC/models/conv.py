@@ -140,11 +140,11 @@ class GNNVirt(paddle.nn.Layer):
 
         for layer in range(self.config.num_layers - 1):
             self.mlp_virtualnode_list.append(
-                    nn.Sequential(L.Linear(self.config.emb_dim, self.config.emb_dim), 
-                        L.batch_norm_1d(self.config.emb_dim), 
+                    nn.Sequential(L.Linear(self.config.emb_dim, self.config.emb_dim),
+                        L.batch_norm_1d(self.config.emb_dim),
                         nn.Swish(),
-                        L.Linear(self.config.emb_dim, self.config.emb_dim), 
-                        L.batch_norm_1d(self.config.emb_dim), 
+                        L.Linear(self.config.emb_dim, self.config.emb_dim),
+                        L.batch_norm_1d(self.config.emb_dim),
                         nn.Swish())
                     )
 
@@ -255,11 +255,11 @@ class JuncGNNVirt(paddle.nn.Layer):
 
         for layer in range(self.num_layers - 1):
             self.mlp_virtualnode_list.append(
-                    nn.Sequential(L.Linear(self.emb_dim, self.emb_dim), 
-                        L.batch_norm_1d(self.emb_dim), 
+                    nn.Sequential(L.Linear(self.emb_dim, self.emb_dim),
+                        L.batch_norm_1d(self.emb_dim),
                         nn.Swish(),
-                        L.Linear(self.emb_dim, self.emb_dim), 
-                        L.batch_norm_1d(self.emb_dim), 
+                        L.Linear(self.emb_dim, self.emb_dim),
+                        L.batch_norm_1d(self.emb_dim),
                         nn.Swish())
                     )
 

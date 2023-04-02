@@ -585,8 +585,8 @@ def mol_to_graph_data(mol):
         return None
 
     atom_id_names = [
-        "atomic_num", "chiral_tag", "degree", "explicit_valence", 
-        "formal_charge", "hybridization", "implicit_valence", 
+        "atomic_num", "chiral_tag", "degree", "explicit_valence",
+        "formal_charge", "hybridization", "implicit_valence",
         "is_aromatic", "total_numHs",
     ]
     bond_id_names = [

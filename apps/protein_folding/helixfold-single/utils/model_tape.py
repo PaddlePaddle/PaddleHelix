@@ -46,13 +46,13 @@ class RunTapeModel(nn.Layer):
 
         # channel_num = {k: v.shape[-1] for k, v in self.batch.items()}
         # pylint: disable=
-        channel_num = {'aatype': 106, 'residue_index': 106, 'seq_length': 1, 
-            'is_distillation': 1, 'seq_mask': 106, 'msa_mask': 106, 
-            'msa_row_mask': 512, 'random_crop_to_size_seed': 2, 
-            'atom14_atom_exists': 14, 'residx_atom14_to_atom37': 14, 
-            'residx_atom37_to_atom14': 37, 'atom37_atom_exists': 37, 
-            'extra_msa': 106, 'extra_msa_mask': 106, 'extra_msa_row_mask': 1024, 
-            'bert_mask': 106, 'true_msa': 106, 'extra_has_deletion': 106, 
+        channel_num = {'aatype': 106, 'residue_index': 106, 'seq_length': 1,
+            'is_distillation': 1, 'seq_mask': 106, 'msa_mask': 106,
+            'msa_row_mask': 512, 'random_crop_to_size_seed': 2,
+            'atom14_atom_exists': 14, 'residx_atom14_to_atom37': 14,
+            'residx_atom37_to_atom14': 37, 'atom37_atom_exists': 37,
+            'extra_msa': 106, 'extra_msa_mask': 106, 'extra_msa_row_mask': 1024,
+            'bert_mask': 106, 'true_msa': 106, 'extra_has_deletion': 106,
             'extra_deletion_value': 106, 'msa_feat': 49, 'target_feat': 22}
         self.alphafold = modules.AlphaFold(channel_num, af2_model_config.model)
 
@@ -64,11 +64,11 @@ class RunTapeModel(nn.Layer):
         encoder_model = ProteinEncoderModel(self.tape_model_config, name='protein')
         self.tape_model = ProteinModel(encoder_model, self.tape_model_config)
         self.tape_single_linear = nn.Linear(
-                self.tape_model_config.hidden_size, 
+                self.tape_model_config.hidden_size,
                 self.af2_model_config.model.embeddings_and_evoformer.msa_channel)
         weight_out_dim = self.model_config.last_n_weight * self.tape_model_config.head_num
         self.tape_pair_linear = nn.Linear(
-                weight_out_dim, 
+                weight_out_dim,
                 self.af2_model_config.model.embeddings_and_evoformer.pair_channel)
 
     def _create_tape_input(self, batch):
@@ -95,7 +95,7 @@ class RunTapeModel(nn.Layer):
         tape_input = self._create_tape_input(batch)
         tape_results = self.tape_model.model.encoder_model.encoder_model(
                 tape_input['sequence'], tape_input['position'],
-                return_representations=True, return_last_n_weight=self.model_config.last_n_weight)    
+                return_representations=True, return_last_n_weight=self.model_config.last_n_weight)
         num_recycle = batch['feat']['aatype'].shape[1]
         tape_results = tree_map(lambda x: _insert_recycle_dim(x, num_recycle), tape_results)
         if self.freeze_tape and batch['cur_step'] < self.model_config.freeze_tape_step:

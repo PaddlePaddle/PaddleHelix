@@ -59,10 +59,10 @@ class MolTransModel(nn.Sequential):
 
         # Enhanced embeddings
         self.drug_emb = EnhancedEmbedding(self.input_drug_dim, self.emb_size, self.drug_max_seq, self.dropout_ratio)
-        self.target_emb = EnhancedEmbedding(self.input_target_dim, self.emb_size, self.target_max_seq, 
+        self.target_emb = EnhancedEmbedding(self.input_target_dim, self.emb_size, self.target_max_seq,
                                              self.dropout_ratio)
         # Encoder module
-        self.encoder = EncoderModule(self.layer_size, self.hidden_size, self.interm_size, self.num_attention_heads, 
+        self.encoder = EncoderModule(self.layer_size, self.hidden_size, self.interm_size, self.num_attention_heads,
                                       self.attention_dropout_ratio, self.hidden_dropout_ratio)
         # Cross information
         self.interaction_cnn = nn.Conv2D(1, 3, 3, padding=1) # Conv2D
@@ -157,9 +157,9 @@ class LayerNorm(nn.Layer):
         Initialization
         """
         super(LayerNorm, self).__init__()
-        self.beta = paddle.create_parameter(shape=[hidden_size], dtype="float32", 
+        self.beta = paddle.create_parameter(shape=[hidden_size], dtype="float32",
             default_initializer = nn.initializer.Assign(paddle.zeros([hidden_size], "float32")))
-        self.gamma = paddle.create_parameter(shape=[hidden_size], dtype="float32", 
+        self.gamma = paddle.create_parameter(shape=[hidden_size], dtype="float32",
             default_initializer = nn.initializer.Assign(paddle.ones([hidden_size], "float32")))
         self.variance_epsilon = variance_epsilon
 
@@ -177,7 +177,7 @@ class EncoderModule(nn.Layer):
     """
     Encoder Module with multiple layers
     """
-    def __init__(self, layer_size, hidden_size, interm_size, num_attention_heads, 
+    def __init__(self, layer_size, hidden_size, interm_size, num_attention_heads,
                  attention_dropout_ratio, hidden_dropout_ratio):
         """
         Initialization
@@ -318,7 +318,7 @@ class SelfAttention(nn.Layer):
         super(SelfAttention, self).__init__()
         if hidden_size % num_attention_heads != 0:
             raise ValueError(
-                 "The hidden size (%d) is not a product of the number of attention heads (%d)" % 
+                 "The hidden size (%d) is not a product of the number of attention heads (%d)" %
                  (hidden_size, num_attention_heads))
         self.num_attention_heads = num_attention_heads
         self.head_size = int(hidden_size / num_attention_heads)

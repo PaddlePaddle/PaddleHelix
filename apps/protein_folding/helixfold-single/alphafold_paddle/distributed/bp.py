@@ -32,13 +32,13 @@ class BroadcastGrad(PyLayer):
     """ A PyLayer Op broadcast gradient in backward stage """
     @staticmethod
     def forward(ctx, input, src):
-        """ return input directly """ 
+        """ return input directly """
         ctx.src = src
         return input.clone()
 
     @staticmethod
     def backward(ctx, grad_output):
-        """ broadcast grad form src """ 
+        """ broadcast grad form src """
         broadcast(grad_output, ctx.src)
         return grad_output.clone()
 

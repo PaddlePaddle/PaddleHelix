@@ -35,7 +35,7 @@ paddle.seed(10)
 paddle.device.set_device("gpu")
 
 class Data_Encoder_flow(Dataset):
-    def __init__(self, X1_index, X2_index,Y,data):        
+    def __init__(self, X1_index, X2_index,Y,data):
         super(Data_Encoder_flow, self).__init__()
         self.X1_index = X1_index
         self.X2_index = X2_index
@@ -43,9 +43,9 @@ class Data_Encoder_flow(Dataset):
         self.data = data
 
     def __len__(self):
-        return len(self.X1_index)       
+        return len(self.X1_index)
     
-    def __getitem__(self, idx):   
+    def __getitem__(self, idx):
 
         return_x1_index = self.X1_index[idx]
         return_x2_index = self.X2_index[idx]
@@ -82,9 +82,9 @@ class Data_test(Dataset):
         self.max_len = max([len(i) for i in self.test_index])
 
     def __len__(self):
-        return len(self.test_index)       
+        return len(self.test_index)
     
-    def __getitem__(self, idx):  
+    def __getitem__(self, idx):
 
         return_test_index = self.test_index[idx]
         return_data = self.processed_data.iloc[return_test_index,:]
@@ -93,7 +93,7 @@ class Data_test(Dataset):
         
         # get scores
         return_y= return_data['Label'].values.astype('float32')
-        return_y = paddle.to_tensor(return_y)   
+        return_y = paddle.to_tensor(return_y)
         # get featueres
         return_d = return_data['SMILES'].values
         return_t = return_data['Target Sequence'].values
@@ -101,8 +101,8 @@ class Data_test(Dataset):
         #Encode Label
         return_d = [encodeDrug(data_d,drug_dic) for data_d in return_d]
         return_t = [encodePro(data_t,pro_dic) for data_t in return_t]
-        return_d = paddle.to_tensor(return_d) 
-        return_t = paddle.to_tensor(return_t) 
+        return_d = paddle.to_tensor(return_d)
+        return_t = paddle.to_tensor(return_t)
 
         # pad the dataset
         if self.max_len != return_data.shape[0]:
@@ -196,20 +196,20 @@ def run(args):
         
         ###### get val/test dataloader
         val_index = []
-        for qid in val_keys:    
-            val_index.append(qid_doc_map_val[qid])      
+        for qid in val_keys:
+            val_index.append(qid_doc_map_val[qid])
         val_dataset = Data_test(val_index,val_data)
         val_dataloader = paddle.io.DataLoader(val_dataset, batch_size=args.test_batch_size, shuffle=True)
 
 
         test_index = []
-        for qid in test_keys:    
-            test_index.append(qid_doc_map_test[qid])        
+        for qid in test_keys:
+            test_index.append(qid_doc_map_test[qid])
         test_dataset = Data_test(test_index,test_data)
         test_dataloader = paddle.io.DataLoader(test_dataset, batch_size=args.test_batch_size, shuffle=True)
 
 
-        # Load model 
+        # Load model
         model = Model()
 
         if args.is_parallel == 1:
@@ -232,8 +232,8 @@ def run(args):
             len_train = len(train_x1_index)
             temp = len(train_data)
             if args.is_mixed:
-                mixed_x1_index = [i + temp for i in mixed_x1_index] 
-                mixed_x2_index = [i + temp for i in mixed_x2_index] 
+                mixed_x1_index = [i + temp for i in mixed_x1_index]
+                mixed_x2_index = [i + temp for i in mixed_x2_index]
 
                 train_x1_index = train_x1_index + mixed_x1_index
                 train_x2_index = train_x2_index + mixed_x2_index
@@ -279,11 +279,11 @@ def run(args):
             print('take time {}'.format(end_time-start_time))
             print('epoch {}: loss: {} '.format(epoch,np.mean(LOSS)))
 
-            # validation   
-            print('validation......')     
+            # validation
+            print('validation......')
             val_average_CI, val_weighted_CI = model_eval(model,val_dataloader)
             # test
-            print('test......') 
+            print('test......')
             test_average_CI, test_weighted_CI = model_eval(model,test_dataloader)
 
 
@@ -312,7 +312,7 @@ def run(args):
 
                     text_file.write("test Average CI is {}".format(test_average_CI) + '\n')
                     text_file.write("test weighted CI is {}".format(test_weighted_CI) + '\n')
-                    text_file.write('##############################################' + '\n') 
+                    text_file.write('##############################################' + '\n')
 
         print('###############################################################')
 

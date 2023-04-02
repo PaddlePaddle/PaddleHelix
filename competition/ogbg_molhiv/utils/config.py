@@ -67,7 +67,7 @@ def load_config(config_file):
             config = yaml.load(f, Loader=yaml.FullLoader)
         else:
             config = yaml.load(f)
-    return config 
+    return config
 
 def create_necessary_dirs(config):
     """Create some necessary directories to save some important files.
