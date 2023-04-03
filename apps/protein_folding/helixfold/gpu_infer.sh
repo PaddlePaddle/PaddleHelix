@@ -17,15 +17,15 @@ export FLAGS_call_stack_level=2
 # export FLAGS_use_system_allocator=1
 
 DATA_DIR="/root/paddlejob/workspace/env_run/output"
-# fasta_file="$root_path/demo_data/demo_infer/7XJT.fasta"          # 336 
-# fasta_file="$root_path/demo_data/demo_infer/6LTH.fasta"          # 2285 
-fasta_file="$root_path/demo_data/demo_infer/A0A1L7F979.fasta"    # 4096
-# fasta_file="$root_path/demo_data/demo_infer/Q9PU36.fasta"        # 5120
-# fasta_file="$root_path/demo_data/demo_infer/F2ULY7.fasta"          # 6600  
-# fasta_file="$root_path/demo_data/demo_infer/Q03001.fasta"          # 7570 
-# fasta_file="$root_path/demo_data/demo_infer/Q8NF91.fasta"          # 8797 
-# fasta_file="$root_path/demo_data/demo_infer/Q5HPA2.fasta"          # 9439
-# fasta_file="$root_path/demo_data/demo_infer/Q8WXI7.fasta"          # 14507
+# fasta_file="$root_path/demo_data/demo_infer/7XJT.fasta"            # 336AA
+# fasta_file="$root_path/demo_data/demo_infer/6LTH.fasta"            # 2285AA
+fasta_file="$root_path/demo_data/demo_infer/A0A1L7F979.fasta"        # 4096AA
+# fasta_file="$root_path/demo_data/demo_infer/Q9PU36.fasta"          # 5120AA
+# fasta_file="$root_path/demo_data/demo_infer/F2ULY7.fasta"          # 6600AA 
+# fasta_file="$root_path/demo_data/demo_infer/Q03001.fasta"          # 7570AA
+# fasta_file="$root_path/demo_data/demo_infer/Q8NF91.fasta"          # 8797AA
+# fasta_file="$root_path/demo_data/demo_infer/Q5HPA2.fasta"          # 9439AA
+# fasta_file="$root_path/demo_data/demo_infer/Q8WXI7.fasta"          # 14507AA
 
 OUTPUT_DIR="$root_path/demo_data/demo_output"
 log_dir="$root_path/demo_data/casp14_demo/demo_log"
@@ -62,10 +62,9 @@ else
   python_cmd="CUDA_VISIBLE_DEVICES=0 python "
   distributed_flag=""
   DAP_DEGREE=1
-  SUBBATCH_SIZE=1
 
-# Reduce the size of subbatch_size when the gpu memory is not enough 
-# SUBBATCH_SIZE=1
+  # Reduce the size of subbatch_size when the gpu memory is not enough 
+  SUBBATCH_SIZE=1
 fi
 
 $python_cmd run_helixfold.py \
