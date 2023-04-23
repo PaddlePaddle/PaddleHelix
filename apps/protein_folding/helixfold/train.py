@@ -240,18 +240,12 @@ def train(args, cur_step, model, train_data_gen, distill_data_gen, train_config,
     def _forward_with_precision(batch):
         if args.precision == "bf16":
             black_list, white_list = get_custom_amp_list()
-            if args.amp_level == "O2":
-                with paddle.amp.auto_cast(level='O2',
-                                          custom_white_list=white_list,
-                                          custom_black_list=black_list,
-                                          dtype='bfloat16'):
-                    return model(batch)
-            else:
-                with paddle.amp.auto_cast(level='O1',
-                                          custom_white_list=white_list,
-                                          custom_black_list=black_list,
-                                          dtype='bfloat16'):
-                    return model(batch)
+            with paddle.amp.auto_cast(enable=True,
+                                      custom_white_list=white_list,
+                                      custom_black_list=black_list,
+                                      level=args.amp_level,
+                                      dtype='bfloat16'):
+                return model(batch)
         elif args.precision == "fp32":
             return model(batch)
         else:
