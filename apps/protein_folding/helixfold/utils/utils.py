@@ -19,14 +19,48 @@ from os.path import basename
 import numpy as np
 import paddle
 
-def get_bf16_op_list():
+
+def get_custom_amp_list():
     """tbd."""
 
     black_list = {"reduce_sum"}
-    white_list = {"concat", "elementwise_add", "elementwise_div", "elementwise_mul", "elementwise_sub", "fill_any_like", "fill_constant", "gather", "gaussian_random",
-        "softmax", "layer_norm", "log_softmax", "matmul_v2", "p_norm", "py_layer", "relu", "scale", "sigmoid", "slice", "softplus", "split", "sqrt", "square", "stack",
-        "sum", "transpose2", "fused_gate_attention", "dropout_nd"}
+    white_list = {
+        "concat",
+        "dropout_nd",
+        "einsum",
+        "elementwise_add",
+        "elementwise_div",
+        "elementwise_mul",
+        "elementwise_sub",
+        "fill_any_like",
+        "fill_constant",
+        "fused_gate_attention",
+        "gather",
+        "gaussian_random",
+        "layer_norm",
+        "log_softmax",
+        "matmul_v2",
+        "p_norm",
+        "py_layer",
+        "relu",
+        "scale",
+        "sigmoid",
+        "slice",
+        "softmax",
+        "softplus",
+        "split",
+        "split_with_num",
+        "sqrt",
+        "square",
+        "stack",
+        "sum",
+        "transpose2",
+        "unsqueeze2",
+        "unstack",
+        "where"
+    }
     return black_list, white_list
+
 
 def get_model_parameter_size(model):
     """tbd"""

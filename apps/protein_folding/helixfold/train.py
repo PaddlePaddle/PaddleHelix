@@ -30,7 +30,7 @@ from paddle import distributed as dist
 from tensorboardX import SummaryWriter
 
 from utils.utils import get_model_parameter_size, add_to_data_writer, upload_to_hadoop, csv_print
-from utils.utils import get_bf16_op_list
+from utils.utils import get_custom_amp_list
 from utils.metric import ResultsCollect
 from utils.model import RunModel
 from utils.exponential_moving_average import ExponentialMovingAverage, EMA
@@ -53,7 +53,8 @@ def time_me():
     # paddle.device.cuda.synchronize()
     return time.time()
 
-def get_optimizer(opt_config, model):
+
+def get_optimizer(args, opt_config, model):
     if opt_config.grad_clip == 0:
         grad_clip = None
     else:
@@ -72,6 +73,7 @@ def get_optimizer(opt_config, model):
             end_lr=opt_config.lr, 
             verbose=False)
 
+    # Split all the parameters to three groups manually.
     evoformer_params = []
     template_and_pair_transition_params = []
     other_params = []
@@ -82,8 +84,8 @@ def get_optimizer(opt_config, model):
             evoformer_params.append(p)
         else:
             other_params.append(p)
-    parameters = []
 
+    parameters = []
     if args.dap_degree > 1 or args.bp_degree > 1:
         parameters.append({'params': get_fused_params(other_params)})
         parameters.append({'params': get_fused_params(evoformer_params), 'dap': True, 'bp': True})
@@ -91,11 +93,13 @@ def get_optimizer(opt_config, model):
     else:
         parameters.append({'params': get_fused_params(other_params + evoformer_params + template_and_pair_transition_params)})
 
+    multi_precision = (args.precision == "bf16" and args.amp_level == "O2")
     optimizer = paddle.optimizer.Adam(
             learning_rate=lr_scheduler, 
             epsilon=1e-06,
             grad_clip=grad_clip,
-            parameters = parameters
+            parameters=parameters,
+            multi_precision=multi_precision,
         )
     return optimizer, lr_scheduler
 
@@ -235,9 +239,19 @@ def train(args, cur_step, model, train_data_gen, distill_data_gen, train_config,
     # train
     def _forward_with_precision(batch):
         if args.precision == "bf16":
-            black_list, white_list = get_bf16_op_list()
-            with paddle.amp.auto_cast(level='O1', custom_white_list=white_list, custom_black_list=black_list, dtype='bfloat16'):
-                return model(batch)
+            black_list, white_list = get_custom_amp_list()
+            if args.amp_level == "O2":
+                with paddle.amp.auto_cast(level='O2',
+                                          custom_white_list=white_list,
+                                          custom_black_list=black_list,
+                                          dtype='bfloat16'):
+                    return model(batch)
+            else:
+                with paddle.amp.auto_cast(level='O1',
+                                          custom_white_list=white_list,
+                                          custom_black_list=black_list,
+                                          dtype='bfloat16'):
+                    return model(batch)
         elif args.precision == "fp32":
             return model(batch)
         else:
@@ -392,21 +406,22 @@ def main(args):
 
         model.alphafold.set_state_dict(pd_params)
     
-    optimizer, lr_scheduler = get_optimizer(train_config.optimizer, model)
+    if args.precision == "bf16" and args.amp_level == "O2":
+        print(f"args.amp_level : {args.amp_level}")
+        model = paddle.amp.decorate(
+            models=model,
+            level=args.amp_level,
+            dtype='bfloat16',
+            excluded_layers=model.alphafold.alphafold_iteration.heads
+        )
+
+    optimizer, lr_scheduler = get_optimizer(args, train_config.optimizer, model)
     args.grad_clip = train_config.optimizer.grad_clip
 
     # ema = ExponentialMovingAverage(model, 0.999)
     ema = EMA(optimizer._param_groups, 0.999)
     ema.register()
 
-    if args.precision == "bf16" and args.amp_level == "O2":
-        submodel, optimizer = paddle.amp.decorate(
-            models=model.alphafold.alphafold_iteration.evoformer,
-            dtype='bfloat16',
-            optimizers=optimizer,
-            level=args.amp_level)
-        model.alphafold.alphafold_iteration.evoformer = submodel
-        
     ### load dataset
     if not args.only_test:
         train_dataset = AF2Dataset(
@@ -496,6 +511,7 @@ def main(args):
     for _ in range(cur_step):
         lr_scheduler.step()
     logging.info('[Main] Start training.')
+
     while True:
         # reset train log info
         if cur_step == 5:
@@ -507,6 +523,7 @@ def main(args):
         # train
         train(args, cur_step, model, train_data_gen, distill_data_gen, train_config, model_config, \
                 lr_scheduler, optimizer, res_collect, train_logger, ema)
+
         if cur_step % args.log_step == 0:
             train_results = res_collect.get_result()
             train_results['lr'] = lr_scheduler.get_lr()
