@@ -1,19 +1,13 @@
 #!/bin/bash
 
 ENV_NAME='helixfold'
-
-CUDA=11.2
-# PADDLE='.post110'
-
-# Check your cuda version
-# CUDA=10.2
-# PADDLE=''
+CUDA=11.6
 
 # Install py env
 conda update -qy conda \
     && conda create -n ${ENV_NAME} -y -c conda-forge \
-      openmm \
-      cudatoolkit==${CUDA_VERSION} \
+      openmm=7.5.1 \
+      cudatoolkit=11.6 \
       pdbfixer \
       pip \
       python=3.7
@@ -29,6 +23,7 @@ wget -q -P alphafold_paddle/common/ \
 /opt/conda/envs/${ENV_NAME}/bin/python -m pip install --upgrade pip \
     && /opt/conda/envs/${ENV_NAME}/bin/python -m pip install -r requirements.txt
 
-pushd /opt/conda/envs/${ENV_NAME}/lib/python3.7/site-packages/simtk
-rm -rf openmm && ln -s ../openmm
+OPEN_MM_PATCH=$(pwd $0)/openmm.patch
+pushd /opt/conda/envs/${ENV_NAME}/lib/python3.7/site-packages
+patch -p0 < $OPEN_MM_PATCH
 popd

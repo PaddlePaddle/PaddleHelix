@@ -1,11 +1,10 @@
 #!/bin/bash
-source ~/.bashrc
 
 cd $(dirname $0)
 
 root_path="$(pwd)"
 conda activate helixfold
-# python_bin="/opt/compiler/gcc-8.2/lib/ld-linux-x86-64.so.2 --library-path /opt/compiler/gcc-8.2/lib:/usr/lib64:/home/ide/v2/conda/envs/cuda10.1_cudnn7.6.5/lib /home/liulihang/tools/paddle-dev/bin/python"
+
 python_bin="/opt/conda/envs/helixfold/bin/python"
 # python_bin="python3"
 
@@ -18,8 +17,11 @@ LDDT_SCORE_BIN="$root_path/tools/lddt"
 chmod +x $TM_SCORE_BIN
 chmod +x $LDDT_SCORE_BIN
 
-# disable C++ enisum, using python enisum
+# Disable C++ enisum, using python enisum
 export FLAGS_new_einsum=0
+
+# Enable bf16 optimization
+export FLAGS_use_autotune=1
 
 train_af2_single() {
     start_step=0
@@ -79,8 +81,6 @@ train_af2_distributed() {
 
 
 exp_name="$1"
-# exp_name="demo-initial" # model 1
-# exp_name="demo-finetune" # model 1.1.1
 
 mkdir -p debug_log debug_models
 
@@ -98,7 +98,6 @@ mkdir -p debug_log debug_models
         log_step="--log_step=20"
         eval_step="--eval_step=1000"
         save_step="--save_step=1000"
-        # init_model="$root_path/data/af2_pd_params/model_5.pdparams"
         train_af2_single
     fi
 }
@@ -120,7 +119,7 @@ mkdir -p debug_log debug_models
         log_step="--log_step=20"
         eval_step="--eval_step=1000"
         save_step="--save_step=1000"
-        # init_model="$root_path/data/af2_pd_params/model_5.pdparams"
+        # init_model="$root_path/data/pd_params/model_5.pdparams"
         train_af2_single
     fi
 }
@@ -143,7 +142,6 @@ mkdir -p debug_log debug_models
         log_step="--log_step=20"
         eval_step="--eval_step=1000"
         save_step="--save_step=1000"
-        # init_model="$root_path/data/af2_pd_params/model_5.pdparams"
         train_af2_distributed
     fi
 }
@@ -168,7 +166,7 @@ mkdir -p debug_log debug_models
         log_step="--log_step=20"
         eval_step="--eval_step=1000"
         save_step="--save_step=1000"
-        # init_model="$root_path/data/af2_pd_params/model_5.pdparams"
+        # init_model="$root_path/data/pd_params/model_5.pdparams"
         train_af2_distributed
     fi
 }
@@ -191,7 +189,6 @@ mkdir -p debug_log debug_models
         log_step="--log_step=20"
         eval_step="--eval_step=1000"
         save_step="--save_step=1000"
-        # init_model="$root_path/data/af2_pd_params/model_5.pdparams"
         train_af2_distributed
     fi
 }
@@ -216,7 +213,7 @@ mkdir -p debug_log debug_models
         log_step="--log_step=20"
         eval_step="--eval_step=1000"
         save_step="--save_step=1000"
-        # init_model="$root_path/data/af2_pd_params/model_5.pdparams"
+        # init_model="$root_path/data/pd_params/model_5.pdparams"
         train_af2_distributed
     fi
 }
@@ -233,8 +230,8 @@ mkdir -p debug_log debug_models
         train_config="./train_configs/demo.json"
         data_config="./data_configs/demo.json"
         model_name="initial"
-        # init_model="$root_path/data/af2_pd_params/model_5.pdparams"
         precision="bf16"
+        # precision="fp32"
         log_step="--log_step=20"
         eval_step="--eval_step=1000"
         save_step="--save_step=1000"
@@ -255,6 +252,7 @@ mkdir -p debug_log debug_models
         data_config="./data_configs/demo.json"
         model_name="initial"
         precision="bf16"
+        # precision="fp32"
         log_step="--log_step=20"
         eval_step="--eval_step=1000"
         save_step="--save_step=1000"
@@ -275,6 +273,7 @@ mkdir -p debug_log debug_models
         data_config="./data_configs/demo.json"
         model_name="initial"
         precision="bf16"
+        # precision="fp32"
         log_step="--log_step=20"
         eval_step="--eval_step=1000"
         save_step="--save_step=1000"

@@ -145,7 +145,7 @@ class RunModel(object):
                         # 3. add merged param to pd_params
                         pd_params[prefix + '.qkv_w'] = qkv_w
 
-        elif params_path.endswith('.pd'):
+        elif params_path.endswith('.pdparams'):
             logger.info('Load as Paddle model')
             pd_params = paddle.load(params_path)
 

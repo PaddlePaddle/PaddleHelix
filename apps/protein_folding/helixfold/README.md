@@ -1,13 +1,14 @@
 # [HelixFold](https://arxiv.org/abs/2207.05477): An Efficient and Improved Implementation of [AlphaFold 2](https://doi.org/10.1038/s41586-021-03819-2) using [PaddlePaddle](https://github.com/paddlepaddle/paddle)
 
-AlphaFold2 is an accurate protein structure prediction pipeline. [HelixFold](https://arxiv.org/abs/2207.05477) provides an efficient and improved implementation of the complete training and inference pipelines of AlphaFold2 in GPU and DCU. Compared with the computational performance of AlphaFold2 reported in the paper and OpenFold implemented through PyTorch, HelixFold reduces the training time from about 11 days to 7.5 days. Training HelixFold from scratch can achieve competitive accuracy with AlphaFold2.
+AlphaFold2 is an accurate protein structure prediction pipeline. [HelixFold](https://arxiv.org/abs/2207.05477) provides an efficient and improved implementation of the complete training and inference pipelines of AlphaFold2 in GPU and DCU. Compared with the computational performance of AlphaFold2 reported in the paper, OpenFold and Uni-Fold implemented through PyTorch, HelixFold reduces the training time from about 11 days originally to 5.12 days, and only 2.89 days when using hybrid parallelism. Training HelixFold from scratch can achieve competitive accuracy with AlphaFold2.
 
 <p align="center">
-<img src="../../../.github/HelixFold_computational_performance.png" align="middle" height="50%" width="50%" />
-<img src="../../../.github/HelixFold_accuracy.png" align="middle" height="60%" width="60%" />
+<img src="../../../.github/HelixFold_computational_perf.png" align="middle" height="50%" width="50%" />
+<img src="../../../.github/HelixFold_infer_accuracy.png" align="middle" height="60%" width="60%" />
 </p>
 
 ## Instruction
+
 The detailed instructions on running HelixFold in GPU and DCU for training and inference are provided in the following links:
 * [Training in GPU](README_train.md)
 * [Training in DCU](README_DCU.md)
@@ -33,7 +34,12 @@ HelixFold code is licensed under the Apache 2.0 License, which is same as AlphaF
 
 ## Reference
 
-[1] Jumper J, Evans R, Pritzel A, et al. Highly accurate protein structure prediction with AlphaFold[J]. Nature, 2021, 596(7873): 583-589.
+[1] Jumper J, Evans R, Pritzel A, et al. (2021). Highly accurate protein structure prediction with AlphaFold. Nature
+577 (7792), 583–589. 10.1038/s41586-021-03819-2.
+
+[2] Ahdritz,G. et al. (2022). OpenFold: retraining AlphaFold2 yields new insights into its learning mechanisms and capacity for generalization. bioRxiv. 10.1101/2022.11.20.517210.
+
+[3] Li, Z., Liu, X., Chen, W., Shen, F., Bi, H., Ke, G., and Zhang, L. (2022). Uni-Fold: An OpenSource Platform for Developing Protein Folding Models beyond AlphaFold. bioRxiv. 10.1101/2022.08.04.502811.
 
 ## Citation
 

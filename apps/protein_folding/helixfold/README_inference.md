@@ -1,12 +1,22 @@
 # HelixFold Inference
 
+## Environment
+
+To reproduce the results reported in this repo, specific environment settings are required as below. 
+
+- python: 3.7
+- cuda: 11.6
+- cudnn: 8.4.0
+- nccl: 2.14.3
+
 ## Installation
+
 HelixFold depends on [PaddlePaddle](https://github.com/paddlepaddle/paddle).
 Python dependencies available through `pip` is provided in `requirements.txt`. HelixFold also depends on `openmm==7.5.1` and `pdbfixer`, which are only available via `conda`. For producing multiple sequence alignments, `kalign`, the [HH-suite](https://github.com/soedinglab/hh-suite) and `jackhmmer` are also needed. The download scripts require `aria2c`.
 
-We provide a script `setup_env` that setup a `conda` environment and installs all dependencies. You can change the name of the environment and CUDA version in `setup_env`. Run:
+We provide a script `setup_env` that setup a `conda` environment and installs all dependencies. You can change the name of the environment and CUDA version in `setup_env`. Locate to the directory of `helixfold` and run:
 ```bash
-wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/HelixFold/paddlepaddle_gpu-2.4.1-cp37-cp37m-linux_x86_64.whl
+wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/HelixFold/paddlepaddle_gpu-0.0.0.post116-cp37-cp37m-linux_x86_64.whl
 sh setup_env
 conda activate helixfold # activate the conda environment
 ```
@@ -14,9 +24,8 @@ Note: If you have a different version of python3 and cuda, please refer to [here
 
 In order to run scripts with DAP/BP/DP-DAP-BP mode, you also need to install `ppfleetx`. Please refer to [here](https://github.com/PaddlePaddle/PaddleFleetX/tree/release/2.4/projects/protein_folding) for more details.
 ```bash
-git clone https://github.com/PaddlePaddle/PaddleFleetX.git
-git checkout release/2.4          # change branch
-python setup.py develop           # install ppfleetx
+wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/HelixFold/ppfleetx-0.0.0-py3-none-any.whl
+python -m pip install ppfleetx-0.0.0-py3-none-any.whl      # install ppfleetx
 ```
 
 ## Usage
