@@ -16,7 +16,7 @@ export FLAGS_free_when_no_cache_hit=1
 export FLAGS_call_stack_level=2
 # export FLAGS_use_system_allocator=1
 
-DATA_DIR="/root/paddlejob/workspace/env_run/output"
+DATA_DIR="/root/paddlejob/workspace/env_run/output"                  # path to data directory
 # fasta_file="$root_path/demo_data/demo_infer/7XJT.fasta"            # 336AA
 # fasta_file="$root_path/demo_data/demo_infer/6LTH.fasta"            # 2285AA
 fasta_file="$root_path/demo_data/demo_infer/A0A1L7F979.fasta"        # 4096AA
@@ -27,9 +27,9 @@ fasta_file="$root_path/demo_data/demo_infer/A0A1L7F979.fasta"        # 4096AA
 # fasta_file="$root_path/demo_data/demo_infer/Q5HPA2.fasta"          # 9439AA
 # fasta_file="$root_path/demo_data/demo_infer/Q8WXI7.fasta"          # 14507AA
 
-OUTPUT_DIR="$root_path/demo_data/demo_output"
-log_dir="$root_path/demo_data/casp14_demo/demo_log"
-MODELS="model_5"   # 'model_1', 'model_2', 'model_3', 'model_4', 'model_5', 'model_5_align'
+OUTPUT_DIR="$root_path/demo_data/demo_output"                        # path to outputs directory
+log_dir="$root_path/demo_data/casp14_demo/demo_log"                  # path to log directory
+MODELS="model_5"   # 'model_1', 'model_2', 'model_3', 'model_4', 'model_5'
 
 # Use DAP
 distributed=true
