@@ -28,6 +28,12 @@ def get_bf16_op_list():
         "sum", "transpose2", "fused_gate_attention", "dropout_nd"}
     return black_list, white_list
 
+def get_structure_module_bf16_op_list():
+    black_list = {"reduce_sum", "elementwise_add", "elementwise_div", "elementwise_mul", "elementwise_sub", "fill_any_like", "fill_constant", "gaussian_random", "uniform_random",
+        "softmax", "log_softmax",  "p_norm", "py_layer", "scale", "sigmoid", "softplus", "sqrt", "square", "linspace", "squared_l2_norm", "reduce_mean", "reduce_min", "reduce_prod", "sum", "fused_gate_attention", "dropout_nd", "clip"}
+    white_list = {"layer_norm", "relu", "split", "stack", "gather", "concat", "transpose2", "matmul_v2", "unsqueeze2", "squeeze2", "tile", "slice", "one_hot_v2", "reshape2", "elementwise_max", "elementwise_min", "equal", "greater_than", "less_than", "reduce_max", "eye", "bitwise_or", "abs", "reduce_max", }
+    return black_list, white_list 
+
 def get_model_parameter_size(model):
     """tbd"""
     size = 0

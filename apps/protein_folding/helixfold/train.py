@@ -35,7 +35,7 @@ from utils.metric import ResultsCollect
 from utils.model import RunModel
 from utils.exponential_moving_average import ExponentialMovingAverage, EMA
 from utils.dataset import LoopedBatchSampler, AF2Dataset, AF2TestDataset, AF2DistillDataset
-from utils.param_fuse import get_fused_params
+from utils.param_fuse import get_fused_param_groups
 from utils.clip_grad import clip_grad_norm_
 from utils.init_env import init_seed, init_distributed_env
 from utils.misc import TrainLogger, set_logging_level
@@ -72,24 +72,7 @@ def get_optimizer(opt_config, model):
             end_lr=opt_config.lr, 
             verbose=False)
 
-    evoformer_params = []
-    template_and_pair_transition_params = []
-    other_params = []
-    for name, p in model.named_parameters():
-        if 'template_pair_stack' in name or 'pair_transition' in name:
-            template_and_pair_transition_params.append(p)
-        elif 'evoformer_iteration' in name or 'extra_msa_stack' in name:
-            evoformer_params.append(p)
-        else:
-            other_params.append(p)
-    parameters = []
-
-    if args.dap_degree > 1 or args.bp_degree > 1:
-        parameters.append({'params': get_fused_params(other_params)})
-        parameters.append({'params': get_fused_params(evoformer_params), 'dap': True, 'bp': True})
-        parameters.append({'params': get_fused_params(template_and_pair_transition_params), 'dap': True})
-    else:
-        parameters.append({'params': get_fused_params(other_params + evoformer_params + template_and_pair_transition_params)})
+    parameters = get_fused_param_groups(model, args.dap_degree > 1 or args.bp_degree > 1)
 
     optimizer = paddle.optimizer.Adam(
             learning_rate=lr_scheduler, 

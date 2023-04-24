@@ -511,3 +511,23 @@ def get_fused_params(params):
         fused_param = flatten_dense_tensors(parameters)
         fused_params.append(fused_param)
     return fused_params
+
+def get_fused_param_groups(model, is_dist_model):
+    evoformer_params = []
+    template_and_pair_transition_params = []
+    other_params = []
+    for name, p in model.named_parameters():
+        if 'template_pair_stack' in name or 'pair_transition' in name:
+            template_and_pair_transition_params.append(p)
+        elif 'evoformer_iteration' in name or 'extra_msa_stack' in name:
+            evoformer_params.append(p)
+        else:
+            other_params.append(p)
+    parameters = []
+    if is_dist_model:
+        parameters.append({'params': get_fused_params(other_params)})
+        parameters.append({'params': get_fused_params(evoformer_params), 'dap': True, 'bp': True})
+        parameters.append({'params': get_fused_params(template_and_pair_transition_params), 'dap': True})
+    else:
+        parameters.append({'params': get_fused_params(other_params + evoformer_params + template_and_pair_transition_params)})
+    return parameters
