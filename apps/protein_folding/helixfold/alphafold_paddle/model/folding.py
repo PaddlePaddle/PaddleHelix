@@ -459,6 +459,7 @@ class StructureModule(nn.Layer):
         single_act = self.initial_projection(single_act)
         pair_act = self.pair_layer_norm(representations['pair'])
 
+        # if not self.training and self.global_config.low_memory is True:
         if not self.training:
             pair_act_cpu = pair_act.cpu()
             del pair_act
@@ -469,7 +470,7 @@ class StructureModule(nn.Layer):
         activations = {'act': single_act, 'affine': affine.to_tensor()}
         for _ in range(self.config.num_layer):
             activations, output = self.fold_iteration(
-                activations, init_single_act, pair_act if self.training else pair_act_cpu,
+                activations, init_single_act, pair_act_cpu if not self.training else pair_act,
                 seq_mask, batch['aatype'])
             outputs.append(output)
 

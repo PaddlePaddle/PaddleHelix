@@ -60,6 +60,16 @@ CONFIG_DIFFS = {
     'model_5': {
         # Jumper et al. (2021) Suppl. Table 5, Model 1.2.3
         'model.global_config.subbatch_size': 48,
+        'model.global_config.low_memory': True,   # True if infer long protein
+    },
+    'model_5_align': {
+        # Jumper et al. (2021) Suppl. Table 5, Model 1.2.3
+        'model.global_config.subbatch_size': 48,
+        'model.global_config.low_memory': True,
+        'data.common.num_recycle': 3,
+        'model.num_recycle': 3,
+        'data.eval.max_msa_clusters': 256,
+        'data.common.max_extra_msa': 1152,
     },
     'initial_model_5_dcu': {
         'data.eval.max_msa_clusters': 128,
@@ -393,9 +403,10 @@ CONFIG = ml_collections.ConfigDict({
             'subbatch_size': 48,
             'use_remat': False,
             'zero_init': True,
+            'low_memory': False,
             'fuse_attention': True,
             'use_dropout_nd': True,
-            'outer_product_mean_position': 'origin', # 'origin' or 'middle', 'first', 'end'
+            'outer_product_mean_position': 'origin', # 'origin' or 'middle', 'first', 'end', set 'end' if use BP
         },
         'heads': {
             'distogram': {
