@@ -211,7 +211,7 @@ Note that such demo for T1026 and T1037 can work without downloading large MSA d
 sh gpu_infer_long.sh
 ```
 
-Note that predicting ultra-long monomer protein is only supported by model parameter `model_5` with setting `enable_low_memory` currently.
+Note that predicting ultra-long monomer protein is only supported by model parameter `model_5` with setting `enable_low_memory` on 8 A100 80G GPUs currently.
 
 ## Copyright
 
