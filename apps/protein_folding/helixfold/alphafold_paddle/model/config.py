@@ -60,7 +60,7 @@ CONFIG_DIFFS = {
     'model_5': {
         # Jumper et al. (2021) Suppl. Table 5, Model 1.2.3
         'model.global_config.subbatch_size': 48,
-        'model.global_config.low_memory': True,   # True if infer long protein
+        # 'model.global_config.low_memory': True,   # True if infer long protein
     },
     'model_5_align': {
         # Jumper et al. (2021) Suppl. Table 5, Model 1.2.3

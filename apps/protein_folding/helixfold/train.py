@@ -312,6 +312,8 @@ def main(args):
     model_config = config.model_config(args.model_name)
     if args.bp_degree > 1 or args.dap_degree > 1:
         model_config.model.global_config.dist_model = True
+    if args.bp_degree > 1:
+        model_config.model.global_config.outer_product_mean_position = 'end'
     # print(f'>>> model_config:\n{model_config}')
 
     model = RunModel(train_config, model_config)

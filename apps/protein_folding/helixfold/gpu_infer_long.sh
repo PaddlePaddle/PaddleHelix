@@ -2,7 +2,7 @@
 
 cd "$(dirname $0)"
 root_path="$(pwd)"
-demo=$1
+# demo=$1
 
 export LD_LIBRARY_PATH=/usr/local/cuda/compat:$LD_LIBRARY_PATH
 export PYTHONPATH=$root_path:$PYTHONPATH
@@ -17,10 +17,19 @@ export FLAGS_call_stack_level=2
 # export FLAGS_use_system_allocator=1
 
 DATA_DIR="/root/paddlejob/workspace/env_run/output"                  # path to data directory
-fasta_file="$root_path/demo_data/casp14_demo/fasta/${demo}.fasta"    # path to fasta file
-OUTPUT_DIR="$root_path/demo_data/casp14_demo/output"                 # path to outputs directory
+# fasta_file="$root_path/demo_data/demo_infer/7XJT.fasta"            # 336AA
+# fasta_file="$root_path/demo_data/demo_infer/6LTH.fasta"            # 2285AA
+# fasta_file="$root_path/demo_data/demo_infer/A0A1L7F979.fasta"      # 4096AA
+# fasta_file="$root_path/demo_data/demo_infer/Q9PU36.fasta"          # 5120AA
+fasta_file="$root_path/demo_data/demo_infer/F2ULY7.fasta"          # 6600AA 
+# fasta_file="$root_path/demo_data/demo_infer/Q03001.fasta"          # 7570AA
+# fasta_file="$root_path/demo_data/demo_infer/Q8NF91.fasta"          # 8797AA
+# fasta_file="$root_path/demo_data/demo_infer/Q5HPA2.fasta"          # 9439AA
+# fasta_file="$root_path/demo_data/demo_infer/Q8WXI7.fasta"          # 14507AA
+
+OUTPUT_DIR="$root_path/demo_data/demo_output"                        # path to outputs directory
 log_dir="$root_path/demo_data/casp14_demo/demo_log"                  # path to log directory
-MODELS="model_5"   # 'model_1', 'model_2', 'model_3', 'model_4', 'model_5'
+MODELS="model_5"
 
 # Use DAP
 distributed=true
@@ -75,6 +84,7 @@ $python_cmd run_helixfold.py \
   --model_names=${MODELS} \
   --output_dir=${OUTPUT_DIR} \
   --disable_amber_relax \
+  --enable_low_memory \
   --seed 2022 \
   --preset='full_dbs' \
   --random_seed=0 \

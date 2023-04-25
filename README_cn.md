@@ -17,7 +17,7 @@
 `2022.07.29` 螺旋桨团队开源了HelixFold-Single的代码，HelixFold-Single是一个**不依赖于MSA的**蛋白质结构预测流程，仅仅需要一级序列作为输入就可以提供**秒级别的蛋白质结构预测**。详情参见[论文](https://arxiv.org/abs/2207.13921)和[代码](./apps/protein_folding/helixfold-single)。欢迎到[PaddleHelix网站](https://paddlehelix.baidu.com/app/drug/protein-single/forecast
 )去试用结构预测的在线服务。
 
-`2022.07.18` 螺旋桨团队全面开源HelixFold训练和推理代码，**完整训练天数从11天优化至5.12天**。详情参见[论文](https://arxiv.org/abs/2207.05477)和[代码](./apps/protein_folding/helixfold)。
+`2022.07.18` 螺旋桨团队全面开源HelixFold训练和推理代码，**完整训练天数从11天优化至5.12天，现在支持预测超长单体蛋白 (约6600 AA)**。详情参见[论文](https://arxiv.org/abs/2207.05477)和[代码](./apps/protein_folding/helixfold)。
 
 `2022.07.07` 论文"BatchDTA: implicit batch alignment enhances deep learning-based drug–target affinity estimation"发表于期刊**Briefings in Bioinformatics**。详情参见[论文](https://academic.oup.com/bib/advance-article-abstract/doi/10.1093/bib/bbac260/6632927)和[代码](./apps/drug_target_interaction/batchdta)。
 
