@@ -199,8 +199,8 @@ class AlphaFold(nn.Layer):
 
             emb_config = self.config.embeddings_and_evoformer
 
-            if not self.training: # for inference
-            # if not self.training and self.global_config.low_memory is True:
+            # if not self.training: # for inference
+            if not self.training and self.global_config.low_memory is True:
                 prev = {
                     'prev_pos': paddle.tile(
                         zeros_bn[..., None, None],
@@ -235,8 +235,8 @@ class AlphaFold(nn.Layer):
             for recycle_idx in range(num_iter):
                 ret = _run_single_recycling(prev, recycle_idx, compute_loss=False)
                 prev = _get_prev(ret)
-                if not self.training:
-                # if not self.training and self.global_config.low_memory is True:
+                # if not self.training:
+                if not self.training and self.global_config.low_memory is True:
                     del ret
                     gc.collect()
 
@@ -390,8 +390,8 @@ class AlphaFoldIteration(nn.Layer):
 
             return ret, total_loss
 
-        if not self.training:
-        # if not self.training and self.global_config.low_memory is True:
+        # if not self.training:
+        if not self.training and self.global_config.low_memory is True:
             black_list, white_list = get_structure_module_bf16_op_list()
             with paddle.amp.auto_cast(level='O1', custom_white_list=white_list, custom_black_list=black_list, dtype='bfloat16'):
                 ret, total_loss = _forward_heads(representations, ret, batch0)
@@ -1127,13 +1127,13 @@ class DistogramHead(nn.Layer):
         breaks = paddle.tile(breaks[None, :],
                             repeat_times=[logits.shape[0], 1])
 
-        if not self.training:
-        # if not self.training and self.global_config.low_memory is True:
+        # if not self.training:
+        if not self.training and self.global_config.low_memory is True:
             logits_cpu = logits.cpu()
             del logits
         return {
             # 'logits': logits,
-            'logits': logits_cpu if not self.training else logits, 
+            'logits': logits_cpu if not self.training and self.global_config.low_memory is True else logits, 
             'bin_edges': breaks}
 
     def loss(self, value, batch):

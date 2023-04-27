@@ -23,7 +23,7 @@ log_dir="$root_path/demo_data/casp14_demo/demo_log"                  # path to l
 MODELS="model_5"   # 'model_1', 'model_2', 'model_3', 'model_4', 'model_5'
 
 # Use DAP
-distributed=true
+distributed=false
 
 # 'fp32' or 'bf16'
 PRECISION='bf16'
@@ -45,7 +45,7 @@ then
   DAP_DEGREE=8
 
   # Reduce the size of subbatch_size when the gpu memory is not enough 
-  SUBBATCH_SIZE=32
+  SUBBATCH_SIZE=384
 else
   # Enable unified memory for EXTREMELY LONG SEQUENCE PROTEIN
   # export FLAGS_use_cuda_managed_memory=true
@@ -55,7 +55,7 @@ else
   DAP_DEGREE=1
 
   # Reduce the size of subbatch_size when the gpu memory is not enough 
-  SUBBATCH_SIZE=1
+  SUBBATCH_SIZE=384
 fi
 
 $python_cmd run_helixfold.py \
