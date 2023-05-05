@@ -62,6 +62,64 @@ def get_custom_amp_list():
     return black_list, white_list
 
 
+def get_structure_module_bf16_op_list():
+    black_list = {
+        "clip",
+        "dropout_nd",
+        "elementwise_add",
+        "elementwise_div",
+        "elementwise_mul",
+        "elementwise_sub",
+        "fill_any_like",
+        "fill_constant",
+        "fused_gate_attention",
+        "gaussian_random",
+        "linspace",
+        "log_softmax",
+        "p_norm",
+        "py_layer",
+        "reduce_mean",
+        "reduce_min",
+        "reduce_prod",
+        "reduce_sum",
+        "scale",
+        "sigmoid",
+        "softmax",
+        "softplus",
+        "sqrt",
+        "square",
+        "squared_l2_norm",
+        "sum",
+        "uniform_random",
+    }
+    white_list = {
+        "abs",
+        "bitwise_or",
+        "concat",
+        "elementwise_max",
+        "elementwise_min",
+        "equal", 
+        "eye",
+        "gather",
+        "greater_than",
+        "layer_norm",
+        "less_than",
+        "matmul_v2",
+        "one_hot_v2",
+        "reduce_max",
+        "relu",
+        "reshape2",
+        "slice", 
+        "split",
+        "squeeze2",
+        "stack",
+        "transpose2",
+        "unsqueeze2",
+        "tile",
+    }
+    return black_list, white_list 
+
+
 def get_model_parameter_size(model):
     """tbd"""
     size = 0

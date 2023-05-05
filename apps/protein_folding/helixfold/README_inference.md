@@ -16,7 +16,7 @@ Python dependencies available through `pip` is provided in `requirements.txt`. H
 
 We provide a script `setup_env` that setup a `conda` environment and installs all dependencies. You can change the name of the environment and CUDA version in `setup_env`. Locate to the directory of `helixfold` and run:
 ```bash
-wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/HelixFold/paddlepaddle_gpu-0.0.0.post116-cp37-cp37m-linux_x86_64.whl
+wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/HelixFold/paddlepaddle_gpu-0.0.0-cp37-cp37m-linux_x86_64.whl
 sh setup_env
 conda activate helixfold # activate the conda environment
 ```
@@ -202,6 +202,16 @@ sh gpu_infer.sh T1026
 ```
 
 Note that such demo for T1026 and T1037 can work without downloading large MSA datasets, only model parameters are required.
+
+### Running HelixFold for Ultra-Long Monomer Protein Demo
+
+**Ultra-long monomer protein (around 6600 AA) prediction is supported now!** We provide a demo script `gpu_infer_long.sh` for predicting ultra-long monomer protein `F2ULY7` under folder `demo_data/demo_infer`. To run it, you just need to execute following command:
+
+```bash
+sh gpu_infer_long.sh
+```
+
+Note that predicting ultra-long monomer protein is only supported by model parameter `model_5` with setting `enable_low_memory` on 8 A100 80G GPUs currently.
 
 ## Copyright
 

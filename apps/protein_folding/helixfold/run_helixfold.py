@@ -49,6 +49,7 @@ RELAX_EXCLUDE_RESIDUES = []
 RELAX_MAX_OUTER_ITERATIONS = 20
 
 
+@paddle.no_grad()
 def predict_structure(
         fasta_path: str,
         fasta_name: str,
@@ -240,6 +241,10 @@ def main(args):
 
         if args.bp_degree > 1 or args.dap_degree > 1:
             model_config.model.global_config.dist_model = True
+        if args.bp_degree > 1:
+            model_config.model.global_config.outer_product_mean_position = 'end'
+        if args.enable_low_memory:
+            model_config.model.global_config.low_memory = True
         model_runner = model.RunModel(model_name, model_config, model_params)
         model_runners[model_name] = model_runner
 
@@ -353,14 +358,18 @@ if __name__ == '__main__':
     parser.add_argument("--precision", type=str, choices=['fp32', 'bf16'], default='fp32')
     parser.add_argument('--distributed',
                         action='store_true', default=False,
-                        help='Whether to use distributed DAP inference')
+                        help='Whether to use distributed DAP inference.')
     parser.add_argument("--dap_degree", type=int, default=1)
     parser.add_argument("--dap_comm_sync", action='store_true', default=True)
     parser.add_argument("--bp_degree", type=int, default=1)
-    parser.add_argument("--seed", type=int, default=None, help="set seed for reproduce experiment results, None is do not set seed")
+    parser.add_argument("--seed", type=int, default=None, help="set seed for reproduce experiment results, None is do not set seed.")
 
     parser.add_argument('--disable_amber_relax',
-                        action='store_true', default=False)
+                        action='store_true', default=False,
+                        help='Whether to enable relaxation.')
+    parser.add_argument('--enable_low_memory',
+                        action='store_true', default=False,
+                        help='Whether to infer long protein by using low memory.')
     parser.add_argument('--subbatch_size', type=int, default=48)
 
     args = parser.parse_args()
