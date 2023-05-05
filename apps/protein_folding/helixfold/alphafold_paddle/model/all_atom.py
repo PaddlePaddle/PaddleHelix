@@ -880,6 +880,8 @@ def between_residue_clash_loss(
     # Disulfide bridge between two cysteines is no clash.
     cys_sg_idx = residue_constants.restype_name_to_atom14_names['CYS'].index('SG')
     cys_sg_one_hot = nn.functional.one_hot(paddle.to_tensor(cys_sg_idx), num_classes=14)
+    if len(cys_sg_one_hot.shape) == 1:
+        cys_sg_one_hot = paddle.unsqueeze(cys_sg_one_hot, axis=[0])
     cys_sg_one_hot1 = paddle.unsqueeze(cys_sg_one_hot, axis=[1,2,4])
     cys_sg_one_hot2 = paddle.unsqueeze(cys_sg_one_hot, axis=[1,2,3])
     disulfide_bonds = (cys_sg_one_hot1 * cys_sg_one_hot2)
