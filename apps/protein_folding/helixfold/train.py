@@ -290,6 +290,7 @@ def main(args):
     set_logging_level(args.logging_level)
 
     """main function"""
+    print(f'>>> PaddlePaddle commit: {paddle.version.commit}')
     print(f'>>> args:\n{args}')
     data_config = ml_collections.ConfigDict(json.load(open(args.data_config, 'r')))
     print(f'>>> data_config:\n{data_config}')
@@ -321,7 +322,7 @@ def main(args):
         model_config.model.global_config.dist_model = True
     if args.bp_degree > 1:
         model_config.model.global_config.outer_product_mean_position = 'end'
-    # print(f'>>> model_config:\n{model_config}')
+    print(f'>>> model_config:\n{model_config}')
 
     model = RunModel(train_config, model_config)
 
