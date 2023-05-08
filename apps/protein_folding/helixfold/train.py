@@ -30,7 +30,7 @@ from paddle import distributed as dist
 from tensorboardX import SummaryWriter
 
 from utils.utils import get_model_parameter_size, add_to_data_writer, upload_to_hadoop, csv_print
-from utils.utils import get_bf16_op_list
+from utils.utils import get_custom_amp_list
 from utils.metric import ResultsCollect
 from utils.model import RunModel
 from utils.exponential_moving_average import ExponentialMovingAverage, EMA
@@ -218,7 +218,7 @@ def train(args, cur_step, model, train_data_gen, distill_data_gen, train_config,
     # train
     def _forward_with_precision(batch):
         if args.precision == "bf16":
-            black_list, white_list = get_bf16_op_list()
+            black_list, white_list = get_custom_amp_list()
             with paddle.amp.auto_cast(level='O1', custom_white_list=white_list, custom_black_list=black_list, dtype='bfloat16'):
                 return model(batch)
         elif args.precision == "fp32":
