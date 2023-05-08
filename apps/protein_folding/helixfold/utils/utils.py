@@ -20,103 +20,20 @@ import numpy as np
 import paddle
 
 
-def get_custom_amp_list():
+def get_bf16_op_list():
     """tbd."""
 
     black_list = {"reduce_sum"}
-    white_list = {
-        "concat",
-        "dropout_nd",
-        "einsum",
-        "elementwise_add",
-        "elementwise_div",
-        "elementwise_mul",
-        "elementwise_sub",
-        "fill_any_like",
-        "fill_constant",
-        "fused_gate_attention",
-        "gather",
-        "gaussian_random",
-        "layer_norm",
-        "log_softmax",
-        "matmul_v2",
-        "p_norm",
-        "py_layer",
-        "relu",
-        "scale",
-        "sigmoid",
-        "slice",
-        "softmax",
-        "softplus",
-        "split",
-        "split_with_num",
-        "sqrt",
-        "square",
-        "stack",
-        "sum",
-        "transpose2",
-        "unsqueeze2",
-        "unstack",
-        "where"
-    }
+    white_list = {"concat", "elementwise_add", "elementwise_div", "elementwise_mul", "elementwise_sub", "fill_any_like", "fill_constant", "gather", "gaussian_random",
+        "softmax", "layer_norm", "log_softmax", "matmul_v2", "p_norm", "py_layer", "relu", "scale", "sigmoid", "slice", "softplus", "split", "sqrt", "square", "stack",
+        "sum", "transpose2", "fused_gate_attention", "dropout_nd"}
     return black_list, white_list
 
 
 def get_structure_module_bf16_op_list():
-    black_list = {
-        "clip",
-        "dropout_nd",
-        "elementwise_add",
-        "elementwise_div",
-        "elementwise_mul",
-        "elementwise_sub",
-        "fill_any_like",
-        "fill_constant",
-        "fused_gate_attention",
-        "gaussian_random",
-        "linspace",
-        "log_softmax",
-        "p_norm",
-        "py_layer",
-        "reduce_mean",
-        "reduce_min",
-        "reduce_prod",
-        "reduce_sum",
-        "scale",
-        "sigmoid",
-        "softmax",
-        "softplus",
-        "sqrt",
-        "square",
-        "squared_l2_norm",
-        "sum",
-        "uniform_random",
-    }
-    white_list = {
-        "abs",
-        "bitwise_or",
-        "concat",
-        "elementwise_max",
-        "elementwise_min",
-        "equal", 
-        "eye",
-        "gather",
-        "greater_than",
-        "layer_norm",
-        "less_than",
-        "matmul_v2",
-        "one_hot_v2",
-        "reduce_max",
-        "relu",
-        "reshape2",
-        "slice", 
-        "split",
-        "squeeze2",
-        "stack",
-        "transpose2",
-        "unsqueeze2",
-        "tile",
-    }
+    black_list = {"reduce_sum", "elementwise_add", "elementwise_div", "elementwise_mul", "elementwise_sub", "fill_any_like", "fill_constant", "gaussian_random", "uniform_random",
+        "softmax", "log_softmax",  "p_norm", "py_layer", "scale", "sigmoid", "softplus", "sqrt", "square", "linspace", "squared_l2_norm", "reduce_mean", "reduce_min", "reduce_prod", "sum", "fused_gate_attention", "dropout_nd", "clip"}
+    white_list = {"layer_norm", "relu", "split", "stack", "gather", "concat", "transpose2", "matmul_v2", "unsqueeze2", "squeeze2", "tile", "slice", "one_hot_v2", "reshape2", "elementwise_max", "elementwise_min", "equal", "greater_than", "less_than", "reduce_max", "eye", "bitwise_or", "abs", "reduce_max", }
     return black_list, white_list 
 
 
