@@ -507,9 +507,12 @@ class Attention(nn.Layer):
         if self.fuse_attention:
             if nonbatched_bias is not None:
                 nonbatched_bias = paddle.unsqueeze(nonbatched_bias, axis=1)
-            _, _, _, _, _, _, _, output = _C_ops.fused_gate_attention(
+            use_flash_attn = True
+
+            _, _, _, _, _, _, _, _, output = _C_ops.fused_gate_attention(
                 q_data, m_data, self.query_w, self.key_w, self.value_w, self.qkv_w, nonbatched_bias, bias, self.gating_w, self.gating_b,
-                self.output_w, self.output_b, 'has_gating', self.config.gating, 'merge_qkv', self.merge_qkv)
+                self.output_w, self.output_b, 'has_gating', self.config.gating, 'merge_qkv', self.merge_qkv,
+                "use_flash_attn", use_flash_attn)
         else:
             c = self.key_dim ** (-0.5)
             q = paddle.einsum('nbqa,ahc->nbqhc', q_data, self.query_w) * c
