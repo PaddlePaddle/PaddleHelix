@@ -287,6 +287,8 @@ class ResultsCollect(object):
     def _extract_loss_dict(self, results):
         """extract value with 'loss' or 'fape' in key"""
         def _calc_tensor_mean(x):
+            if x.dtype == paddle.bfloat16:
+                x = x.cast("float32")
             if len(x.shape) == 0:
                 return x.item()
             else:

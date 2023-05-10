@@ -144,9 +144,22 @@ def eval(args, model, eval_dataset, compute_loss, cache_dir=None):
             batch['feat'] = align_feat(batch['feat'], args.dap_degree)
             batch['label'] = align_label(batch['label'], args.dap_degree)
         
-        res = model(batch, compute_loss=compute_loss)
+        if args.precision == "bf16" and args.amp_level == "O2":
+            black_list, white_list = get_custom_amp_list()
+            with paddle.amp.auto_cast(enable=True,
+                                      custom_white_list=white_list,
+                                      custom_black_list=black_list,
+                                      level=args.amp_level,
+                                      dtype='bfloat16'):
+                res = model(batch, compute_loss=compute_loss)
+        else:
+            res = model(batch, compute_loss=compute_loss)
         if compute_loss:
             results, loss = res
+            if loss.dtype == paddle.bfloat16:
+                loss = loss.cast("float32").item()
+            else:
+                loss = loss.item()
         else:
             results, loss = res, np.zeros([1])
         s2 = time_me()
@@ -257,8 +270,7 @@ def train(args, cur_step, model, train_data_gen, distill_data_gen, train_config,
         ema.update()
         optimizer.clear_grad()
 
-    if args.precision == "bf16":
-        loss = loss.cast("float32")
+    loss = loss.cast("float32") if loss.dtype == paddle.bfloat16 else loss
         
     s5 = time_me()
     batch_cost = s5 - s0
