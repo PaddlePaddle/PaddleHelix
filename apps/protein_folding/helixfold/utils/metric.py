@@ -286,7 +286,13 @@ class ResultsCollect(object):
 
     def _extract_loss_dict(self, results):
         """extract value with 'loss' or 'fape' in key"""
+        def _calc_tensor_mean(x):
+            if len(x.shape) == 0:
+                return x.item()
+            else:
+                return x.numpy().mean()
+
         res = tree_flatten(results)
         res = tree_filter(lambda k: 'loss' in k or 'fape' in k, None, res)
-        res = tree_map(lambda x: x.numpy().mean(), res)
+        res = tree_map(lambda x: _calc_tensor_mean(x), res)
         return res
