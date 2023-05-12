@@ -290,6 +290,7 @@ class AlphaFoldIteration(nn.Layer):
         }
 
         self.used_heads = []
+        self.heads = []
         for head_name, head_config in sorted(self.config.heads.items()):
             if head_name not in Head_modules:
                 continue
@@ -300,6 +301,7 @@ class AlphaFoldIteration(nn.Layer):
 
             head_name_ = Head_names.get(head_name, head_name)
             setattr(self, head_name_, module)
+            self.heads.append(module)
 
     def forward(self,
                 ensembled_batch,
@@ -2173,7 +2175,7 @@ class SingleTemplateEmbedding(nn.Layer):
         Returns:
             A template embedding [N_res, N_res, c_z].
         """
-        assert mask_2d.dtype == query_embedding.dtype
+        assert mask_2d.dtype == query_embedding.dtype, f"mask_2d.dtype ({mask_2d.dtype}) is not the same with query_embedding.dtype ({query_embedding.dtype})!"
         dtype = query_embedding.dtype
         num_res = batch['template_aatype'].shape[1]
         template_mask = batch['template_pseudo_beta_mask']
