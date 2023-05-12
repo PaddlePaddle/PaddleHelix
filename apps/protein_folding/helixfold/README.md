@@ -20,7 +20,7 @@ The detailed instructions on running HelixFold in GPU and DCU for training and i
 
 * **Operator Fusion and Tensor Fusion to Reduce the Cost of Scheduling** Scheduling a huge number of operators is one of the bottlenecks for the training. To reduce the cost of scheduling, **Fused Gated Self-Attention** is utilized to combine multiple blocks into an operator, and thousands of tensors are fused into only a few tensors.
 
-* **Multi-dimensional Memory Optimization** Multiple techniques, including Recompute, BFloat16, In-place memory, and Subbatch (Chunking), are exploited to reduce the memory required for training.
+* **Multi-dimensional Memory Optimization** Multiple techniques, including Recompute, BFloat16, In-place memory, and Subbatch (Chunking), are exploited to reduce the memory required for training and inference. **Ultra-long monomer protein (around 6600 AA) prediction is supported now**.
 
 Please refer to [paper](https://arxiv.org/abs/2207.05477) for more technical details.
 

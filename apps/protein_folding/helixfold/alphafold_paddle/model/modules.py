@@ -14,6 +14,7 @@
 
 """Modules."""
 
+import gc
 import numpy as np
 
 import paddle
@@ -29,6 +30,7 @@ from alphafold_paddle.common import residue_constants
 from alphafold_paddle.model.utils import mask_mean, subbatch
 from alphafold_paddle.model import folding, lddt, quat_affine, all_atom
 from alphafold_paddle.model.utils import init_gate_linear, init_final_linear
+from utils.utils import get_structure_module_bf16_op_list
 
 # Map head name in config to head name in model params
 Head_names = {
@@ -196,14 +198,26 @@ class AlphaFold(nn.Layer):
             zeros_bn_shape = batch['aatype'].shape[0:1] + batch['aatype'].shape[2:]
 
             emb_config = self.config.embeddings_and_evoformer
-            prev = {
-                'prev_pos': paddle.zeros(
-                    zeros_bn_shape + [residue_constants.atom_type_num, 3], dtype="float32"),
-                'prev_msa_first_row': paddle.zeros(
-                    zeros_bn_shape + [emb_config.msa_channel], dtype="float32"),
-                'prev_pair': paddle.zeros(
-                    zeros_bn_shape + [num_residues, emb_config.pair_channel], dtype="float32"),
-            }
+
+            # if not self.training: # for inference
+            if not self.training and self.global_config.low_memory is True:
+                prev = {
+                    'prev_pos': paddle.zeros(
+                        zeros_bn_shape + [residue_constants.atom_type_num, 3], dtype="float32"),
+                    'prev_msa_first_row': paddle.zeros(
+                        zeros_bn_shape + [emb_config.msa_channel], dtype="float32"),
+                    'prev_pair': paddle.zeros(
+                        zeros_bn_shape + [num_residues, emb_config.pair_channel], dtype=paddle.bfloat16),
+                }
+            else:
+                prev = {
+                    'prev_pos': paddle.zeros(
+                        zeros_bn_shape + [residue_constants.atom_type_num, 3], dtype="float32"),
+                    'prev_msa_first_row': paddle.zeros(
+                        zeros_bn_shape + [emb_config.msa_channel], dtype="float32"),
+                    'prev_pair': paddle.zeros(
+                        zeros_bn_shape + [num_residues, emb_config.pair_channel], dtype="float32"),
+                }
 
             if 'num_iter_recycling' in batch:
                 # Training trick: dynamic recycling number
@@ -215,6 +229,10 @@ class AlphaFold(nn.Layer):
             for recycle_idx in range(num_iter):
                 ret = _run_single_recycling(prev, recycle_idx, compute_loss=False)
                 prev = _get_prev(ret)
+                # if not self.training:
+                if not self.training and self.global_config.low_memory is True:
+                    del ret
+                    gc.collect()
 
         else:
             prev = {}
@@ -266,6 +284,7 @@ class AlphaFoldIteration(nn.Layer):
         }
 
         self.used_heads = []
+        self.heads = []
         for head_name, head_config in sorted(self.config.heads.items()):
             if head_name not in Head_modules:
                 continue
@@ -276,6 +295,7 @@ class AlphaFoldIteration(nn.Layer):
 
             head_name_ = Head_names.get(head_name, head_name)
             setattr(self, head_name_, module)
+            self.heads.append(module)
 
     def forward(self,
                 ensembled_batch,
@@ -366,23 +386,29 @@ class AlphaFoldIteration(nn.Layer):
 
             return ret, total_loss
 
-        tracer = _dygraph_tracer()
-        if tracer._amp_dtype == "bfloat16":
-            with paddle.amp.auto_cast(enable=False):
-                for key, value in representations.items():
-                    if value.dtype in [paddle.fluid.core.VarDesc.VarType.BF16]:
-                        temp_value = value.cast('float32')
-                        temp_value.stop_gradient = value.stop_gradient
-                        representations[key] = temp_value
-                for key, value in batch0.items():
-                    if value.dtype in [paddle.fluid.core.VarDesc.VarType.BF16]:
-                        temp_value = value.cast('float32')
-                        temp_value.stop_gradient = value.stop_gradient
-                        batch0[key] = temp_value
+        # if not self.training:
+        if not self.training and self.global_config.low_memory is True:
+            black_list, white_list = get_structure_module_bf16_op_list()
+            with paddle.amp.auto_cast(level='O1', custom_white_list=white_list, custom_black_list=black_list, dtype='bfloat16'):
                 ret, total_loss = _forward_heads(representations, ret, batch0)
-
         else:
-            ret, total_loss = _forward_heads(representations, ret, batch0)
+            tracer = _dygraph_tracer()
+            if tracer._amp_dtype == "bfloat16":
+                with paddle.amp.auto_cast(enable=False):
+                    for key, value in representations.items():
+                        if value.dtype in [paddle.fluid.core.VarDesc.VarType.BF16]:
+                            temp_value = value.cast('float32')
+                            temp_value.stop_gradient = value.stop_gradient
+                            representations[key] = temp_value
+                    for key, value in batch0.items():
+                        if value.dtype in [paddle.fluid.core.VarDesc.VarType.BF16]:
+                            temp_value = value.cast('float32')
+                            temp_value.stop_gradient = value.stop_gradient
+                            batch0[key] = temp_value
+                    ret, total_loss = _forward_heads(representations, ret, batch0)
+
+            else:
+                ret, total_loss = _forward_heads(representations, ret, batch0)
 
         if compute_loss:
             return ret, total_loss
@@ -1069,10 +1095,10 @@ class DistogramHead(nn.Layer):
     Jumper et al. (2021) Suppl. Sec. 1.9.8 "Distogram prediction"
     """
 
-    def __init__(self, channel_num, config, name='distogram_head'):
+    def __init__(self, channel_num, config, global_config, name='distogram_head'):
         super(DistogramHead, self).__init__()
         self.config = config
-        # self.global_config = global_config
+        self.global_config = global_config
 
         self.half_logits = nn.Linear(channel_num['pair_channel'],
                                     self.config.num_bins, name='half_logits')
@@ -1097,8 +1123,13 @@ class DistogramHead(nn.Layer):
                           self.config.num_bins - 1)
         breaks = paddle.broadcast_to(breaks, [logits.shape[0]] + breaks.shape)
 
+        # if not self.training:
+        if not self.training and self.global_config.low_memory is True:
+            logits_cpu = logits.cpu()
+            del logits
         return {
-            'logits': logits, 
+            # 'logits': logits,
+            'logits': logits_cpu if not self.training and self.global_config.low_memory is True else logits, 
             'bin_edges': breaks}
 
     def loss(self, value, batch):
@@ -2146,7 +2177,7 @@ class SingleTemplateEmbedding(nn.Layer):
         Returns:
             A template embedding [N_res, N_res, c_z].
         """
-        assert mask_2d.dtype == query_embedding.dtype
+        assert mask_2d.dtype == query_embedding.dtype, f"mask_2d.dtype ({mask_2d.dtype}) is not the same with query_embedding.dtype ({query_embedding.dtype})!"
         dtype = query_embedding.dtype
         num_res = batch['template_aatype'].shape[1]
         template_mask = batch['template_pseudo_beta_mask']

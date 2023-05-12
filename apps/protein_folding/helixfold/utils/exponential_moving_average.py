@@ -89,8 +89,8 @@ class EMA(object):
             for p in group['params']:
                 if p.stop_gradient is True:
                     continue
-                self._shadow[id(p)] = paddle.zeros_like(p)
-                self._shadow[id(p)].set_value(p)
+                self._shadow[id(p)] = paddle.zeros_like(p, dtype="float32")
+                self._shadow[id(p)].set_value(p.astype("float32"))
 
     @paddle.no_grad()
     def update(self):
@@ -104,7 +104,7 @@ class EMA(object):
                     continue
                 new_val = p.detach().clone()
                 old_val = self._shadow[id(p)]
-                new_average = decay * old_val + (1 - decay) * new_val
+                new_average = decay * old_val + (1 - decay) * new_val.astype("float32")
                 self._shadow[id(p)] = new_average
 
         self._update_step += 1
@@ -121,7 +121,10 @@ class EMA(object):
                 assert id(p) in self._shadow
 
                 self._backup[id(p)] = p.detach().clone()
-                p.set_value(self._shadow[id(p)])
+                if p.dtype == paddle.bfloat16:
+                    p.set_value(self._shadow[id(p)].astype(paddle.bfloat16))
+                else:
+                    p.set_value(self._shadow[id(p)])
 
     @paddle.no_grad()
     def restore(self):
