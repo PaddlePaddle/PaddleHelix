@@ -64,7 +64,8 @@ def get_chi_atom_indices():
             atom_indices.append(
                 [residue_constants.atom_order[atom] for atom in chi_angle])
         for _ in range(4 - len(atom_indices)):
-            atom_indices.append([0, 0, 0, 0])  # For chi angles not defined on the AA.
+            atom_indices.append(
+                [0, 0, 0, 0])  # For chi angles not defined on the AA.
         chi_atom_indices.append(atom_indices)
 
     chi_atom_indices.append([[0, 0, 0, 0]] * 4)  # For UNKNOWN residue.
@@ -274,8 +275,7 @@ def atom37_to_torsion_angles(
     aatype: paddle.Tensor,  # (B, T, N)
     all_atom_pos: paddle.Tensor,  # (B, T, N, 37, 3)
     all_atom_mask: paddle.Tensor,  # (B, T, N, 37)
-    placeholder_for_undefined=False,
-) -> Dict[str, paddle.Tensor]:
+    placeholder_for_undefined=False, ) -> Dict[str, paddle.Tensor]:
     """Computes the 7 torsion angles (in sin, cos encoding) for each residue.
 
     The 7 torsion angles are in the order
@@ -300,44 +300,57 @@ def atom37_to_torsion_angles(
     """
 
     # Map aatype > 20 to 'Unknown' (20).
-    aatype = paddle.minimum(aatype.astype('int'), paddle.full(shape=[1], fill_value=20, dtype="int"))
-    
+    aatype = paddle.minimum(
+        aatype.astype('int'), paddle.full(shape=[1], fill_value=20, dtype="int"))
+
     num_batch, num_temp, num_res = aatype.shape
 
     # Compute the backbone angles.
     pad = paddle.zeros([num_batch, num_temp, 1, 37, 3])
-    prev_all_atom_pos = paddle.concat([pad, all_atom_pos[..., :-1, :, :]], axis=-3)
+    prev_all_atom_pos = paddle.concat(
+        [pad, all_atom_pos[..., :-1, :, :]], axis=-3)
 
     pad = paddle.zeros([num_batch, num_temp, 1, 37])
-    prev_all_atom_mask = paddle.concat([pad, all_atom_mask[..., :-1, :]], axis=-2)
+    prev_all_atom_mask = paddle.concat(
+        [pad, all_atom_mask[..., :-1, :]], axis=-2)
 
     # For each torsion angle collect the 4 atom positions that define this angle.
     # shape (B, T, N, atoms=4, xyz=3)
     pre_omega_atom_pos = paddle.concat(
-        [prev_all_atom_pos[..., 1:3, :],  # prev CA, C
-        all_atom_pos[..., 0:2, :]  # this N, CA
-        ], axis=-2)
+        [
+            prev_all_atom_pos[..., 1:3, :],  # prev CA, C
+            all_atom_pos[..., 0:2, :]  # this N, CA
+        ],
+        axis=-2)
 
     phi_atom_pos = paddle.concat(
-        [prev_all_atom_pos[..., 2:3, :],  # prev C
-        all_atom_pos[..., 0:3, :]  # this N, CA, C
-        ], axis=-2)
+        [
+            prev_all_atom_pos[..., 2:3, :],  # prev C
+            all_atom_pos[..., 0:3, :]  # this N, CA, C
+        ],
+        axis=-2)
 
     psi_atom_pos = paddle.concat(
-        [all_atom_pos[..., 0:3, :],  # this N, CA, C
-        all_atom_pos[..., 4:5, :]  # this O
-        ], axis=-2)
+        [
+            all_atom_pos[..., 0:3, :],  # this N, CA, C
+            all_atom_pos[..., 4:5, :]  # this O
+        ],
+        axis=-2)
 
     # Collect the masks from these atoms.
     # Shape [batch, n_temp, num_res]
     pre_omega_mask = (
-        paddle.prod(prev_all_atom_mask[..., 1:3], axis=-1)  # prev CA, C
-        * paddle.prod(all_atom_mask[..., 0:2], axis=-1))  # this N, CA
+        paddle.prod(
+            prev_all_atom_mask[..., 1:3], axis=-1)  # prev CA, C
+        * paddle.prod(
+            all_atom_mask[..., 0:2], axis=-1))  # this N, CA
     phi_mask = (
         prev_all_atom_mask[..., 2]  # prev C
-        * paddle.prod(all_atom_mask[..., 0:3], axis=-1))  # this N, CA, C
+        * paddle.prod(
+            all_atom_mask[..., 0:3], axis=-1))  # this N, CA, C
     psi_mask = (
-        paddle.prod(all_atom_mask[..., 0:3], axis=-1) *  # this N, CA, C
+        paddle.prod(
+            all_atom_mask[..., 0:3], axis=-1) *  # this N, CA, C
         all_atom_mask[..., 4])  # this O
 
     # Collect the atoms for the chi-angles.

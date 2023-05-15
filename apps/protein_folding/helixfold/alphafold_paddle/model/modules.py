@@ -1862,6 +1862,17 @@ class OuterProductMean(nn.Layer):
         epsilon = 1e-3
         norm = paddle.einsum('nabc,nadc->nbdc', mask, mask) + epsilon
 
+        def fast_einsum(equation, left_act, right_act):
+            assert equation == "nacb,nade->ndceb"
+            tmp = paddle.matmul(
+                x=paddle.reshape(right_act, [right_act.shape[0], right_act.shape[1], -1]),  # na(de)
+                y=paddle.reshape(left_act, [left_act.shape[0], left_act.shape[1], -1]),     # na(cb)
+                transpose_x=True,
+                transpose_y=False)  # n(de)(cb)
+            tmp = paddle.reshape(tmp, [left_act.shape[0], right_act.shape[2], right_act.shape[3], left_act.shape[2], left_act.shape[3]])
+            out = paddle.transpose(tmp, perm=[0, 1, 3, 2, 4])
+            return out
+
         def compute_chunk(left_act, right_act):
             # This is equivalent to
             #
@@ -1871,15 +1882,7 @@ class OuterProductMean(nn.Layer):
             # but faster. maybe for subbatch inference?
             
             left_act = left_act.transpose([0, 1, 3, 2])
-            # act = paddle.einsum('nacb,nade->ndceb', left_act, right_act)
-            tmp = paddle.matmul(
-                x=paddle.reshape(right_act, [right_act.shape[0], right_act.shape[1], -1]),  # na(de)
-                y=paddle.reshape(left_act, [left_act.shape[0], left_act.shape[1], -1]),     # na(cb)
-                transpose_x=True,
-                transpose_y=False)  # n(de)(cb)
-            tmp = paddle.reshape(tmp, [left_act.shape[0], right_act.shape[2], right_act.shape[3], left_act.shape[2], left_act.shape[3]])
-            act = paddle.transpose(tmp, perm=[0, 1, 3, 2, 4])
- 
+            act = fast_einsum('nacb,nade->ndceb', left_act, right_act)
             act = paddle.einsum('ndceb,cef->ndbf', act, self.output_w) + self.output_b
             return act.transpose([0, 2, 1, 3])
 
