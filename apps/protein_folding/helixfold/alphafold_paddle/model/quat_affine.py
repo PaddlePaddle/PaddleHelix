@@ -111,7 +111,7 @@ def quat_to_rot(normalized_quat):
     mat = paddle.unsqueeze(normalized_quat, [-1, -3]) # normalized_quat[..., None, :, None]
     rot_tensor = paddle.sum(
         paddle.to_tensor(np.reshape(QUAT_TO_ROT, (4, 4, 9))) *
-        normalized_quat.unsqueeze(axis=[-1, -2]) * # [..., :, None, None]
+        normalized_quat[..., :, None, None] *
         mat,
         axis=(-3, -2)) # (..., 4, 4, 9) -> (..., 9)
     t_shape = rot_tensor.shape[:-1]
@@ -124,7 +124,7 @@ def quat_multiply_by_vec(quat, vec):
     mat = paddle.unsqueeze(vec, [-1, -3]) # vec[..., None, :, None]
     return paddle.sum(
         paddle.to_tensor(QUAT_MULTIPLY_BY_VEC) *
-        quat.unsqueeze(axis=[-1, -2]) * # [..., :, None, None]
+        quat[..., :, None, None] *
         mat,
         axis=(-3, -2))
 
@@ -133,7 +133,7 @@ def quat_multiply(quat1, quat2):
     mat = paddle.unsqueeze(quat2, [-1, -3]) # quat2[..., None, :, None]
     return paddle.sum(
         paddle.to_tensor(QUAT_MULTIPLY) *
-        quat1.unsqueeze(axis=[-1, -2]) * # [..., :, None, None]
+        quat1[..., :, None, None] *
         mat,
         axis=(-3, -2))
 
@@ -323,26 +323,23 @@ class QuatAffine(object):
 
 ######Paddle Implementation
 def _multiply(a, b):
-    a1  = a[..., 0, 0]
-    a2  = a[..., 0, 1]
-    a3  = a[..., 0, 2]
+    a1 = a[..., 0, 0]
+    a2 = a[..., 0, 1]
+    a3 = a[..., 0, 2]
     a11 = a[..., 1, 0]
     a12 = a[..., 1, 1]
     a13 = a[..., 1, 2]
     a21 = a[..., 2, 0]
     a22 = a[..., 2, 1]
     a23 = a[..., 2, 2]
-
-    b1  = b[..., 0, 0]
-    b2  = b[..., 1, 0]
-    b12 = b[..., 2, 0]
-
-    b3  = b[..., 0, 1]
+    b1 = b[..., 0, 0]
+    b2 = b[..., 1, 0]
+    b3 = b[..., 0, 1]
     b11 = b[..., 1, 1]
-    b22 = b[..., 2, 1]
-
+    b12 = b[..., 2, 0]
     b13 = b[..., 0, 2]
     b21 = b[..., 1, 2]
+    b22 = b[..., 2, 1]
     b23 = b[..., 2, 2]
     return paddle.stack([
         paddle.stack([
@@ -360,6 +357,7 @@ def _multiply(a, b):
         a21*b3 + a22*b11 + a23*b22,
         a21*b13 + a22*b21 + a23*b23], axis=-1)], 
         axis=-2)
+
 
 def make_canonical_transform(
     n_xyz: paddle.Tensor,
@@ -419,7 +417,8 @@ def make_canonical_transform(
                                   zeros,    ones,  zeros,
                                   -sin_c2, zeros, cos_c2], axis=-1)
     c2_rot_matrix = c2_rot_matrix.reshape(sin_c2.shape + [3,3])
-    c_rot_matrix = paddle.matmul(c2_rot_matrix, c1_rot_matrix)
+
+    c_rot_matrix = _multiply(c2_rot_matrix, c1_rot_matrix)
     n_xyz = paddle.stack(apply_rot_to_vec(c_rot_matrix, n_xyz, unstack=True), axis=-1)
 
     # Place N in the x-y plane.
@@ -536,7 +535,8 @@ def make_canonical_transform_np(
     c2_rot_matrix = np.stack([np.array([cos_c2,  zeros, sin_c2]),
                               np.array([zeros,    ones,  zeros]),
                               np.array([-sin_c2, zeros, cos_c2])])
-    c_rot_matrix = np.matmul(c2_rot_matrix, c1_rot_matrix)
+
+    c_rot_matrix = _multiply_np(c2_rot_matrix, c1_rot_matrix)
     n_xyz = np.stack(apply_rot_to_vec_np(c_rot_matrix, n_xyz, unstack=True)).T
 
     # Place N in the x-y plane.
@@ -547,7 +547,8 @@ def make_canonical_transform_np(
     n_rot_matrix = np.stack([np.array([ones,  zeros,  zeros]),
                               np.array([zeros, cos_n, -sin_n]),
                               np.array([zeros, sin_n,  cos_n])])
-    return (translation, np.transpose(np.matmul(n_rot_matrix, c_rot_matrix), [2, 0, 1]))
+
+    return (translation, np.transpose(_multiply_np(n_rot_matrix, c_rot_matrix), [2, 0, 1]))
 
 
 def make_transform_from_reference_np(
