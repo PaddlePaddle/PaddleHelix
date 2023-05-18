@@ -443,6 +443,7 @@ class Attention(nn.Layer):
 
         # TODO(GuoxiaWang): delete non fuse_attention related code on dcu
         self.fuse_attention = self.global_config.fuse_attention
+        self.use_flash_attn = self.global_config.use_flash_attn
         self.merge_qkv = (q_dim == kv_dim)
 
         assert key_dim % num_head == 0
@@ -509,12 +510,25 @@ class Attention(nn.Layer):
         if self.fuse_attention:
             if nonbatched_bias is not None:
                 nonbatched_bias = paddle.unsqueeze(nonbatched_bias, axis=1)
-            use_flash_attn = True
 
-            _, _, _, _, _, _, _, _, output = _C_ops.fused_gate_attention(
-                q_data, m_data, self.query_w, self.key_w, self.value_w, self.qkv_w, nonbatched_bias, bias, self.gating_w, self.gating_b,
-                self.output_w, self.output_b, 'has_gating', self.config.gating, 'merge_qkv', self.merge_qkv,
-                "use_flash_attn", use_flash_attn)
+            import paddle.incubate.nn.functional as F
+            output = F.fused_gate_attention(
+                query=q_data,
+                key=m_data,
+                query_weight=self.query_w,
+                key_weight=self.key_w,
+                value_weight=self.value_w,
+                qkv_weight=self.qkv_w,
+                gate_linear_weight=self.gating_w,
+                gate_linear_bias=self.gating_b,
+                out_linear_weight=self.output_w,
+                out_linear_bias=self.output_b,
+                nonbatched_bias=nonbatched_bias,
+                attn_mask=bias,
+                has_gating=self.config.gating,
+                merge_qkv=self.merge_qkv,
+                use_flash_attn=self.use_flash_attn,
+            )
         else:
             c = self.key_dim ** (-0.5)
             q = paddle.einsum('nbqa,ahc->nbqhc', q_data, self.query_w) * c
