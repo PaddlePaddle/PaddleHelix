@@ -36,7 +36,7 @@ from alphafold_paddle.data.utils import align_feat, unpad_prediction
 
 from utils.init_env import init_seed, init_distributed_env
 from ppfleetx.distributed.protein_folding import dp, dap, bp
-from utils.utils import get_bf16_op_list
+from utils.utils import get_custom_amp_list
 
 logging.basicConfig()
 logger = logging.getLogger(__file__)
@@ -120,8 +120,8 @@ def predict_structure(
 
         def _forward_with_precision(processed_feature_dict):
             if args.precision == "bf16":
-                black_list, white_list = get_bf16_op_list()
-                with paddle.amp.auto_cast(level='O1', custom_white_list=white_list, custom_black_list=black_list, dtype='bfloat16'):
+                black_list, white_list = get_custom_amp_list()
+                with paddle.amp.auto_cast(enable=True, custom_white_list=white_list, custom_black_list=black_list, level=args.amp_level, dtype='bfloat16'):
                     return model_runner.predict(
                                 processed_feature_dict,
                                 ensemble_representations=True,
@@ -235,7 +235,7 @@ def main(args):
 
         data_dir = pathlib.Path(args.data_dir)
         params = f'params_{model_name}'
-        model_params = data_dir.joinpath('params', f'{params}.pd')
+        model_params = data_dir.joinpath('params', f'{params}.pdparams')
         if not model_params.exists():
             model_params = data_dir.joinpath('params', f'{params}.npz')
 
@@ -356,6 +356,7 @@ if __name__ == '__main__':
                         help='The random seed for the data pipeline. '
                         'By default, this is randomly generated.')
     parser.add_argument("--precision", type=str, choices=['fp32', 'bf16'], default='fp32')
+    parser.add_argument("--amp_level", type=str, default='O1')
     parser.add_argument('--distributed',
                         action='store_true', default=False,
                         help='Whether to use distributed DAP inference.')

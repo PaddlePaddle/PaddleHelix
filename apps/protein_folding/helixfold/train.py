@@ -144,16 +144,23 @@ def eval(args, model, eval_dataset, compute_loss, cache_dir=None):
             batch['feat'] = align_feat(batch['feat'], args.dap_degree)
             batch['label'] = align_label(batch['label'], args.dap_degree)
         
-        if args.precision == "bf16" and args.amp_level == "O2":
-            black_list, white_list = get_custom_amp_list()
-            with paddle.amp.auto_cast(enable=True,
-                                      custom_white_list=white_list,
-                                      custom_black_list=black_list,
-                                      level=args.amp_level,
-                                      dtype='bfloat16'):
-                res = model(batch, compute_loss=compute_loss)
-        else:
-            res = model(batch, compute_loss=compute_loss)
+        # inference
+        def _forward_with_precision(batch):
+            if args.precision == "bf16":
+                black_list, white_list = get_custom_amp_list()
+                with paddle.amp.auto_cast(enable=True,
+                                          custom_white_list=white_list, 
+                                          custom_black_list=black_list, 
+                                          level=args.amp_level, 
+                                          dtype='bfloat16'):
+                    return model(batch, compute_loss=compute_loss)
+            elif args.precision == "fp32":
+                return model(batch, compute_loss=compute_loss)
+            else:
+                raise ValueError("Please choose precision from bf16 and fp32! ")
+        
+        # res = model(batch, compute_loss=compute_loss)
+        res = _forward_with_precision(batch)
         if compute_loss:
             results, loss = res
             if loss.dtype == paddle.bfloat16:
