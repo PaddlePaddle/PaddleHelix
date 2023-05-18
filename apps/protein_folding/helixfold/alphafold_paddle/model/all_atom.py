@@ -868,8 +868,8 @@ def between_residue_clash_loss(
     dists_mask *= (residue_index1 < residue_index2)
 
     # Backbone C--N bond between subsequent residues is no clash.
-    c_one_hot = nn.functional.one_hot(paddle.to_tensor([2]), num_classes=14)
-    n_one_hot = nn.functional.one_hot(paddle.to_tensor([0]), num_classes=14)
+    c_one_hot = nn.functional.one_hot(paddle.full(shape=[1], fill_value=2, dtype="int64"), num_classes=14)
+    n_one_hot = nn.functional.one_hot(paddle.full(shape=[1], fill_value=0, dtype="int64"), num_classes=14)
     neighbour_mask = ((residue_index1 + 1) == residue_index2)
     tmp_c_one_hot = paddle.unsqueeze(c_one_hot, axis=[1,2,4])
     tmp_n_one_hot = paddle.unsqueeze(n_one_hot, axis=[1,2,3])
@@ -879,7 +879,7 @@ def between_residue_clash_loss(
 
     # Disulfide bridge between two cysteines is no clash.
     cys_sg_idx = residue_constants.restype_name_to_atom14_names['CYS'].index('SG')
-    cys_sg_one_hot = nn.functional.one_hot(paddle.to_tensor(cys_sg_idx), num_classes=14)
+    cys_sg_one_hot = nn.functional.one_hot(paddle.full(shape=[1], fill_value=cys_sg_idx, dtype="int64"), num_classes=14)
     cys_sg_one_hot1 = paddle.unsqueeze(cys_sg_one_hot, axis=[1,2,4])
     cys_sg_one_hot2 = paddle.unsqueeze(cys_sg_one_hot, axis=[1,2,3])
     disulfide_bonds = (cys_sg_one_hot1 * cys_sg_one_hot2)
