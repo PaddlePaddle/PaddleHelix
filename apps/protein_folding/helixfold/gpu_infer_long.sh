@@ -37,11 +37,14 @@ distributed=true
 # 'fp32' or 'bf16'
 PRECISION='bf16'
 
-# Disable C++ enisum, using python enisum
-export FLAGS_new_einsum=0
+# 'O1' or 'O2'
+AMP_LEVEL='O1'
 
-# Enable bf16 optimization
-export FLAGS_use_autotune=1
+# Enable C++ enisum instead of python enisum
+export FLAGS_new_einsum=1
+
+# Enable/Disable bf16 optimization
+export FLAGS_use_autotune=0
 
 if [ $distributed == true ]
 then
@@ -89,5 +92,6 @@ $python_cmd run_helixfold.py \
   --preset='full_dbs' \
   --random_seed=0 \
   --precision=${PRECISION} \
+  --amp_level=${AMP_LEVEL} \
   --subbatch_size=${SUBBATCH_SIZE} \
   ${@:2}
