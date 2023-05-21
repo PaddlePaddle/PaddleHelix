@@ -309,7 +309,9 @@ def main(args):
     set_logging_level(args.logging_level)
 
     """main function"""
+    new_einsum = os.getenv("FLAGS_new_einsum", True)
     print(f'>>> PaddlePaddle commit: {paddle.version.commit}')
+    print(f'>>> FLAGS_new_einsum: {new_einsum}')
     print(f'>>> args:\n{args}')
     data_config = ml_collections.ConfigDict(json.load(open(args.data_config, 'r')))
     print(f'>>> data_config:\n{data_config}')
