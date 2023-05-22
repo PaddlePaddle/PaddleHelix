@@ -404,6 +404,7 @@ CONFIG = ml_collections.ConfigDict({
             'use_remat': False,
             'zero_init': True,
             'low_memory': False,
+            'fuse_linear': False,
             'fuse_attention': True,
             'use_flash_attn': True,
             'use_dropout_nd': True,

@@ -51,6 +51,8 @@ class InvariantPointAttention(nn.Layer):
         self.global_config = global_config
         self.dist_epsilon = dist_epsilon
 
+        Linear = paddle.incubate.nn.FusedLinear if self.global_config.fuse_linear else paddle.nn.Linear
+
         num_head = self.config.num_head
         num_scalar_qk = self.config.num_scalar_qk
         num_point_qk = self.config.num_point_qk
@@ -62,15 +64,15 @@ class InvariantPointAttention(nn.Layer):
         assert num_point_qk > 0
         assert num_point_v > 0
 
-        self.q_scalar = nn.Linear(
+        self.q_scalar = Linear(
             channel_num['seq_channel'], num_head * num_scalar_qk)
-        self.kv_scalar = nn.Linear(
+        self.kv_scalar = Linear(
             channel_num['seq_channel'],
             num_head * (num_scalar_v + num_scalar_qk))
 
-        self.q_point_local = nn.Linear(
+        self.q_point_local = Linear(
             channel_num['seq_channel'], num_head * 3 * num_point_qk)
-        self.kv_point_local = nn.Linear(
+        self.kv_point_local = Linear(
             channel_num['seq_channel'],
             num_head * 3 * (num_point_qk + num_point_v))
 
@@ -79,7 +81,7 @@ class InvariantPointAttention(nn.Layer):
             [num_head], 'float32',
             default_initializer=nn.initializer.Constant(tpw))
 
-        self.attention_2d = nn.Linear(channel_num['pair_channel'], num_head)
+        self.attention_2d = Linear(channel_num['pair_channel'], num_head)
 
         if self.global_config.zero_init:
             init_w = nn.initializer.Constant(value=0.0)
@@ -87,7 +89,7 @@ class InvariantPointAttention(nn.Layer):
             init_w = nn.initializer.XavierUniform()
 
         c = num_scalar_v + num_point_v * 4 + channel_num['pair_channel']
-        self.output_projection = nn.Linear(
+        self.output_projection = Linear(
             num_head * c, num_output,
             weight_attr=paddle.ParamAttr(initializer=init_w))
 
@@ -257,6 +259,8 @@ class FoldIteration(nn.Layer):
         self.config = config
         self.global_config = global_config
 
+        Linear = paddle.incubate.nn.FusedLinear if self.global_config.fuse_linear else paddle.nn.Linear
+
         self.invariant_point_attention = InvariantPointAttention(
             channel_num, config, global_config)
         self.attention_layer_norm = nn.LayerNorm(channel_num['seq_channel'])
@@ -273,7 +277,7 @@ class FoldIteration(nn.Layer):
             if i > 0:
                 layer_name, c_in = f'transition_{i}', self.config.num_channel
 
-            setattr(self, layer_name, nn.Linear(
+            setattr(self, layer_name, Linear(
                 c_in, self.config.num_channel,
                 weight_attr=paddle.ParamAttr(initializer=init_w)))
 
@@ -287,7 +291,7 @@ class FoldIteration(nn.Layer):
             last_init_w = nn.initializer.XavierUniform()
 
         # Jumper et al. (2021) Alg. 23 "Backbone update"
-        self.affine_update = nn.Linear(
+        self.affine_update = Linear(
             self.config.num_channel, 6,
             weight_attr=paddle.ParamAttr(initializer=last_init_w))
 
@@ -349,8 +353,10 @@ class StructureModule(nn.Layer):
         self.config = config
         self.global_config = global_config
 
+        Linear = paddle.incubate.nn.FusedLinear if self.global_config.fuse_linear else paddle.nn.Linear
+
         self.single_layer_norm = nn.LayerNorm(channel_num['seq_channel'])
-        self.initial_projection = nn.Linear(
+        self.initial_projection = Linear(
             channel_num['seq_channel'], config.num_channel)
         self.pair_layer_norm = nn.LayerNorm(channel_num['pair_channel'])
 
@@ -925,9 +931,11 @@ class MultiRigidSidechain(nn.Layer):
         self.config = config
         self.global_config = global_config
 
+        Linear = paddle.incubate.nn.FusedLinear if self.global_config.fuse_linear else paddle.nn.Linear
+
         c = self.config.num_channel
-        self.input_projection = nn.Linear(channel_num['seq_channel'], c)
-        self.input_projection_1 = nn.Linear(channel_num['seq_channel'], c)
+        self.input_projection = Linear(channel_num['seq_channel'], c)
+        self.input_projection_1 = Linear(channel_num['seq_channel'], c)
 
         for i in range(self.config.num_residual_block):
             l1, l2 = 'resblock1', 'resblock2'
@@ -940,12 +948,12 @@ class MultiRigidSidechain(nn.Layer):
             else:
                 init_w_2 = nn.initializer.XavierUniform()
 
-            setattr(self, l1, nn.Linear(
+            setattr(self, l1, Linear(
                 c, c, weight_attr=paddle.ParamAttr(initializer=init_w_1)))
-            setattr(self, l2, nn.Linear(
+            setattr(self, l2, Linear(
                 c, c, weight_attr=paddle.ParamAttr(initializer=init_w_2)))
 
-        self.unnormalized_angles = nn.Linear(c, 14)
+        self.unnormalized_angles = Linear(c, 14)
 
     def forward(self, affine, single_act, init_single_act, aatype):
         single_act = self.input_projection(nn.functional.relu(single_act))
