@@ -188,7 +188,7 @@ def batched_gather(params, indices, axis=0, batch_dims=0):
 
     # indices = [Batch..., Index...]
     # Expand the index values across batch elements
-    strides = paddle.arange(bn).unsqueeze(-1) * stride
+    strides = paddle.arange(bn, dtype="int64").unsqueeze(-1) * stride
     i = i.reshape([bn, -1])
     flat_i = paddle.flatten(i + strides)
 
