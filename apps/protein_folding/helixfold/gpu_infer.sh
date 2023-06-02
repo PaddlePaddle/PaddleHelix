@@ -35,7 +35,11 @@ AMP_LEVEL='O1'
 export FLAGS_new_einsum=1
 
 # Enable/Disable bf16 optimization
-export FLAGS_use_autotune=0
+export FLAGS_use_autotune=1
+
+# Enable LayerNorm optimization
+export FLAGS_use_fast_math=1
+
 
 if [ $distributed == true ]
 then

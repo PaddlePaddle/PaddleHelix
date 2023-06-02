@@ -22,7 +22,11 @@ chmod +x $LDDT_SCORE_BIN
 export FLAGS_new_einsum=1
 
 # Enable/Disable bf16 optimization
-export FLAGS_use_autotune=0
+export FLAGS_use_autotune=1
+
+# Enable LayerNorm optimization
+export FLAGS_use_fast_math=1
+
 
 train_af2_single() {
     start_step=0

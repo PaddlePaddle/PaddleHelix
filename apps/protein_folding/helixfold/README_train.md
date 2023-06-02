@@ -21,9 +21,9 @@ conda activate helixfold # activate the conda environment
 ```
 Note: If you have a different version of python3 and cuda, please refer to [here](https://www.paddlepaddle.org.cn/whl/linux/gpu/develop.html) for the compatible PaddlePaddle `dev` package.
 
-In order to run scripts with DAP/BP/DP-DAP-BP mode, you also need to install `ppfleetx`. Please refer to [here](https://github.com/PaddlePaddle/PaddleFleetX/tree/release/2.4/projects/protein_folding) for more details.
+In order to run scripts with DAP/BP/DP-DAP-BP mode, you also need to install `ppfleetx`. Please refer to [here](https://github.com/PaddlePaddle/PaddleFleetX/tree/develop/projects/protein_folding) for more details.
 ```bash
-wget https://baidu-nlp.bj.bcebos.com/PaddleHelix/HelixFold/ppfleetx-0.0.0-py3-none-any.whl
+wget https://paddle-qa.bj.bcebos.com/PaddleFleetX/ppfleetx-0.0.0-py3-none-any.whl
 python -m pip install ppfleetx-0.0.0-py3-none-any.whl  	   # install ppfleetx
 ```
 
