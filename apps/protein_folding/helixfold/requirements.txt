@@ -13,4 +13,4 @@ scipy==1.7.0
 tensorflow-cpu==2.5.0
 tensorboardX==2.5
 etcd3
-./paddlepaddle_gpu-0.0.0-cp37-cp37m-linux_x86_64.whl
+./paddlepaddle_gpu-0.0.0.post116-cp37-cp37m-linux_x86_64.whl

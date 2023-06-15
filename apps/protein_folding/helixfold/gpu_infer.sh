@@ -31,8 +31,8 @@ PRECISION='bf16'
 # 'O1' or 'O2'
 AMP_LEVEL='O1'
 
-# Enable C++ enisum instead of python enisum
-export FLAGS_new_einsum=1
+# Enable/Disable C++ enisum
+export FLAGS_new_einsum=0
 
 # Enable/Disable bf16 optimization
 export FLAGS_use_autotune=1

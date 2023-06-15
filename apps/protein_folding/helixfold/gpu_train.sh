@@ -18,8 +18,8 @@ LDDT_SCORE_BIN="$root_path/tools/lddt"
 chmod +x $TM_SCORE_BIN
 chmod +x $LDDT_SCORE_BIN
 
-# Enable C++ enisum instead of python enisum
-export FLAGS_new_einsum=1
+# Enable/Disable C++ enisum
+export FLAGS_new_einsum=0
 
 # Enable/Disable bf16 optimization
 export FLAGS_use_autotune=1
