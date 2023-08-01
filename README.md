@@ -62,7 +62,7 @@ PaddleHelix is a bio-computing tool, taking advantage of the machine learning ap
 
 ## Resources
 ### Application Platform
-[PaddleHelix platform](https://paddlehelix.baidu.com/) provides the AI + biochemistry abilities for the scenarios of drug discovery, vaccine design and precision medicine.
+**[PaddleHelix platform](https://paddlehelix.baidu.com/)** provides the AI + biochemistry abilities for the scenarios of drug discovery, vaccine design and precision medicine.
 
 ### Installation Guide
 PaddleHelix is a bio-computing repository based on [PaddlePaddle](https://github.com/paddlepaddle/paddle), a high-performance Parallelized Deep Learning Platform. The installation prerequisites and guide can be found [here](./installation_guide.md).
