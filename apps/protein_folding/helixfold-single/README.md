@@ -55,7 +55,7 @@ where `unrelaxed.pdb` is the predicted pdb file.
 
 ## Citing this work
 
-If you use the code or data in this repos, please cite:
+If you use the code or data in this repository, please cite:
 
 ```bibtex
 @article{fang2022helixfold_single,
