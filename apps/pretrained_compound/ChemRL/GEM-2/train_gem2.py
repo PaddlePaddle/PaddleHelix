@@ -274,6 +274,7 @@ def main(args):
 
     ### build model
     model = MolRegressionModel(model_config, encoder_config)
+    single_model = model
     print("parameter size:", calc_parameter_size(model.parameters()))
     if args.distributed:
         model = paddle.DataParallel(model)
@@ -308,7 +309,7 @@ def main(args):
             ema.register()
         
         if epoch_id == 69:
-            model.encoder.reduce_dropout()
+            single_model.encoder.reduce_dropout()
 
         ## train
         s_time = time.time()
