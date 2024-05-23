@@ -12,6 +12,8 @@ English | [简体中文](README_cn.md)
 
 
 ## Latest News
+`2024.05.23` PaddleHelix released the codes of HelixDock, a pre-training model on large-scale generated docking conformations to unlock the potential of protein-ligand conformation prediction, significantly improving prediction accuracy and generalizability. Please refer to [paper]([https://arxiv.org/abs/2310.13913) and [codes](./apps/molecular_docking/helixdock) for more details. Welcome to [PaddleHelix website](https://paddlehelix.baidu.com/app/drug/helix-dock/forecast)to try out the conformation prediction online service. 
+
 `2022.12.08` Paper "HelixMO: Sample-Efficient Molecular Optimization in Scene-Sensitive Latent Space" is accepted by **BIBM 2022**. Please refere to [link1](https://www.computer.org/csdl/proceedings-article/bibm/2022/09995561/1JC23yWxizC) or [link2](https://aps.arxiv.org/abs/2112.00905) for more details. We also deployed the drug design service on the website [PaddleHelix](https://paddlehelix.baidu.com/app/drug/drugdesign/forecast).
 
 `2022.08.11` PaddleHelix released the codes of HelixGEM-2, a novel Molecular Property Prediction Network that models full-range many-body interactions. And it ranked 1st in the OGB [PCQM4Mv2](https://ogb.stanford.edu/docs/lsc/leaderboards/) leaderboard. Please refer to [paper](https://arxiv.org/abs/2208.05863) and [codes](./apps/pretrained_compound/ChemRL/GEM-2) for more details.
