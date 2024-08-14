@@ -1,0 +1,9 @@
+{
+    "entities": [
+        {
+            "type": "protein",
+            "sequence": "SGGGMTYHVLVQFDVPSDKREAFAAAGLFDANGSLQNEPGTLRFEVIRDENNRAANRFYLDEVYEDEAAFLQHCRNETIARFYELIDSYAFGPLFLFKGYRVEG",
+            "count": 6
+        }
+    ]
+}

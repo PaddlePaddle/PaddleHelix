@@ -1,0 +1,14 @@
+{
+    "entities": [
+        {
+            "type": "dna",
+            "sequence": "CCATTATAGC",
+            "count": 1
+        },
+        {
+            "type": "dna",
+            "sequence": "GCTATAATGG",
+            "count": 1
+        }
+    ]
+}
