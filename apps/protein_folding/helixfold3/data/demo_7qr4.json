@@ -1,0 +1,16 @@
+{
+    "job_name": "7qr4",
+    "random_seed": 0,
+    "entities": [
+        {
+            "type": "protein",
+            "sequence": "RPNHTIYINNLNEKIKKDELKKSLHAIFSRFGQILDILVSRSLKMRGQAFVIFKEVSSATNALRSMQGFPFYDKPMRIQYAKTDSDIIAKM",
+            "count": 2
+        },
+        {
+            "type": "rna",
+            "sequence": "GGGGGCCACAGCAGAAGCGUUCACGUCGCAGCCCCUGUCAGCCAUUGCACUCCGGCUGCGAAUUCUGCU",
+            "count": 2
+        }
+    ]
+}
