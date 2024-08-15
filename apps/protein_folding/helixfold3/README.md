@@ -4,11 +4,21 @@ The AlphaFold series has transformed protein structure prediction with remarkabl
 
 The PaddleHelix team is working on [HelixFold3](./Report_HelixFold3.pdf) to replicate the advanced capabilities of AlphaFold3. Insights from the AlphaFold3 paper inform our approach and build on our prior work with [HelixFold](https://arxiv.org/abs/2207.05477), [HelixFold-Single](https://arxiv.org/abs/2207.13921), [HelixFold-Multimer](https://arxiv.org/abs/2404.10260), and [HelixDock](https://doi.org/10.1038/s42256-023-00721-6). Currently, HelixFold3's accuracy in predicting the structures of small molecule ligands, nucleic acids (including DNA and RNA), and proteins is comparable to that of AlphaFold3. We are committed to continuously enhancing the model's performance and rigorously evaluating it across a broader range of biological molecules.
 
-<p align="center">
-<img src="images/ligands_posebusters_v1.png" align="left" height="60%" width="25.4%" />
-<img src="images/NA_casp15.png" align="middle" height="60%" width="54.2%" />
-<img src="images/proteins_heter_v2_success_rate.png" align="right" height="60%" width="20.4%" />
-</p>
+<!-- <p align="center"> -->
+<img src="images/ligands_posebusters_v1.png" align="left" height="60%" width="50%" />
+
+
+<img src="images/proteins_heter_v2_success_rate.png" align="left" height="60%" width="40%" />
+<br></br>
+
+<img src="images/NA_casp15.png"/>
+<!-- </p> -->
+
+<br>
+<!-- <p align="center">
+<img src="images/proteins_heter_v2_success_rate.png" align="right" height="60%" width="30%" />
+</p> -->
+
 
 
 ## HelixFold3 Inference
