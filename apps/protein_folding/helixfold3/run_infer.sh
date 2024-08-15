@@ -32,7 +32,7 @@ CUDA_VISIBLE_DEVICES=0 "$PYTHON_BIN" inference.py \
     --input_json data/demo_6zcy.json \
     --output_dir ./output \
     --model_name allatom_demo \
-    --init_model init_models/HelixFold3-params-240814.zip \
+    --init_model init_models/HelixFold3-240814.pdparams \
     --infer_times 1 \
     --diff_batch_size 1 \
     --precision "bf16" \
