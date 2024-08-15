@@ -134,8 +134,7 @@ CUDA_VISIBLE_DEVICES=0 "$PYTHON_BIN" inference.py \
     --model_name allatom_demo \
     --init_model ./init_models/checkpoints.pdparams \
     --infer_times 3 \
-    --precision "bf16" \
-    --no_msa_templ_feats # comment it to enable MSA searching
+    --precision "bf16"
 ```
 The descriptions of the above script are as follows:
 * Replace `MAXIT_SRC` with your installed maxit's root path.
@@ -147,7 +146,6 @@ The descriptions of the above script are as follows:
 * `--output_dir` - Model output path. The output will be in a folder named the same as your `--input_json` under this path.
 * `--model_name` - Model name in `./helixfold/model/config.py`. Different model names specify different configurations. Mirro modification to configuration can be specified in `CONFIG_DIFFS` in the `config.py` without change to the full configuration in `CONFIG_ALLATOM`.
 * `--infer_time` - The number of inferences executed by model for single input. In each inference, the model will infer `5` times (`diff_batch_size`) for the same input by default. This hyperparameter can be changed by `model.head.diffusion_module.test_diff_batch_size` within `./helixfold/model/config.py`
-* `--no_msa_templ_feats` - Inference without MSA and template features.
 
 ### Understanding Model Output
 

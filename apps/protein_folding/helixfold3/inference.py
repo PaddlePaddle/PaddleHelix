@@ -200,7 +200,7 @@ def eval(args, model, batch):
     return res
 
 
-def postprocess_fn(batch, results, output_dir, maxit_binary=None):
+def postprocess_fn(entry_name, batch, results, output_dir, maxit_binary=None):
     """
         postprocess function for HF3 output.
             - batch. input data
@@ -279,7 +279,8 @@ def postprocess_fn(batch, results, output_dir, maxit_binary=None):
 
     #### NOTE: append some contexts to cif file, Now only support ligand-intra bond type.
     ## 1. license
-    mmcif_writer.mmcif_meta_append(pred_cif_path)
+    extra_infos = {'entry_id': entry_name, "global_plddt": float(confidence_results['mean_plddt'])}
+    mmcif_writer.mmcif_meta_append(pred_cif_path, extra_infos)
     
     ## 2. post add ligand bond type;
     ## N_token, for ligand, N_token == N_atom
@@ -392,8 +393,9 @@ def get_display_results(batch, results):
     return all_results
 
 
-def save_result(feature_dict, prediction, output_dir, maxit_bin):
-    postprocess_fn(batch=feature_dict, 
+def save_result(entry_name, feature_dict, prediction, output_dir, maxit_bin):
+    postprocess_fn(entry_name=entry_name,
+                    batch=feature_dict, 
                     results=prediction,
                     output_dir=output_dir,
                     maxit_binary=maxit_bin)
@@ -407,7 +409,9 @@ def save_result(feature_dict, prediction, output_dir, maxit_bin):
 
     with open(output_dir.joinpath('all_results.json'), 'w') as f:
         f.write(json.dumps(all_results, indent=4))
-
+    
+    root_path = os.path.dirname(os.path.abspath(__file__))
+    shutil.copyfile(pathlib.Path(root_path).joinpath('LICENSE'), output_dir.joinpath('terms_of_use.md'))
 
 def split_prediction(pred, rank):
     prediction = []
@@ -460,11 +464,7 @@ def main(args):
         assert args.uniclust30_database_path is not None
 
     logger.info('Getting MSA/Template Pipelines...')
-    if args.no_msa_templ_feats:
-        logger.debug('MSA/Template Pipelines are not used.')
-        msa_templ_data_pipeline_dict = {}
-    else:
-        msa_templ_data_pipeline_dict = get_msa_templates_pipeline(args)
+    msa_templ_data_pipeline_dict = get_msa_templates_pipeline(args)
         
 
     ### create model
@@ -494,11 +494,10 @@ def main(args):
 
     features_pkl = output_dir_base.joinpath('final_features.pkl')
     feature_dict = feature_processing_aa.process_input_json(
-                all_entitys, 
-                ccd_preprocessed_path=args.ccd_preprocessed_path,
-                msa_templ_data_pipeline_dict=msa_templ_data_pipeline_dict,
-                msa_output_dir=msa_output_dir,
-                no_msa_templ_feats=args.no_msa_templ_feats)
+                    all_entitys, 
+                    ccd_preprocessed_path=args.ccd_preprocessed_path,
+                    msa_templ_data_pipeline_dict=msa_templ_data_pipeline_dict,
+                    msa_output_dir=msa_output_dir)
 
     # save features
     with open(features_pkl, 'wb') as f:
@@ -527,7 +526,8 @@ def main(args):
             json_name = job_base + f'-pred-{str(infer_id + 1)}-{str(rank_id + 1)}'
             output_dir = pathlib.Path(output_dir_base).joinpath(json_name)
             output_dir.mkdir(parents=True, exist_ok=True)
-            save_result(feature_dict=feature_dict,
+            save_result(entry_name=job_base,
+                        feature_dict=feature_dict,
                         prediction=prediction[rank_id],
                         output_dir=output_dir, 
                         maxit_bin=args.maxit_binary)
@@ -633,6 +633,5 @@ if __name__ == '__main__':
                         'config (reduced_dbs), no ensembling and full '
                         'genetic database config  (full_dbs)')
     parser.add_argument('--maxit_binary', type=str, default=None)
-    parser.add_argument('--no_msa_templ_feats', default=False, action='store_true')
     args = parser.parse_args()
     main(args)

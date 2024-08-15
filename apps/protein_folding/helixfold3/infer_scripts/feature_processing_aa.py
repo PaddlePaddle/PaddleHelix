@@ -378,7 +378,7 @@ def process_chain_msa(args):
 
 def process_input_json(all_entitys, ccd_preprocessed_path, 
                           msa_templ_data_pipeline_dict, msa_output_dir,
-                          no_msa_templ_feats=True):
+                          no_msa_templ_feats=False):
 
     ## load ccd dict.
     ccd_preprocessed_dict = load_ccd_dict(ccd_preprocessed_path)
