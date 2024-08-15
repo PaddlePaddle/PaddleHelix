@@ -104,6 +104,7 @@ We also provide [examples](./apps) that implement various algorithms and show th
 * **Protein Structure Prediction**
   - [HelixFold](./apps/protein_folding/helixfold)
   - [HelixFold-Single](./apps/protein_folding/helixfold-single)
+  - [HelixFold3](./apps/protein_folding/helixfold3)
 
 ### Competition Solutions
 The PaddleHelix team participated in multiple competitions related to bio-computing. The solutions can be found [here](./competition).

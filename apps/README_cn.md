@@ -14,6 +14,7 @@
 * **蛋白质结构预测**
   - [HelixFold](./protein_folding/helixfold)
   - [HelixFold-Single：无需MSA的结构预测](./protein_folding/helixfold-single)
+  - [HelixFold3](./protein_folding/helixfold3/)
 * **蛋白质功能预测**
   - [DeepFRI](./protein_function_prediction/DeepFRI/)
   - [ProteinSIGN](./protein_function_prediction/ProteinSIGN/)

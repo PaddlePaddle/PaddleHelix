@@ -14,6 +14,7 @@ We provide examples that implement various algorithms and show the methods runni
 * **Protein Structure Prediction**
   - [HelixFold](./protein_folding/helixfold)
   - [HelixFold-Single: MSA-free structure prediction](./protein_folding/helixfold-single)
+  - [HelixFold3](./protein_folding/helixfold3/)
 * **Protein Function Prediction**
   - [DeepFRI](./protein_function_prediction/DeepFRI/)
   - [ProteinSIGN](./protein_function_prediction/ProteinSIGN/)

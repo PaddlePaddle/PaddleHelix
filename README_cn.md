@@ -104,6 +104,7 @@
 * **蛋白质结构预测**
   - [HelixFold](./apps/protein_folding/helixfold)
   - [HelixFold-Single](./apps/protein_folding/helixfold-single)
+  - [HelixFold3](./apps/protein_folding/helixfold3/)
 
 ### 比赛解决方案
 螺旋桨团队参加了多项生物计算相关的赛事，相关解决方案可以参阅[这里](./competition).
