@@ -52,7 +52,7 @@ ERROR_CODES = {
     3: 'Unknown error.'
 }
 
-OBABEL_BIN = os.getenv('OBABEL_BIN', '/root/paddlejob/workspace/output/yangpan/program_files/anaconda3/bin/conda')
+OBABEL_BIN = os.getenv('OBABEL_BIN')
 if not os.path.exists(OBABEL_BIN):
     raise FileNotFoundError(f'Cannot find obabel binary at {OBABEL_BIN}.')
 

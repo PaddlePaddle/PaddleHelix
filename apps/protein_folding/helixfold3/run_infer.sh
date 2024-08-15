@@ -3,6 +3,7 @@
 PYTHON_BIN="/usr/bin/python3" # changes to your python
 ENV_BIN="/root/miniconda3/bin"  # change to your env
 MAXIT_SRC="PATH/TO/MAXIT/SRC" # changes to your MAXIT
+export OBABEL_BIN="PATH/TO/OBABEL/BIN" # changes to your openbabel
 DATA_DIR="./data"
 export PATH="$MAXIT_SRC/bin:$PATH"
 

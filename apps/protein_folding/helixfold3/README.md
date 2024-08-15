@@ -14,13 +14,15 @@ The PaddleHelix team is working on [HelixFold3](./Report_HelixFold3.pdf) to repl
 ## HelixFold3 Inference
 
 ### Environment
-Specific environment settings are required to reproduce the results reported in this repo.
+Specific environment settings are required to reproduce the results reported in this repo,
 
 * Python: 3.9
 * CUDA: 12.0
 * CuDNN: 8.4.0
 * NCCL: 2.14.3
 * Paddle: 2.6.1
+
+Those settings are recommended as they are the same as we used in our inference experiments.
 
 ### Installation
 
@@ -91,6 +93,7 @@ PYTHON_BIN="PATH/TO/YOUR/PYTHON"
 ENV_BIN="PATH/TO/YOUR/ENV"
 MAXIT_BIN="PATH/TO/MAXIT/SRC"
 DATA_DIR="PATH/TO/DATA"
+export OBABEL_BIN="PATH/TO/OBABEL/BIN"
 export PATH="$MAXIT_BIN/bin:$PATH"
 
 CUDA_VISIBLE_DEVICES=0 "$PYTHON_BIN" inference.py \

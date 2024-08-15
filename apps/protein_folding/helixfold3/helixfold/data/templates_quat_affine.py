@@ -303,7 +303,7 @@ class QuatAffine(object):
             transformed_point[1] - translation[..., 1],
             transformed_point[2] - translation[..., 2]]
 
-        return apply_inverse_rot_to_vec(rotation, rot_point)O
+        return apply_inverse_rot_to_vec(rotation, rot_point)
 
 
 ######Paddle Implementation
