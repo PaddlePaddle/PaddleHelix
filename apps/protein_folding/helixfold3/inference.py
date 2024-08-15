@@ -517,12 +517,15 @@ def main(args):
     print(f"============ Start Inference ============")
     
     infer_times = args.infer_times
-    diff_batch_size = model_config.model.heads.diffusion_module.test_diff_batch_size
-    logger.info(f'Inference {infer_times} Times...\n')
+    if args.diff_batch_size > 0:
+        model_config.model.heads.diffusion_module.test_diff_batch_size = args.diff_batch_size
+    diff_batch_size = model_config.model.heads.diffusion_module.test_diff_batch_size 
+    logger.info(f'Inference {infer_times} Times...')
+    logger.info(f" diffusion batch size {diff_batch_size}...\n")
     all_pred_path = []
     for infer_id in range(infer_times):
         
-        logger.info(f'Start {infer_id}-th inference, rank {diff_batch_size}...\n')
+        logger.info(f'Start {infer_id}-th inference...\n')
         prediction = eval(args, model, feature_dict)
         
         # save result
@@ -553,6 +556,7 @@ if __name__ == '__main__':
     parser.add_argument("--precision", type=str, choices=['fp32', 'bf16'], default='fp32')
     parser.add_argument("--amp_level", type=str, default='O1')
     parser.add_argument("--infer_times", type=int, default=1)
+    parser.add_argument("--diff_batch_size", type=int, default=-1)
     parser.add_argument('--input_json', type=str,
                         default=None, required=True,
                         help='Paths to json file, each containing '

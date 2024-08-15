@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ENV_NAME='helixfold'
-CUDA=12.0 #TODO
+CUDA=12.0
 
 # Install py env
 conda update -qy conda \
