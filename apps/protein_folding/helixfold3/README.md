@@ -147,7 +147,6 @@ The descriptions of the above script are as follows:
 * `--output_dir` - Model output path. The output will be in a folder named the same as your `--input_json` under this path.
 * `--model_name` - Model name in `./helixfold/model/config.py`. Different model names specify different configurations. Mirro modification to configuration can be specified in `CONFIG_DIFFS` in the `config.py` without change to the full configuration in `CONFIG_ALLATOM`.
 * `--infer_time` - The number of inferences executed by model for single input. In each inference, the model will infer `5` times (`diff_batch_size`) for the same input by default. This hyperparameter can be changed by `model.head.diffusion_module.test_diff_batch_size` within `./helixfold/model/config.py`
-* `--no_msa_templ_feats` - Inference WITHOUT MSA and template features. **NOTE: turnning it on is NOT recommended.**
 
 ### Understanding Model Output
 

@@ -36,4 +36,3 @@ CUDA_VISIBLE_DEVICES=0 "$PYTHON_BIN" inference.py \
     --infer_times 1 \
     --diff_batch_size 1 \
     --precision "bf16"
-    # --no_msa_templ_feats # comment it to enable MSA searching
