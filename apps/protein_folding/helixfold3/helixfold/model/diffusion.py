@@ -117,7 +117,7 @@ class DiffusionModule(nn.Layer):
         self.s_max = 160
         self.s_min = 4e-4
         self.p = 7
-        self.gamma0 = 0.05
+        self.gamma0 = 0.8
         self.gamma_min = 1.0
         self.lambda_ = 1.003
         self.eta = 1.5
@@ -218,7 +218,7 @@ class DiffusionModule(nn.Layer):
             xi = self.lambda_ * paddle.sqrt(t_hat ** 2 - c_tau_1 ** 2) * paddle.normal(shape=[B, N_atom, 3])
             x_noisy = x + xi
             x_denoised = self._forward_model(x_noisy, paddle.tile(t_hat, [B]), batch, representations)
-            delta = (x - x_denoised) / t_hat
+            delta = (x_noisy - x_denoised) / t_hat
             dt = c_tau - t_hat
             x = x_noisy + self.eta * dt * delta
 
