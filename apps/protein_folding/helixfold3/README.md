@@ -224,18 +224,4 @@ If you use the code, data, or checkpoints in this repo, please cite the followin
   author={PaddleHelix Team},
   year={2024}
 }
-
-@article{wang2022helixfold,
-  title={HelixFold: An Efficient Implementation of AlphaFold2 using PaddlePaddle},
-  author={Wang, Guoxia and Fang, Xiaomin and Wu, Zhihua and Liu, Yiqun and Xue, Yang and Xiang, Yingfei and Yu, Dianhai and Wang, Fan and Ma, Yanjun},
-  journal={arXiv preprint arXiv:2207.05477},
-  year={2022}
-}
-
-@article{wang2022efficient_alphafold2,
-  title={Efficient AlphaFold2 Training using Parallel Evoformer and Branch Parallelism},
-  author={Wang, Guoxia and Wu, Zhihua and Fang, Xiaomin and Xiang, Yingfei and Liu, Yiqun and Yu, Dianhai and Ma, Yanjun},
-  journal={arXiv preprint arXiv:2211.00235},
-  year={2022}
-}
 ```
