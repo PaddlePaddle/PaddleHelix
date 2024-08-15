@@ -492,24 +492,17 @@ def main(args):
     msa_output_dir = output_dir_base.joinpath('msas')
     msa_output_dir.mkdir(parents=True, exist_ok=True)
 
-    feature_dict = None
     features_pkl = output_dir_base.joinpath('final_features.pkl')
-    if features_pkl.exists():
-        with open(features_pkl, 'rb') as f:
-            feature_dict = pickle.load(f)
-    else:
-        feature_dict = feature_processing_aa.process_input_json(
-                    all_entitys, 
-                    ccd_preprocessed_path=args.ccd_preprocessed_path,
-                    msa_templ_data_pipeline_dict=msa_templ_data_pipeline_dict,
-                    msa_output_dir=msa_output_dir,
-                    no_msa_templ_feats=args.no_msa_templ_feats)
+    feature_dict = feature_processing_aa.process_input_json(
+                all_entitys, 
+                ccd_preprocessed_path=args.ccd_preprocessed_path,
+                msa_templ_data_pipeline_dict=msa_templ_data_pipeline_dict,
+                msa_output_dir=msa_output_dir,
+                no_msa_templ_feats=args.no_msa_templ_feats)
 
-        with open(features_pkl, 'wb') as f:
-            pickle.dump(feature_dict, f, protocol=4)
-
-    with open(features_pkl, 'rb') as f:
-        feature_dict = pickle.load(f)
+    # save features
+    with open(features_pkl, 'wb') as f:
+        pickle.dump(feature_dict, f, protocol=4)
 
     feature_dict['feat'] = batch_convert(feature_dict['feat'], add_batch=True)
     feature_dict['label'] = batch_convert(feature_dict['label'], add_batch=True)
