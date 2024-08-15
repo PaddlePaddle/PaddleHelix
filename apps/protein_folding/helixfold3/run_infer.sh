@@ -2,10 +2,9 @@
 
 PYTHON_BIN="/usr/bin/python3"
 ENV_BIN="/root/miniconda3/bin"
-# MAXIT_SRC="/root/paddlejob/workspace/output/yexianbin/dcu_command/maxit-v11.200-prod-src/"
-MAXIT_SRC="/home/rudder_paddle_home/custom_workspace/init_models/paddlehelix/paddlefold/maxit-v11.100-prod-src"
+MAXIT_SRC="/PATH/TO/MAXIT/SRC" #FIXME
 DATA_DIR="./data"
-export PATH="$MAXIT_SRC/hin:$PATH"
+export PATH="$MAXIT_SRC/bin:$PATH"
 
 CUDA_VISIBLE_DEVICES=0 "$PYTHON_BIN" inference.py \
     --maxit_binary "$MAXIT_SRC/bin/maxit" \
