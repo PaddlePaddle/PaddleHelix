@@ -41,23 +41,19 @@ is provided in `requirements.txt`. `kalign`, the [`HH-suite`](https://github.com
 also needed to produce multiple sequence alignments. The download scripts require `aria2c`. 
 
 We provide a script `setup_env.sh` that sets up a `conda` environment and installs all dependencies. The name of the 
-environment and CUDA version can be modified in `setup_env.sh`. Locate to the directory of `helixfold` and change the 
-python path to your python path in `setup_env.sh` for line 16-17
-
-```bash
-# setup_env.sh line 15
-/opt/conda/envs/${ENV_NAME}/bin/python -m pip ... # change to your conda python path
-```
-
-then run:
+environment and CUDA version can be modified in `setup_env.sh`. Locate to the directory of `helixfold` then run:
 
 ```bash
 sh setup_env.sh
+
 # activate the conda environment
 conda activate helixfold
+
 # install paddlepaddle
 python3 -m pip install paddlepaddle-gpu==2.6.1.post120 -f https://www.paddlepaddle.org.cn/whl/linux/mkl/avx/stable.html
 # or lower version: https://paddle-wheel.bj.bcebos.com/2.5.1/linux/linux-gpu-cuda11.7-cudnn8.4.1-mkl-gcc8.2-avx/paddlepaddle_gpu-2.5.1.post117-cp39-cp39-linux_x86_64.whl
+
+python3 -m pip install -r requirements.txt
 ```
 
 Note: If you have a different version of python3 and cuda, please refer to [here](https://www.paddlepaddle.org.cn/whl/linux/gpu/develop.html) for the compatible PaddlePaddle `dev` package.

@@ -12,5 +12,3 @@ conda create -n ${ENV_NAME} -y -c conda-forge \
 conda install -y -c bioconda aria2 hmmer==3.3.2 kalign2==2.04 hhsuite==3.3.0 -n ${ENV_NAME}
 conda install -y -c conda-forge openbabel -n ${ENV_NAME}
 
-/opt/conda/envs/${ENV_NAME}/bin/python -m pip install -r requirements.txt
-
