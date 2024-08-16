@@ -15,6 +15,7 @@ CUDA_VISIBLE_DEVICES=0 "$PYTHON_BIN" inference.py \
 	--kalign_binary_path "$ENV_BIN/kalign" \
 	--hmmsearch_binary_path "$ENV_BIN/hmmsearch" \
 	--hmmbuild_binary_path "$ENV_BIN/hmmbuild" \
+    --nhmmer_binary_path "$ENV_BIN/nhmmer" \
     --preset='reduced_dbs' \
     --bfd_database_path "$DATA_DIR/bfd/bfd_metaclust_clu_complete_id30_c90_final_seq.sorted_opt" \
     --small_bfd_database_path "$DATA_DIR/small_bfd/bfd-first_non_consensus_sequences.fasta" \

@@ -95,7 +95,7 @@ The script `scripts/download_all_data.sh` can be used to download and set up all
 
 #### Running HelixFold for Inference
 To run inference on a sequence or multiple sequences using HelixFold3's pretrained parameters, run e.g.:
-* Inference on single GPU:
+* Inference on single GPU (change the settings in script BEFORE you run it)
 ```
 sh run_infer.sh
 ```
@@ -106,19 +106,20 @@ The script is as follows,
 
 PYTHON_BIN="PATH/TO/YOUR/PYTHON"
 ENV_BIN="PATH/TO/YOUR/ENV"
-MAXIT_BIN="PATH/TO/MAXIT/SRC"
+MAXIT_SRC="PATH/TO/MAXIT/SRC"
 DATA_DIR="PATH/TO/DATA"
 export OBABEL_BIN="PATH/TO/OBABEL/BIN"
 export PATH="$MAXIT_BIN/bin:$PATH"
 
 CUDA_VISIBLE_DEVICES=0 "$PYTHON_BIN" inference.py \
-    --maxit_binary "$MAXIT_BIN/bin/maxit" \
+    --maxit_binary "$MAXIT_SRC/bin/maxit" \
     --jackhmmer_binary_path "$ENV_BIN/jackhmmer" \
 	--hhblits_binary_path "$ENV_BIN/hhblits" \
 	--hhsearch_binary_path "$ENV_BIN/hhsearch" \
 	--kalign_binary_path "$ENV_BIN/kalign" \
 	--hmmsearch_binary_path "$ENV_BIN/hmmsearch" \
 	--hmmbuild_binary_path "$ENV_BIN/hmmbuild" \
+    --nhmmer_binary_path "$ENV_BIN/nhmmer" \
     --preset='reduced_dbs' \
     --bfd_database_path "$DATA_DIR/bfd/bfd_metaclust_clu_complete_id30_c90_final_seq.sorted_opt" \
     --small_bfd_database_path "$DATA_DIR/small_bfd/bfd-first_non_consensus_sequences.fasta" \
@@ -141,8 +142,9 @@ CUDA_VISIBLE_DEVICES=0 "$PYTHON_BIN" inference.py \
     --precision "fp32"
 ```
 The descriptions of the above script are as follows:
-* Replace `MAXIT_SRC` with your installed maxit's root path.
+* Replace `MAXIT_SRC` with your installed `maxit`'s root path.
 * Replace `DATA_DIR` with your downloaded data path.
+* Replace `OBABEL_BIN` with your installed `openbabel` path.
 * Replace `ENV_BIN` with your conda virtual environment or any environment where `hhblits`, `hmmsearch` and other dependencies have been installed.
 * `--preset` - Set `'reduced_dbs'` to use small bfd or `'full_dbs'` to use full bfd.
 * `--*_database_path` - Path to datasets you have downloaded.
