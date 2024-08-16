@@ -44,7 +44,10 @@ We provide a script `setup_env.sh` that sets up a `conda` environment and instal
 environment and CUDA version can be modified in `setup_env.sh`. Locate to the directory of `helixfold` then run:
 
 ```bash
-sh setup_env.sh
+# Install py env
+conda create -n helixfold -c conda-forge python=3.9
+conda install -y -c bioconda aria2 hmmer==3.3.2 kalign2==2.04 hhsuite==3.3.0 -n helixfold
+conda install -y -c conda-forge openbabel -n helixfold
 
 # activate the conda environment
 conda activate helixfold
