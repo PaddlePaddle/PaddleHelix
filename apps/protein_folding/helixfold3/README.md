@@ -40,8 +40,7 @@ HelixFold3 depends on [PaddlePaddle](https://github.com/paddlepaddle/paddle). Py
 is provided in `requirements.txt`. `kalign`, the [`HH-suite`](https://github.com/soedinglab/hh-suite) and `jackhmmer` are 
 also needed to produce multiple sequence alignments. The download scripts require `aria2c`. 
 
-We provide a script `setup_env.sh` that sets up a `conda` environment and installs all dependencies. The name of the 
-environment and CUDA version can be modified in `setup_env.sh`. Locate to the directory of `helixfold` then run:
+Locate to the directory of `helixfold` then run:
 
 ```bash
 # Install py env
