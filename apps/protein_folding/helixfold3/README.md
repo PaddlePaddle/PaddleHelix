@@ -4,20 +4,19 @@ The AlphaFold series has transformed protein structure prediction with remarkabl
 
 The PaddleHelix team is working on [HelixFold3](./helixfold3_report.pdf) to replicate the advanced capabilities of AlphaFold3. Insights from the AlphaFold3 paper inform our approach and build on our prior work with [HelixFold](https://arxiv.org/abs/2207.05477), [HelixFold-Single](https://doi.org/10.1038/s42256-023-00721-6), [HelixFold-Multimer](https://arxiv.org/abs/2404.10260), and [HelixDock](https://arxiv.org/abs/2310.13913). Currently, HelixFold3's accuracy in predicting the structures of small molecule ligands, nucleic acids (including DNA and RNA), and proteins is comparable to that of AlphaFold3. We are committed to continuously enhancing the model's performance and rigorously evaluating it across a broader range of biological molecules. Please refer to our [HelixFold3 technical report](./helixfold3_report.pdf) for more details.
 
+
+<img src="./demo_output/6zcy_demo_result.png" alt="demo" style="display: block; margin-left: auto; margin-right: auto; width: 50%; margin-bottom: 20px;" />
+
+
 <!-- <p align="center"> -->
-<img src="images/ligands_posebusters_v1.png" align="left" height="60%" width="50%" />
+<img src="images/ligands_posebusters_v1.png" align="left" height="60%" width="50%" style="padding-left: 10px;"/>
 
 
-<img src="images/proteins_heter_v2_success_rate.png" align="left" height="60%" width="40%" />
+<img src="images/proteins_heter_v2_success_rate.png" align="right" height="60%" width="40%" style="padding-right: 10px;"/>
 <br></br>
 
-<img src="images/NA_casp15.png"/>
-<!-- </p> -->
-
+<img src="images/NA_casp15.png" style="display: block; padding-top: 10px;">
 <br>
-<!-- <p align="center">
-<img src="images/proteins_heter_v2_success_rate.png" align="right" height="60%" width="30%" />
-</p> -->
 
 
 
@@ -93,6 +92,31 @@ The script `scripts/download_all_data.sh` can be used to download and set up all
     will download a reduced version of the databases to be used with the `reduced_dbs` preset. The total download 
     size for the reduced databases is around 190 GB, and the total unzipped size is around 530 GB.
 
+#### Understanding Model Input
+
+There are some demo input under `./data/` for your test and reference. Data input is in the form of JSON containing
+several entities such as protein, ligand, nucleic acids, and irons. Proteins and nucleic acids inputs are their sequence.
+HelixFold3 supports input ligand as SMILES or CCD id, please refer to `/data/demo_6zcy_smiles.json` and `demo_output/demo_6zcy_smiles/` 
+for more details about SMIMLES input. More flexible input will come in soon.
+
+A example of input data is as follows:
+```json
+{
+    "entities": [
+        {
+            "type": "protein",
+            "sequence": "MDTEVYESPYADPEEIRPKEVYLDRKLLTLEDKELGSGNFGTVKKGYYQMKKVVKTVAVKILKNEANDPALKDELLAEANVMQQLDNPYIVRMIGICEAESWMLVMEMAELGPLNKYLQQNRHVKDKNIIELVHQVSMGMKYLEESNFVHRDLAARNVLLVTQHYAKISDFGLSKALRADENYYKAQTHGKWPVKWYAPECINYYKFSSKSDVWSFGVLMWEAFSYGQKPYRGMKGSEVTAMLEKGERMGCPAGCPREMYDLMNLCWTYDVENRPGFAAVELRLRNYYYDVVNHHHHHH",
+            "count": 1
+        },
+        {
+            "type": "ligand",
+            "ccd": "QF8",
+            "count": 1
+        }
+    ]
+}
+```
+
 #### Running HelixFold for Inference
 To run inference on a sequence or multiple sequences using HelixFold3's pretrained parameters, run e.g.:
 * Inference on single GPU (change the settings in script BEFORE you run it)
@@ -153,8 +177,6 @@ The descriptions of the above script are as follows:
 * `--model_name` - Model name in `./helixfold/model/config.py`. Different model names specify different configurations. Mirro modification to configuration can be specified in `CONFIG_DIFFS` in the `config.py` without change to the full configuration in `CONFIG_ALLATOM`.
 * `--infer_time` - The number of inferences executed by model for single input. In each inference, the model will infer `5` times (`diff_batch_size`) for the same input by default. This hyperparameter can be changed by `model.head.diffusion_module.test_diff_batch_size` within `./helixfold/model/config.py`
 * `--precision` - Either `bf16` or `fp32`. Please check if your machine can support `bf16` or not beforing changing it. For example, `bf16` is supported by A100 and H100 or higher version while V100 only supports `fp32`.
-
-Note: HelixFold3 also supports input ligand as SMILES, refer to `/data/demo_6zcy_smiles.json` and `demo_output/demo_6zcy_smiles/` for more details.
 
 ### Understanding Model Output
 
