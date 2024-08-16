@@ -32,7 +32,7 @@ Specific environment settings are required to reproduce the results reported in 
 * NCCL: 2.14.3
 * Paddle: 2.6.1
 
-Those settings are recommended as they are the same as we used in our inference experiments.
+Those settings are recommended as they are the same as we used in our A100 machines for all inference experiments. 
 
 ### Installation
 
@@ -134,7 +134,7 @@ CUDA_VISIBLE_DEVICES=0 "$PYTHON_BIN" inference.py \
     --model_name allatom_demo \
     --init_model ./init_models/checkpoints.pdparams \
     --infer_times 3 \
-    --precision "bf16"
+    --precision "fp32"
 ```
 The descriptions of the above script are as follows:
 * Replace `MAXIT_SRC` with your installed maxit's root path.
@@ -146,6 +146,7 @@ The descriptions of the above script are as follows:
 * `--output_dir` - Model output path. The output will be in a folder named the same as your `--input_json` under this path.
 * `--model_name` - Model name in `./helixfold/model/config.py`. Different model names specify different configurations. Mirro modification to configuration can be specified in `CONFIG_DIFFS` in the `config.py` without change to the full configuration in `CONFIG_ALLATOM`.
 * `--infer_time` - The number of inferences executed by model for single input. In each inference, the model will infer `5` times (`diff_batch_size`) for the same input by default. This hyperparameter can be changed by `model.head.diffusion_module.test_diff_batch_size` within `./helixfold/model/config.py`
+* `--precision` - Either `bf16` or `fp32`. Please check if your machine can support `bf16` or not beforing changing it. For example, `bf16` is supported by A100 and H100 or higher version while V100 only supports `fp32`.
 
 ### Understanding Model Output
 
@@ -185,6 +186,17 @@ The contents of each output file are as follows:
 * `demo_data-pred-X-Y` - Prediction results of `demo_data.json` in X-th inference and Y-thdiffusion batch, 
 including predicted structures in `cif` or `pdb` and a JSON file containing all metrics' results.
 * `demo_data-rank*` - Ranked results of a series of predictions according to metrics.
+
+### Resource Usage
+
+We suggest a single GPU for inference has at least 32G available memory. The number of tokens is at most 1200 for inference on a single A100-40G GPU with precision `bf16`. The length of inference input tokens on a single V100-32G with precision `fp32` is up to 1000. Inferring longer tokens may cost more GPU memory.
+
+For samples with larger tokens, you can reduce `model.global_config.subbatch_size` in `CONFIG_DIFFS` in `helixfold/model/config.py` to save more GPU memory but suffer from slower inference. `model.global_config.subbatch_size` is set as `96` by default. You can also
+reduce the number of additional recycles by changing `model.num_recycle` in the same place.
+
+
+We are keen to support longer token inference, it will come in soon.
+
 
 ## Copyright
 

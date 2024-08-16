@@ -38,8 +38,9 @@ CONFIG_DIFFS = {
     'allatom_demo': {
         'model.heads.confidence_head.weight': 0.01
     },
-    'allatom_subbatch_64': {
+    'allatom_subbatch_64_recycle_1': {
         'model.global_config.subbatch_size': 64,
+        'model.num_recycle': 1,
     },
 }
 
