@@ -36,13 +36,17 @@ Those settings are recommended as they are the same as we used in our A100 machi
 
 ### Installation
 
-HelixFold3 depends on [PaddlePaddle](https://github.com/paddlepaddle/paddle). Python dependencies available through `pip` is provided in `requirements.txt`. `kalign`, the [`HH-suite`](https://github.com/soedinglab/hh-suite) and `jackhmmer` are also needed to produce multiple sequence alignments. The download scripts require `aria2c`. 
+HelixFold3 depends on [PaddlePaddle](https://github.com/paddlepaddle/paddle). Python dependencies available through `pip` 
+is provided in `requirements.txt`. `kalign`, the [`HH-suite`](https://github.com/soedinglab/hh-suite) and `jackhmmer` are 
+also needed to produce multiple sequence alignments. The download scripts require `aria2c`. 
 
-We provide a script `setup_env.sh` that sets up a `conda` environment and installs all dependencies. The name of the environment and CUDA version can be modified in `setup_env.sh`. Locate to the directory of `helixfold` and change the python path to your python path in `setup_env.sh` for line 16-17
+We provide a script `setup_env.sh` that sets up a `conda` environment and installs all dependencies. The name of the 
+environment and CUDA version can be modified in `setup_env.sh`. Locate to the directory of `helixfold` and change the 
+python path to your python path in `setup_env.sh` for line 16-17
 
 ```bash
-# setup_env.sh line 16-17
-/PATH/TO/PYTHON/BIN -m pip ...
+# setup_env.sh line 15
+/opt/conda/envs/${ENV_NAME}/bin/python -m pip ... # change to your conda python path
 ```
 
 then run:
@@ -60,7 +64,9 @@ Note: If you have a different version of python3 and cuda, please refer to [here
 
 
 #### Install Maxit
-The conversion between `.cif` and `.pdb` relies on [Maxit](https://sw-tools.rcsb.org/apps/MAXIT/index.html). Download Maxit source code from https://sw-tools.rcsb.org/apps/MAXIT/maxit-v11.100-prod-src.tar.gz. Untar and follow its `README` to complete installation. 
+The conversion between `.cif` and `.pdb` relies on [Maxit](https://sw-tools.rcsb.org/apps/MAXIT/index.html). 
+Download Maxit source code from https://sw-tools.rcsb.org/apps/MAXIT/maxit-v11.100-prod-src.tar.gz. Untar and follow 
+its `README` to complete installation. 
 
 ### Usage
 
@@ -189,13 +195,16 @@ including predicted structures in `cif` or `pdb` and a JSON file containing all 
 
 ### Resource Usage
 
-We suggest a single GPU for inference has at least 32G available memory. The number of tokens is at most 1200 for inference on a single A100-40G GPU with precision `bf16`. The length of inference input tokens on a single V100-32G with precision `fp32` is up to 1000. Inferring longer tokens may cost more GPU memory.
+We suggest a single GPU for inference has at least 32G available memory. The maximum number of tokens is around 
+1200 for inference on a single A100-40G GPU with precision `bf16`. The length of inference input tokens on a 
+single V100-32G with precision `fp32` is up to 1000. Inferring longer tokens or entities with larger atom numbers 
+per token than normal protein residues like nucleic acids may cost more GPU memory.
 
 For samples with larger tokens, you can reduce `model.global_config.subbatch_size` in `CONFIG_DIFFS` in `helixfold/model/config.py` to save more GPU memory but suffer from slower inference. `model.global_config.subbatch_size` is set as `96` by default. You can also
 reduce the number of additional recycles by changing `model.num_recycle` in the same place.
 
 
-We are keen to support longer token inference, it will come in soon.
+We are keen on support longer token inference, it will come in soon.
 
 
 ## Copyright
