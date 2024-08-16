@@ -154,6 +154,8 @@ The descriptions of the above script are as follows:
 * `--infer_time` - The number of inferences executed by model for single input. In each inference, the model will infer `5` times (`diff_batch_size`) for the same input by default. This hyperparameter can be changed by `model.head.diffusion_module.test_diff_batch_size` within `./helixfold/model/config.py`
 * `--precision` - Either `bf16` or `fp32`. Please check if your machine can support `bf16` or not beforing changing it. For example, `bf16` is supported by A100 and H100 or higher version while V100 only supports `fp32`.
 
+Note: HelixFold3 also supports input ligand as SMILES, refer to `/data/demo_6zcy_smiles.json` and `demo_output/demo_6zcy_smiles/` for more details.
+
 ### Understanding Model Output
 
 The outputs will be in a subfolder of `output_dir`, including the computed MSAs, predicted structures, 
