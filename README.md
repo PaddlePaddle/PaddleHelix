@@ -1,4 +1,4 @@
-English | [简体中文](README_cn.md)
+English | [简体中文](README_cn.md) | [日本語](README_ja.md)
 
 <p align="center">
 <img src="./.github/paddlehelix_logo.png" align="middle" height="90%" width="90%" />

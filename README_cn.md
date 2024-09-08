@@ -1,4 +1,4 @@
-[English](README.md) | 简体中文
+[English](README.md) | 简体中文 | [日本語](README_ja.md)
 
 <p align="center">
 <img src="./.github/飞桨-螺旋桨_logo.png" align="middle" height="75%" width="75%" />
