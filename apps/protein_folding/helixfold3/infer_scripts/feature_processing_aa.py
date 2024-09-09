@@ -63,12 +63,15 @@ def crop_msa(feat, max_msa_depth=16384):
     return msa.astype('int32'), msa_mask, delection_mat
 
 
-def get_padding_restype(ccd_id, ccd_preprocessed_dict, extra_feats=None):
+def get_padding_restype(ccd_id, ccd_preprocessed_dict, extra_feats=None, is_poly_point=False):
   if ccd_id in ccd_preprocessed_dict:
     refs = ccd_preprocessed_dict[ccd_id]  # O(1)
     if ccd_id in residue_constants.STANDARD_LIST:
       _residue_is_standard = True
-      pdb_atom_ids_list = POLYMER_STANDARD_RESI_ATOMS[ccd_id] # NOTE: now is only support standard residue.
+      if not is_poly_point:
+        pdb_atom_ids_list = POLYMER_STANDARD_RESI_ATOMS[ccd_id] # NOTE: now is only support standard residue.
+      else:
+        pdb_atom_ids_list = refs['atom_ids']
     else:
       # for ligand/ion. ccd_id.
       _residue_is_standard = False
@@ -190,8 +193,14 @@ def get_inference_restype_mask(all_chain_features, ccd_preprocessed_dict, extra_
   frame_indice_offset = 0
   for type_chain_id, ccd_list in all_chain_features.items():
     dtype, chain_id = type_chain_id.rsplit('_', 1) 
-    for ccd_id in ccd_list:
-      pad_feats = get_padding_restype(ccd_id, ccd_preprocessed_dict, extra_feats=extra_feats)
+    for idx, ccd_id in enumerate(ccd_list):
+      is_poly_point = False
+      if idx == len(ccd_list) - 1 and dtype == 'protein':
+        is_poly_point = True
+      elif idx == 0 and dtype in ['rna', 'dna']:
+        is_poly_point = True
+      pad_feats = get_padding_restype(ccd_id, ccd_preprocessed_dict, extra_feats=extra_feats, 
+                                        is_poly_point=is_poly_point)
       pad_feats['ai_indice'] = pad_feats['ai_indice'] + frame_indice_offset
       pad_feats['bi_indice'] = pad_feats['bi_indice'] + frame_indice_offset
       pad_feats['ci_indice'] = pad_feats['ci_indice'] + frame_indice_offset
