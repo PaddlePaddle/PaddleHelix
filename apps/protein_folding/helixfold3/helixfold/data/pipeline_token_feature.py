@@ -17,16 +17,16 @@
 import collections
 import os
 import time
-from typing import MutableMapping, Optional, List
+from typing import Any, MutableMapping, Optional, List
 from absl import logging
 from helixfold.common import residue_constants
 from helixfold.data import parsers
+from helixfold.data.pipeline_conf_bonds import load_ccd_dict
 import numpy as np
 import json
-import gzip
-import pickle
+
 from rdkit import Chem
- 
+
 FeatureDict = MutableMapping[str, np.ndarray]
 ELEMENT_MAPPING = Chem.GetPeriodicTable()
  
@@ -70,6 +70,15 @@ def flatten_is_protein_features(is_protein_feats: np.ndarray) -> FeatureDict:
  
   return res
  
+
+def dump_all_ccd_keys(ccd_data: dict[str, Any]):
+  ccd_keys_file='all_ccd_keys.txt'
+  if not os.path.isfile(ccd_keys_file):
+      open(ccd_keys_file, 'w').write('\n'.join(ccd_data.keys()))
+  logging.warning(f'All ccd keys are dumped to {ccd_keys_file}')
+  return ccd_keys_file
+  
+   
 def make_sequence_features(
     all_chain_info, ccd_preprocessed_dict, 
     extra_feats: Optional[dict]=None) -> FeatureDict:
@@ -120,13 +129,18 @@ def make_sequence_features(
     sym_id = chainid_to_sym_id[_alphabet_chain_id]
     for residue_id, ccd_id in enumerate(ccd_seq):
       if ccd_id not in ccd_preprocessed_dict:
-        assert not extra_feats is None and ccd_id in extra_feats,\
-                  f'<{ccd_id}> not in ccd_preprocessed_dict, But got extra_feats is None'
+        if extra_feats is None:
+          ccd_kf=dump_all_ccd_keys(ccd_preprocessed_dict)
+          raise ValueError(f'<{ccd_id}> not in ccd_preprocessed_dict, But got extra_feats is None. See all keys in {ccd_kf}')
+        if ccd_id not in extra_feats:
+          ccd_kf=dump_all_ccd_keys(ccd_preprocessed_dict)
+          raise ValueError(f'<{ccd_id}> not in ccd_preprocessed_dict or extra_feats.  See all keys in {ccd_kf}')
         _ccd_feats = extra_feats[ccd_id]
       else:
         _ccd_feats = ccd_preprocessed_dict[ccd_id]
       num_atoms = len(_ccd_feats['position'])
-      assert num_atoms > 0, f'TODO filter - Got CCD <{ccd_id}>: 0 atom nums.'
+      if num_atoms == 0:
+         raise NotImplementedError(f'TODO filter - Got CCD <{ccd_id}>: 0 atom nums.')
       
       if ccd_id not in residue_constants.STANDARD_LIST: 
           features['asym_id'].append(np.array([chain_num_id] * num_atoms, dtype=np.int32))
@@ -211,13 +225,8 @@ class DataPipeline:
       assembly_dict = unit_dict
 
     if ccd_preprocessed_dict is None:
-      ccd_preprocessed_dict = {}
-      st_1 = time.time()
-      if 'pkl.gz' in self.ccd_preprocessed_path:
-          with gzip.open(self.ccd_preprocessed_path, "rb") as fp:
-              ccd_preprocessed_dict = pickle.load(fp)
-      logging.info(f'load ccd dataset done. use {time.time()-st_1}s')
- 
+      ccd_preprocessed_dict=load_ccd_dict(self.ccd_preprocessed_path)
+
     if select_mmcif_chainID is not None:
       select_mmcif_chainID = set(select_mmcif_chainID)
  

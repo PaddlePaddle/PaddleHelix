@@ -1,0 +1,33 @@
+{
+    "entities": [
+        {
+            "type": "protein",
+            "sequence": "NSVHPCCDPVICEPREGEHCISGPCCENCYFLNSGTICKRARGDGNQDYCTGITPDCPRNRYNV",
+            "count": 2
+        },
+        {
+            "type": "bond",
+            "bond": "A,CYS,6,SG,A,CYS,29,SG,disulf,2.3;A,CYS,20,SG,A,CYS,26,SG,disulf,2.3;A,CYS,25,SG,A,CYS,50,SG,disulf,2.3;A,CYS,38,SG,A,CYS,57,SG,disulf,2.3",
+            "_case_from": "https://www.uniprot.org/uniprotkb/P83658/entry#ptm_processing",
+            "_note": "Intrachain, A"
+        },
+        {
+            "type": "bond",
+            "bond": "B,CYS,6,SG,B,CYS,29,SG,disulf,2.3;B,CYS,20,SG,B,CYS,26,SG,disulf,2.3;B,CYS,25,SG,B,CYS,50,SG,disulf,2.3;B,CYS,38,SG,B,CYS,57,SG,disulf,2.3",
+            "_case_from": "https://www.uniprot.org/uniprotkb/P83658/entry#ptm_processing",
+            "_note": "Intrachain, B"
+        },
+        {
+            "type": "bond",
+            "bond": "A,CYS,7,SG,B,CYS,12,SG,disulf,2.3",
+            "_case_from": "https://www.uniprot.org/uniprotkb/P83658/entry#ptm_processing",
+            "_note": "Interchain, AB"
+        },
+        {
+            "type": "bond",
+            "bond": "B,CYS,7,SG,A,CYS,12,SG,disulf,2.3",
+            "_case_from": "https://www.uniprot.org/uniprotkb/P83658/entry#ptm_processing",
+            "_note": "Interchain, BA"
+        }
+    ]
+}

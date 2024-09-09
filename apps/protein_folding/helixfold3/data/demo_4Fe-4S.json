@@ -1,0 +1,45 @@
+{
+    "entities": [
+        {
+            "type": "protein",
+            "sequence": "MKLNVDGLLVYFPYDYIYPEQFSYMRELKRTLDAKGHGVLEMPSGTGKTVSLLALIMAYQRAYPLEVTKLIYCSRTVPEIEKVIEELRKLLNFYEKQEGEKLPFLGLALSSRKNLCIHPEVTPLRFGKDVDGKCHSLTASYVRAQYQHDTSLPHCRFYEEFDAHGREVPLPAGIYNLDDLKALGRRQGWCPYFLARYSILHANVVVYSYHYLLDPKIADLVSKELARKAVVVFDEAHNIDNVCIDSMSVNLTRRTLDRCQGNLETLQKTVLRIKETDEQRLRDEYRRLVEGLREASAARETDAHLANPVLPDEVLQEAVPGSIRTAEHFLGFLRRLLEYVKWRLRVQHVVQESPPAFLSGLAQRVCIQRKPLRFCAERLRSLLHTLEITDLADFSPLTLLANFATLVSTYAKGFTIIIEPFDDRTPTIANPILHFSCMDASLAIKPVFERFQSVIITSGTLSPLDIYPKILDFHPVTMATFTMTLARVCLCPMIIGRGNDQVAISSKFETREDIAVIRNYGNLLLEMSAVVPDGIVAFFTSYQYMESTVASWYEQGILENIQRNKLLFIETQDGAETSVALEKYQEACENGRGAILLSVARGKVSEGIDFVHHYGRAVIMFGVPYVYTQSRILKARLEYLRDQFQIRENDFLTFDAMRHAAQCVGRAIRGKTDYGLMVFADKRFARGDKRGKLPRWIQEHLTDANLNLTVDEGVQVAKYFLRQMAQPFHREDQLGLSLLSLEQLESEETLKRIEQIAQQL",
+            "count": 1
+        },
+        {
+            "type": "ligand",
+            "ccd": "SF4",
+            "count": 1,
+            "_note": "5T5I"
+        },
+        {
+            "type": "bond",
+            "bond": "A,CYS,116,SG,B,SF4,1,FE1,metalc,2.2;A,CYS,134,SG,B,SF4,1,FE2,metalc,2.2;A,CYS,155,SG,B,SF4,1,FE3,metalc,2.2;A,CYS,190,SG,B,SF4,1,FE4,metalc,2.2",
+            "_case_from": "https://www.uniprot.org/uniprotkb/P18074/entry",
+            "_note":"ALL_CYS-ALL_FE"
+        },
+        {
+            "type": "bond",
+            "bond": "B,SF4,1,FE1,B,SF4,1,S2,metalc,2.2;B,SF4,1,FE1,B,SF4,1,S3,metalc,2.2;B,SF4,1,FE1,B,SF4,1,S4,metalc,2.2",
+            "_case_from": "https://www.uniprot.org/uniprotkb/P18074/entry",
+            "_note":"FE1-S234"
+        },
+        {
+            "type": "bond",
+            "bond": "B,SF4,1,FE2,B,SF4,1,S1,metalc,2.2;B,SF4,1,FE2,B,SF4,1,S3,metalc,2.2;B,SF4,1,FE2,B,SF4,1,S4,metalc,2.2",
+            "_case_from": "https://www.uniprot.org/uniprotkb/P18074/entry",
+            "_note":"FE2-S134"
+        },
+        {
+            "type": "bond",
+            "bond": "B,SF4,1,FE3,B,SF4,1,S1,metalc,2.2;B,SF4,1,FE3,B,SF4,1,S2,metalc,2.2;B,SF4,1,FE3,B,SF4,1,S4,metalc,2.2",
+            "_case_from": "https://www.uniprot.org/uniprotkb/P18074/entry",
+            "_note":"FE3-S124"
+        },
+        {
+            "type": "bond",
+            "bond": "B,SF4,1,FE4,B,SF4,1,S1,metalc,2.2;B,SF4,1,FE14,B,SF4,1,S2,metalc,2.2;B,SF4,1,FE4,B,SF4,1,S3,metalc,2.2",
+            "_case_from": "https://www.uniprot.org/uniprotkb/P18074/entry",
+            "_note":"FE4-S123"
+        }
+    ]
+}

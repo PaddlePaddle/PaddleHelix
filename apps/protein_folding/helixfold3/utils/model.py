@@ -17,7 +17,6 @@
 import numpy as np
 import paddle
 import paddle.nn as nn
-import logging
 import io
 
 from helixfold.model import modules_all_atom

@@ -1,0 +1,21 @@
+{
+    "entities": [
+        {
+            "type": "protein",
+            "sequence": "MQIFVKTLTGKTITLEVESSDTIDNVKAKIQDKEGIPPDQQRLIFAGKQLEDGRTLADYNIQKESTLHLVLRLRGG",
+            "count": 1,
+            "_case_from": "https://www.rcsb.org/structure/5K9P",
+            "_note": "Ub"
+        },
+        {
+            "type": "ligand",
+            "ccd": "PO2",
+            "count": 1
+        },
+        {
+            "type": "bond",
+            "bond": "A,SER,20,OG,B,PO2,1,P,covale,1.66",
+            "_note": "Ser20 phosphorylated ubiquitin"
+        }
+    ]
+}

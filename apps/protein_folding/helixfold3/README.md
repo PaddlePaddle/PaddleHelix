@@ -63,7 +63,15 @@ Note: If you have a different version of python3 and cuda, please refer to [here
 #### Install Maxit
 The conversion between `.cif` and `.pdb` relies on [Maxit](https://sw-tools.rcsb.org/apps/MAXIT/index.html). 
 Download Maxit source code from https://sw-tools.rcsb.org/apps/MAXIT/maxit-v11.100-prod-src.tar.gz. Untar and follow 
-its `README` to complete installation. 
+its `README` to complete installation. If you encouter error like your GCC version not support (9.4.0, for example), editing `etc/platform.sh` and reruning compilation again would make sense. See below:
+
+```bash
+#   Check if it is a Linux platform
+    Linux)
+#     Check if it is GCC version 4.x
+      gcc_ver=`gcc --version | grep -e " 4\."` # edit `4\.` to `9\.`
+      if [[ -z $gcc_ver ]]
+```
 
 ### Usage
 
@@ -96,10 +104,11 @@ The script `scripts/download_all_data.sh` can be used to download and set up all
 
 There are some demo input under `./data/` for your test and reference. Data input is in the form of JSON containing
 several entities such as `protein`, `ligand`, `nucleic acids`, and `iron`. Proteins and nucleic acids inputs are their sequence.
-HelixFold3 supports input ligand as SMILES or CCD id, please refer to `/data/demo_6zcy_smiles.json` and `demo_output/demo_6zcy_smiles/` 
-for more details about SMILES input. More flexible input will come in soon.
+HelixFold3 supports input ligand as SMILES, CCD id or small molecule files, please refer to `/data/demo_6zcy_smiles.json` and `data/demo_p450_heme_sdf.json` 
+for more details about SMILES input. Flexible input from small molecule is now supported. See `obabel -L formats |grep -v 'Write-only'`
 
 A example of input data is as follows:
+
 ```json
 {
     "entities": [
@@ -116,11 +125,59 @@ A example of input data is as follows:
     ]
 }
 ```
+Example of **covalently modified** input:
+
+```json
+{
+    "entities": [
+        {
+            "type": "protein",
+            "sequence": "MDALYKSTVAKFNEVIQLDCSTEFFSIALSSIAGILLLLLLFRSKRHSSLKLPPGKLGIPFIGESFIFLRALRSNSLEQFFDERVKKFGLVFKTSLIGHPTVVLCGPAGNRLILSNEEKLVQMSWPAQFMKLMGENSVATRRGEDHIVMRSALAGFFGPGALQSYIGKMNTEIQSHINEKWKGKDEVNVLPLVRELVFNISAILFFNIYDKQEQDRLHKLLETILVGSFALPIDLPGFGFHRALQGRAKLNKIMLSLIKKRKEDLQSGSATATQDLLSVLLTFRDDKGTPLTNDEILDNFSSLLHASYDTTTSPMALIFKLLSSNPECYQKVVQEQLEILSNKEEGEEITWKDLKAMKYTWQVAQETLRMFPPVFGTFRKAITDIQYDGYTIPKGWKLLWTTYSTHPKDLYFNEPEKFMPSRFDQEGKHVAPYTFLPFGGGQRSCVGWEFSKMEILLFVHHFVKTFSSYTPVDPDEKISGDPLPPLPSKGFSIKLFPRP",
+            "count": 1
+        },
+        {
+            "type": "ligand",
+            "ccd": "HEM",
+            "count": 1
+        },
+        {
+            "type": "ligand",
+            "smiles": "CC1=C2CC[C@@]3(CCCC(=C)[C@H]3C[C@@H](C2(C)C)CC1)C",
+            "count": 1
+        },
+        {
+            "type": "bond",
+            "bond": "A,CYS,445,SG,B,HEM,1,FE,covale,2.3",
+            "_comment": "<chain-id>,<residue name>,<residue index>,<atom id>,<chain-id>,<residue name>,<residue index>,<atom id>,<bond type>,<bond length>",
+            "_another_comment": "use semicolon to separate multiple bonds",
+            "_also_comment": "For ccd input, use CCD key as residue name; for smiles and file input, use `UNK-<index>` where index is the chain order you input. eg. `UNK-1` for the first ligand chain(or the count #1), `UNK-2` the second(or the count #2)."
+        }
+    ]
+}
+```
+Another example of **disulfide modified** input:
+
+```json
+{
+    "entities": [
+        {
+            "type": "protein",
+            "sequence": "MASVKSSSSSSSSSFISLLLLILLVIVLQSQVIECQPQQSCTASLTGLNVCAPFLVPGSPTASTECCNAVQSINHDCMCNTMRIAAQIPAQCNLPPLSCSAN",
+            "count": 1
+        },
+        {
+            "type": "bond",
+            "bond": "A,CYS,41,SG,A,CYS,77,SG,disulf,2.2;A,CYS,51,SG,A,CYS,66,SG,disulf,2.2;A,CYS,67,SG,A,CYS,92,SG,disulf,2.2;A,CYS,79,SG,A,CYS,99,SG,disulf,2.2",
+            "_case_from": "https://www.uniprot.org/uniprotkb/Q43495/entry#ptm_processing"
+        }
+    ]
+}
+```
 
 #### Running HelixFold for Inference
 To run inference on a sequence or multiple sequences using HelixFold3's pretrained parameters, run e.g.:
 * Inference on single GPU (change the settings in script BEFORE you run it)
-```
+```shell
 sh run_infer.sh
 ```
 
@@ -184,7 +241,7 @@ The outputs will be in a subfolder of `output_dir`, including the computed MSAs,
 ranked structures, and evaluation metrics. For a task of inferring twice with diffusion batch size 3, 
 assume your input JSON is named `demo_data.json`, the `output_dir` directory will have the following structure:
 
-```
+```text
 <output_dir>/
 └── demo_data/
     ├── demo_data-pred-1-1/
@@ -208,9 +265,10 @@ assume your input JSON is named `demo_data.json`, the `output_dir` directory wil
         └── ...
 
 ```
+
 The contents of each output file are as follows:
 * `final_features.pkl` – A `pickle` file containing the input feature NumPy arrays
- used by the models to predict the structures.
+ used by the models to predict the structures. If you need to re-run a inference without re-building the MSAs, delete this file.
 * `msas/` - A directory containing the files describing the various genetic
  tool hits that were used to construct the input MSA.
 * `demo_data-pred-X-Y` - Prediction results of `demo_data.json` in X-th inference and Y-thdiffusion batch, 

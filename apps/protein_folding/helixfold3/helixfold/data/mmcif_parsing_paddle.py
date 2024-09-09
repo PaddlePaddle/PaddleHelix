@@ -22,7 +22,7 @@ from typing import Any, Mapping, Optional, Sequence, Tuple, List
 from Bio import PDB
 import numpy as np
 import time
-import logging
+from absl import logging
 from helixfold.common.residue_constants import crystallization_aids, ligand_exclusion_list
 
 # Type aliases:
@@ -34,7 +34,6 @@ PdbStructure = PDB.Structure.Structure
 SeqRes = str
 MmCIFDict = Mapping[str, Sequence[str]]
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 @dataclasses.dataclass(frozen=True)
 class Monomer:

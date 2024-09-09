@@ -1,0 +1,25 @@
+{
+    "entities": [
+        {
+            "type": "protein",
+            "sequence": "MDALYKSTVAKFNEVIQLDCSTEFFSIALSSIAGILLLLLLFRSKRHSSLKLPPGKLGIPFIGESFIFLRALRSNSLEQFFDERVKKFGLVFKTSLIGHPTVVLCGPAGNRLILSNEEKLVQMSWPAQFMKLMGENSVATRRGEDHIVMRSALAGFFGPGALQSYIGKMNTEIQSHINEKWKGKDEVNVLPLVRELVFNISAILFFNIYDKQEQDRLHKLLETILVGSFALPIDLPGFGFHRALQGRAKLNKIMLSLIKKRKEDLQSGSATATQDLLSVLLTFRDDKGTPLTNDEILDNFSSLLHASYDTTTSPMALIFKLLSSNPECYQKVVQEQLEILSNKEEGEEITWKDLKAMKYTWQVAQETLRMFPPVFGTFRKAITDIQYDGYTIPKGWKLLWTTYSTHPKDLYFNEPEKFMPSRFDQEGKHVAPYTFLPFGGGQRSCVGWEFSKMEILLFVHHFVKTFSSYTPVDPDEKISGDPLPPLPSKGFSIKLFPRP",
+            "count": 1
+        },
+        {
+            "type": "ligand",
+            "ccd": "HEM",
+            "count": 1
+        },
+        {
+            "type": "ligand",
+            "smiles": "CC1=C2CC[C@@]3(CCCC(=C)[C@H]3C[C@@H](C2(C)C)CC1)C",
+            "count": 1
+        },
+        {
+            "type": "bond",
+            "bond": "A,CYS,445,SG,B,HEM,1,FE,covale,2.3",
+            "_comment": "<chain-id>,<residue name>,<residue index>,<atom id>,<chain-id>,<residue name>,<residue index>,<atom id>,<bond type>,<bond length>",
+            "_also_comment": "For ccd input, use CCD key as residue name; for smiles and file input, use `UNK-<index>` where index is the chain order you input"
+        }
+    ]
+}

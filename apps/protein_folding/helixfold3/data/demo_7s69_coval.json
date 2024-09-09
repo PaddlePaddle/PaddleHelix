@@ -1,0 +1,20 @@
+{
+    "entities": [
+        {
+            "type": "protein",
+            "sequence": "DRHHHHHHKLGKMKIVEEPNSFGLNNPFLSQTNKLQPRVQPSPVSGPSHLFRLAGKCFNLVESTYKYELCPFHNVTQHEQTFRWNAYSGILGIWQEWDIENNTFSGMWMREGDSCGNKNRQTKVLLVCGKANKLSSVSEPSTCLYSLTFETPLVCHPHSLLVYPTLSEGLQEKWNEAEQALYDELITEQGHGKILKEIFREAGYLKTTKPDGEGKETQDKPKEFDSLEKCNKGYTELTSEIQRLKKMLNEHGISYVTNGTSRSEGQPAEVNTTFARGEDKVHLRGDTGIRDGQ",
+            "count": 1
+        },
+        {
+            "type": "ligand",
+            "sdf": "/repo/PaddleHelix/apps/protein_folding/helixfold3/data/7s69_glycan.sdf",
+            "count": 1
+        },
+        {
+            "type": "bond",
+            "bond": "A,ASN,74,ND2,B,UNK-1,1,C16,covale,2.3",
+            "_comment": "'A,74,ND2:B,1:CW,null' from RF2AA.",
+            "_also_comment": "For ccd input, use CCD key as residue name; for smiles and file input, use `UNK-<index>` where index is the chain order you input"
+        }
+    ]
+}

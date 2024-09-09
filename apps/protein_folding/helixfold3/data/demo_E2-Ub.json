@@ -1,0 +1,23 @@
+{
+    "entities": [
+        {
+            "type": "protein",
+            "sequence": "MSRAKRIMKEIQAVKDDPAAHITLEFVSESDIHHLKGTFLGPPGTPYEGGKFVVDIEVPMEYPFKPPKMQFDTKVYHPNISSVTGAICLDILKNAWSPVITLKSALISLQALLQSPEPNDPQDAEVAQHYLRDRESFNKTAALWTRLYASETSNGQKGNVEESDLYGIDHDLIDEFESQGFEKDKIVEVLRRLGVKSLDPNDNNTANRIIEELLK",
+            "count": 1,
+            "_case_from": "https://www.uniprot.org/uniprotkb/P21734/entry#sequences",
+            "_note": "E2"
+        },
+        {
+            "type": "protein",
+            "sequence": "MQIFVKTLTGKTITLEVESSDTIDNVKAKIQDKEGIPPDQQRLIFAGKQLEDGRTLADYNIQKESTLHLVLRLRGG",
+            "count": 1,
+            "_case_from": "https://www.uniprot.org/uniprotkb/P21734/entry#sequences",
+            "_note": "Ub"
+        },
+        {
+            "type": "bond",
+            "bond": "A,LYS,93,NZ,B,GLY,76,C,covale,1.66",
+            "_note": "Glycyl lysine isopeptide (Lys-Gly) (interchain with G-Cter in ubiquitin)"
+        }
+    ]
+}

@@ -1,0 +1,14 @@
+{
+    "entities": [
+        {
+            "type": "protein",
+            "sequence": "MASVKSSSSSSSSSFISLLLLILLVIVLQSQVIECQPQQSCTASLTGLNVCAPFLVPGSPTASTECCNAVQSINHDCMCNTMRIAAQIPAQCNLPPLSCSAN",
+            "count": 1
+        },
+        {
+            "type": "bond",
+            "bond": "A,CYS,41,SG,A,CYS,77,SG,disulf,2.2;A,CYS,51,SG,A,CYS,66,SG,disulf,2.2;A,CYS,67,SG,A,CYS,92,SG,disulf,2.2;A,CYS,79,SG,A,CYS,99,SG,disulf,2.2",
+            "_case_from": "https://www.uniprot.org/uniprotkb/Q43495/entry#ptm_processing"
+        }
+    ]
+}

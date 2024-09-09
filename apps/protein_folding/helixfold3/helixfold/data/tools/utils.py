@@ -16,7 +16,7 @@
 
 import contextlib
 import shutil
-import logging
+from absl import logging
 import tempfile
 import time
 from typing import Optional

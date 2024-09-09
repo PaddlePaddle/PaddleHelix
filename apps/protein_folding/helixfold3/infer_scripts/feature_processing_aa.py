@@ -16,7 +16,10 @@
 import collections
 import copy
 import os
-import time, gzip, pickle
+from pathlib import Path
+import pickle
+from typing import List, Mapping, Optional, Tuple
+
 import numpy as np
 import logging
 from helixfold.common import residue_constants
@@ -25,8 +28,10 @@ from helixfold.data import pipeline_multimer
 from helixfold.data import pipeline_rna_multimer
 from helixfold.data import pipeline_conf_bonds, pipeline_token_feature, pipeline_hybrid
 from helixfold.data import label_utils
-from concurrent.futures import ProcessPoolExecutor, as_completed
-from .preprocess import digit2alphabet
+
+from helixfold.data.tools import utils
+
+from .preprocess import Entity, digit2alphabet
 
 logger = logging.getLogger(__file__)
 
@@ -34,20 +39,6 @@ POLYMER_STANDARD_RESI_ATOMS = residue_constants.residue_atoms
 STRING_FEATURES = ['all_chain_ids', 'all_ccd_ids','all_atom_ids', 
                   'release_date','label_ccd_ids','label_atom_ids']
 
-def load_ccd_dict(ccd_preprocessed_path):
-    assert os.path.exists(ccd_preprocessed_path),\
-              (f'[CCD] ccd_preprocessed_path: {ccd_preprocessed_path} not exist.')
-    st_1 = time.time()
-    if 'pkl.gz' in ccd_preprocessed_path:
-        with gzip.open(ccd_preprocessed_path, "rb") as fp:
-            ccd_preprocessed_dict = pickle.load(fp)
-    elif '.pkl' in ccd_preprocessed_path:
-        with open(ccd_preprocessed_path, "rb") as fp:
-            ccd_preprocessed_dict = pickle.load(fp)
-    print(f'[CCD] load ccd dataset done. use {time.time()-st_1}s;'\
-                    f'Has length of {len(ccd_preprocessed_dict)}')
-    
-    return ccd_preprocessed_dict
 
 
 def crop_msa(feat, max_msa_depth=16384):
@@ -256,7 +247,7 @@ def get_inference_restype_mask(all_chain_features, ccd_preprocessed_dict, extra_
   }
 
 
-def add_assembly_features(all_chain_features, ccd_preprocessed_dict, no_msa_templ_feats=True):
+def add_assembly_features(all_chain_features: Mapping, ccd_preprocessed_dict: Mapping, no_msa_templ_feats:bool=True, covalent_bonds:Optional[List[pipeline_conf_bonds.CovalentBond]]=None):
   '''
     ## NOTE: keep the type and chainID orders.
     all_chain_features: {
@@ -330,7 +321,7 @@ def add_assembly_features(all_chain_features, ccd_preprocessed_dict, no_msa_temp
   ref_features = pipeline_conf_bonds.make_ccd_conf_features(all_chain_info=new_order_chain_infos,
                                                       ccd_preprocessed_dict=ccd_preprocessed_dict,
                                                       extra_feats=extra_feats_infos)
-  bond_features = pipeline_conf_bonds.make_bond_features(covalent_bond=[], 
+  bond_features = pipeline_conf_bonds.make_bond_features(covalent_bond=covalent_bonds, 
                                                       all_chain_info=new_order_chain_infos, 
                                                       ccd_preprocessed_dict=ccd_preprocessed_dict,
                                                       extra_feats=extra_feats_infos)
@@ -399,40 +390,36 @@ def process_chain_msa(args):
     return chain_id, raw_features, desc, seq
 
 
-def process_input_json(all_entitys, ccd_preprocessed_path, 
+def process_input_json(all_entitys: List[Entity], ccd_preprocessed_path, 
                           msa_templ_data_pipeline_dict, msa_output_dir,
                           no_msa_templ_feats=False):
 
     ## load ccd dict.
-    ccd_preprocessed_dict = load_ccd_dict(ccd_preprocessed_path)
+    ccd_preprocessed_dict = pipeline_conf_bonds.load_ccd_dict(ccd_preprocessed_path)
     all_chain_features = {}
     sequence_features = {} 
     num_chains = 0
-    for entity_items in all_entitys:
+    for entity in all_entitys:
+      if (dtype:=entity.dtype) not in residue_constants.CHAIN_type_order:
+        continue
       # dtype(protein, dna, rna, ligand): no_chains,  msa_seqs, seqs
-      dtype = list(entity_items.keys())[0]
-      items = list(entity_items.values())[0]
-      entity_count = items['count']
-      ccd_seqs = items['seqs']
-      msa_seqs = items['msa_seqs']
-      extra_mol_infos = items.get('extra_mol_infos', {}) ## dict, 「extra-add, ccd_id」: ccd_features.
 
-      for i in range(entity_count):
+      for i in range(entity.count):
         chain_num_ids = num_chains + i
         chain_id = digit2alphabet(chain_num_ids) # increase ++
         type_chain_id = dtype + '_' + chain_id
-        if ccd_seqs in sequence_features:
-          all_chain_features[type_chain_id] = copy.deepcopy(sequence_features[ccd_seqs])
+        if entity.seqs in sequence_features:
+          all_chain_features[type_chain_id] = copy.deepcopy(sequence_features[entity.seqs])
           continue
         
-        ccd_list = parsers.parse_ccd_fasta(ccd_seqs)
+        ccd_list = parsers.parse_ccd_fasta(entity.seqs)
         chain_features = {'msa_templ_feats': {},
                           'ccd_seqs': ccd_list, 
-                          'msa_seqs': msa_seqs,
-                          'extra_feats': extra_mol_infos}
+                          'msa_seqs': entity.msa_seqs,
+                          'extra_feats': entity.extra_mol_infos}
         all_chain_features[type_chain_id] = chain_features
-        sequence_features[ccd_seqs] = chain_features
-      num_chains += entity_count
+        sequence_features[entity.seqs] = chain_features
+      num_chains += entity.count
 
     if not no_msa_templ_feats:
       ## 1. get all msa_seqs for protein/rna MSA/Template search. Only for protein/rna.
@@ -495,8 +482,12 @@ def process_input_json(all_entitys, ccd_preprocessed_path,
           for _type_chain_id in fasta_seq_to_type_chain_id[fasta_seq]:
             chain_features['msa_templ_feats'] = copy.deepcopy(seqs_to_msa_features[fasta_seq])
 
+
+    # gather all defined covalent bonds
+    all_covalent_bonds=[bond for entity in all_entitys for bond in entity.msa_seqs if entity.dtype == 'bond']
+
     assert num_chains == len(all_chain_features.keys())
-    all_feats = add_assembly_features(all_chain_features, ccd_preprocessed_dict, no_msa_templ_feats)
+    all_feats = add_assembly_features(all_chain_features, ccd_preprocessed_dict, no_msa_templ_feats, all_covalent_bonds)
     np_example, label = all_feats['feats'], all_feats['label']
     assert num_chains == len(np.unique(np_example['all_chain_ids']))
 

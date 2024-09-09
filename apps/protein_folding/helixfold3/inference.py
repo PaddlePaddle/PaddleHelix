@@ -23,9 +23,9 @@ import json
 import pickle
 import pathlib
 import shutil
-import logging
 import numpy as np
 from helixfold.common import all_atom_pdb_save
+from helixfold.data.pipeline_conf_bonds import load_ccd_dict
 from helixfold.model import config, utils
 from helixfold.data import pipeline_parallel as pipeline
 from helixfold.data import pipeline_multimer_parallel as pipeline_multimer
@@ -95,19 +95,30 @@ def preprocess_json_entity(json_path, out_dir):
 def convert_to_json_compatible(obj):
     if isinstance(obj, np.ndarray):
         return obj.tolist()
-    elif isinstance(obj, np.integer):
+    if isinstance(obj, np.integer):
         return int(obj)
-    elif isinstance(obj, np.floating):
+    if isinstance(obj, np.floating):
         return float(obj)
-    elif isinstance(obj, dict):
+    if isinstance(obj, dict):
         return {k: convert_to_json_compatible(v) for k, v in obj.items()}
-    elif isinstance(obj, list):
+    if isinstance(obj, list):
         return [convert_to_json_compatible(i) for i in obj]
-    else:
-        return obj
-    
-def get_msa_templates_pipeline(args) -> Dict:
-    use_precomputed_msas = True # FLAGS.use_precomputed_msas
+    return obj
+
+def resolve_bin_path(cfg_path: str, default_binary_name: str)-> str:
+    """Helper function to resolve the binary path."""
+    if cfg_path and os.path.isfile(cfg_path):
+        return cfg_path
+
+    if cfg_val:=shutil.which(default_binary_name):
+        logging.warning(f'Using resolved {default_binary_name}: {cfg_val}')
+        return cfg_val
+
+    raise FileNotFoundError(f"Could not find a proper binary path for {default_binary_name}: {cfg_path}.")
+
+def get_msa_templates_pipeline(cfg: DictConfig) -> Dict:
+    use_precomputed_msas = True  # Assuming this is a constant or should be set globally
+
     template_searcher = hmmsearch.Hmmsearch(
         binary_path=args.hmmsearch_binary_path,
         hmmbuild_binary_path=args.hmmbuild_binary_path,

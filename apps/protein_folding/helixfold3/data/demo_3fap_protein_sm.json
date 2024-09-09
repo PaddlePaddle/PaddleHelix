@@ -1,0 +1,20 @@
+{
+    "entities": [
+        {
+            "type": "protein",
+            "sequence": "GVQVETISPGDGRTFPKRGQTCVVHYTGMLEDGKKFDSSRDRNKPFKFMLGKQEVIRGWEEGVAQMSVGQRAKLTISPDYAYGATGHPGIIPPHATLVFDVELLKLE",
+            "count": 1
+        },
+        {
+            "type": "protein",
+            "sequence": "VAILWHEMWHEGLEEASRLYFGERNVKGMFEVLEPLHAMMERGPQTLKETSFNQAYGRDLMEAQEWCRKYMKSGNVKDLTQAWDLYYHVFRRIS",
+            "count": 1
+        },
+        {
+            "type": "ligand",
+            "sdf": "/mnt/data/yinying/tests/helixfold/ligands/ARD_ideal.sdf",
+            "use_3d": false,
+            "count": 1
+        }
+    ]
+}
