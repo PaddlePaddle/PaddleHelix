@@ -1,0 +1,37 @@
+Bootstrap: docker
+From: nvidia/cuda:12.6.0-cudnn-devel-ubuntu24.04
+
+%labels
+    Author j.caley@unsw.edu.au
+    Version 1.0.0
+
+%post
+    apt update && DEBIAN_FRONTEND=noninteractive apt install --no-install-recommends -y wget git
+
+    wget "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh"
+    bash Miniforge3-Linux-x86_64.sh -b -p /opt/miniforge
+    rm Miniforge3-Linux-x86_64.sh
+    export PATH="/opt/miniforge/bin:$PATH"
+
+    git clone --single-branch --branch dev --depth 1 --no-checkout https://github.com/PaddlePaddle/PaddleHelix.git app/helixfold3
+    cd app/helixfold3
+    git sparse-checkout init --cone
+    git sparse-checkout set apps/protein_folding/helixfold3
+    git checkout dev
+    mv apps/protein_folding/helixfold3/* .
+    rm -rf apps
+    mamba env create -f environment.yaml
+
+    apt autoremove -y && apt remove --purge -y wget git && apt clean -y
+    rm -rf /var/lib/apt/lists/* /root/.cache *.tar.gz
+    mamba clean --all --force-pkgs-dirs -y
+
+%environment
+    export PATH="/app/helixfold3:/opt/miniforge/bin:/opt/miniforge/envs/helixfold/bin:$PATH"
+    export PYTHONPATH="/app/helixfold3:$PYTHONPATH"
+    export PYTHON_BIN="/opt/miniforge/envs/helixfold/bin/python3.9"
+    export ENV_BIN="/opt/miniforge/envs/helixfold/bin"
+    export OBABEL_BIN="/opt/miniforge/envs/helixfold/bin"
+
+%runscript
+    mamba run --name helixfold "$@"
