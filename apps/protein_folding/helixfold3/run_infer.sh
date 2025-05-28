@@ -19,7 +19,6 @@ CUDA_VISIBLE_DEVICES=0 "$PYTHON_BIN" inference.py \
     --preset='reduced_dbs' \
     --bfd_database_path "$DATA_DIR/bfd/bfd_metaclust_clu_complete_id30_c90_final_seq.sorted_opt" \
     --small_bfd_database_path "$DATA_DIR/small_bfd/bfd-first_non_consensus_sequences.fasta" \
-    --bfd_database_path "$DATA_DIR/small_bfd/bfd-first_non_consensus_sequences.fasta" \
     --uniclust30_database_path "$DATA_DIR/uniclust30/uniclust30_2018_08/uniclust30_2018_08" \
     --uniprot_database_path "$DATA_DIR/uniprot/uniprot.fasta" \
     --pdb_seqres_database_path "$DATA_DIR/pdb_seqres/pdb_seqres.txt" \
