@@ -68,16 +68,11 @@ python3 -m pip install -r requirements.txt
 Note: If you have a different version of python3 and cuda, please refer to [here](https://www.paddlepaddle.org.cn/whl/linux/gpu/develop.html) for the compatible PaddlePaddle `dev` package.
 
 
-#### Install Maxit
-The conversion between `.cif` and `.pdb` relies on [Maxit](https://sw-tools.rcsb.org/apps/MAXIT/index.html). 
-Download Maxit source code from https://sw-tools.rcsb.org/apps/MAXIT/maxit-v11.100-prod-src.tar.gz. Untar and follow 
-its `README` to complete installation. 
-
 ### Usage
 
 In order to run HelixFold3, the genetic databases and model parameters are required.
 
-The parameters of HelixFold3 can be downloaded [here](https://paddlehelix.bd.bcebos.com/HelixFold3/params/HelixFold3-params-240814.zip), 
+The parameters of HelixFold3 can be downloaded [here](https://paddlehelix.bd.bcebos.com/HelixFold3/params/HelixFold3-params-20250714.zip), 
 please place the downloaded checkpoint in ```./init_models/ ```directory.
 
 The script `scripts/download_all_data.sh` can be used to download and set up all genetic databases with the following configs:
@@ -103,11 +98,11 @@ The script `scripts/download_all_data.sh` can be used to download and set up all
 #### Understanding Model Input
 
 There are some demo input under `./data/` for your test and reference. Data input is in the form of JSON containing
-several entities such as `protein`, `ligand`, `nucleic acids`, and `iron`. Proteins and nucleic acids inputs are their sequence.
+several entities such as `protein`, `ligand`, `dna`, `rna` and `ion`. Proteins and nucleic acids inputs are their sequence.
 HelixFold3 supports input ligand as SMILES or CCD id, please refer to `/data/demo_6zcy_smiles.json` and `demo_output/demo_6zcy_smiles/` 
 for more details about SMILES input. More flexible input will come in soon.
 
-A example of input data is as follows:
+An example of input data is as follows:
 ```json
 {
     "entities": [
@@ -119,6 +114,35 @@ A example of input data is as follows:
         {
             "type": "ligand",
             "ccd": "QF8",
+            "count": 1
+        }
+    ]
+}
+```
+---  
+
+The **`modification`** field is an optional parameter that specifies modified residues in a polymer sequence (protein, DNA, or RNA). It includes the following attributes:  
+
+- **`index`** – The 1-based position of the residue to be modified.  
+- **`ccd`** – The Chemical Component Dictionary (CCD) code of the modified residue. *(Currently, only modifications defined in the CCD database are supported.)*  
+- **`type`** – The modification type. At present, only **`"residue_replace"`** is supported, but additional types will be introduced in future updates.  
+
+Here is an example modification input:
+```json
+{
+    "entities": [
+        {
+            "type": "dna",
+            "sequence": "CCATTATAGC",
+            "count": 1,
+            "modification": [
+                {"type": "residue_replace", "ccd": "5CM", "index": 2},
+                {"type": "residue_replace", "ccd": "5CM", "index": 5}
+            ]
+        },
+        {
+            "type": "dna",
+            "sequence": "GCTATAATGG",
             "count": 1
         }
     ]
@@ -138,13 +162,9 @@ The script is as follows,
 
 PYTHON_BIN="PATH/TO/YOUR/PYTHON"
 ENV_BIN="PATH/TO/YOUR/ENV"
-MAXIT_SRC="PATH/TO/MAXIT/SRC"
 DATA_DIR="PATH/TO/DATA"
-export OBABEL_BIN="PATH/TO/OBABEL/BIN"
-export PATH="$MAXIT_BIN/bin:$PATH"
 
 CUDA_VISIBLE_DEVICES=0 "$PYTHON_BIN" inference.py \
-    --maxit_binary "$MAXIT_SRC/bin/maxit" \
     --jackhmmer_binary_path "$ENV_BIN/jackhmmer" \
 	--hhblits_binary_path "$ENV_BIN/hhblits" \
 	--hhsearch_binary_path "$ENV_BIN/hhsearch" \
@@ -154,8 +174,7 @@ CUDA_VISIBLE_DEVICES=0 "$PYTHON_BIN" inference.py \
     --nhmmer_binary_path "$ENV_BIN/nhmmer" \
     --preset='reduced_dbs' \
     --bfd_database_path "$DATA_DIR/bfd/bfd_metaclust_clu_complete_id30_c90_final_seq.sorted_opt" \
-    --small_bfd_database_path "$DATA_DIR/small_bfd/bfd-first_non_consensus_sequences.fasta" \
-    --bfd_database_path "$DATA_DIR/small_bfd/bfd-first_non_consensus_sequences.fasta" \
+    --reduced_bfd_database_path "$DATA_DIR/small_bfd/bfd-first_non_consensus_sequences.fasta" \
     --uniclust30_database_path "$DATA_DIR/uniclust30/uniclust30_2018_08/uniclust30_2018_08" \
     --uniprot_database_path "$DATA_DIR/uniprot/uniprot.fasta" \
     --pdb_seqres_database_path "$DATA_DIR/pdb_seqres/pdb_seqres.txt" \
@@ -165,18 +184,16 @@ CUDA_VISIBLE_DEVICES=0 "$PYTHON_BIN" inference.py \
     --obsolete_pdbs_path "$DATA_DIR/pdb_mmcif/obsolete.dat" \
     --ccd_preprocessed_path "$DATA_DIR/ccd_preprocessed_etkdg.pkl.gz" \
     --rfam_database_path "$DATA_DIR/Rfam-14.9_rep_seq.fasta" \
-    --max_template_date=2020-05-14 \
-    --input_json data/demo_protein_ligand.json \
+    --max_template_date=2021-09-30 \
+    --input_json data/demo_6zcy.json \
     --output_dir ./output \
     --model_name allatom_demo \
-    --init_model ./init_models/checkpoints.pdparams \
+    --init_model <PATH_TO_CHECKPOINTS_PDPARAMS> \
     --infer_times 3 \
     --precision "fp32"
 ```
 The descriptions of the above script are as follows:
-* Replace `MAXIT_SRC` with your installed `maxit`'s root path.
 * Replace `DATA_DIR` with your downloaded data path.
-* Replace `OBABEL_BIN` with your installed `openbabel` path.
 * Replace `ENV_BIN` with your conda virtual environment or any environment where `hhblits`, `hmmsearch` and other dependencies have been installed.
 * `--preset` - Set `'reduced_dbs'` to use small bfd or `'full_dbs'` to use full bfd.
 * `--*_database_path` - Path to datasets you have downloaded.
@@ -197,7 +214,6 @@ assume your input JSON is named `demo_data.json`, the `output_dir` directory wil
 └── demo_data/
     ├── demo_data-pred-1-1/
     │   ├── all_results.json
-    │   ├── predicted_structure.pdb
     │   └── predicted_structure.cif
     ├── demo_data-pred-1-2/
     ├── demo_data-pred-1-3/
@@ -207,22 +223,18 @@ assume your input JSON is named `demo_data.json`, the `output_dir` directory wil
     |
     ├── demo_data-rank[1-6]/
     │   ├── all_results.json
-    |   ├── predicted_structure.pdb
     │   └── predicted_structure.cif  
     |
-    ├── final_features.pkl
     └── msas/
         ├── ...
         └── ...
 
 ```
 The contents of each output file are as follows:
-* `final_features.pkl` – A `pickle` file containing the input feature NumPy arrays
- used by the models to predict the structures.
 * `msas/` - A directory containing the files describing the various genetic
  tool hits that were used to construct the input MSA.
 * `demo_data-pred-X-Y` - Prediction results of `demo_data.json` in X-th inference and Y-thdiffusion batch, 
-including predicted structures in `cif` or `pdb` and a JSON file containing all metrics' results.
+including predicted structures in `cif` and a JSON file containing all metrics' results.
 * `demo_data-rank*` - Ranked results of a series of predictions according to metrics.
 
 ### Resource Usage

@@ -358,6 +358,7 @@ residue_atoms = {
     'TYR': ['C', 'CA', 'CB', 'CG', 'CD1', 'CD2', 'CE1', 'CE2', 'CZ', 'N', 'O',
             'OH'],
     'VAL': ['C', 'CA', 'CB', 'CG1', 'CG2', 'N', 'O'],
+    'UNK': ['C', 'CA', 'CB', 'N', 'O', 'CG'],
 
     ## DNA
     "DA": ["P", "OP1", "OP2", "O5'", "C5'", "C4'", "O4'", "C3'", "O3'", "C2'", "C1'",
@@ -368,6 +369,7 @@ residue_atoms = {
                     "N1", "C2", "O2", "N3", "C4", "N4", "C5", "C6"],
     "DT": ["P", "OP1", "OP2", "O5'", "C5'", "C4'", "O4'", "C3'", "O3'", "C2'", "C1'",
                     "N1", "C2", "O2", "N3", "C4", "O4", "C5", "C7", "C6"],
+    'DN': ["P", "OP1", "OP2", "O5'", "C5'", "C4'", "O4'", "C3'", "O3'", "C2'", "C1'"],
 
     ## RNA
     "A": ["P", "OP1", "OP2", "O5'", "C5'", "C4'", "O4'", "C3'", "O3'", "C2'", "O2'", "C1'",
@@ -378,6 +380,7 @@ residue_atoms = {
                 "N1", "C2", "O2", "N3", "C4", "N4", "C5", "C6"], 
     "U": ["P", "OP1", "OP2", "O5'", "C5'", "C4'", "O4'", "C3'", "O3'", "C2'", "O2'", "C1'",
                 "N1", "C2", "O2", "N3", "C4", "O4", "C5", "C6"], 
+    "N": ["P", "OP1", "OP2", "O5'", "C5'", "C4'", "O4'", "C3'", "O3'", "C2'", "O2'", "C1'",]
 }
 
 # Naming swaps for ambiguous atom names.
@@ -726,6 +729,7 @@ RNA_NT_TO_ID = {
   'D': 4, # A, G, U
   'H': 4, # A, C, U
   'V': 4, # A, C, G
+  'X': 4,
   '-': 5
 }
 
@@ -1356,7 +1360,6 @@ ligand_exclusion_list = [
   "CBM",
   "CCN",
   "CIT",
-  "CL",
   "CLR",
   "CM",
   "CMO",
@@ -1405,7 +1408,6 @@ ligand_exclusion_list = [
   "MSE",
   "MYR",
   "N",
-  "NA",
   "NH2",
   "NH4",
   "NHE",
@@ -1440,7 +1442,6 @@ ligand_exclusion_list = [
   "SO4",
   "SPD",
   "SPM",
-  "SR",
   "STE",
   "STO",
   "STU",

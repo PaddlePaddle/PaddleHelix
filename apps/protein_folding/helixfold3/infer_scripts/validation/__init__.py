@@ -12,8 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Common data types and constants used within HelixFold."""
+import os
+from typing import Dict, Any
 
-from .extend_data_types import FeatureDict
+JSON_SCHEMA_PATH = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "schema_hf3_input.json"))
 
-__all__ = ['FeatureDict']
+
+class ValidationException(Exception):
+  """Custom exception for validation errors with detailed information."""
+
+  def __init__(self, message: str, details: Dict[str, Any] = None):
+    super().__init__(message)
+    self.details = details or {}

@@ -194,12 +194,23 @@ class Attention(nn.Layer):
             q = paddle.einsum('nbqa,ahc->nbqhc', q_data, self.query_w) * c
             k = paddle.einsum('nbka,ahc->nbkhc', m_data, self.key_w)
             v = paddle.einsum('nbka,ahc->nbkhc', m_data, self.value_w)
-            logits = paddle.einsum('nbqhc,nbkhc->nbhqk', q, k) + bias
+            # logits = paddle.einsum('nbqhc,nbkhc->nbhqk', q, k) + bias
+            # if nonbatched_bias is not None:
+            #     logits += paddle.unsqueeze(nonbatched_bias, axis=1)
 
-            if nonbatched_bias is not None:
-                logits += paddle.unsqueeze(nonbatched_bias, axis=1)
+            # weights = nn.functional.softmax(logits)
 
-            weights = nn.functional.softmax(logits)
+            logits = paddle.einsum('nbqhc,nbkhc->nbhqk', q, k)
+
+            # put softmax in fp32 to avoid grad_norm exploding
+            with paddle.amp.auto_cast(enable=False):
+                logits = logits.cast("float32")
+                logits += bias.cast("float32")
+                if nonbatched_bias is not None:
+                    logits += paddle.unsqueeze(nonbatched_bias, axis=1).cast("bfloat16")
+
+                weights = nn.functional.softmax(logits)
+            
             weighted_avg = paddle.einsum('nbhqk,nbkhc->nbqhc', weights, v)
 
             if self.config.gating:
@@ -259,7 +270,7 @@ class OuterProductMean(nn.Layer):
 
         Returns:
         Update to pair representation, shape [batch, N_res, N_res, c_z].
-        """
+        """       
         
         act = self.layer_norm_input(act)
         right_act = self.right_projection(act)
@@ -268,6 +279,7 @@ class OuterProductMean(nn.Layer):
         mask = paddle.unsqueeze(mask, axis=-1)
 
         left_act = mask * left_act
+        right_act =  mask * right_act
         
         epsilon = 1e-3
         norm = paddle.einsum('nabc,nadc->nbdc', mask, mask) + epsilon
@@ -303,8 +315,11 @@ class OuterProductMean(nn.Layer):
             act = sb_chunk(left_act, right_act)
         else:
             act = compute_chunk(left_act, right_act)
-
         act = act / norm
+
+        seq_mask = mask.sum([0, 1, 3]) > 0
+        pair_mask = seq_mask[None] * seq_mask[:, None]
+        act *= pair_mask.unsqueeze(-1).cast(act.dtype)
 
         return act
 
@@ -323,6 +338,7 @@ class TriangleAttention(nn.Layer):
         self.global_config = global_config
 
         assert config.orientation in ['per_row', 'per_column']
+        self.train_subbatch_size = self.config.get("train_subbatch_size", None)
 
         self.query_norm = nn.LayerNorm(channel_num['pair_channel'],
                                     name='query_norm')
@@ -362,9 +378,13 @@ class TriangleAttention(nn.Layer):
             sb_attn = subbatch(self.attention, [0, 1, 2], [1, 1, 1],
                                self.global_config.subbatch_size, 1, same_arg_idx={1: 0})
             pair_act = sb_attn(pair_act, pair_act, bias, nonbatched_bias)
-        elif "train_subbatch_size" in self.global_config:
+        elif "train_subbatch_size" in self.global_config: # global train subbatch
             sb_attn = subbatch(self.attention, [0, 1, 2], [1, 1, 1],
                                self.global_config.train_subbatch_size, 1, same_arg_idx={1: 0})
+            pair_act = sb_attn(pair_act, pair_act, bias, nonbatched_bias)
+        elif self.training and self.train_subbatch_size is not None: # local train subbatch
+            sb_attn = subbatch(self.attention, [0, 1, 2], [1, 1, 1],
+                               self.train_subbatch_size, 1, same_arg_idx={1: 0})
             pair_act = sb_attn(pair_act, pair_act, bias, nonbatched_bias)
         else:
             pair_act = self.attention(pair_act, pair_act, bias, nonbatched_bias)

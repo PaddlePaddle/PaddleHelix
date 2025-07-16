@@ -13,21 +13,17 @@
 # limitations under the License.
 
 """RunModel."""
+import logging
 
-import numpy as np
 import paddle
 import paddle.nn as nn
-import logging
-import io
-
 from helixfold.model import modules_all_atom
-from helixfold.model import utils
+
 logger = logging.getLogger(__name__)
 
 class RunModel(nn.Layer):
-    """
-    RunModel
-    """
+    """RunModel"""
+    
     def __init__(self, model_config):
         super(RunModel, self).__init__()
 
@@ -39,9 +35,7 @@ class RunModel(nn.Layer):
        
 
     def forward(self, batch, compute_loss=True):
-        """
-        all_atom_mask: (b, N_res, 37)
-        """
+        """forward"""
 
         res = self.helixfold(
                 batch['feat'],
@@ -54,21 +48,8 @@ class RunModel(nn.Layer):
         return res
 
     def init_params(self, params_path: str):
-        if params_path.endswith('.npz'):
-            with open(params_path, 'rb') as f:
-                params = np.load(io.BytesIO(f.read()), allow_pickle=False)
-                params = dict(params)
-
-            pd_params = utils.jax_params_to_paddle(params)
-            pd_params = {
-                k[len('helixfold.'):]: v
-                for k, v in pd_params.items()
-            }
-
-            if self.model_config.model.global_config.fuse_attention:
-                utils.pd_params_merge_qkvw(pd_params)
-
-        elif params_path.endswith('.pd') or params_path.endswith('.pdparams'):
+        """init params"""
+        if params_path.endswith('.pd') or params_path.endswith('.pdparams'):
             logger.info('Load as Paddle model')
             pd_params = paddle.load(params_path)
 

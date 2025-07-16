@@ -103,6 +103,7 @@ class Jackhmmer:
       cmd_flags = [
           # Don't pollute stdout with Jackhmmer output.
           '-o', '/dev/null',
+          # '-o', sto_path+'.out',
           '-A', sto_path,
           '--noali',
           '--F1', str(self.filter_f1),

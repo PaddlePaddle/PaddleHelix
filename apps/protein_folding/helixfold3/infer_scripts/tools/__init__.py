@@ -12,8 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Common data types and constants used within HelixFold."""
+"""Utility functions for inference."""
 
-from .extend_data_types import FeatureDict
-
-__all__ = ['FeatureDict']

@@ -12,70 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Utils for data."""
+"""
+	Utility functions for feature processing.
+"""
 
-from typing import *
-from absl import logging
+import re
+import functools
+from functools import reduce
+from typing import Mapping, List
+
 import numpy as np
-import pickle
-import os
-import time
-import json
-import gzip
-from helixfold.data.pipeline import FeatureDict, DataPipeline
+from helixfold.common import residue_constants
 
-# macros for retrying getting queue items.
-CROPPING_DOWN_SAMPLING_SIZE = 5_000
-
-
-ignored_keys = [
-    'domain_name',
-    'sequence',
-    'is_distillation',
-    'template_domain_names',
-    'template_e_value',
-    'template_neff',
-    'template_prob_true',
-    'template_release_date',
-    'template_score',
-    'template_similarity',
-    'template_sequence',
-    'template_sum_probs',
-    'seq_length',
-    'msa_row_mask',
-    'random_crop_to_size_seed',
-    'extra_msa_row_mask',
-    'resolution',
-    'template_mask',
-]
-
-batched_keys = [
-    'deletion_matrix_int',
-    'msa',
-    'msa_mask',
-    'template_aatype',
-    'template_all_atom_masks',
-    'template_all_atom_positions',
-    'template_confidence_scores',
-    'extra_msa',
-    'extra_msa_mask',
-    'bert_mask',
-    'true_msa',
-    'extra_has_deletion',
-    'extra_deletion_value',
-    'msa_feat',
-    'template_pseudo_beta',
-    'template_pseudo_beta_mask',
-    # extended for hf3
-    'has_deletion', 'deletion_value', 
-    'template_restype', 'template_pseudo_beta_mask',
-    'template_backbone_frame_mask', 
-    # extedned for hf3 online
-    'template_distogram', 'template_unit_vector'
-]
-
-
-atom_level_keys = [
+ATOM_LEVEL_KEYS = [
     'perm_entity_id', 'perm_asym_id', 'all_chain_ids', 'all_ccd_ids', 'all_atom_ids', 'perm_atom_index', 
 
     'ref_pos', 'ref_mask', 'ref_element', 'ref_charge', 'ref_atom_name_chars',
@@ -83,124 +32,214 @@ atom_level_keys = [
 
     'label_ccd_ids', 'label_atom_ids', 'all_atom_pos',
     'all_atom_pos_mask',
+
+	'atom_plddts',
 ]
 
+## results key need to be save.
+DISPLAY_DIM = frozenset(["SINGLE", "NUM_CHAIN", "NUM_ATOM", "NUM_TOKEN", 
+        "NUM_CHAIN, NUM_CHAIN", "NUM_ATOM, NUM_ATOM", "NUM_TOKEN, NUM_TOKEN"])
+
+DISPLAY_RESULTS_KEYS = {
+    'atom_chain_ids': "NUM_ATOM",
+    'atom_plddts': "NUM_ATOM",
+    'pae': "NUM_TOKEN, NUM_TOKEN",
+    'token_chain_ids': "NUM_TOKEN",
+    'token_res_ids': "NUM_TOKEN",
+    'chain_plddt': "NUM_CHAIN", 
+    'chain_ptm': "NUM_CHAIN", 
+    'chain_pair_iptm': "NUM_CHAIN, NUM_CHAIN", 
+    'chain_pair_pae_min': "NUM_CHAIN, NUM_CHAIN",
+    'iptm': "SINGLE",
+    'ptm': "SINGLE",
+    'has_clash': "SINGLE", 
+    'mean_plddt': "SINGLE",
+    'ranking_confidence': "SINGLE",
+}
 
 
-def crop_spatial_all_atom(feat, label, list_n_k, crop_size, for_recycle, 
-                          targeted_asym_ids=None, inf=3e4):
-    """ 
-    Crop spatial. 
-    Randomly select target rediue from targeted chains
+def find_two_closest_atoms(frame_coords: np.ndarray,
+						   	frame_coords_mask: np.ndarray
+							) -> Mapping[str, np.ndarray]:
+	"""Find the two closest atoms to the reference bi atom, Only for ligand.
+	
+		Args: 
+			frame_coords: the coordinates of all atoms; (N,3)
+			frame_coords_mask: the mask of the frame atoms; (N,1)
+		Returns:
+		 	dict, record relative index or mask of the frame atoms in one residue.
+	"""
+	diff = frame_coords[:, np.newaxis, :] - frame_coords[np.newaxis, :, :]
+	dist_matrix = np.linalg.norm(diff, axis=2)
+	np.fill_diagonal(dist_matrix, np.inf)
+	closest_indices = np.argsort(dist_matrix, axis=1)[:, :2]
+
+	atom_nums = frame_coords.shape[0]
+	frame_mask = np.zeros(atom_nums, dtype=np.int32)
+	ai_mask = np.zeros(atom_nums, dtype=np.int32) ## record the index of the frame atoms in one residue
+	bi_mask = np.zeros(atom_nums, dtype=np.int32)
+	ci_mask = np.zeros(atom_nums, dtype=np.int32)
+	for bi in range(frame_coords.shape[0]):
+		ai = closest_indices[bi, 0]
+		ci = closest_indices[bi, 1]
+		if not is_frame_atoms_collinear(frame_coords[ai], 
+										frame_coords[bi], 
+										frame_coords[ci]):
+			ai_mask[bi] = ai
+			bi_mask[bi] = bi
+			ci_mask[bi] = ci
+			frame_mask[bi] = 1
+
+	return {
+		"ai_indice": ai_mask, # N_atom = N_token
+		"bi_indice": bi_mask,
+		"ci_indice": ci_mask,
+		"frame_indice_mask": frame_mask * frame_coords_mask,
+		"frame_atom_offset": np.array([atom_nums], dtype=np.int32),
+	}
+
+
+def is_frame_atoms_collinear(ai: np.ndarray, 
+							 bi: np.ndarray, 
+							 ci: np.ndarray, 
+							 threshold: float = 25) -> bool:
+	"""Check if the three atoms are collinear.
+	
+		Args:
+			ai: the coordinates of the first atom; (3,)
+			bi: the coordinates of the second atom; (3,)
+			ci: the coordinates of the third atom; (3,)
+			threshold: the threshold of the angle; (default: 25)
+		Returns:
+			bool, True if the three atoms are collinear, False otherwise.
+	"""
+	## calculate the angle between the two vectors
+	vec_ab = bi - ai
+	vec_bc = ci - bi
+
+	## calculate the Norm-2 of the two vectors
+	norm_ab = np.linalg.norm(vec_ab)
+	norm_bc = np.linalg.norm(vec_bc)
+	if norm_ab == 0 or norm_bc == 0:
+		return True
+
+	cos_theta = np.dot(vec_ab, vec_bc) / (norm_ab * norm_bc)
+	cos_theta = np.clip(cos_theta, -1, 1)
+	theta = np.arccos(cos_theta) * 180 / np.pi
+	return theta < threshold
+
+
+def get_pae_frame_mask(atom_ids_list: List, 
+						atom_positions_list: List,
+						residue_name_3: str,
+						residue_is_standard: bool,
+						residue_is_missing: bool,
+						ref_atom_ids_index: Mapping[str, int]) -> Mapping[str, np.ndarray]:
+	"""
+		function to get the mask of the PAE frame.
+			# _atom_ids_list, _atom_positions_list is the ground truth. pos/atom_ids
+			# N_atom
+		returns:
+			dict, frame ai,bi,ci indice and indice mask
+	"""
+	assert len(atom_ids_list) == len(atom_positions_list)
+	total_nums = len(ref_atom_ids_index)
+	assert total_nums > 0, f'TODO filter - Got CCD <{residue_name_3}>: 0 atom nums.'
+	frame_atom_pos = np.zeros([total_nums, 3], dtype=np.float32)
+	frame_atom_pos_mask = np.zeros([total_nums], dtype=np.int32)
+	frame_mask = np.zeros([total_nums], dtype=np.int32) 
+	ai_mask = np.zeros([total_nums], dtype=np.int32) 
+	bi_mask = np.zeros([total_nums], dtype=np.int32) 
+	ci_mask = np.zeros([total_nums], dtype=np.int32)
+
+	# N_token 
+	res = { 'ai_indice':  np.array([0], dtype=np.int32),
+			'bi_indice':  np.array([0], dtype=np.int32),
+			'ci_indice':  np.array([0], dtype=np.int32),
+			'frame_indice_mask':  np.array([0], dtype=np.int32),
+			'frame_atom_offset': np.array([total_nums], dtype=np.int32)}	
+	
+	## NOTE: if reisude is missing, return the invalid mask for frame.
+	if residue_is_missing:
+		if not residue_is_standard:
+			# N_atom
+			res['ai_indice'] = ai_mask
+			res['bi_indice'] = bi_mask
+			res['ci_indice'] = ci_mask
+			res['frame_indice_mask'] = frame_mask
+		return res
+
+	for at_id, at_pos in zip(atom_ids_list, atom_positions_list):
+		if at_id in ref_atom_ids_index: 
+			adjust_idx = ref_atom_ids_index[at_id]
+			frame_atom_pos[adjust_idx] = at_pos
+			frame_atom_pos_mask[adjust_idx] = 1
+
+			if residue_name_3 in residue_constants.PROTEIN_LIST:
+				if at_id in residue_constants.PROTEIN_FRAME_ATOM:
+					if at_id == 'N':
+						ai_mask[adjust_idx] = 1
+					elif at_id == 'CA':
+						bi_mask[adjust_idx] = 1
+					elif at_id == 'C':
+						ci_mask[adjust_idx] = 1
+			elif residue_name_3 in residue_constants.DNA_RNA_LIST:
+				if at_id in residue_constants.DNA_RNA_FRAME_ATOM:
+					if at_id == "C1'":
+						ai_mask[adjust_idx] = 1
+					elif at_id == "C3'":
+						bi_mask[adjust_idx] = 1
+					elif at_id == "C4'":
+						ci_mask[adjust_idx] = 1
+			else:
+				## ligand/ion/non-standard token is need to be post processed.
+				ai_mask[adjust_idx] = 1
+				bi_mask[adjust_idx] = 1
+				ci_mask[adjust_idx] = 1
+		else:
+			## NOTE: To filter the atom_ids not in the ccd_dict.
+			pass
+	
+	frame_atom_nums = np.sum(reduce(np.logical_or, [ai_mask, bi_mask, ci_mask]))
+	if frame_atom_nums < 3:
+		## NOTE: if frame atom mask is less than 3, the frame is marked as invalid. such as Zn, Na, Cl, etc.
+		if not residue_is_standard:
+			# N_token = atoms. non-standard residue.
+			res['ai_indice'] = np.zeros_like(ai_mask)
+			res['bi_indice'] = np.zeros_like(bi_mask)
+			res['ci_indice'] = np.zeros_like(ci_mask)
+			res['frame_indice_mask'] = np.zeros_like(frame_mask)
+		return res
+	elif residue_is_standard and frame_atom_nums > 3:
+		## NOTE: if the frame atom nums is more than 3 and residue is standard, the frame is marked as invalid
+		## some standard ccd may have more than one frame atoms in ai, bi, ci. this missleading frame is not valid.
+		return res
+
+	if residue_is_standard:
+		res['ai_indice'] = np.where(ai_mask)[0]
+		res['bi_indice'] = np.where(bi_mask)[0]
+		res['ci_indice'] = np.where(ci_mask)[0]
+		res['frame_indice_mask'] = np.array([1], dtype=np.int32)
+	else:
+		# N_token = atoms. non-standard residue.
+		## ligand is need to be post processed.
+		res = find_two_closest_atoms(frame_atom_pos, frame_atom_pos_mask)
+
+	return res 
+
+
+def map_to_continuous_indices(arr: np.ndarray) -> np.ndarray:
+    """Map the index array to continuous indices.
+    
+    	Args:
+    		arr: the index array; (N,)
+    	Returns:
+    		the continuous index array; (N,)
+		Example:
+			input: [3, 3, 3, 3, 74, 74, 74, ... , n-2, n-1, n-1, n, n, n]
+			output: [0, 0, 0, 0, 1, 1, 1, ....., m-2, m-1, m-1, m, m, m]
     """
-    ca_coords = label['all_atom_pos'][label['all_centra_token_indice']]  # [N_token, 3]
-    ca_mask = label['all_centra_token_indice_mask'].astype('bool')  # [N_token]
-    mask = np.logical_and(np.isin(feat['asym_id'], targeted_asym_ids), ca_mask)
-    if np.sum(mask) == 0:
-        return crop_contiguous(list_n_k, crop_size), 'contiguous'
-    target_coords = ca_coords[mask]
-    center_coords = target_coords[np.random.randint(len(target_coords))]
-    return crop_spatial_all_atom_by_center(
-            feat, label, center_coords, crop_size)
-
-
-def crop_spatial_inter_all_atom(feat, label, list_n_k, crop_size, for_recycle, 
-                                targeted_asym_ids=None, ca_ca_threshold=15.0, inf=3e4):
-    """ 
-    Crop spatial interface.
-    Select interface rediue from targeted chains
-    """
-    ca_coords = label['all_atom_pos'][label['all_centra_token_indice']]  # [N_token, 3]
-    ca_mask = label['all_centra_token_indice_mask'].astype('bool')  # [N_token]
-    asym_id = feat['asym_id']
-
-    # down sample token
-    num_token = label['all_centra_token_indice'].shape[0]
-    if num_token > CROPPING_DOWN_SAMPLING_SIZE:
-        down_sampling_indices = np.sort(np.random.choice(
-            np.arange(num_token), CROPPING_DOWN_SAMPLING_SIZE, replace=False))
-        ca_coords = ca_coords[down_sampling_indices]
-        ca_mask = ca_mask[down_sampling_indices]
-        asym_id = asym_id[down_sampling_indices]
-
-    # if there are not enough atoms to construct interface, use contiguous crop
-    if (ca_mask.sum(axis=-1) <= 1).all():
-        # return crop_contiguous(list_n_k, crop_size)
-        return crop_spatial_all_atom(feat, label, list_n_k, crop_size, for_recycle, inf=3e4)
-
-    pair_mask = ca_mask[..., None] * ca_mask[..., None, :]
-    # get_pairwise_distances
-    coord_diff = np.expand_dims(ca_coords, -2) - np.expand_dims(ca_coords, -3)
-    ca_distances = np.sqrt(np.sum(coord_diff**2, axis=-1))
-    # get_interface_candidates
-    in_same_asym = asym_id[..., None] == asym_id[..., None, :]
-    ca_distances = ca_distances * (1.0 - in_same_asym.astype('float')) * pair_mask
-    cnt_interfaces = np.sum((ca_distances > 0) & (ca_distances < ca_ca_threshold), axis=-1)
-    if for_recycle: # [num_recycle, num_res]
-        cnt_interfaces = cnt_interfaces[0]
-    # idx of residue whose to-other-entitiy distance < ca_ca_threshold
-    interface_candidates = cnt_interfaces.nonzero()[0]
-    if not targeted_asym_ids is None:
-        # keep interface_candidates from targeted(sampled) chains 
-        interface_candidates = interface_candidates[
-            np.isin(asym_id[interface_candidates], targeted_asym_ids)
-        ]
-
-    if np.any(interface_candidates):
-        target_res = int(np.random.choice(interface_candidates))
-    else:
-        # return crop_contiguous(list_n_k, crop_size)
-        return crop_spatial_all_atom(feat, label, list_n_k, crop_size, for_recycle, inf=3e4)
-
-    # map down sampled target token back to full token
-    if num_token > CROPPING_DOWN_SAMPLING_SIZE:
-        target_res = down_sampling_indices[target_res]
-
-    center_coords = label['all_atom_pos'][label['all_centra_token_indice']][target_res]
-    ret, _ = crop_spatial_all_atom_by_center(
-            feat, label, center_coords, crop_size)
-    return ret, "crop_spatial_inter"
-
-
-def crop_spatial_all_atom_by_center(feat, label, center_coords, crop_size):
-    """ tbd. """
-    ca_coords = label['all_atom_pos'][label['all_centra_token_indice']]  # [N_token, 3]
-    ca_mask = label['all_centra_token_indice_mask'].astype('bool')  # [N_token]
-    dists = np.sqrt(((center_coords[None] - ca_coords) ** 2).sum(-1))  # (N_token,)
-    dists[~ca_mask] = float('Inf')
-    indices = np.argsort(dists)[:crop_size]
-    indices.sort()
-    return indices, "crop_spatial"
-
-
-def crop_contiguous(list_n_k, N_res):
-    n_added = 0
-    n_remain = np.sum(list_n_k)
-    list_m_k = [np.zeros([n_k]) for n_k in list_n_k]
-    chain_orders = np.random.permutation(len(list_n_k))
-    for chain_i in chain_orders:
-        n_k = list_n_k[chain_i]
-        n_remain -= n_k
-        # get crop range
-        crop_size_max = min(N_res - n_added, n_k)
-        crop_size_min = min(n_k, max(0, N_res - (n_added + n_remain)))
-        crop_size = np.random.randint(crop_size_min, crop_size_max + 1)
-        crop_start = np.random.randint(0, n_k - crop_size + 1)
-        # update mask
-        list_m_k[chain_i][crop_start: crop_start + crop_size] = 1
-        n_added += crop_size
-    crop_contiguous_idx = np.where(np.concatenate(list_m_k))[0]
-    return crop_contiguous_idx
-
-
-
-def map_to_continuous_indices(arr):
-    """ 
-    map index array to continous indices
-    input: [3, 3, 3, 3, 74, 74, 74, ... , n-2, n-1, n-1, n, n, n]
-    output: [0, 0, 0, 0, 1, 1, 1, ....., m-2, m-1, m-1, m, m, m]
-    """
-    if arr.shape[0] == 0: return 
+    if arr.shape[0] == 0: return arr
     index_map = {arr[0]:0}
     counter_idx = 0
     for i in range(1, len(arr)):
@@ -213,169 +252,111 @@ def map_to_continuous_indices(arr):
         arr[i] = index_map[arr[i]]
     return arr
 
-def get_crop_mask_all_atom(
-    crop_features: FeatureDict,
-    seq_infos: Mapping,
-    crop_size: int = 256,                      
-    spatial_crop_ratio=0.4, 
-    spatial_inter_crop_ratio=0.4, 
-    targeted_asym_ids=None,
-    max_atom_num=None) -> List:
-    """ get cropping idx. """
 
-    def _crop_idx_to_mask(crop_idx, chain_len_dict):
-        seq_lens = list(chain_len_dict.values())
-        crop_mask = np.zeros(sum(seq_lens), dtype=bool)
-        crop_mask[crop_idx] = True
-        chain_crop_dict = {}
-        offset = 0
-        for chain_id, seq_len in chain_len_dict.items():
-            chain_crop_dict[chain_id] = crop_mask[offset: offset + seq_len]
-            offset += seq_len
-        return chain_crop_dict
+@functools.lru_cache(maxsize=256)
+def int_id_to_str_id(num: int) -> str:
+    """Encodes a number as a string, using reverse spreadsheet style naming.
 
-    # token_size = crop_features["seq_token"]["restype"].shape[0]
-    # atom_size = crop_features["seq_token"]["ref_pos"].shape[0]
+    Args:
+        num: A positive integer.
 
-    seq_lens = seq_infos['seq_lens']
-    rand_drop = np.random.random()
+    Returns:
+        A string that encodes the positive integer using reverse spreadsheet style,
+        naming e.g. 1 = A, 2 = B, ..., 27 = AA, 28 = BA, 29 = CA, ... This is the
+        usual way to encode chain IDs in mmCIF files.
+    """
+    if num <= 0:
+        raise ValueError(f'Only positive integers allowed, got {num}.')
 
-    # map asym_id to chain_id
-    asym_to_chain = {}
-    for token_id, chain_id in zip(crop_features["conf_bond"]["ref_token2atom_idx"], 
-                                  crop_features["seq_token"]['all_chain_ids']):
-        asym_to_chain[crop_features["seq_token"]["asym_id"][token_id]] = chain_id
+    num = num - 1  # 1-based indexing.
+    output = []
+    while num >= 0:
+        output.append(chr(num % 26 + ord('A')))
+        num = num // 26 - 1
+    return ''.join(output)
 
-    raw_features = {
-        'asym_id': crop_features["seq_token"]["asym_id"],
-        'sym_id': crop_features["seq_token"]["sym_id"],
-        'entity_id': crop_features["seq_token"]["entity_id"],
-        'residue_index': crop_features["seq_token"]["residue_index"],
-        'is_protein': crop_features["seq_token"]["is_protein"],
-        'is_dna': crop_features["seq_token"]["is_dna"],
-        'is_rna': crop_features["seq_token"]["is_rna"],
-        'is_ligand': crop_features["seq_token"]["is_ligand"],
-        'ref_token2atom_idx': crop_features["conf_bond"]["ref_token2atom_idx"],
-    }
-    raw_labels = crop_features['labels']
 
-    if rand_drop < (1 - spatial_crop_ratio - spatial_inter_crop_ratio):
-        crop_token_idx, crop_method = crop_contiguous(seq_lens, crop_size), 'contiguous'
-    elif rand_drop > (1 - spatial_crop_ratio):
-        crop_token_idx, crop_method = crop_spatial_all_atom(feat=raw_features, 
-                                label=raw_labels, list_n_k=seq_lens, \
-                                crop_size=crop_size, for_recycle=False, 
-                                targeted_asym_ids=targeted_asym_ids)
-    else:
-        crop_token_idx, crop_method = crop_spatial_inter_all_atom(feat=raw_features, 
-                        label=raw_labels, list_n_k=seq_lens, \
-                        crop_size=crop_size, for_recycle=False, 
-                        targeted_asym_ids=targeted_asym_ids)
+@functools.lru_cache(maxsize=256)
+def str_id_to_int_id(str_id: str) -> int:
+    """Encodes an mmCIF-style string chain ID as an integer.
+
+    The integer IDs are one based so this function is the inverse of
+    int_id_to_str_id.
+
+    Args:
+        str_id: A string chain ID consisting only of upper case letters A-Z.
+
+    Returns:
+        An integer that can be used to order mmCIF chain IDs in the standard
+        (reverse spreadsheet style) ordering.
+    """
+    if not re.match('^[A-Z]+$', str_id):
+        raise ValueError(f'String ID must be upper case letters, got {str_id}.')
+
+    offset = ord('A') - 1
+    output = 0
+    for i, c in enumerate(str_id):
+        output += (ord(c) - offset) * int(26**i)
+    return output
+
+
+@np.vectorize
+def user_asymid_to_weight(user_asymid: str) -> tuple:
+    """Convert user asymid to weight and decorate with np.vectorize.
     
-    crop_token_idx = crop_token_idx.astype(int)
-
-    # Redo a smaller cropping if it contains too many atoms
-    estimated_atom_num = np.sum(raw_features['is_protein'][crop_token_idx] * 14 
-            + raw_features['is_dna'][crop_token_idx] * 22 
-            + raw_features['is_rna'][crop_token_idx] * 22 
-            + raw_features['is_ligand'][crop_token_idx] * 1)
-    if estimated_atom_num >= max_atom_num:
-        # print('[Crop] redo cropping', estimated_atom_num)
-        return get_crop_mask_all_atom(crop_features, 
-                seq_infos, 
-                int(crop_size * 0.8), 
-                spatial_crop_ratio, 
-                spatial_inter_crop_ratio, 
-                targeted_asym_ids,
-                max_atom_num)
-
-    crop_idx_mask = _crop_idx_to_mask(crop_token_idx, 
-        chain_len_dict=dict(zip(np.unique(raw_features["asym_id"]), seq_lens)))
-
-    # crop_idx_mask = filter_invalid_chains(crop_idx_mask, raw_features)
-
-    # map asym_id to chain
-    return {asym_to_chain[k]: v for k, v in crop_idx_mask.items()}, crop_method
+    Args:
+        user_asymid: str, such as: "A-11"
+    
+    Returns:
+        tuple: (int, int), such as: (1, 11)
+    """
+    parts = user_asymid.split('-')
+    assert len(parts) == 2, f"Invalid user_asymid: {user_asymid}"
+    return (str_id_to_int_id(parts[0]), int(parts[1]))
 
 
-def generate_pkl_features_from_fasta(
-        fasta_path: str,
-        name: str,
-        output_dir: str,
-        data_pipeline: DataPipeline,
-        timings: Optional[Dict[str, float]] = None,
-        use_gzip: bool = False):
-    """Generate features.pkl from FASTA sequence."""
-    if timings is None:
-        timings = {}
+def sorted_results_by_chain_order(results, ori_chain_ids, ori_chain_ids_token):
+	"""Reorder the inference results by the original chain ids.
+		
+	Args:
+		results: dict, inference results.
+		ori_chain_ids: np.ndarray, original chain ids for atom.
+		ori_chain_ids_token: np.ndarray, original chain ids for token.
+	Returns:
+		reordered_results: dict, reordered inference results.
+	"""
+	seen = set()
+	# Maintain the order of unique chain IDs
+	ori_chain_level = [x for x in ori_chain_ids_token if not (x in seen or seen.add(x))]
+	ent_weights_chain, sym_weights_chain = user_asymid_to_weight(ori_chain_level)
+	ent_weights_token, sym_weights_token = user_asymid_to_weight(ori_chain_ids_token)
+	ent_weights_atom, sym_weights_atom = user_asymid_to_weight(ori_chain_ids)
+	
+	sorted_indices_chain = np.lexsort((sym_weights_chain, ent_weights_chain))
+	sorted_indices_token = np.lexsort((sym_weights_token, ent_weights_token))
+	sorted_indices_atom = np.lexsort((sym_weights_atom, ent_weights_atom))
+	
+	reordered_results = {}
+	for key in list(results.keys()):
+		assert DISPLAY_RESULTS_KEYS[key] in DISPLAY_DIM, \
+			f"key {key} not in DISPLAY_DIM, Got {DISPLAY_RESULTS_KEYS[key]}, " \
+			f"Expected keys are: {DISPLAY_DIM}"
+		_res = results.pop(key)
+		if DISPLAY_RESULTS_KEYS[key] == 'SINGLE':
+			reordered_results[key] = _res
+		elif DISPLAY_RESULTS_KEYS[key] == 'NUM_CHAIN':
+			reordered_results[key] = np.take(_res, sorted_indices_chain, axis=0) 
+		elif DISPLAY_RESULTS_KEYS[key] == 'NUM_TOKEN':
+			reordered_results[key] = np.take(_res, sorted_indices_token, axis=0) 
+		elif DISPLAY_RESULTS_KEYS[key] == 'NUM_ATOM':
+			reordered_results[key] = np.take(_res, sorted_indices_atom, axis=0) 
+		elif DISPLAY_RESULTS_KEYS[key] == 'NUM_CHAIN, NUM_CHAIN':
+			reordered_results[key] = np.take(_res, sorted_indices_chain, axis=0) 
+			reordered_results[key] = np.take(reordered_results[key], sorted_indices_chain, axis=1) 
+		elif DISPLAY_RESULTS_KEYS[key] == 'NUM_TOKEN, NUM_TOKEN':
+			reordered_results[key] = np.take(_res, sorted_indices_token, axis=0) 
+			reordered_results[key] = np.take(reordered_results[key], sorted_indices_token, axis=1)
+		else:
+			raise ValueError(f"key {key} not supported in _reorder_results yet.")
 
-    # Check output dir.
-    output_dir = os.path.join(output_dir, name)
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-    msa_output_dir = os.path.join(output_dir, 'msas')
-    if not os.path.exists(msa_output_dir):
-        os.makedirs(msa_output_dir)
-
-    # Get features.
-    pt = time.time()
-    logging.info(f"processing file {fasta_path}...")
-    features = data_pipeline.process(
-        input_fasta_path=fasta_path,
-        msa_output_dir=msa_output_dir)
-    timings['data_pipeline'] = time.time() - pt
-
-    # Write out features as a pickled dictionary.
-    if use_gzip:
-        features_output_path = os.path.join(output_dir, 'features.pkl.gz')
-        with gzip.open(features_output_path, 'wb') as f:
-            pickle.dump(features, f, protocol=4)
-
-    else:
-        features_output_path = os.path.join(output_dir, 'features.pkl')
-        with open(features_output_path, 'wb') as f:
-            pickle.dump(features, f, protocol=4)
-
-    logging.info(f"process file {fasta_path} done.")
-
-    # Save timings.
-    timings_output_path = os.path.join(output_dir, 'timings.json')
-    with open(timings_output_path, 'w') as fp:
-        json.dump(timings, fp, indent=4)
-
-    return features
-
-
-
-ignored_keys_multimer = ignored_keys + [
-    'num_templates',
-    'num_alignments',
-    'assembly_num_chains',
-    'cluster_bias_mask',
-    'release_date',
-    'resolution',
-    'protein_num_templates',
-    'protein_num_alignments',
-    'protein_cluster_bias_mask',
-    'ligand_num_templates',
-    'ligand_num_alignments',
-    'ligand_cluster_bias_mask',
-    'rna_num_templates',
-    'rna_num_alignments',
-    'rna_cluster_bias_mask',
-    'dna_num_templates',
-    'dna_num_alignments',
-    'dna_cluster_bias_mask',
-]
-batched_keys_multimer = batched_keys + [
-    'deletion_matrix'
-]
-
-# keys that should be ignored when conducting crop & pad
-def is_ignored_key_multimer(k):
-    return k in ignored_keys_multimer
-
-# keys that have batch dim, e.g. msa features which have shape [N_msa, N_res, ...]
-def is_batched_key_multimer(k):
-    return k in batched_keys_multimer
-
+	return reordered_results

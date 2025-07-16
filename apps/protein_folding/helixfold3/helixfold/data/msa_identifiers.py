@@ -18,6 +18,7 @@ import dataclasses
 import re
 from typing import Optional
 
+import pandas as pd
 
 # Sequences coming from UniProtKB database come in the
 # `db|UniqueIdentifier|EntryName` format, e.g. `tr|A0A146SKV9|A0A146SKV9_FUNHE`
@@ -88,3 +89,36 @@ def get_identifiers(description: str) -> Identifiers:
     return Identifiers()
   else:
     return _parse_sequence_identifier(sequence_identifier)
+
+
+def get_identifiers_from_species_df(description: str, 
+                                    species_identifer_df: pd.DataFrame = None
+                                    ) -> Identifiers:
+  """Computes extra MSA features from the species name in the description.
+  
+      Args:
+        description: The description of the sequence.
+        species_identifer_df: The dataframe containing the species identifiers.
+      Returns:
+        An `Identifiers` instance with species_id.
+  """
+
+  if species_identifer_df is None:
+    return Identifiers()
+
+  identifer = ''
+  word_list = description.split()
+  for i, word in enumerate(word_list):
+
+    if word[0].isupper() and i+1 < len(word_list):
+      name =  ' '.join(word_list[i:i+2])
+
+      matching_rows = species_identifer_df.loc[
+        species_identifer_df['Scientific name'] == name, 'Mnemonic'
+      ]  
+      if not matching_rows.empty:  
+        identifer = matching_rows.iloc[0]
+
+        break
+
+  return Identifiers(species_id=identifer)

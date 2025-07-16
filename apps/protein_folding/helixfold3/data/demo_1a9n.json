@@ -1,0 +1,19 @@
+{
+    "entities": [
+        {
+            "type": "protein",
+            "sequence": "MVKLTAELIEQAAQYTNAVRDRELDLRGYKIPVIENLGATLDQFDAIDFSDNEIRKLDGFPLLRRLKTLLVNNNRICRIGEGLDQALPDLTELILTNNSLVELGDLDPLASLKSLTYLCILRNPVTNKKHYRLYVIYKVPQVRVLDFQKVKLKERQEAEKMFKGKRGAQLAKDIAR",
+            "count": 1
+        },
+        {
+            "type": "protein",
+            "sequence": "MDIRPNHTIYINNMNDKIKKEELKRSLYALFSQFGHVVDIVALKTMKMRGQAFVIFKELGSSTNALRQLQGFPFYGKPMRIQYAKTDSDIISKMRG",
+            "count": 1
+        },
+        {
+            "type": "rna",
+            "sequence": "CCUGGUAUUGCAGUACCUCCAGGU",
+            "count": 1
+        }
+    ]
+}
