@@ -19,6 +19,7 @@ import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
 import gc
+import os
 FLUID_DEPRECATED = not hasattr(paddle, 'fluid')
 if FLUID_DEPRECATED:
     from paddle.base.framework import _dygraph_tracer
@@ -38,6 +39,7 @@ from helixfold.model.diffusion import (
     AtomAttentionDecoder,
     AttentionPairBias,
     RelativePositionEncoding,
+    AttentionIndex
 )
 
 from helixfold.model.utils import subbatch, tree_map
@@ -79,6 +81,8 @@ class HelixFold3(nn.Layer):
                 self.channel_num,
                 self.config.heads.confidence_head,
                 self.global_config)
+                
+        self._AttenIndex = AttentionIndex()
 
     def forward(self,
                 batch,
@@ -87,6 +91,7 @@ class HelixFold3(nn.Layer):
                 return_representations=False,
                 ensemble_representations=True,
                 compute_loss=True):
+
         single_inputs_act, single_init_act, pair_init_act = \
             self.input_embedder(batch)
 
@@ -140,6 +145,8 @@ class HelixFold3(nn.Layer):
         else:
             ret = self._forward_heads(representations, batch, label_cropped, label)
         
+        self._AttenIndex.clean_atten_idx()
+
         return ret
     
     def _forward_heads(self, representations, batch, label_cropped, label):
@@ -231,7 +238,7 @@ class InputEmbedder(nn.Layer):
         self.atom_attention_encoder = AtomAttentionEncoder(
             self.channel_num,
             self.config.atom_encoder,
-            self.global_config)
+            self.global_config, use_cache=False)
 
         self.single_project = nn.Linear(
             self.channel_num['token_channel'] + 32 + 32 + 1,
@@ -272,7 +279,6 @@ class InputEmbedder(nn.Layer):
 
         return single_inputs_act, single_init_act, pair_init_act
 
-
 class EmbeddingsAndPairformer(nn.Layer):
     """Template module, MSA module, Pairformer
 
@@ -306,7 +312,7 @@ class EmbeddingsAndPairformer(nn.Layer):
             global_config)
 
         self.pairformer_stack = nn.LayerList()
-        for _ in range(self.config.pairformer.num_block):
+        for i in range(self.config.pairformer.num_block):
             self.pairformer_stack.append(Pairformer(
                 self.channel_num, self.config.pairformer,
                 self.global_config))
@@ -461,7 +467,7 @@ class MsaModule(nn.Layer):
             449, self.config.msa_channel, bias_attr=False) #FIXME: 449 is hard coded
 
         self.evoformer_stack = nn.LayerList()
-        for _ in range(self.config.num_block):
+        for i in range(self.config.num_block):
             self.evoformer_stack.append(EvoformerV3(
                 self.channel_num,
                 self.config,
@@ -697,7 +703,6 @@ class TransitionV3(nn.Layer):
                 _transition_fn, [0], [1],
                 self.global_config.subbatch_size, 1)
             x = sb_transition(x)
-
         else:
             x = _transition_fn(x)
 
@@ -716,6 +721,8 @@ class EvoformerV3(nn.Layer):
         self.global_config = global_config
 
         use_dropout_nd = self.global_config.get('use_dropout_nd', False)
+        self.msa_subbatch = self.config.get('msa_subbatch', 0)
+        self.use_msa_dynamic_subbatch = self.config.get('use_msa_dynamic_subbatch', False)
 
         self.outer_product_mean = OuterProductMean(
             self.channel_num,
@@ -800,8 +807,24 @@ class EvoformerV3(nn.Layer):
 
         pair_act += self.outer_product_mean(msa_act, msa_mask)
 
-        residual = self.msa_pair_weighted_averaging(
-            msa_act, pair_act, pair_mask)
+        msa_depth, token_len = msa_act.shape[1:3]
+        msa_subbatch_size = self._get_msa_subbatch_size(msa_depth, token_len)
+
+        if not self.training and msa_subbatch_size > 0:
+            # subbatch enable
+            # TODO: Temporarily work around enisum bugs for large dimension tensors
+            # TODO: Relationship bw len(token) and subbatch size should be experimentally determined.
+            all_residual_batch = []
+            for start in range(0, msa_depth, msa_subbatch_size):
+                end = min(start + msa_subbatch_size, msa_depth)
+                msa_act_batch = msa_act[:, start:end]
+                residual_batch = self.msa_pair_weighted_averaging(
+                                    msa_act_batch, pair_act, pair_mask)
+                all_residual_batch.append(residual_batch)
+            residual = paddle.concat(all_residual_batch, axis=1)
+        else:
+            residual = self.msa_pair_weighted_averaging(
+                                msa_act, pair_act, pair_mask)
         msa_act += self.msa_averaging_dropout(residual)
         msa_act += self.msa_transition(msa_act)
 
@@ -809,7 +832,7 @@ class EvoformerV3(nn.Layer):
         pair_act += self.triangle_outgoing_dropout(residual)
 
         residual = self.triangle_multiplication_incoming(pair_act, pair_mask)
-        pair_act += pair_act + self.triangle_incoming_dropout(residual)
+        pair_act += self.triangle_incoming_dropout(residual)
 
         residual = self.triangle_attention_starting_node(pair_act, pair_mask)
         pair_act += self.triangle_starting_dropout(residual)
@@ -820,6 +843,22 @@ class EvoformerV3(nn.Layer):
         pair_act += self.pair_transition(pair_act)
 
         return msa_act, pair_act
+
+    def _get_msa_subbatch_size(self, msa_depth, token_len):
+        if self.msa_subbatch != 0:
+            # forcedly determined by configuration
+            return self.msa_subbatch
+        if not self.use_msa_dynamic_subbatch:
+            # use full batch size
+            return 0
+        # dynamically determined by token length
+        # TODO: Relationship bw len(token) and subbatch size should be experimentally determined.
+        if token_len >= 5000:
+            return 1024
+        elif token_len >= 2000:
+            return 2048
+        else:
+            return msa_depth
 
     def _parse_dropout_params(self, module):
         dropout_rate = 0.0 if self.global_config.deterministic else \
@@ -901,7 +940,7 @@ class ConfidenceHead(nn.Layer):
         token_pair_channel = channel_num['token_pair_channel']
 
         self.atom_encoder = AtomAttentionEncoder(
-                channel_num, self.config.atom_encoder, self.global_config)
+                channel_num, self.config.atom_encoder, self.global_config, use_cache=False)
         self.ln_s = nn.LayerNorm(token_channel * 2 + 32 + 32 + 1)
         self.lin_s_left = nn.Linear(
                 token_channel * 2 + 32 + 32 + 1, token_pair_channel)
@@ -916,7 +955,7 @@ class ConfidenceHead(nn.Layer):
                 self.global_config))
         
         self.atom_decoder = AtomAttentionDecoder(
-                channel_num, self.config.atom_decoder, self.global_config)
+                channel_num, self.config.atom_decoder, self.global_config, use_cache=False)
         self.ln_pae = nn.LayerNorm(token_pair_channel)
         self.lin_pae = nn.Linear(token_pair_channel, self.config.b_pae)
         self.ln_pde = nn.LayerNorm(token_pair_channel)
@@ -990,20 +1029,34 @@ class ConfidenceHead(nn.Layer):
         Returns:
             atom_plddts: (B, N_atom)
             mean_plddt: (B,)
+            chain_plddt_asym_id: (B, n_chain)
+            chain_plddt: (B, n_chain)
+
+            chain_inter_pde_asym_id: (B, n_chain)
+            chain_inter_pde: (B, n_chain)
+
             pae: (B, N_token, N_token)
             ptm: (B,)
             iptm: (B,)
             has_clash: (B,)
             ranking_confidence: (B,)
+            chain_pair_asym_ids: (B, n_chain)
+            chain_pair_iptm: (B, n_chain, n_chain)
+            chain_pair_mask: (B, n_chain, n_chain)
         """
         B = logit_value['logits_pae'].shape[0]
         breaks_pae = paddle.linspace(0., 
                 self.config.stride_pae * self.config.b_pae,
                 self.config.b_pae - 1)
+        breaks_pde = paddle.linspace(0., 
+            self.config.stride_pde * self.config.b_pde,
+            self.config.b_pde - 1)
         inputs = {
+            'token2atom_idx': batch['ref_token2atom_idx'],
             'frame_mask': batch['frame_mask'],
             'asym_id': batch['asym_id'],
             'breaks_pae': paddle.tile(breaks_pae, [B, 1]),
+            'breaks_pde': paddle.tile(breaks_pde, [B, 1]),
             'perm_asym_id': batch['perm_asym_id'],
             'is_polymer_chain': ((batch['is_protein_aa'] + 
                     batch['is_dna_aa'] + batch['is_rna_aa']) > 0),
@@ -1013,7 +1066,7 @@ class ConfidenceHead(nn.Layer):
 
         ret_list = []
         for i in range(B):
-            cur_input = tree_map(lambda x: x[i].numpy(), inputs)
+            cur_input = tree_map(lambda x: x[i].astype('float32').numpy(), inputs)
             ret = get_all_atom_confidence_metrics(cur_input)
             ret_list.append(ret)
             
@@ -1084,3 +1137,17 @@ def merge_loflist_to_dict(sample_loflist):
             batch[k] = [[s[k] for s in slist] 
                     for slist in sample_loflist]
     return batch
+
+
+def get_insert_diff_batch_special_key(keys):
+    """
+    find keys that doesn't need in inserting diffusion batch dim
+    """
+    key_list = []
+    for k in keys:
+        if k.startswith("template"):
+            key_list.append(k)
+        elif k in ['msa', 'msa_mask', 'deletion_value', 'deletion_matrix', 'has_deletion']:
+            key_list.append(k)
+
+    return key_list

@@ -14,7 +14,7 @@ fi
 
 DOWNLOAD_DIR="$1"
 ROOT_DIR="${DOWNLOAD_DIR}/params"
-SOURCE_URL="https://paddlehelix.bd.bcebos.com/HelixFold3/params/HelixFold3-params-240814.zip"
+SOURCE_URL="https://paddlehelix.bd.bcebos.com/HelixFold3/params/HelixFold3-params-20250714.zip"
 BASENAME=$(basename "${SOURCE_URL}")
 
 mkdir --parents "${ROOT_DIR}"

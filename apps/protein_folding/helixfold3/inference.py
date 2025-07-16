@@ -13,101 +13,129 @@
 # limitations under the License.
 
 """Inference scripts."""
-import re
 import os
 import copy
 import argparse
 import random
-import paddle
-import json
-import pickle
 import pathlib
 import shutil
 import logging
+from typing import Dict, List
+
 import numpy as np
-from helixfold.common import all_atom_pdb_save
+import paddle
+
 from helixfold.model import config, utils
-from helixfold.data import pipeline_parallel as pipeline
-from helixfold.data import pipeline_multimer_parallel as pipeline_multimer
-from helixfold.data import pipeline_rna_parallel as pipeline_rna
-from helixfold.data import pipeline_rna_multimer
-from helixfold.data.utils import atom_level_keys, map_to_continuous_indices
+from helixfold.data import msa_pipeline_protein
+from helixfold.data import msa_pipeline_rna
+from helixfold.data.utils import (
+    ATOM_LEVEL_KEYS, 
+    DISPLAY_RESULTS_KEYS,
+    sorted_results_by_chain_order,
+    map_to_continuous_indices)
 from helixfold.data.tools import hmmsearch
 from helixfold.data import templates
 from utils.utils import get_custom_amp_list
 from utils.model import RunModel
 from utils.misc import set_logging_level
-from typing import Dict
-from infer_scripts import feature_processing_aa, preprocess
+from infer_scripts import feature_processing_aa, preprocess, entity_bean
 from infer_scripts.tools import mmcif_writer
-
-ALLOWED_LIGAND_BONDS_TYPE_MAP = preprocess.ALLOWED_LIGAND_BONDS_TYPE_MAP
-INVERSE_ALLOWED_LIGAND_BONDS_TYPE_MAP = {
-    v: k for k, v in ALLOWED_LIGAND_BONDS_TYPE_MAP.items()
-}
-
-DISPLAY_RESULTS_KEYS = [
-    'atom_chain_ids',
-    'atom_plddts',
-    'pae',
-    'token_chain_ids',
-    'token_res_ids',
-    'iptm',
-    'ptm',
-    'ranking_confidence',
-    'has_clash', 
-    'mean_plddt',
-]
-
-RETURN_KEYS = ['diffusion_module', 'confidence_head']
+from infer_scripts.tools.utils import write_format_json, convert_to_json_compatible
+from infer_scripts.validation import JSON_SCHEMA_PATH
+from infer_scripts.validation.input_validation import validate_input_file
+from infer_scripts.tools.post_calculate import calculate_chain_pair_pae_matrix
 
 logger = logging.getLogger(__file__)
 
-MAX_TEMPLATE_HITS = 4
 
-def init_seed(seed):
-    """ set seed for reproduct results"""
+def init_seed(seed: int):
+    """set seed for reproduct results"""
     paddle.seed(seed)
     np.random.seed(seed)
     random.seed(seed)
 
-def batch_convert(np_array, add_batch=True):
+
+def tensor_to_numpy(common_feat: Dict[str, paddle.Tensor]) -> Dict[str, np.ndarray]:
+    """Func of convert paddle(tensor) to numpy."""
+    for feat_key in common_feat:
+        if isinstance(common_feat[feat_key], paddle.Tensor):
+            if common_feat[feat_key].dtype == paddle.bfloat16:
+                common_feat[feat_key] = paddle.cast(common_feat[feat_key], 'float32').numpy()
+            else:
+                common_feat[feat_key] = common_feat[feat_key].numpy()
+        if feat_key in ['residue_index', 'asym_id']:
+            common_feat[feat_key] = common_feat[feat_key].astype(np.int32)
+    
+    return common_feat
+
+
+def batch_convert(np_array: Dict[str, np.ndarray], add_batch=True):
+    """Func of convert numpy to paddle tensor, also add batch dim."""
     np_type = {}
     other_type = {}
-    # 
+    
     for key, value in np_array.items():
         if type(value) == np.ndarray:
-            np_type.update(utils.map_to_tensor({key: value}, add_batch=add_batch))
+            try:
+                np_type.update(utils.map_to_tensor({key: value}, add_batch=add_batch))
+            except Exception as e:
+                print(f"[ERROR] Failed to convert {key} to tensor: {e}")
+                raise e
         else:
-            other_type[key] = [value]  ## other type shoule be list.
-    
+            other_type[key] = [value]
+
     return {**np_type, **other_type}
 
-def preprocess_json_entity(json_path, out_dir):
-    all_entitys = preprocess.online_json_to_entity(json_path, out_dir)
-    if all_entitys is None:
-        raise ValueError("The json file does not contain any valid entity.")
-    else:
-        logger.info("The json file contains %d valid entity.", len(all_entitys))
-    
-    return all_entitys
 
-def convert_to_json_compatible(obj):
-    if isinstance(obj, np.ndarray):
-        return obj.tolist()
-    elif isinstance(obj, np.integer):
-        return int(obj)
-    elif isinstance(obj, np.floating):
-        return float(obj)
-    elif isinstance(obj, dict):
-        return {k: convert_to_json_compatible(v) for k, v in obj.items()}
-    elif isinstance(obj, list):
-        return [convert_to_json_compatible(i) for i in obj]
-    else:
-        return obj
+def preprocess_json_to_entity(json_path: str, out_dir: pathlib.Path) -> List[entity_bean.EntityBean]:
+    """Preprocess json file to entity bean.
+
+    Args:
+        json_path: Path to input JSON file
+        out_dir: Directory to write output files
+
+    Returns:
+        List of entity bean
     
-def get_msa_templates_pipeline(args) -> Dict:
-    use_precomputed_msas = True # FLAGS.use_precomputed_msas
+    Raises:
+        ValidationException: If input JSON file is not valid
+    """
+
+    # 1. Validate input JSON against schema
+    logger.info(f'Validating input JSON against schema: {JSON_SCHEMA_PATH}')
+    validate_input_file(json_path, schema_path=JSON_SCHEMA_PATH)
+    
+    # 2. simple preprocess entities
+    all_entities = preprocess.online_json_parser(json_path)
+
+    # 3. write the raw json file to out_dir
+    shutil.copyfile(
+        json_path, 
+        out_dir.joinpath(os.path.basename(json_path))
+    )
+
+    # 4. copy the LICENSE to out_dir
+    root_path = pathlib.Path(__file__).parent
+    shutil.copyfile(
+        pathlib.Path(root_path).joinpath('LICENSE'), 
+        out_dir.joinpath('terms_of_use.md')
+    )
+    
+    return all_entities
+
+
+def get_msa_templates_pipeline(args: argparse.Namespace) -> Dict:
+    """Get MSA/Template Pipelines for protein/rna"""
+    
+    # Check the args first
+    use_reduced_bfd = args.preset == 'reduced_dbs'
+    setattr(args, 'use_reduced_bfd', use_reduced_bfd)
+    if use_reduced_bfd:
+        assert args.reduced_bfd_database_path is not None
+    else:
+        assert args.bfd_database_path is not None
+        assert args.uniclust30_database_path is not None
+
     template_searcher = hmmsearch.Hmmsearch(
         binary_path=args.hmmsearch_binary_path,
         hmmbuild_binary_path=args.hmmbuild_binary_path,
@@ -116,48 +144,45 @@ def get_msa_templates_pipeline(args) -> Dict:
     template_featurizer = templates.HmmsearchHitFeaturizer(
         mmcif_dir=args.template_mmcif_dir,
         max_template_date=args.max_template_date,
-        max_hits=MAX_TEMPLATE_HITS,
+        max_hits=4,
         kalign_binary_path=args.kalign_binary_path,
         release_dates_path=None,
         obsolete_pdbs_path=args.obsolete_pdbs_path)
 
-    monomer_data_pipeline = pipeline.DataPipeline(
+    protein_data_pipeline = msa_pipeline_protein.DataPipeline(
         jackhmmer_binary_path=args.jackhmmer_binary_path,
         hhblits_binary_path=args.hhblits_binary_path,
-        hhsearch_binary_path=args.hhsearch_binary_path,
         uniref90_database_path=args.uniref90_database_path,
         mgnify_database_path=args.mgnify_database_path,
         bfd_database_path=args.bfd_database_path,
         uniclust30_database_path=args.uniclust30_database_path,
-        small_bfd_database_path=args.small_bfd_database_path ,
+        reduced_bfd_database_path=args.reduced_bfd_database_path,
+        uniprot_database_path=args.uniprot_database_path,
         template_searcher=template_searcher,
         template_featurizer=template_featurizer,
-        use_small_bfd=args.use_small_bfd,
-        use_precomputed_msas=use_precomputed_msas)
+        use_reduced_bfd=args.use_reduced_bfd,
+        use_precomputed_msas=True)
 
-    prot_data_pipeline = pipeline_multimer.DataPipeline(
-        monomer_data_pipeline=monomer_data_pipeline,
-        jackhmmer_binary_path=args.jackhmmer_binary_path,
-        uniprot_database_path=args.uniprot_database_path,
-        use_precomputed_msas=use_precomputed_msas)
-
-    rna_monomer_data_pipeline = pipeline_rna.RNADataPipeline(
+    rna_data_pipeline = msa_pipeline_rna.DataPipeline(
       hmmer_binary_path=args.nhmmer_binary_path,
       rfam_database_path=args.rfam_database_path,
       rnacentral_database_path=None,
       nt_database_path=None,     
       species_identifer_map_path=None,
-      use_precomputed_msas=use_precomputed_msas)  
-
-    rna_data_pipeline = pipeline_rna_multimer.RNADataPipeline(
-      monomer_data_pipeline=rna_monomer_data_pipeline)
+      use_precomputed_msas=True)  
 
     return {
-        'protein': prot_data_pipeline,
+        'protein': protein_data_pipeline,
         'rna': rna_data_pipeline
     }
 
-def ranking_all_predictions(output_dirs):
+
+def ranking_all_predictions(output_dirs: List[pathlib.Path]):
+    """Ranking all predictions based on ranking confidence.
+
+    Args:
+        output_dirs: List of output directories.
+    """
     ranking_score_path_map = {}
     for outpath in output_dirs:
         _results = preprocess.read_json(os.path.join(outpath, 'all_results.json'))
@@ -175,10 +200,11 @@ def ranking_all_predictions(output_dirs):
         shutil.copytree(outpath, target_path)
         rank_id += 1
 
+
 @paddle.no_grad()
-def eval(args, model, batch):
+def eval(args: argparse.Namespace, model: RunModel, batch: Dict) -> Dict:
     """evaluate a given dataset"""
-    model.eval()       
+    model.eval()
         
     # inference
     def _forward_with_precision(batch):
@@ -200,172 +226,32 @@ def eval(args, model, batch):
     return res
 
 
-def postprocess_fn(entry_name, batch, results, output_dir, maxit_binary=None):
+def _get_common_feat_to_save(batch: Dict, 
+                            results: Dict, 
+                            cif_required_keys: List[str],
+                            metric_required_keys: List[str],
+                            mask_ignore_keys: List[str],
+                            atom_level_mask_keys: List[str]) -> Dict:
+    """Preprocess inference results, extract features, and apply masks.
+
+    Args:
+        batch: Input data.
+        results: Model output.
+        cif_required_keys: cif key information to be extracted from batch.
+        metric_required_keys: metric key information to be extracted from confidence results.
+        mask_ignore_keys: Key information to be ignored in mask.
+        atom_level_mask_keys: Atom-level keys for apply different mask
+
+    Returns:
+        A dictionary of features after preprocessing and masking.
     """
-        postprocess function for HF3 output.
-            - batch. input data
-            - results. model output
-            - output_dir. to save output
-            - maxit_binary. path to maxit binary
-    """
-    diff_results = results['diffusion_module']
-    confidence_results = results['confidence_head']
 
-    required_keys = copy.deepcopy(all_atom_pdb_save.required_keys_for_saving)
-    required_keys += ['token_bonds_type', 'ref_element', 'is_ligand']
-    required_keys = required_keys + ['atom_plddts']
-
-    # 1 feat extraction
-    common_feat = {k: batch['feat'][k][0]
-            for k in required_keys if k in batch['feat']}
-    common_feat.update(
-        {k: batch['label'][k][0]
-            for k in required_keys if k in batch['label']}
-    )
-    common_feat.update(
-        {'atom_plddts': confidence_results['atom_plddts'][0]})
-
-    ## NOTE: remove "UNK-"
-    common_feat['all_ccd_ids'] = re.sub(r'UNK-\w*', 'UNK', common_feat['all_ccd_ids']).split()
-    common_feat['all_atom_ids'] = str(common_feat['all_atom_ids']).split()
-
-    ## asym_id start with 1
-    common_feat['asym_id'] -= 1
-    ## resid start with 1
-    common_feat['residue_index'] += 1
-
-    pred_dict = {
-        "pos": diff_results['final_atom_positions'].numpy(),
-        "mask": diff_results['final_atom_mask'].numpy(),
-    }
-    exp_dict = {
-        "mask": batch['label']['all_atom_pos_mask'].numpy(),
-    }
-
-    atom_mask = np.logical_and(pred_dict["mask"] > 0, 
-                exp_dict["mask"] > 0)[0]  # [N_atom]
-    token_mask = batch['label']['all_centra_token_indice_mask'][0].numpy().astype('bool')
-    # tensor to numpy
-    for feat_key in common_feat:
-        if isinstance(common_feat[feat_key], paddle.Tensor):
-            common_feat[feat_key] = common_feat[feat_key].numpy()
-        if feat_key in ['residue_index', 'asym_id']:
-            common_feat[feat_key] = common_feat[feat_key].astype(np.int32)
-
-    def apply_mask(key, val):
-        """ apply mask to val """
+    def _apply_mask(key, val, atom_mask, token_mask):
+        """apply mask to val"""
         val = np.array(val)
-        if key in atom_level_keys or key in ['atom_plddts']:
-            if key in ['ref_token2atom_idx']:
-                return map_to_continuous_indices(val[atom_mask])
-            return val[atom_mask]
-        else:
-            if key in ['token_bonds_type']:
-                return val[token_mask, :][:, token_mask] 
-            return val[token_mask]
-    common_feat_masked = {k: apply_mask(k, v) for k, v in common_feat.items()}
-
-    ## save prediction masked 
-    pred_cif_path = f'{output_dir}/predicted_structure.cif'
-    all_atom_pdb_save.prediction_to_mmcif(
-        pred_dict["pos"][0][atom_mask], 
-        common_feat_masked, 
-        maxit_binary=maxit_binary, 
-        mmcif_path=pred_cif_path)
-    
-    assert os.path.exists(pred_cif_path),\
-              (f"pred: {pred_cif_path} not exists! please check it")
-
-
-    #### NOTE: append some contexts to cif file, Now only support ligand-intra bond type.
-    ## 1. license
-    extra_infos = {'entry_id': entry_name, "global_plddt": float(confidence_results['mean_plddt'])}
-    mmcif_writer.mmcif_meta_append(pred_cif_path, extra_infos)
-    
-    ## 2. post add ligand bond type;
-    ## N_token, for ligand, N_token == N_atom
-    ref_token2atom_idx = common_feat_masked['ref_token2atom_idx']
-    is_ligand = common_feat_masked['is_ligand'].astype(bool) # N_token
-    perm_is_ligand = is_ligand[ref_token2atom_idx].astype(bool)
-    
-    ccd_ids = common_feat_masked['all_ccd_ids'] # N_atom
-    atom_ids = common_feat_masked['all_atom_ids'] # N_atom
-    token_bond_type = common_feat_masked['token_bonds_type'] # N_token 
-    bond_mat = token_bond_type[ref_token2atom_idx][:, ref_token2atom_idx] # N_token -> N_atom
-    ligand_bond_type = bond_mat[perm_is_ligand][:, perm_is_ligand]
-    index1, index2 = np.nonzero(ligand_bond_type)
-    bonds = [(int(i), int(j), ligand_bond_type[i][j]) for i, j in zip(index1, index2) if i < j]
-    ligand_atom_ids = atom_ids[perm_is_ligand]
-    ligand_ccd_ids = ccd_ids[perm_is_ligand]
-
-    contexts = {'_chem_comp_bond.comp_id': [], 
-                '_chem_comp_bond.atom_id_1': [], 
-                '_chem_comp_bond.atom_id_2 ': [],
-                '_chem_comp_bond.value_order': []}
-    for idx, (i, j, bd_type) in enumerate(bonds):
-        _bond_type = INVERSE_ALLOWED_LIGAND_BONDS_TYPE_MAP[bd_type]
-        contexts['_chem_comp_bond.comp_id'].append(ligand_ccd_ids[i])
-        contexts['_chem_comp_bond.atom_id_1'].append(ligand_atom_ids[i])
-        contexts['_chem_comp_bond.atom_id_2 '].append(ligand_atom_ids[j])
-        contexts['_chem_comp_bond.value_order'].append(_bond_type)
-        # contexts['_chem_comp_bond.pdbx_ordinal'].append(idx + 1)
-    mmcif_writer.mmcif_append(pred_cif_path, contexts, rm_duplicates=True)
-    #### NOTE: append some contexts to cif file
-
-
-def get_display_results(batch, results):
-    confidence_score_float_names = ['ptm', 'iptm', 'has_clash', 'mean_plddt', 'ranking_confidence']
-    confidence_score_names = ['atom_plddts', 'pae']
-    ## atom_plddts: [N_atom], pae: [N_token, N_token]
-    required_atom_level_keys = atom_level_keys + ['atom_plddts']
-    display_required_keys = ['all_ccd_ids', 'all_atom_ids', 
-                            'ref_token2atom_idx', 'restype', 
-                            'residue_index', 'asym_id',
-                            'all_atom_pos_mask',]
-    all_results = {k: [] for k in DISPLAY_RESULTS_KEYS}
-    for k in confidence_score_float_names:
-        all_results[k] = float(results['confidence_head'][k])
-
-    diff_results = results['diffusion_module']
-    # 1 feat extraction
-    common_feat = {k: batch['feat'][k][0]
-            for k in display_required_keys if k in batch['feat']}
-    common_feat.update(
-        {k: batch['label'][k][0]
-            for k in  display_required_keys if k in batch['label']}
-    )
-    common_feat.update({k: results['confidence_head'][k][0]
-                            for k in confidence_score_names})
-
-    ## NOTE: remove "UNK-"
-    common_feat['all_ccd_ids'] = re.sub(r'UNK-\w*', 'UNK', common_feat['all_ccd_ids']).split()
-    common_feat['all_atom_ids'] = str(common_feat['all_atom_ids']).split()
-    ## asym_id start with 1
-    common_feat['asym_id'] -= 1
-    ## resid start with 1
-    common_feat['residue_index'] += 1
-
-    pred_dict = {
-        "pos": diff_results['final_atom_positions'].numpy(),
-        "mask": diff_results['final_atom_mask'].numpy(),
-    }
-    exp_dict = {
-        "mask": batch['label']['all_atom_pos_mask'].numpy(),
-    }
-
-    atom_mask = np.logical_and(pred_dict["mask"] > 0, exp_dict["mask"] > 0)[0]  # [N_atom] get valid atom
-    token_mask = batch['label']['all_centra_token_indice_mask'][0].numpy().astype('bool') # get valid token
-    # tensor to numpy
-    for feat_key in common_feat:
-        if isinstance(common_feat[feat_key], paddle.Tensor):
-            common_feat[feat_key] = common_feat[feat_key].numpy()
-        if feat_key in ['residue_index', 'asym_id']:
-            common_feat[feat_key] = common_feat[feat_key].astype(np.int32)
-
-    def apply_mask(key, val):
-        """ apply mask to val """
-        val = np.array(val)
-        if key in required_atom_level_keys:
+        if key in mask_ignore_keys:
+            return val
+        elif key in atom_level_mask_keys:
             if key in ['ref_token2atom_idx']:
                 return map_to_continuous_indices(val[atom_mask])
             return val[atom_mask]
@@ -373,47 +259,188 @@ def get_display_results(batch, results):
             if key in ['token_bonds_type', 'pae']:
                 return val[token_mask, :][:, token_mask] 
             return val[token_mask]
-    common_feat_masked = {k: apply_mask(k, v) for k, v in common_feat.items()}
 
+    # 0. prepare the keys first.
+    diff_results = results['diffusion_module']
+    confidence_results = results['confidence_head']
+
+    # 1. keys-value extraction
+    common_feat = {k: batch['feat'][k][0] for k in cif_required_keys if k in batch['feat']}
+    common_feat.update({k: batch['label'][k][0] for k in cif_required_keys if k in batch['label']})
+    common_feat.update({k: confidence_results[k][0] for k in metric_required_keys})
+
+    # 2. convert string keys to list
+    string_keys = ['all_chain_ids', 'all_ccd_ids', 'all_atom_ids', 'chain_ids']
+    for k in string_keys:
+        common_feat[k] = str(common_feat[k]).split()
+    
+    atom_mask = np.logical_and(
+        diff_results['final_atom_mask'].numpy() > 0, 
+        batch['label']['all_atom_pos_mask'].numpy() > 0)[0]
+    token_mask = batch['label']['all_centra_token_indice_mask'][0].numpy().astype('bool')
+
+    ## 3. convert to numpy and apply atom/token level mask for common features
+    common_feat = tensor_to_numpy(common_feat)
+    common_feat = {k: _apply_mask(k, v, atom_mask, token_mask) for k, v in common_feat.items()}
+    common_feat['atom_mask'] = atom_mask
+    common_feat['token_mask'] = token_mask
+
+    ## 4. add ligand intra bond info
+    common_feat['ligand_intra_bonds_info'] = mmcif_writer._prepare_bonds(common_feat)
+
+    return common_feat 
+
+
+def dump_cif(entry_name: str, 
+            common_feat: Dict, 
+            results: Dict, 
+            output_dir: pathlib.Path, 
+            mmcif_extra_infos: Dict):
+    """save inference results to all_results.json file.
+
+    Args:
+        common_feat: input data
+        results: model output
+        output_dir: to save output
+    """
+
+    diff_results = results['diffusion_module'] 
+    atom_mask = common_feat['atom_mask']
+    ligand_intra_bond_info = common_feat['ligand_intra_bonds_info'] 
+    pos = diff_results['final_atom_positions'].numpy()[0]
+    
+    pred_cif_path = f'{output_dir}/predicted_structure.cif'
+    mmcif_writer.prediction_to_mmcif(
+        entry_name=entry_name,
+        atom_positions=pos[atom_mask],
+        feats_dict=common_feat,
+        mmcif_path=pred_cif_path,
+        extra_infos=mmcif_extra_infos,
+        ligand_intra_bonds_info=ligand_intra_bond_info,
+    )
+    assert os.path.exists(pred_cif_path), (f"pred: {pred_cif_path} not exists! please check it")
+
+
+def dump_metric_results(common_feat: Dict, results: Dict, output_dir: pathlib.Path):
+    """Save metric results to all_results.json file.
+
+    Args:
+        common_feat: common feature to save metric results
+        results: model output
+        output_dir: to save output
+    """
     ## NOTE: save display results.
-    ref_token2atom_idx = common_feat_masked['ref_token2atom_idx']
-    chain_ids = common_feat_masked['asym_id'][ref_token2atom_idx] # N_token -> N_atom
+    all_results = {}
+    ref_token2atom_idx = common_feat['ref_token2atom_idx']
+    ori_chain_ids = common_feat['all_chain_ids'] # N_atom
+    ori_chain_ids_token = common_feat['chain_ids'] # N_token
 
-    ## token-level
-    all_results['pae'] = common_feat_masked['pae']
-    for i in common_feat_masked['asym_id']:
-        all_results['token_chain_ids'].append(all_atom_pdb_save.all_chain_ids[i])
-    for i in common_feat_masked['residue_index']:
-        all_results['token_res_ids'].append(i)
+    ## 1. SINGLE
+    all_results['ptm'] = float(common_feat['ptm'])
+    all_results['iptm'] = float(common_feat['iptm'])
+    all_results['has_clash'] = float(common_feat['has_clash'])
+    all_results['mean_plddt'] = common_feat['atom_plddts'].mean()
+    all_results['ranking_confidence'] = float(common_feat['ranking_confidence']) 
 
-    ## atom-level
-    all_results['atom_plddts'] = common_feat_masked['atom_plddts']
-    all_results['atom_chain_ids'] = [all_atom_pdb_save.all_chain_ids[ca_i] for ca_i in chain_ids]
+    ## 2. token-level
+    all_results['pae'] = common_feat['pae']
+    all_results['token_chain_ids'] = ori_chain_ids_token.tolist()
+    all_results['token_res_ids'] = (common_feat['residue_index'] + 1).tolist()
 
-    return all_results
+    ## 3. atom-level
+    all_results['atom_plddts'] = common_feat['atom_plddts']
+    all_results['atom_chain_ids'] = ori_chain_ids.tolist()
+
+    ## 4. chain-level
+    all_results['chain_plddt'] = common_feat['chain_plddt']
+    all_results['chain_pair_iptm'] = np.where(
+        common_feat['chain_pair_mask'] == 1, 
+        common_feat['chain_pair_iptm'], 
+        np.nan)
+    np.fill_diagonal(all_results['chain_pair_iptm'], np.nan)
+    all_results['chain_ptm'] = np.where(
+        np.diagonal(common_feat['chain_pair_mask']) == 1, 
+        np.diagonal(common_feat['chain_pair_iptm']), 
+        np.nan
+    )
+    _chain_pae_mask = np.diagonal(common_feat['chain_pair_mask']).astype('bool')
+    all_results['chain_pair_pae_min'] = calculate_chain_pair_pae_matrix(
+        all_results['pae'], 
+        all_results['token_chain_ids'], 
+        mask_chain=_chain_pae_mask, 
+        mask_value=np.nan, 
+        metric_type='min'
+    )                      
+
+    all_results = sorted_results_by_chain_order(
+        all_results, 
+        ori_chain_ids, 
+        ori_chain_ids_token
+    )
+
+    ## final results and save to json file.
+    final_results = {}
+    for k in DISPLAY_RESULTS_KEYS:
+        if k in all_results:
+            final_results[k] = convert_to_json_compatible(all_results[k])
+        else:
+            raise ValueError(f'Key {k} not found in result; Required keys are: {DISPLAY_RESULTS_KEYS}.')
+
+    write_format_json(
+        final_results, 
+        file_path=output_dir.joinpath('all_results.json'), 
+        nan_to_none=True
+    )
 
 
-def save_result(entry_name, feature_dict, prediction, output_dir, maxit_bin):
-    postprocess_fn(entry_name=entry_name,
-                    batch=feature_dict, 
-                    results=prediction,
-                    output_dir=output_dir,
-                    maxit_binary=maxit_bin)
+def save_result(entry_name: str, feature_dict: Dict, 
+                prediction: Dict, output_dir: pathlib.Path, extra_infos: Dict = None):
+    """Save the prediction results.
+
+    Args:
+        entry_name: str, the name of the json file.
+        feature_dict: dict, the batch features from the input data.
+        prediction: dict, the prediction from the inference.
+        output_dir: pathlib.Path, the directory to save the prediction results.
+        extra_infos: dict, the extra information for the prediction.
+    """
+    mask_ignore_keys = ['chain_plddt', 'chain_pair_iptm', 'chain_pair_mask',
+                        'ptm', 'iptm', 'has_clash', 'ranking_confidence']
+    metric_required_keys = ['atom_plddts', 'pae', 'ptm', 'iptm', 
+                            'chain_plddt', 'chain_pair_iptm', 'chain_pair_mask',
+                            'has_clash', 'ranking_confidence']
+    cif_required_keys = copy.deepcopy(mmcif_writer.REQUIRED_KEYS_FOR_SAVING)
+
+    common_feat_to_save = _get_common_feat_to_save(
+        batch=feature_dict,
+        results=prediction,
+        cif_required_keys=cif_required_keys,
+        metric_required_keys=metric_required_keys,
+        mask_ignore_keys=mask_ignore_keys,
+        atom_level_mask_keys=ATOM_LEVEL_KEYS,
+    )
+
+    # 1. save structure mmcif. 
+    dump_cif(
+        entry_name=entry_name,
+        common_feat=common_feat_to_save, 
+        results=prediction,
+        output_dir=output_dir,
+        mmcif_extra_infos=extra_infos
+    )
+
+    # 2. save the plddts, pae, and so on;
+    dump_metric_results(
+        common_feat=common_feat_to_save,
+        results=prediction,
+        output_dir=output_dir
+    )
+
+
+def split_prediction(pred: Dict[str, Dict[str, np.ndarray]], rank: int) -> List[Dict]:
+    """split prediction to rank parts."""
     
-    all_results = {k: [] for k in DISPLAY_RESULTS_KEYS}
-    res = get_display_results(batch=feature_dict,results=prediction)
-    
-    for k in all_results:
-        if k in res:
-            all_results[k] = convert_to_json_compatible(res[k])
-
-    with open(output_dir.joinpath('all_results.json'), 'w') as f:
-        f.write(json.dumps(all_results, indent=4))
-    
-    root_path = os.path.dirname(os.path.abspath(__file__))
-    shutil.copyfile(pathlib.Path(root_path).joinpath('LICENSE'), output_dir.joinpath('terms_of_use.md'))
-
-def split_prediction(pred, rank):
+    RETURN_KEYS = ['diffusion_module', 'confidence_head']
     prediction = []
     feat_key_list = [pred[rk].keys() for rk in RETURN_KEYS]
     feat_key_table = dict(zip(RETURN_KEYS, feat_key_list))
@@ -431,20 +458,13 @@ def split_prediction(pred, rank):
 
 
 def main(args):
-    set_logging_level(args.logging_level)
+    """Main entry in HelixFold3 inference"""
 
-    """main function"""
+    set_logging_level(args.logging_level)
     new_einsum = os.getenv("FLAGS_new_einsum", True)
     print(f'>>> PaddlePaddle commit: {paddle.version.commit}')
     print(f'>>> FLAGS_new_einsum: {new_einsum}')
     print(f'>>> args:\n{args}')
-
-    all_entitys = preprocess_json_entity(args.input_json, args.output_dir)
-    ## check maxit binary path
-    if args.maxit_binary is not None:
-        assert os.path.exists(args.maxit_binary), \
-            f"The maxit binary path {args.maxit_binary} does not exists."
-
 
     ### set seed for reproduce experiment results
     seed = args.seed
@@ -454,17 +474,14 @@ def main(args):
         logger.warning('seed is only used for reproduction')
     init_seed(seed)
 
-
-    use_small_bfd = args.preset == 'reduced_dbs'
-    setattr(args, 'use_small_bfd', use_small_bfd)
-    if use_small_bfd:
-        assert args.small_bfd_database_path is not None
-    else:
-        assert args.bfd_database_path is not None
-        assert args.uniclust30_database_path is not None
+    job_base = pathlib.Path(args.input_json).stem
+    output_dir_base = pathlib.Path(args.output_dir).joinpath(job_base)
+    output_dir_base.mkdir(parents=True, exist_ok=True)
+    all_entities = preprocess_json_to_entity(args.input_json, output_dir_base)
 
     logger.info('Getting MSA/Template Pipelines...')
-    msa_templ_data_pipeline_dict = get_msa_templates_pipeline(args)
+    msa_templ_data_pipeline_dict = get_msa_templates_pipeline(args) \
+                                if os.getenv("NO_MSA") != "1" else {}
         
 
     ### create model
@@ -487,27 +504,17 @@ def main(args):
         raise NotImplementedError("bf16 O2 is not supported yet.")
 
     print(f"============ Data Loading ============")
-    job_base = pathlib.Path(args.input_json).stem
-    output_dir_base = pathlib.Path(args.output_dir).joinpath(job_base)
-    msa_output_dir = output_dir_base.joinpath('msas')
-    msa_output_dir.mkdir(parents=True, exist_ok=True)
-
-    features_pkl = output_dir_base.joinpath('final_features.pkl')
-    feature_dict = feature_processing_aa.process_input_json(
-                    all_entitys, 
-                    ccd_preprocessed_path=args.ccd_preprocessed_path,
-                    msa_templ_data_pipeline_dict=msa_templ_data_pipeline_dict,
-                    msa_output_dir=msa_output_dir)
-
-    # save features
-    with open(features_pkl, 'wb') as f:
-        pickle.dump(feature_dict, f, protocol=4)
-
+    feature_dict = feature_processing_aa.featurize_entities(
+        all_entities, 
+        ccd_preprocessed_path=args.ccd_preprocessed_path,
+        msa_templ_data_pipeline_dict=msa_templ_data_pipeline_dict,
+        msa_output_dir=output_dir_base.joinpath('msas'),
+        use_msa_templ_feats=os.getenv("NO_MSA") != "1"
+    )
     feature_dict['feat'] = batch_convert(feature_dict['feat'], add_batch=True)
     feature_dict['label'] = batch_convert(feature_dict['label'], add_batch=True)
     
     print(f"============ Start Inference ============")
-    
     infer_times = args.infer_times
     if args.diff_batch_size > 0:
         model_config.model.heads.diffusion_module.test_diff_batch_size = args.diff_batch_size
@@ -530,7 +537,7 @@ def main(args):
                         feature_dict=feature_dict,
                         prediction=prediction[rank_id],
                         output_dir=output_dir, 
-                        maxit_bin=args.maxit_binary)
+                        extra_infos={})
             all_pred_path.append(output_dir)
     
     # final ranking
@@ -602,8 +609,8 @@ if __name__ == '__main__':
                         'JackHMMER.')
     parser.add_argument('--bfd_database_path', type=str, default=None,
                         help='Path to the BFD database for use by HHblits.')
-    parser.add_argument('--small_bfd_database_path', type=str, default=None,
-                        help='Path to the small version of BFD used '
+    parser.add_argument('--reduced_bfd_database_path', type=str, default=None,
+                        help='Path to the reduced version of BFD used '
                         'with the "reduced_dbs" preset.')
     parser.add_argument('--uniclust30_database_path', type=str, default=None,
                         help='Path to the Uniclust30 database for use '
@@ -629,9 +636,8 @@ if __name__ == '__main__':
                         default='full_dbs', required=False,
                         choices=['reduced_dbs', 'full_dbs'],
                         help='Choose preset model configuration - '
-                        'no ensembling and smaller genetic database '
+                        'no ensembling and reduced genetic database '
                         'config (reduced_dbs), no ensembling and full '
                         'genetic database config  (full_dbs)')
-    parser.add_argument('--maxit_binary', type=str, default=None)
     args = parser.parse_args()
     main(args)

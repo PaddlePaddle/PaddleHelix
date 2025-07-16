@@ -14,6 +14,7 @@
 
 """Modules and utilities for the diffusion module."""
 
+import gc
 import copy
 import numpy as np
 import paddle
@@ -22,7 +23,7 @@ import paddle.nn.functional as F
 from scipy.spatial.transform import Rotation
 
 from helixfold.model.utils import recompute_wrapper
-
+from helixfold.model import rotary
 
 def tile_batch_dim(batch, repeat_time):
     """
@@ -47,6 +48,7 @@ def tile_batch_dim(batch, repeat_time):
         return new_batch
     else:
         return _tile(batch, repeat_time)
+
 
 def insert_diff_batch_dim(batch, repeat_time, special_keys=None):
     """
@@ -76,6 +78,7 @@ def insert_diff_batch_dim(batch, repeat_time, special_keys=None):
     else:
         return _insert(batch, repeat_time)
 
+
 def get_noise_schedule(sigma_data, s_max, s_min, p, step_size):
     """
     get_noise_schedule
@@ -86,7 +89,7 @@ def get_noise_schedule(sigma_data, s_max, s_min, p, step_size):
     return t_tau
 
 
-def CentreRandomAugmentation(x, mask, s_trans=1):
+def CentreRandomAugmentation(x, mask, s_trans=1, uniform=False):
     """
     x: (B, N_atom, 3)
     mask: (B, N_atom)
@@ -97,7 +100,10 @@ def CentreRandomAugmentation(x, mask, s_trans=1):
     B = x.shape[0]
     R = [Rotation.random().as_matrix() for _ in range(B)]
     R = paddle.to_tensor(R, x.dtype)    # (B, 3, 3)
-    t = s_trans * paddle.normal(shape=[B, 1, 3])
+    if uniform:
+        t = s_trans * paddle.uniform(shape=[B, 1, 3])
+    else:
+        t = s_trans * paddle.normal(shape=[B, 1, 3])
     x = x @ R + t
     x = x * mask
     return x
@@ -123,24 +129,48 @@ class DiffusionModule(nn.Layer):
         self.eta = 1.5
         self.P_mean = -1.2
         self.P_std = 1.5
-
+        self.step_num = 200
+        
         token_channel = channel_num['token_channel']
         diffusion_token_channel = channel_num['diffusion_token_channel']
 
+        # diffusion cache
+        self.enable_diff_cache = self.config.get("enable_diff_cache", False)
+        use_caches = [True, True, True, True] if self.enable_diff_cache else [False, False, False, False]
+        
         ## network
         self.diffusion_conditioning = DiffusionConditioning(
-                channel_num, self.config.diffusion_conditioning, self.global_config)
+                channel_num, self.config.diffusion_conditioning, self.global_config, use_cache=use_caches[0])
         self.atom_encoder = AtomAttentionEncoder(
-                channel_num, self.config.atom_encoder, self.global_config)
+                channel_num, self.config.atom_encoder, self.global_config, use_cache=use_caches[1])
         
         self.ln1 = nn.LayerNorm(token_channel)
         self.lin1 = nn.Linear(token_channel, diffusion_token_channel, bias_attr=False)
         self.diffusion_transformer = DiffusionTransformer(
-                channel_num, self.config.diffusion_transformer, self.global_config)
+                channel_num, self.config.diffusion_transformer, self.global_config, use_cache=use_caches[2])
         
         self.ln2 = nn.LayerNorm(diffusion_token_channel)
         self.atom_decoder = AtomAttentionDecoder(
-                channel_num, self.config.atom_decoder, self.global_config)
+                channel_num, self.config.atom_decoder, self.global_config, use_cache=use_caches[3])
+
+    def clear_cache(self):
+        def clear_cache_dit(dit):
+            dit.cached_b = None
+            for bid in range(dit.config.n_block):
+                dit.attention_list[bid].cached_b = None
+                dit.attention_list[bid].cached_b_beta = None
+        self.diffusion_conditioning.cached_zij = None
+        self.diffusion_conditioning.cached_si = None
+        self.atom_encoder.cached_ql = None
+        self.atom_encoder.cached_cl = None
+        self.atom_encoder.cached_plm = None
+        self.atom_encoder.cached_rl_zij = None
+        self.atom_encoder.cached_rl_cl = None
+        self.atom_encoder.cached_rl_plm = None
+        self.atom_encoder.cached_single_plm = None
+        clear_cache_dit(self.atom_encoder.atom_transformer.diff_transformer)
+        clear_cache_dit(self.diffusion_transformer)
+        clear_cache_dit(self.atom_decoder.atom_transformer.diff_transformer)
 
 
     def _noise_schedule(self, step_num):
@@ -164,7 +194,7 @@ class DiffusionModule(nn.Layer):
         s_trunk = representations['single'] # (B, N_token, d1)
         z_trunk = representations['pair']   # (raw_batch, N_token, N_token, d2)
         rel_pos_encoding = representations['rel_pos_encoding']   # (raw_batch, N_token, N_token, d2)
-        # atom_mask = batch['all_atom_pos_mask']  # (B, N_atom)
+        atom_mask = batch['ref_mask'].cast(x_noisy.dtype)  # (B, N_atom)
         seq_mask = batch['seq_mask']        # (B, N_token)
 
         si, zij = self.diffusion_conditioning(
@@ -174,7 +204,6 @@ class DiffusionModule(nn.Layer):
         r_noisy = x_noisy / paddle.sqrt(t_hat ** 2 + self.sigma_data ** 2)
 
         atom_token_uid = batch['ref_token2atom_idx']
-        atom_mask = paddle.ones_like(atom_token_uid)
         ai, ql_skip, cl_skip, p_lm_skip = self.atom_encoder(feature=batch, rl=r_noisy, 
                                                             s_trunk=s_trunk, zij=zij) 
 
@@ -187,6 +216,7 @@ class DiffusionModule(nn.Layer):
                                      atom_token_uid, atom_mask)
         
         x_out = self._c_ckip(t_hat) * x_noisy + self._c_out(t_hat) * r_update
+        atom_mask = paddle.cast(atom_mask, dtype=x_out.dtype)
         x_out = x_out * atom_mask[..., None]
 
         if return_r:
@@ -195,15 +225,18 @@ class DiffusionModule(nn.Layer):
     
     def forward(self, representations, batch):
         """forward"""
-
-        return self.sample_diffusion(representations, batch)  
+        return self.sample_diffusion(representations, batch)
     
     ### for sampling
-
-    def sample_diffusion(self, representations, batch, step_num=200):
+    def sample_diffusion(self, representations, batch, step_num=None, gamma0=None):
         """
         sample_diffusion
         """
+        if step_num is None:
+            step_num = self.step_num
+        if gamma0 is None:
+            gamma0 = self.gamma0
+
         single_act = representations['single']  # (B, N, d1)
         atom_mask = batch['all_atom_pos_mask']
         B, N_atom = atom_mask.shape[:2]
@@ -213,7 +246,7 @@ class DiffusionModule(nn.Layer):
             c_tau = c_list[i]
             c_tau_1 = c_list[i - 1]
             x = CentreRandomAugmentation(x, atom_mask)
-            gamma = self.gamma0 if c_tau > self.gamma_min else 0
+            gamma = gamma0 if c_tau > self.gamma_min else 0
             t_hat = c_tau_1 * (gamma + 1)
             xi = self.lambda_ * paddle.sqrt(t_hat ** 2 - c_tau_1 ** 2) * paddle.normal(shape=[B, N_atom, 3])
             x_noisy = x + xi
@@ -227,6 +260,9 @@ class DiffusionModule(nn.Layer):
             'final_atom_positions': x,   # (B, N_atom, 3)
             'final_atom_mask': atom_mask, # (B, N_atom)
         }
+
+        if self.enable_diff_cache:
+            self.clear_cache()
         return ret
 
 
@@ -234,9 +270,10 @@ class DiffusionConditioning(nn.Layer):
     """
     DiffusionConditioning
     """
-    def __init__(self, channel_num, config, global_config):
+    def __init__(self, channel_num, config, global_config, use_cache):
         super(DiffusionConditioning, self).__init__()
-
+        self.config = config
+        self.global_config = global_config
         token_channel = channel_num['token_channel']
         pair_channel = channel_num['token_pair_channel']
         
@@ -254,15 +291,25 @@ class DiffusionConditioning(nn.Layer):
         self.single_trans1 = Transition(token_channel, n=2)
         self.single_trans2 = Transition(token_channel, n=2)
 
+        self.use_cache = use_cache
+        self.cached_zij = None
+        self.cached_si = None
+
     def forward(self, t_hat, rel_pos_encoding, s_inputs, s_trunk, z_trunk, sigma_data):
         """forward"""
-        zij = paddle.concat([z_trunk, rel_pos_encoding], -1)
-        zij = self.pair_lin(self.pair_ln(zij))
-        zij += self.pair_trans1(zij)
-        zij += self.pair_trans2(zij)
-
-        si = paddle.concat([s_trunk, s_inputs], -1)
-        si = self.single_lin1(self.single_ln1(si))
+        if not self.training and self.use_cache and (not self.cached_zij is None):
+            zij = self.cached_zij
+            si = self.cached_si
+        else:
+            zij = paddle.concat([z_trunk, rel_pos_encoding], -1)
+            zij = self.pair_lin(self.pair_ln(zij))
+            zij += self.pair_trans1(zij)
+            zij += self.pair_trans2(zij)
+            si = paddle.concat([s_trunk, s_inputs], -1)
+            si = self.single_lin1(self.single_ln1(si))
+            if self.use_cache:
+                self.cached_zij = zij
+                self.cached_si = si
         n = self.fourier_embedding(0.25 * paddle.log(t_hat / sigma_data))   # (B, c)
         si += self.single_lin2(self.single_ln2(n[:, None]))
         si += self.single_trans1(si)
@@ -321,27 +368,40 @@ class DiffusionTransformer(nn.Layer):
     """
     DiffusionTransformer
     """
-    def __init__(self, channel_num, config, global_config):
+    def __init__(self, channel_num, config, global_config, use_cache):
         super(DiffusionTransformer, self).__init__()
         self.config = config
         a_channel = channel_num[self.config.a_channel_name]
         s_channel = channel_num[self.config.s_channel_name]
         z_channel = channel_num[self.config.z_channel_name]
 
+        use_rotary = self.config.get('use_rotary', False)
+        dropout_rate = self.config.get('dropout_rate', 0.1)
+
         self.attention_list = nn.LayerList()
         self.transition_list = nn.LayerList()
         for n in range(self.config.n_block):
             self.attention_list.append(AttentionPairBias(
                     a_channel, s_channel, z_channel, 
-                    self.config.n_head, has_si=True))
+                    self.config.n_head, has_si=True,
+                    dropout_rate=dropout_rate,
+                    use_rotary=use_rotary, use_cache=use_cache))
             self.transition_list.append(ConditionedTransitionBlock(
                     a_channel, s_channel))
+        self.use_cache = use_cache
+        self.cached_b = None
 
     def forward(self, ai, si, zij, beta):
         """forward"""
         for attention, transition in zip(self.attention_list, self.transition_list):
-            ai += recompute_wrapper(attention, 
-                    ai, si, zij, beta, is_recompute=self.training)
+            if not self.training and self.use_cache:
+                ai_, b_ = recompute_wrapper(attention, 
+                        ai, si, zij, beta, self.cached_b, is_recompute=self.training)
+                self.cached_b = b_
+                ai += ai_
+            else:
+                ai += recompute_wrapper(attention, 
+                    ai, si, zij, beta, self.cached_b, is_recompute=self.training)
             ai += recompute_wrapper(transition, 
                     ai, si, is_recompute=self.training)
         return ai
@@ -350,7 +410,7 @@ class DiffusionTransformer(nn.Layer):
 class AttentionPairBias(nn.Layer):
     """AttentionPairBias"""
     def __init__(self, a_channel, s_channel, z_channel, 
-            n_head, has_si, dropout_rate=0.1):
+            n_head, has_si, use_rotary=False, dropout_rate=0.1, use_q_proj_z=False, use_cache=False):
         super(AttentionPairBias, self).__init__()
 
         self.has_si = has_si
@@ -373,11 +433,27 @@ class AttentionPairBias(nn.Layer):
         if has_si:
             self.out_lin2 = nn.Linear(s_channel, a_channel,
                     bias_attr=nn.initializer.Constant(value=-2.0))
+        
+        # TODO: should consider input_position if having multiple chains
+        self.use_rotary = use_rotary
+        if self.use_rotary:
+            self.rope = rotary.RotaryPositionalEmbeddings(dim=self.head_dim)
+
+        # NOTE: expected to use in trunk only
+        self.use_q_proj_z = use_q_proj_z
+        if self.use_q_proj_z:
+            self.proj_z_ln = nn.LayerNorm(z_channel)
+            self.proj_z_lin = nn.Linear(z_channel, z_channel,
+                                        weight_attr=nn.initializer.Constant(value=0.0),
+                                        bias_attr=nn.initializer.Constant(value=0.0))
 
         default_M = 10000
         self._AttenIndex = AttentionIndex(max_atom_num=default_M)
+        self.use_cache = use_cache
+        self.cached_b = None
+        self.cached_b_beta = None
   
-    def forward(self, ai, si, zij, beta):
+    def forward(self, ai, si, zij, beta, cached_b=None):
         """
         ai: (B, N, d1)
         si: (B, N, d1)
@@ -386,7 +462,6 @@ class AttentionPairBias(nn.Layer):
         attention_idx
         """
         assert self.has_si == (not si is None)
-
         B, N, D = paddle.shape(ai)
         H, d = self.n_head, self.head_dim
 
@@ -394,11 +469,16 @@ class AttentionPairBias(nn.Layer):
             ai = self.ln(ai, si)
         else:
             ai = self.ln(ai)
-        q = self.q_lin(ai).reshape([B, N, H, d]).transpose([0, 2, 1, 3]) # (B, H, N, d)
-        k = self.k_lin(ai).reshape([B, N, H, d]).transpose([0, 2, 1, 3]) # (B, H, N, d)
-        v = self.v_lin(ai).reshape([B, N, H, d]).transpose([0, 2, 1, 3]) # (B, H, N, d)
+
         # zij is not tiled by diff_batch_size so far
-        b = self.b_lin(self.b_ln(zij)) # (B, N, N, H) or (B, C, nq, nk, H)
+        if self.use_cache and not cached_b is None: self.cached_b = cached_b
+        if not self.training and self.use_cache and (not self.cached_b is None):
+            b = self.cached_b
+        else:
+            b = self.b_lin(self.b_ln(zij)) # (B, N, N, H) or (B, C, nq, nk, H)
+            if self.use_cache:
+                self.cached_b = b
+        if self.use_cache and not cached_b is None: cached_b = b
         g = nn.functional.sigmoid(self.g_lin(ai))\
                          .reshape([B, N, H, d]).transpose([0, 2, 1, 3]) # (B, H, N, d)
         diff_batch_size = ai.shape[0] // b.shape[0]
@@ -409,56 +489,108 @@ class AttentionPairBias(nn.Layer):
             atten_idx = self._AttenIndex.get_atten_idx(M)
 
             query_idx = atten_idx['query_idx'].flatten() # [C,32]
-            query_mask = atten_idx['query_mask'][..., None, None, None] # [C,32,1,1,1]
+            query_mask = atten_idx['query_mask'][..., None, None] # [C,32,1,1]
             key_idx = atten_idx['key_idx'].flatten() # [C,128,1,1,1]
-            key_mask = atten_idx['key_mask'][..., None, None, None]   # [C,128,1,1,1]
+            key_mask = atten_idx['key_mask'][..., None, None]   # [C,128,1,1]
             alpha_mask = atten_idx['alpha_mask'] # [C,32,128]
             C, n_query, n_key = alpha_mask.shape
 
-            q = q.transpose([2, 0, 1, 3]) # (B, H, N, d) -> (N, B, H, d)
-            k = k.transpose([2, 0, 1, 3]) # (B, H, N, d) -> (N, B, H, d)
-            v = v.transpose([2, 0, 1, 3]) # (B, H, N, d) -> (N, B, H, d)
-            g = g.transpose([2, 0, 1, 3]) # (B, H, N, d) -> (N, B, H, d)
+            query_like_shape = [C, n_query, B, D]
+            key_like_shape = [C, n_key, B, D]
 
-            query_like_shape = [C, n_query, B, H, d]
-            key_like_shape = [C, n_key, B, H, d]
+            query_mask = query_mask.cast(b.dtype)
+            key_mask = key_mask.cast(b.dtype)
+            q = ai.transpose([1, 0, 2])  # [N, B, d]
+            k = ai.transpose([1, 0, 2])  # [N, B, d]
+            v = ai.transpose([1, 0, 2])  # [N, B, d]
+            g = g.transpose([2, 0, 1, 3])  # [N, B, H, d]
 
-            query_mask = query_mask.cast(q.dtype)
-            key_mask = key_mask.cast(k.dtype)
-            q = q[query_idx].reshape(query_like_shape) * query_mask # (C, 32, B, H, d)
-            k = k[key_idx].reshape(key_like_shape) * key_mask  # (C, 128, B, H, d)
-            v = v[key_idx].reshape(key_like_shape) * key_mask # (C, 128, B, H, d)
-            g = g[query_idx].reshape(query_like_shape) * query_mask # (C, 32, B, H, d)
+            q = q[query_idx].reshape(query_like_shape) * query_mask # (C, 32, B, d)
+            k = k[key_idx].reshape(key_like_shape) * key_mask # (C, 128, B, d)
+            v = v[key_idx].reshape(key_like_shape) * key_mask # (C, 128, B, d)
+            g = g[query_idx].reshape([C, n_query, B, H, d]) * query_mask[..., None] # (C, 32, B, H, d)
 
-            q = q.transpose([2, 3, 0, 1, 4]) # (C, 32, B, H, d) -> (B, H, C, 32, d)
-            k = k.transpose([2, 3, 0, 1, 4]) # (C, 128, B, H, d) -> (B, H, C, 128, d)
-            v = v.transpose([2, 3, 0, 1, 4]) # (C, 128, B, H, d) -> (B, H, C, 128, d)
+            q = q.transpose([2, 0, 1, 3]) # (C, 32, B, d) -> (B, C, 32, d)
+            k = k.transpose([2, 0, 1, 3]) # (C, 128, B, d) -> (B, C, 128, d)
+            v = v.transpose([2, 0, 1, 3]) # (C, 128, B, d) -> (B, C, 128, d)
             g = g.transpose([2, 3, 0, 1, 4]) # (C, 32, B, H, d) -> (B, H, C, 32, d)
-            b = b.transpose([0, 4, 1, 2, 3]) # (b, C, 32, 128, H) -> (b, H, C, 32, 128)
+            if not self.training and self.use_cache and (not self.cached_b_beta is None):
+                b = self.cached_b_beta
+            else:
+                b = b.transpose([0, 4, 1, 2, 3]) # (b, C, 32, 128, H) -> (b, H, C, 32, 128)
+                if diff_batch_size > 1:
+                    b = tile_batch_dim(b, diff_batch_size)
+                beta = tile_batch_dim(beta, ai.shape[0])
+                b = (b + beta.unsqueeze(1)) # (B, H, C, 32, 128)
+                if self.use_cache:
+                    self.cached_b_beta = b
 
-            if diff_batch_size > 1:
-                b = tile_batch_dim(b, diff_batch_size)
-            beta = tile_batch_dim(beta, ai.shape[0])
-            b = (b + beta.unsqueeze(1)) # (B, H, C, 32, 128)
-            alpha = paddle.matmul(q / np.sqrt(d), k, transpose_y=True) + b # (B, H, C, 32, 128)
-            alpha = paddle.nn.functional.softmax(alpha)
-            alpha = self.alpha_dropout(alpha)
+            # (B, H, C, n_query, d)
+            q = self.q_lin(q).reshape([B, C, n_query, H, d]).transpose([0, 3, 1, 2, 4])
+            # (B, H, C, n_key, d)
+            k = self.k_lin(k).reshape([B, C, n_key, H, d]).transpose([0, 3, 1, 2, 4])
+            if self.use_rotary:
+                q = self.rope(q)
+                k = self.rope(k)
+            # (B, H, C, n_key, d)
+            v = self.v_lin(v).reshape([B, C, n_key, H, d]).transpose([0, 3, 1, 2, 4])
+
+            # (B, H, C, n_query, n_key)
+            with paddle.amp.auto_cast(enable=False):
+                q = q.cast(paddle.float32)
+                k = k.cast(paddle.float32)
+                v = v.cast(paddle.float32)
+                b = b.cast(paddle.float32)
+                alpha = paddle.matmul(q / np.sqrt(d), k, transpose_y=True) + b
+                alpha = paddle.nn.functional.softmax(alpha)
+                alpha = self.alpha_dropout(alpha)
+                alpha = alpha.cast(ai.dtype)
 
             ai = paddle.matmul(alpha, v) * g # (B, H, C, 32, d)
             ai = ai.reshape([B, H, C * n_query, d])
             ai = ai[:, :, :si.shape[1], :]
 
         else:
-            # global attention
-            if diff_batch_size > 1:
-                b = tile_batch_dim(b, diff_batch_size)
-            if beta.shape[0] == 1:
-                beta = beta.tile([ai.shape[0], 1, 1])
-            b = (b + beta[..., None]).transpose([0, 3, 1, 2]) # (B, N, N, H) -> (B, H, N, N)
+            if not self.training and self.use_cache and (not self.cached_b_beta is None):
+                b = self.cached_b_beta
+            else:
+                # global attention
+                if diff_batch_size > 1:
+                    b = tile_batch_dim(b, diff_batch_size)
+                if beta.shape[0] == 1:
+                    beta = beta.tile([ai.shape[0], 1, 1])
+                b = (b + beta[..., None]).transpose([0, 3, 1, 2]) # (B, N, N, H) -> (B, H, N, N)
+                if self.use_cache:
+                    self.cached_b_beta = b
 
-            alpha = paddle.matmul(q / np.sqrt(d), k, transpose_y=True) + b    # (B, H, N, N)
-            alpha = F.softmax(alpha) # (B, H, N, N)
-            alpha = self.alpha_dropout(alpha)
+            q = self.q_lin(ai).reshape([B, N, H, d]).transpose([0, 2, 1, 3]) # (B, H, N, d)
+            k = self.k_lin(ai).reshape([B, N, H, d]).transpose([0, 2, 1, 3]) # (B, H, N, d)
+            if self.use_rotary:
+                q = self.rope(q)
+                k = self.rope(k)
+            v = self.v_lin(ai).reshape([B, N, H, d]).transpose([0, 2, 1, 3]) # (B, H, N, d)
+
+            # alpha = paddle.matmul(q / np.sqrt(d), k, transpose_y=True) + b    # (B, H, N, N)
+            with paddle.amp.auto_cast(enable=False):
+                q = q.cast(paddle.float32)
+                k = k.cast(paddle.float32)
+                v = v.cast(paddle.float32)
+                b = b.cast(paddle.float32)
+                alpha = paddle.matmul(q / np.sqrt(d), k, transpose_y=True) + b
+
+                if self.use_q_proj_z: #TODO: dtype cast
+                    dz = zij.shape[-1] // H # projected z channel
+                    zij = self.proj_z_lin(self.proj_z_ln(zij))
+                    zij = zij.reshape([B, N, N, H, dz])
+                    sub_dim = d // dz
+                    q_prim = q.reshape([B, H, N, sub_dim, dz])
+                    q_prim = q_prim[:, :, :, :1]
+                    q_proj_z = paddle.einsum('bhikc,bijhc->bhij', q_prim, zij)
+                    alpha += q_proj_z
+
+                alpha = F.softmax(alpha) # (B, H, N, N)
+                alpha = self.alpha_dropout(alpha)
+                alpha = alpha.cast(ai.dtype)
 
             ai = paddle.matmul(alpha, v) * g # (B, H, N, d)
         
@@ -467,7 +599,10 @@ class AttentionPairBias(nn.Layer):
         ai = self.out_dropout(ai)
         if self.has_si:
             ai = nn.functional.sigmoid(self.out_lin2(si)) * ai
-        return ai
+        if not self.training and self.use_cache:
+            return ai, cached_b
+        else:
+            return ai
 
 
 class ConditionedTransitionBlock(nn.Layer):
@@ -516,7 +651,7 @@ class AtomAttentionEncoder(nn.Layer):
     """
     AtomAttentionEncoder: only support multimer-monomer
     """
-    def __init__(self, channel_num, config, global_config):
+    def __init__(self, channel_num, config, global_config, use_cache):
         super(AtomAttentionEncoder, self).__init__()
         self.config = config
         in_token_channel = channel_num[self.config.in_token_channel_name]
@@ -569,13 +704,23 @@ class AtomAttentionEncoder(nn.Layer):
         )
 
         self.atom_transformer = AtomTransformer(
-            channel_num=channel_num, config=config.atom_transformer, global_config=global_config)
+            channel_num=channel_num, config=config.atom_transformer, global_config=global_config, use_cache=use_cache)
     
         # aggregate atom representation to token representation
         self.act_atom_to_token = nn.ReLU()
         self.lin_atom_to_token = \
             nn.Linear(atom_channel, out_token_channel, bias_attr=False)
-    
+
+        self.use_cache = use_cache
+        self.cached_ql = None
+        self.cached_cl = None
+        self.cached_plm = None
+        # cache for branch 'if rl is not None:'
+        self.cached_rl_zij = None
+        self.cached_rl_cl = None
+        self.cached_rl_plm = None
+        # cache for plm and single_cond combination
+        self.cached_single_plm = None
     
     def forward(self, feature, rl, s_trunk, zij):
         """
@@ -603,83 +748,100 @@ class AtomAttentionEncoder(nn.Layer):
             diff_batch_size = rl.shape[0] / zij.shape[0] # B/b
         
         atom_token_uid = feature['ref_token2atom_idx'] # [B,M]
-        atom_mask = paddle.ones_like(atom_token_uid, dtype='int64') # [B,M]
+        atom_mask = feature['ref_mask'] # [B,M]
 
-        # create teh atom single conditioning: embed per-atom meta data
-        f_ref_element = F.one_hot(feature['ref_element'], num_classes=128) # (B, M, 128)
-        f_ref_pos = feature['ref_pos']   # (B, M, 3)
-        f_ref_space_uid = feature['ref_space_uid'] # (B, M)
-        f_ref_charge = feature['ref_charge'].unsqueeze(-1).cast(f_ref_pos.dtype) # (B, M, 1)
-        f_ref_mask = feature['ref_mask'].unsqueeze(-1).cast(f_ref_pos.dtype) # (B, M, 1)
-        f_atom_name_chars = F.one_hot(
-            feature['ref_atom_name_chars'], num_classes=64) # (B, M, 4, 64)
-        f_atom_name_chars = f_atom_name_chars.reshape(
-            f_atom_name_chars.shape[:2] + [4 * 64]) # (B, M, 4*64)
-        atom_feat_concat = paddle.concat(
-                [f_ref_pos, f_ref_charge, f_ref_mask, f_ref_element, f_atom_name_chars], 
-                axis=-1) * f_ref_mask
-        
-        cl = self.lin_atom_meta_to_cond_feat(atom_feat_concat) # (B, M, c_a)
-
-        # embed offsets between atom reference positions
-        if DIFFUSION and diff_batch_size > 1:
-            f_ref_pos = f_ref_pos[:zij.shape[0]] # (b, M, 3)
-            f_ref_space_uid = f_ref_space_uid[:zij.shape[0]] # (b, M)
-
-        dlm = self.ap_util.add_2_seqs(f_ref_pos, - f_ref_pos, dense=self.dense) # [b,C,nq,nk,3]
-        vlm = self.ap_util.cmp_2_seqs(f_ref_space_uid, f_ref_space_uid, dense=self.dense) # [b,C,nq,nk,1]
-        vlm = vlm.cast(dtype='float32')
-        plm = self.lin_pos_offset_to_apair(dlm) * vlm # (b, M, M, c_atompair)
-
-        # embed pairwise inverse squared distancs, and the valid mask
-        plm += self.lin_inv_sq_dist_to_apair(1 / (1 + dlm**2)) * vlm
-        plm += self.lin_valid_mask_to_apair(vlm) * vlm
-
-        # initialize the atom single representation as the single conditioning.
-        ql = cl # (B, M, c_a)
+        if not self.training and self.use_cache and (not self.cached_ql is None):
+            cl = self.cached_cl
+            ql = self.cached_ql
+            plm = self.cached_plm
+        else:
+            # create the atom single conditioning: embed per-atom meta data
+            f_ref_element = F.one_hot(feature['ref_element'], num_classes=128) # (B, M, 128)
+            f_ref_pos = feature['ref_pos']   # (B, M, 3)
+            f_ref_space_uid = feature['ref_space_uid'] # (B, M)
+            f_ref_charge = feature['ref_charge'].unsqueeze(-1).cast(f_ref_pos.dtype) # (B, M, 1)
+            f_ref_mask = feature['ref_mask'].unsqueeze(-1).cast(f_ref_pos.dtype) # (B, M, 1)
+            f_atom_name_chars = F.one_hot(
+                feature['ref_atom_name_chars'], num_classes=64) # (B, M, 4, 64)
+            f_atom_name_chars = f_atom_name_chars.reshape(
+                f_atom_name_chars.shape[:2] + [4 * 64]) # (B, M, 4*64)
+            atom_feat_concat = paddle.concat(
+                    [f_ref_pos, f_ref_charge, f_ref_mask, f_ref_element, f_atom_name_chars], 
+                    axis=-1) * f_ref_mask
+            
+            cl = self.lin_atom_meta_to_cond_feat(atom_feat_concat) # (B, M, c_a) #TODO: mask
+            # embed offsets between atom reference positions
+            if DIFFUSION and diff_batch_size > 1:
+                f_ref_pos = f_ref_pos[:zij.shape[0]] # (b, M, 3)
+                f_ref_space_uid = f_ref_space_uid[:zij.shape[0]] # (b, M)
+            dlm = self.ap_util.add_2_seqs(f_ref_pos, - f_ref_pos, dense=self.dense) # [b,C,nq,nk,3]
+            vlm = self.ap_util.cmp_2_seqs(f_ref_space_uid, f_ref_space_uid, dense=self.dense) # [b,C,nq,nk,1]
+            vlm = vlm.cast(dtype='float32')
+            plm = self.lin_pos_offset_to_apair(dlm) * vlm # (b, M, M, c_atompair)
+            # embed pairwise inverse squared distancs, and the valid mask
+            plm += self.lin_inv_sq_dist_to_apair(1 / (1 + dlm**2)) * vlm
+            plm += self.lin_valid_mask_to_apair(vlm) * vlm
+            # initialize the atom single representation as the single conditioning.
+            ql = cl.clone() # (B, M, c_a)
+            if self.use_cache:
+                self.cached_cl = cl
+                self.cached_ql = ql
+                self.cached_plm = plm
 
         # if provided, add trunk embedding and noisy positions
         atom_mask = atom_mask.cast(ql.dtype)
         if rl is not None:
-            # convert s_trunk_tok_i to s_trunk_atom_l
-            s_trunk_atom = seq_to_atom_feat(s_trunk, atom_token_uid, atom_mask) # (B, M, c_s)
-
-            # broadcast the single and pair embedding from the trunk
-            cl += self.lin_trunk_single_to_cond_atom_feat(
-                    self.ln_trunk_single_to_cond_atom_feat(s_trunk_atom)) \
-                    * atom_mask.unsqueeze(-1) # (B, M, c_a)
-            
-            zij = self.lin_cond_pair_feat_to_pair_repr(
-                    self.ln_cond_pair_feat_to_pair_repr(zij)) 
-            
-            plm += self.ap_util.to_atompair(zij=zij, atom_token_uid=atom_token_uid, 
-                                            atom_mask=atom_mask, dense=self.dense)
-            # assert plm.shape[1] == cl.shape[1]
+            if not self.training and self.use_cache and (not self.cached_rl_plm is None):
+                cl = self.cached_rl_cl
+                zij = self.cached_rl_zij
+                plm = self.cached_rl_plm
+            else:
+                # convert s_trunk_tok_i to s_trunk_atom_l
+                s_trunk_atom = seq_to_atom_feat(s_trunk, atom_token_uid, atom_mask) # (B, M, c_s)
+                # broadcast the single and pair embedding from the trunk
+                cl += self.lin_trunk_single_to_cond_atom_feat(
+                        self.ln_trunk_single_to_cond_atom_feat(s_trunk_atom)) \
+                        * atom_mask.unsqueeze(-1) # (B, M, c_a)
+                
+                zij = self.lin_cond_pair_feat_to_pair_repr(
+                        self.ln_cond_pair_feat_to_pair_repr(zij)) 
+                        # TODO: zij mask # (batch_zij, N, N, C_atompair)
+                
+                plm += self.ap_util.to_atompair(zij=zij, atom_token_uid=atom_token_uid, 
+                                                atom_mask=atom_mask, dense=self.dense)
+                # assert plm.shape[1] == cl.shape[1]
+                if self.use_cache:
+                    self.cached_rl_cl = cl
+                    self.cached_rl_zij = zij
+                    self.cached_rl_plm = plm
             
             # Add the noisy positions
             ql += self.lin_noise_pos_to_single_repr(rl) \
                   * atom_mask.unsqueeze(-1) # (B, M, c_a)
 
-        # add the combined single conditioning to the pair representation
-        if DIFFUSION and diff_batch_size > 1:
-            single_cond = cl[:zij.shape[0]] # (b, M, C_a)
+        if not self.training and self.use_cache and (not self.cached_single_plm is None):
+            plm =  self.cached_single_plm
         else:
-            single_cond = cl # (B, M, c_a)
-        single_cond = self.lin_single_cond_to_pair_repr(
-                        self.act_single_cond_to_pair_repr(single_cond))# (b, M, c_atompair)
-
-        single_cond = self.ap_util.add_2_seqs(single_cond, single_cond, dense=self.dense) # (b, M, M, c_atompair)
-        plm += single_cond 
-
-        # run MLP on the pair activation
-        plm += self.mlp_pair_active(plm)
+            # add the combined single conditioning to the pair representation
+            if DIFFUSION and diff_batch_size > 1:
+                single_cond = cl[:zij.shape[0]] # (b, M, C_a)
+            else:
+                single_cond = cl # (B, M, c_a)
+            single_cond = self.lin_single_cond_to_pair_repr(
+                            self.act_single_cond_to_pair_repr(single_cond))# (b, M, c_atompair)
+            single_cond = self.ap_util.add_2_seqs(single_cond, single_cond, dense=self.dense) # (b, M, M, c_atompair)
+            plm += single_cond 
+            # run MLP on the pair activation
+            plm += self.mlp_pair_active(plm) #TODO: mask
+            if self.use_cache:
+                self.cached_single_plm = plm
         
         # cross attention transformer
         ql = self.atom_transformer(ql, cl, plm)
 
         # aggregate per-atom representation to per-token representation
         N_token =  feature['residue_index'].shape[1]
-        al = self.lin_atom_to_token(self.act_atom_to_token(ql)) # (B, M, c_t)
+        al = self.act_atom_to_token(self.lin_atom_to_token(ql)) # (B, M, c_t)
         ai = aggregate_atom_feat_to_token(
             al, atom_token_uid, atom_mask, N_token) # (B, N_res, c_t)
 
@@ -689,14 +851,14 @@ class AtomAttentionEncoder(nn.Layer):
 class AtomTransformer(nn.Layer):
     " Atom Transformer for HF3. "
     
-    def __init__(self, channel_num, config, global_config):
+    def __init__(self, channel_num, config, global_config, use_cache):
         super(AtomTransformer, self).__init__()
         self.config = config
         self.n_query = config.n_query
         self.n_key = config.n_key
         self.default_size = 10000
         self.diff_transformer = DiffusionTransformer(
-            channel_num, config.diffusion_transformer, global_config)
+            channel_num, config.diffusion_transformer, global_config, use_cache=use_cache)
         self._AttenIndex = AttentionIndex(self.default_size, self.n_query, self.n_key)
 
     def forward(self, ql, cl, plm):
@@ -716,7 +878,7 @@ class AtomTransformer(nn.Layer):
             # dense plm
             assert len(plm.shape) == 5
             alpha_mask = atten_idx['alpha_mask']
-            beta = paddle.full_like(alpha_mask, fill_value=-10.0**10, dtype='bfloat16')
+            beta = paddle.full_like(alpha_mask, fill_value=-10.0**10, dtype=ql.dtype)
             beta[alpha_mask == 1] = 0
 
         beta = beta[None] # [1, M, M] or [1, C, 32, 128] 
@@ -757,7 +919,7 @@ class AtomTransformer(nn.Layer):
 class AtomAttentionDecoder(nn.Layer):
     " Atom Attention Decoder for HF3. "
 
-    def __init__(self, channel_num, config, global_config):
+    def __init__(self, channel_num, config, global_config, use_cache):
         super(AtomAttentionDecoder, self).__init__()
         self.config = config
         token_channel = channel_num[self.config.in_token_channel_name]
@@ -768,14 +930,10 @@ class AtomAttentionDecoder(nn.Layer):
         atom_channel = channel_num['atom_channel']
         self.lin0 = nn.Linear(token_channel, atom_channel, bias_attr=False)
         self.atom_transformer = AtomTransformer(
-            channel_num, config.atom_transformer, global_config)
+            channel_num, config.atom_transformer, global_config, use_cache=use_cache)
         self.ln1 = nn.LayerNorm(atom_channel)
-        if config.get('final_zero_init', True):
-            weight_init = nn.initializer.Constant(value=0.0)
-        else:
-            weight_init = None
         self.lin1 = nn.Linear(atom_channel, out_channel, bias_attr=False,
-                weight_attr=weight_init)
+                weight_attr=nn.initializer.Constant(value=0.0))
 
     def forward(self, ai, ql_skip, cl_skip, plm_skip, atom_token_uid, atom_mask):
         """
@@ -793,6 +951,7 @@ class AtomAttentionDecoder(nn.Layer):
 
         # Broadcast per-token activiations to per-atom activations and add the skip connection
         al = seq_to_atom_feat(ai, atom_token_uid, atom_mask) # (B, M, C_t)
+        atom_mask = paddle.cast(atom_mask, dtype=al.dtype)
         al = al * atom_mask.unsqueeze(-1) # (B, M, C_s)
         ql_skip += self.lin0(al) * atom_mask.unsqueeze(-1) # (B, M, C_a)
         
@@ -855,7 +1014,7 @@ class RelativePositionEncoding(nn.Layer):
         sym_id = batch['sym_id']
         rel_chain = _calc_clipped_offset(
             sym_id, self.config.relative_chain_max,
-            paddle.logical_not(same_chain))
+            same_entity)
 
         same_entity_ = paddle.cast(same_entity.unsqueeze(axis=-1),
                                    rel_pos.dtype)
@@ -886,7 +1045,8 @@ class AttentionIndex():
         self._key_list = ['query_idx', 'query_mask', 'key_idx', 'key_mask', 
                     'alpha_mask', 'pair_idx']
         self._upd_M_N_create_index(max_atom_num)
-
+        self.atten_idx_cache = dict()
+        self.xy_idx_cache = dict()
         
     def _upd_M_N_create_index(self, M):
         """ Update M and create a larger arange of indices. 
@@ -1011,6 +1171,13 @@ class AttentionIndex():
                               'pair_idx': paddle.to_tensor(self._pair_idx), 
                               'centers': paddle.to_tensor(self._centers)}
 
+        # clean for memory saving
+        for obj in [self._xid, self._yid, self._query_idx, self._query_mask, 
+                    self._key_idx, self._key_mask, self._alpha_mask, self._pair_idx,
+                    self._centers]:
+            del obj
+        gc.collect()
+
     
     def _slice_subset_index(self, atten_idx, C):
         return copy.deepcopy({k: atten_idx[k][:C] for k in self._key_list})
@@ -1059,17 +1226,22 @@ class AttentionIndex():
         - y_idx: tensor
         """
         assert self.xy_idx is not None
+        if self.xy_idx_cache and M in self.xy_idx_cache:
+            return self.xy_idx_cache[M]
+        
         if M == self.max_atom_num:
             return self.xy_idx
         if M > self.max_atom_num:
             # create_larger index for larger M
             self._upd_M_N_create_index(M)
-            return self.xy_idx
-        
+            self.xy_idx_cache[M] = self.xy_idx
+            return self.xy_idx_cache[M][0], self.xy_idx_cache[M][1]
+
         # slice subset indices
         xid, yid = self.xy_idx
         subset_mask = (xid < M) * (yid < M)
-        return xid[subset_mask], yid[subset_mask]
+        self.xy_idx_cache[M] = (xid[subset_mask],yid[subset_mask])
+        return self.xy_idx_cache[M][0], self.xy_idx_cache[M][1]
     
     def get_atten_idx(self, M):
         """ Get attention indices for any given max number of atoms.
@@ -1086,12 +1258,16 @@ class AttentionIndex():
         - pair_idx: tensor, shape: [C, n_query, n_key]
         - centers: tensor, shape: [C]
         """
+        if self.atten_idx_cache and M in self.atten_idx_cache:
+            return self.atten_idx_cache[M]
+        
         if M == self.max_atom_num:
             return self.attention_idx
         
         if M > self.max_atom_num:
             # create larger index for larger M
             self._upd_M_N_create_index(M)
+            self.atten_idx_cache[M] = self.attention_idx
             return self.attention_idx
         
         # slice subset indices
@@ -1100,9 +1276,16 @@ class AttentionIndex():
         # replace out-of-range indices by zero padding
         self._padding(sub_atten_idx, M)
         for k in self._key_list:
-            sub_atten_idx[k] = paddle.to_tensor(sub_atten_idx[k])
+            if not isinstance(sub_atten_idx[k], paddle.Tensor):
+                sub_atten_idx[k] = sub_atten_idx[k].clone().detach()
         sub_atten_idx['centers'] = paddle.to_tensor(centers)
+        self.atten_idx_cache[M] = sub_atten_idx
         return sub_atten_idx
+
+    def clean_atten_idx(self):
+        """ Clean cached local-seq attention indices. """
+        self.atten_idx_cache = {}
+        self.xy_idx_cache = {}
 
 
 class AtomPairUtil():
@@ -1209,7 +1392,8 @@ class AtomPairUtil():
             uid = atom_token_uid[i]
             # query and key feats
             x_seq_id, y_seq_id = uid[ap_id_x], uid[ap_id_y]
-            ap_feat_dense = f_pair[i][x_seq_id, y_seq_id] # [num_valid_ap, b, D]
+            ap_feat_dense = f_pair[i][x_seq_id, y_seq_id].reshape([
+                                 x_seq_id.size, D]) # [num_valid_ap, D]
             atompair = paddle.scatter_nd(index=valid_pair_idx, 
                                         updates=ap_feat_dense,
                                         shape=[C * nq * nk, D])
@@ -1238,7 +1422,8 @@ class AtomPairUtil():
 
         ql = ql.transpose([1, 0, 2]) # [M, B, D]
         qm = qm.transpose([1, 0, 2]) # [M, B, D]
-        ap_dense = func(ql[xid], qm[yid]) # [num_valid_ap, B, D]
+        ap_dense = func(ql[xid].reshape([xid.size, B, D]),
+                         qm[yid].reshape([yid.size, B, D])) # [num_valid_ap, B, D]
         
         ap_sparse = paddle.scatter_nd(index=valid_pair_idx, 
                                       updates=ap_dense, 
@@ -1312,15 +1497,10 @@ def seq_to_atom_feat(f_token, atom_token_uid, atom_mask):
     Returns:
         f_atom:         [B,M,D]
     """
-    B, M = atom_token_uid.shape[:2]
-    f_atom = []
-    atom_mask = atom_mask.cast(f_token.dtype)
-    for i in range(B):
-        idx = atom_token_uid[i]
-        mask = atom_mask[i]
-        atom = f_token[i][idx] * mask[..., None]
-        f_atom.append(atom.unsqueeze(0))
-    f_atom = paddle.concat(f_atom, axis=0)
+    B, N, D = f_token.shape
+    atom_token_uid = atom_token_uid.unsqueeze(-1).tile([1, 1, D])
+    f_atom = paddle.take_along_axis(f_token, atom_token_uid, axis=1)
+    f_atom *= atom_mask.unsqueeze(-1).cast(f_token.dtype)
     return f_atom
 
 
@@ -1368,19 +1548,21 @@ def aggregate_atom_feat_to_token(f_atom, atom_token_uid, atom_mask, n_token):
     f_token: [B,N,D]
     """
     B, _, D = f_atom.shape[:3]
-    
     f_atom_mean = []
     for i in range(B):
-        idx = atom_token_uid[i].cast('int64')
-        mask = atom_mask[i]
-        atom_sum = paddle.geometric.segment_sum(data=f_atom[i][mask == 1],
-                                                segment_ids=idx[mask == 1])
-        atom_count = paddle.geometric.segment_sum(data=mask[mask == 1],
-                                                  segment_ids=idx[mask == 1])
-        atom_mean = atom_sum / (atom_count[:, None] + 1e-8)
-        f_atom_mean.append(atom_mean.unsqueeze(0))
-    f_atom_mean = paddle.concat(f_atom_mean, axis=0)
-    pad_len = n_token - f_atom_mean.shape[1]
-    padding = paddle.zeros([B, pad_len, D], dtype=f_atom.dtype)
-    f_token = paddle.concat([f_atom_mean, padding], 1)
+        idx = atom_token_uid[i].cast('int32')
+        with paddle.amp.auto_cast(enable=False):
+            mask = atom_mask[i].cast(paddle.float32)
+            atom_feat = f_atom[i].cast(paddle.float32)
+            atom_sum = paddle.geometric.segment_sum(
+                    data=atom_feat * mask[:, None], segment_ids=idx)
+            atom_count = paddle.geometric.segment_sum(
+                    data=mask, segment_ids=idx)
+            atom_mean = atom_sum / (atom_count[:, None] + 1e-8)
+            atom_mean = paddle.concat(
+                [atom_mean, paddle.zeros([n_token - len(atom_mean), D], dtype=atom_feat.dtype)], 
+                axis=0)
+        f_atom_mean.append(atom_mean)
+    f_token = paddle.stack(f_atom_mean)
+    f_token = f_token.cast(f_atom.dtype)
     return f_token

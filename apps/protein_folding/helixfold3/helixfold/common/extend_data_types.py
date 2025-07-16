@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Common data types and constants used within HelixFold."""
+"""Extend data types for HelixFold."""
 
-from .extend_data_types import FeatureDict
+from typing import MutableMapping
+import numpy as np
 
-__all__ = ['FeatureDict']
+FeatureDict = MutableMapping[str, np.ndarray]

@@ -18,9 +18,10 @@ import collections
 from typing import Dict, Iterable, List, Sequence, Union
 
 from helixfold.common import residue_constants
-from helixfold.data import pipeline
-from helixfold.data.pipeline_hybrid import HF2_PADDING_DIM, \
-                                          feats_pad_and_concatenate
+from helixfold.common import FeatureDict
+from helixfold.data.pipeline_aa_utils import AF2_PADDING_DIM as HF3_PADDING_DIM
+from helixfold.data.pipeline_aa_utils import feats_pad_and_concatenate
+
 import numpy as np
 import pandas as pd
 
@@ -50,7 +51,7 @@ CHAIN_FEATURES = ('num_alignments', 'seq_length')
 IS_FILTER_KEYS = set(['msa_source_indices'])
 
 def create_paired_features(
-    chains: Iterable[pipeline.FeatureDict]) ->  List[pipeline.FeatureDict]:
+    chains: Iterable[FeatureDict]) ->  List[FeatureDict]:
   """Returns the original chains with paired NUM_SEQ features.
 
   Args:
@@ -110,7 +111,7 @@ def pad_features(feature: np.ndarray, feature_name: str) -> np.ndarray:
   return feats_padded
 
 
-def _make_msa_df(chain_features: pipeline.FeatureDict) -> pd.DataFrame:
+def _make_msa_df(chain_features: FeatureDict) -> pd.DataFrame:
   """Makes dataframe with msa features needed for msa pairing."""
   chain_msa = chain_features['msa_all_seq']
   query_seq = chain_msa[0]
@@ -173,7 +174,7 @@ def _match_rows_by_sequence_similarity(this_species_msa_dfs: List[pd.DataFrame]
   return all_paired_msa_rows
 
 
-def pair_sequences(examples: List[pipeline.FeatureDict]
+def pair_sequences(examples: List[FeatureDict]
                    ) -> Dict[int, np.ndarray]:
   """Returns indices for paired MSA sequences across chains."""
 
@@ -262,9 +263,9 @@ def dense_pad(*arrs: np.ndarray, padding_dim: Union[tuple, list],
 
 
 def _correct_post_merged_feats(
-    np_example: pipeline.FeatureDict,
-    np_chains_list: Sequence[pipeline.FeatureDict],
-    pair_msa_sequences: bool) -> pipeline.FeatureDict:
+    np_example: FeatureDict,
+    np_chains_list: Sequence[FeatureDict],
+    pair_msa_sequences: bool) -> FeatureDict:
   """Adds features that need to be computed/recomputed post merging."""
 
   np_example['seq_length'] = np.asarray(np_example['aatype'].shape[0],
@@ -291,8 +292,8 @@ def _correct_post_merged_feats(
   return np_example
 
 
-def _pad_templates(chains: Sequence[pipeline.FeatureDict],
-                   max_templates: int) -> Sequence[pipeline.FeatureDict]:
+def _pad_templates(chains: Sequence[FeatureDict],
+                   max_templates: int) -> Sequence[FeatureDict]:
   """For each chain pad the number of templates to a fixed size.
 
   Args:
@@ -314,8 +315,8 @@ def _pad_templates(chains: Sequence[pipeline.FeatureDict],
 
 
 def _merge_features_from_multiple_chains(
-    chains: Sequence[pipeline.FeatureDict],
-    pair_msa_sequences: bool) -> pipeline.FeatureDict:
+    chains: Sequence[FeatureDict],
+    pair_msa_sequences: bool) -> FeatureDict:
   """Merge features from multiple chains.
 
   Args:
@@ -346,7 +347,7 @@ def _merge_features_from_multiple_chains(
         #     *feats, pad_value=MSA_PAD_VALUES[feature_name])
         ## NOTE: HF3 use the dense_pad function instead of block_diag for MSA_FEATURES.
         merged_example[feature_name] = dense_pad(
-              *feats, padding_dim=HF2_PADDING_DIM[feature_name_split],
+              *feats, padding_dim=HF3_PADDING_DIM[feature_name_split],
               padding_value=MSA_PAD_VALUES[feature_name])
     elif feature_name_split in SEQ_FEATURES:
       merged_example[feature_name] = np.concatenate(feats, axis=0)
@@ -360,7 +361,7 @@ def _merge_features_from_multiple_chains(
 
 
 def _merge_homomers_dense_msa(
-    chains: Iterable[pipeline.FeatureDict]) -> Sequence[pipeline.FeatureDict]:
+    chains: Iterable[FeatureDict]) -> Sequence[FeatureDict]:
   """Merge all identical chains, making the resulting MSA dense.
 
   Args:
@@ -387,7 +388,7 @@ def _merge_homomers_dense_msa(
 
 
 def _concatenate_paired_and_unpaired_features(
-    example: pipeline.FeatureDict) -> pipeline.FeatureDict:
+    example: FeatureDict) -> FeatureDict:
   """Merges paired and block-diagonalised features."""
   features = MSA_FEATURES
   for feature_name in features:
@@ -401,9 +402,9 @@ def _concatenate_paired_and_unpaired_features(
   return example
 
 
-def merge_chain_features(np_chains_list: List[pipeline.FeatureDict],
+def merge_chain_features(np_chains_list: List[FeatureDict],
                          pair_msa_sequences: bool,
-                         max_templates: int) -> pipeline.FeatureDict:
+                         max_templates: int) -> FeatureDict:
   """Merges features for multiple chains to single FeatureDict.
 
   Args:
@@ -433,7 +434,7 @@ def merge_chain_features(np_chains_list: List[pipeline.FeatureDict],
 
 
 def deduplicate_unpaired_sequences(
-    np_chains: List[pipeline.FeatureDict]) -> List[pipeline.FeatureDict]:
+    np_chains: List[FeatureDict]) -> List[FeatureDict]:
   """Removes unpaired sequences which duplicate a paired sequence."""
 
   feature_names = np_chains[0].keys()

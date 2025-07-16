@@ -36,6 +36,55 @@ def compute_plddt(logits: np.ndarray) -> np.ndarray:
   return predicted_lddt_ca * 100
 
 
+def compute_chain_plddt(atom_plddt, perm_asym_id):
+  """
+  Args:
+    atom_plddt: [num_atoms] atom-level pLDDT values.
+    perm_asym_id: [num_atoms] atom-level chain IDs.
+  Returns:
+    chain_plddt: [num_chains] per-chain pLDDT.
+  """
+  uniq_asym_ids = np.unique(perm_asym_id)
+  chain_plddt = []
+  for idx, asym_id in enumerate(uniq_asym_ids):
+    chain_mask = (perm_asym_id == asym_id)
+    chain_plddt.append(np.mean(atom_plddt[chain_mask]))
+  return uniq_asym_ids, np.array(chain_plddt)
+
+
+def predicted_prob_to_value(logits, breaks):
+  """Convert predicted probability into value
+  Args:
+    logits: (*, num_bins)
+    breaks: [num_bins - 1]
+  Returns:
+    value: (*,)
+  """
+  prob = scipy.special.softmax(logits, axis=-1)
+  bin_centers = _calculate_bin_centers(breaks)
+  value = np.sum(prob * bin_centers, axis=-1)
+  return value
+
+
+def compute_chain_inter_pde(logits, breaks, asym_id):
+  """
+  Args:
+    logits: (num_res, num_res, num_bins)
+    breaks: [num_bins - 1]
+    asym_id: [num_res]
+  Returns:
+    chain_inter_pde: [num_chains]
+  """
+  pde_value = predicted_prob_to_value(logits, breaks)
+  uniq_asym_ids = np.unique(asym_id)
+  chain_inter_pde = []
+  for aid in uniq_asym_ids:
+    pair_mask = (asym_id == aid)[:, None] * (asym_id != aid)[None]
+    pair_mask = np.logical_or(pair_mask, pair_mask.T)
+    chain_inter_pde.append(np.mean(pde_value[pair_mask]))
+  return uniq_asym_ids, np.array(chain_inter_pde)
+
+
 def _calculate_bin_centers(breaks: np.ndarray):
   """Gets the bin centers from the bin edges.
 
@@ -166,3 +215,50 @@ def predicted_tm_score(
       pair_residue_weights, axis=-1, keepdims=True))
   per_alignment = np.sum(predicted_tm_term * normed_residue_mask, axis=-1)
   return np.asarray(per_alignment[(per_alignment * residue_weights).argmax()])
+
+
+def predicted_chain_pair_iptm(
+    logits: np.ndarray,
+    breaks: np.ndarray,
+    residue_weights: Optional[np.ndarray] = None,
+    asym_id: Optional[np.ndarray] = None) -> np.ndarray:
+  """compute chain pair ipTM score
+  Args:
+    logits: [num_res, num_res, num_bins] the logits output from
+      PredictedAlignedErrorHead.
+    breaks: [num_bins] the error bins.
+    residue_weights: [num_res] the per residue weights to use for the
+      expectation.
+    asym_id: [num_res] the asymmetric unit ID - the chain ID. 
+
+  Returns:
+    chain_pair_asym_ids: [N_chain]
+    chain_pair_iptm: [N_chain, N_chain]
+  """
+  uniq_asym_ids = np.unique(asym_id)
+  n_chains = len(uniq_asym_ids)
+  chain_pair_iptm = np.zeros((n_chains, n_chains), 'float32')
+  chain_pair_mask = np.ones((n_chains, n_chains), 'float32')
+  for i, asym_a in enumerate(uniq_asym_ids):
+    for j, asym_b in enumerate(uniq_asym_ids):
+      flag = np.logical_or(asym_id == asym_a, asym_id == asym_b)
+      cur_logits = logits[flag][:, flag]
+      cur_weight = residue_weights[flag]
+      cur_asym = asym_id[flag]
+      if np.sum(cur_weight) == 0:
+        chain_pair_mask[i, j] = 0
+        continue
+      if asym_a == asym_b:
+        score = predicted_tm_score(
+            cur_logits, breaks, cur_weight, cur_asym, 
+            interface=False)
+      else:
+        score = predicted_tm_score(
+            cur_logits, breaks, cur_weight, cur_asym,
+            interface=True)
+      chain_pair_iptm[i, j] = score
+  return {
+    'chain_pair_asym_ids': uniq_asym_ids,
+    'chain_pair_iptm': chain_pair_iptm,
+    'chain_pair_mask': chain_pair_mask,
+  }

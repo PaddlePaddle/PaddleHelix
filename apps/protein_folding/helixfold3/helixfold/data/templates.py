@@ -772,12 +772,14 @@ def _process_single_hit(
   if os.path.exists(cif_path):
     logging.debug('Reading PDB entry from %s. Query: %s, template: %s', cif_path,
                   query_sequence, template_sequence)
-
-    # Fail if we can't find the mmCIF file.
     cif_string = _read_file(cif_path)
   elif os.path.exists(cif_gz_path):
     with gzip.open(cif_gz_path, 'rb') as f:
       cif_string = f.read().decode('utf-8')
+  else:
+    # Fail if we can't find the mmCIF file.
+    error = f'Could not find mmCIF file for PDB ID {hit_pdb_code} in either {cif_path} or {cif_gz_path}'
+    return SingleHitResult(features=None, error=error, warning=None)
 
   parsing_result = mmcif_parsing.parse(
       file_id=hit_pdb_code, mmcif_string=cif_string)

@@ -16,9 +16,9 @@
 
 from typing import Iterable, MutableMapping, List
 
+from helixfold.common import FeatureDict
 from helixfold.common import residue_constants
 from helixfold.data import msa_pairing
-from helixfold.data import pipeline
 import numpy as np
 
 REQUIRED_FEATURES = frozenset({
@@ -33,10 +33,10 @@ REQUIRED_FEATURES = frozenset({
 })
 
 MAX_TEMPLATES = 4
-MSA_CROP_SIZE = 2048
+MSA_CROP_SIZE = 16384
 
 
-def _is_homomer_or_monomer(chains: Iterable[pipeline.FeatureDict]) -> bool:
+def _is_homomer_or_monomer(chains: Iterable[FeatureDict]) -> bool:
   """Checks if a list of chains represents a homomer/monomer example."""
   # Note that an entity_id of 0 indicates padding.
   num_unique_chains = len(np.unique(np.concatenate(
@@ -46,8 +46,8 @@ def _is_homomer_or_monomer(chains: Iterable[pipeline.FeatureDict]) -> bool:
 
 
 def pair_and_merge(
-    all_chain_features: MutableMapping[str, pipeline.FeatureDict]
-    ) -> pipeline.FeatureDict:
+    all_chain_features: MutableMapping[str, FeatureDict]
+    ) -> FeatureDict:
   """Runs processing on features to augment, pair and merge.
 
   Args:
@@ -79,43 +79,12 @@ def pair_and_merge(
   np_example["num_templates"] = MAX_TEMPLATES # fix num_templates for multi chain padding
   return np_example
 
-def rna_merge(
-    all_chain_features: MutableMapping[str, pipeline.FeatureDict],
-    rna_msa_crop_size: int = 16384,
-    ) -> pipeline.FeatureDict:
-  """Runs processing on features to augment and merge.
-
-  Args:
-    all_chain_features: A MutableMap of dictionaries of features for each chain.
-
-  Returns:
-    A dictionary of features.
-  """
-
-  process_unmerged_features_rna(all_chain_features)
-
-  np_chains_list = list(all_chain_features.values())
-
-  pair_msa_sequences = False
-
-  np_chains_list = crop_chains(
-      np_chains_list,
-      msa_crop_size=rna_msa_crop_size,
-      pair_msa_sequences=pair_msa_sequences,
-      max_templates=0)
-  np_example = msa_pairing.merge_chain_features(
-      np_chains_list=np_chains_list, 
-      pair_msa_sequences=pair_msa_sequences,
-      max_templates=0)
-  np_example = process_final_rna(np_example)
-  return np_example
-
 
 def crop_chains(
-    chains_list: List[pipeline.FeatureDict],
+    chains_list: List[FeatureDict],
     msa_crop_size: int,
     pair_msa_sequences: bool,
-    max_templates: int) -> List[pipeline.FeatureDict]:
+    max_templates: int) -> List[FeatureDict]:
   """Crops the MSAs for a set of chains.
 
   Args:
@@ -141,10 +110,10 @@ def crop_chains(
   return cropped_chains
 
 
-def _crop_single_chain(chain: pipeline.FeatureDict,
+def _crop_single_chain(chain: FeatureDict,
                        msa_crop_size: int,
                        pair_msa_sequences: bool,
-                       max_templates: int) -> pipeline.FeatureDict:
+                       max_templates: int) -> FeatureDict:
   """Crops msa sequences to `msa_crop_size`."""
   msa_size = chain['num_alignments']
 
@@ -192,17 +161,9 @@ def _crop_single_chain(chain: pipeline.FeatureDict,
   return chain
 
 
-def process_final(np_example: pipeline.FeatureDict) -> pipeline.FeatureDict:
+def process_final(np_example: FeatureDict) -> FeatureDict:
   """Final processing steps in data pipeline, after merging and pairing."""
   np_example = _correct_msa_restypes(np_example)
-  np_example = _make_seq_mask(np_example)
-  np_example = _make_msa_mask(np_example)
-  np_example = _filter_features(np_example)
-  return np_example
-
-def process_final_rna(np_example: pipeline.FeatureDict) -> pipeline.FeatureDict:
-  """Final processing steps in data pipeline, after merging and pairing."""
-  # np_example = _correct_msa_restypes(np_example)
   np_example = _make_seq_mask(np_example)
   np_example = _make_msa_mask(np_example)
   np_example = _filter_features(np_example)
@@ -233,13 +194,13 @@ def _make_msa_mask(np_example):
   return np_example
 
 
-def _filter_features(np_example: pipeline.FeatureDict) -> pipeline.FeatureDict:
+def _filter_features(np_example: FeatureDict) -> FeatureDict:
   """Filters features of example to only those requested."""
   return {k: v for (k, v) in np_example.items() if k in REQUIRED_FEATURES}
 
 
 def process_unmerged_features(
-    all_chain_features: MutableMapping[str, pipeline.FeatureDict]):
+    all_chain_features: MutableMapping[str, FeatureDict]):
   """Postprocessing stage for per-chain features before merging."""
   num_chains = len(all_chain_features)
   for chain_features in all_chain_features.values():
@@ -256,36 +217,6 @@ def process_unmerged_features(
     # Add all_atom_mask and dummy all_atom_positions based on aatype.
     all_atom_mask = residue_constants.STANDARD_ATOM_MASK[
         chain_features['aatype']]
-    chain_features['all_atom_mask'] = all_atom_mask
-    chain_features['all_atom_positions'] = np.zeros(
-        list(all_atom_mask.shape) + [3])
-
-    # Add assembly_num_chains.
-    chain_features['assembly_num_chains'] = np.asarray(num_chains)
-
-  # Add entity_mask.
-  for chain_features in all_chain_features.values():
-    chain_features['entity_mask'] = (
-        chain_features['entity_id'] != 0).astype(np.int32)
-
-
-def process_unmerged_features_rna(
-    all_chain_features: MutableMapping[str, pipeline.FeatureDict]):
-  """Postprocessing stage for per-chain features before merging."""
-  num_chains = len(all_chain_features)
-  for chain_features in all_chain_features.values():
-    # Convert deletion matrices to float.
-    chain_features['deletion_matrix'] = np.asarray(
-        chain_features.pop('deletion_matrix_int'), dtype=np.float32)
-    if 'deletion_matrix_int_all_seq' in chain_features:
-      chain_features['deletion_matrix_all_seq'] = np.asarray(
-          chain_features.pop('deletion_matrix_int_all_seq'), dtype=np.float32)
-
-    chain_features['deletion_mean'] = np.mean(
-        chain_features['deletion_matrix'], axis=0)
-
-    # Add all_atom_mask and dummy all_atom_positions based on aatype.
-    all_atom_mask = np.zeros((len(chain_features['aatype']), 37))
     chain_features['all_atom_mask'] = all_atom_mask
     chain_features['all_atom_positions'] = np.zeros(
         list(all_atom_mask.shape) + [3])

@@ -92,12 +92,13 @@ def parse_fasta(fasta_string: str) -> Tuple[Sequence[str], Sequence[str]]:
   return sequences, descriptions
 
 
-def parse_stockholm(stockholm_string: str) -> Msa:
+def parse_stockholm(stockholm_string: str, query: Optional[str] = None) -> Msa:
   """Parses sequences and deletion matrix from stockholm format alignment.
 
   Args:
     stockholm_string: The string contents of a stockholm file. The first
       sequence in the file should be the query sequence.
+    query: Optional[str], the query sequence.
 
   Returns:
     A tuple of:
@@ -121,6 +122,10 @@ def parse_stockholm(stockholm_string: str) -> Msa:
 
   msa = []
   deletion_matrix = []
+
+  if not query is None and len(name_to_sequence) == 0:  
+    ## NOTE: prepare variable for mock msa
+    name_to_sequence = collections.OrderedDict({'query': query})
 
   query = ''
   keep_columns = []
@@ -223,6 +228,7 @@ def parse_stockholm_RNA(stockholm_string: str, query: Optional[str]) -> Msa:
   return Msa(sequences=msa,
              deletion_matrix=deletion_matrix,
              descriptions=list(name_to_sequence.keys()))
+
 
 def align_query_to_sto(query, sto_sequence):
   query = query.strip()

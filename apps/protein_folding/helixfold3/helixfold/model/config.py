@@ -36,12 +36,11 @@ def model_config(name: str) -> ml_collections.ConfigDict:
 
 CONFIG_DIFFS = {
     'allatom_demo': {
+        'model.heads.diffusion_module.atom_encoder.atom_transformer.diffusion_transformer.use_rotary': True,
+        'model.heads.diffusion_module.diffusion_transformer.use_rotary': True,
+        'model.heads.diffusion_module.atom_decoder.atom_transformer.diffusion_transformer.use_rotary': True,
         'model.heads.confidence_head.weight': 0.01
-    },
-    'allatom_subbatch_64_recycle_1': {
-        'model.global_config.subbatch_size': 64,
-        'model.num_recycle': 1,
-    },
+    }
 }
 
 CONFIG_ALLATOM = ml_collections.ConfigDict({
@@ -411,7 +410,7 @@ CONFIG_ALLATOM = ml_collections.ConfigDict({
       'use_flash_attn': True,
       'outer_product_mean_position': 'first',
     },
-    'num_recycle': 3,
+    'num_recycle': 9,
     'resample_msa_in_recycling': True,
   },
 })

@@ -1,0 +1,17 @@
+{
+    "entities": [
+        {
+            "type": "dna",
+            "sequence": "CCATTATAGC",
+            "count": 1,
+            "modification": [
+                {"type": "residue_replace", "ccd": "5CM", "index": 2}
+            ]
+        },
+        {
+            "type": "dna",
+            "sequence": "GCTATAATGG",
+            "count": 1
+        }
+    ]
+}

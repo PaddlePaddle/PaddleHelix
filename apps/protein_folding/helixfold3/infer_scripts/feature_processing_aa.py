@@ -13,497 +13,660 @@
 # limitations under the License.
 
 """Functions for building the features for the HelixFold-3 inference pipeline."""
-import collections
 import copy
 import os
 import time, gzip, pickle
+from typing import Mapping, List, Union, Tuple
 import numpy as np
+import pathlib
 import logging
+import dataclasses
+from concurrent.futures import ProcessPoolExecutor, as_completed
+
 from helixfold.common import residue_constants
 from helixfold.data import parsers
-from helixfold.data import pipeline_multimer
-from helixfold.data import pipeline_rna_multimer
-from helixfold.data import pipeline_conf_bonds, pipeline_token_feature, pipeline_hybrid
-from helixfold.data import label_utils
-from concurrent.futures import ProcessPoolExecutor, as_completed
-from .preprocess import digit2alphabet
+from helixfold.data import msa_pipeline_protein
+from helixfold.data import pipeline_aa
+from helixfold.data import utils
+from helixfold.data.feature_processing import MAX_TEMPLATES as MAX_PROTEIN_TEMPLATE_HITS
+from helixfold.data.feature_processing import MSA_CROP_SIZE as MAX_MSA_DEPTH
+from infer_scripts.entity_bean import EntityBean
+
 
 logger = logging.getLogger(__file__)
 
 POLYMER_STANDARD_RESI_ATOMS = residue_constants.residue_atoms
-STRING_FEATURES = ['all_chain_ids', 'all_ccd_ids','all_atom_ids', 
-                  'release_date','label_ccd_ids','label_atom_ids']
+STRING_FEATURES = ['all_chain_ids', 'all_ccd_ids','all_atom_ids', 'chain_ids',
+                  'release_date', 'label_ccd_ids', 'label_atom_ids', 'atom_perm_str']
+MAX_MSA_WORKERS = 1
 
-def load_ccd_dict(ccd_preprocessed_path):
-    assert os.path.exists(ccd_preprocessed_path),\
-              (f'[CCD] ccd_preprocessed_path: {ccd_preprocessed_path} not exist.')
-    st_1 = time.time()
-    if 'pkl.gz' in ccd_preprocessed_path:
-        with gzip.open(ccd_preprocessed_path, "rb") as fp:
-            ccd_preprocessed_dict = pickle.load(fp)
-    elif '.pkl' in ccd_preprocessed_path:
-        with open(ccd_preprocessed_path, "rb") as fp:
-            ccd_preprocessed_dict = pickle.load(fp)
-    print(f'[CCD] load ccd dataset done. use {time.time()-st_1}s;'\
-                    f'Has length of {len(ccd_preprocessed_dict)}')
+@dataclasses.dataclass(frozen=True)
+class MSATaskMeta:
+  """Class representing a MSATaskMeta.
+
+    data_pipeline (DataPipeline): DataPipeline object for processing individual chains.
+    chain_id (str): Chain ID.
+    seq (str): Chain sequence.
+    desc (str): Chain description.
+    msa_output_dir (PathLike): MSA output directory.
+    features_pkl (PathLike): Feature file path.
+    task_type (Literal): Task type, protein or rna
+    processed_features (Mapping[str, any]): Processed features.
+  """
+  data_pipeline: msa_pipeline_protein.DataPipeline
+  chain_id: str
+  seq: str
+  desc: str
+  msa_output_dir: str
+  features_pkl: str
+  task_type: str
+  processed_features: Mapping[str, any] = dataclasses.field(default_factory=dict)
+  
+  def __post_init__(self):
+    assert self.task_type in ['protein', 'rna'],\
+        (f"task_type: {self.task_type} not in ['protein', 'rna']")
+
+  @property
+  def features(self):
+    return self.processed_features
+
+
+def load_ccd_dict(ccd_preprocessed_path: str) -> Mapping[str, any]:
+  """Load ccd preprocessed dict.
+
+      Args:
+          ccd_preprocessed_path: str
+
+      Returns:
+          Mapping[str, any]: CCD preprocessed dict.
+  """
+  assert os.path.exists(ccd_preprocessed_path),\
+            (f'[CCD] ccd_preprocessed_path: {ccd_preprocessed_path} not exist.')
+  st_1 = time.time()
+  if 'pkl.gz' in ccd_preprocessed_path:
+      with gzip.open(ccd_preprocessed_path, "rb") as fp:
+          ccd_preprocessed_dict = pickle.load(fp)
+  elif '.pkl' in ccd_preprocessed_path:
+      with open(ccd_preprocessed_path, "rb") as fp:
+          ccd_preprocessed_dict = pickle.load(fp)
+  logger.info(f'[CCD] Load ccd dataset done. use: {time.time()-st_1}s; '\
+                  f'Total length: {len(ccd_preprocessed_dict)}')
+  
+  return ccd_preprocessed_dict
+
+
+def crop_msa(feat: Mapping[str, any], max_msa_depth: int = 16384) -> Mapping[str, any]:
+  """ pad msa and generate msa_mask. """
+  msa = feat['msa']
+  deletion_mat = feat['deletion_matrix']
+  has_deletion = feat['has_deletion']
+  deletion_value_mat = feat['deletion_value']
+  msa_mask = np.ones_like(feat['msa']).astype('float32') # [msa_depth, n_token]
+
+  msa_depth, _ = msa_mask.shape
+  if msa_depth > max_msa_depth:
+      msa_mask = msa_mask[: max_msa_depth, :]
+      msa = msa[: max_msa_depth, :]
+      deletion_mat = deletion_mat[: max_msa_depth, :]
+      has_deletion = has_deletion[: max_msa_depth, :]
+      deletion_value_mat = deletion_value_mat[: max_msa_depth, :]
+  
+  feat['msa'] = msa.astype('int32')
+  feat['msa_mask'] = msa_mask
+  feat['deletion_matrix'] = deletion_mat
+  feat['has_deletion'] = has_deletion
+  feat['deletion_value'] = deletion_value_mat
+
+  return feat
+
+
+def get_padding_restype(ccd_id: str, 
+                        ccd_preprocessed_dict: Mapping[str, any], 
+                        chain_type: str, 
+                        is_polymer_terminus: bool) -> Mapping[str, any]:
+  """Get the standard atoms order and features for specific residue according to the CCD.
+
+    Args:
+        ccd_id: The CCD ID of the residue.
+        ccd_preprocessed_dict: The chemical components dictionary.
+        chain_type: The type of the chain, protein, rna, dna, ligand.
+        is_polymer_terminus: Whether the residue is the terminus of the polymer.
+
+    Returns:
+        Mapping[str, any]: The padding features for the residue.
+    """
+
+  def _set_std_token_indices(pad_feats: Mapping[str, any], 
+                             token_indice: np.ndarray, 
+                             key_prefix: str):
+      """
+          Helper function to set token indices and masks.
+      """
+      token_indice = np.where(token_indice == 1)[0]
+      if key_prefix == 'centra':
+         suffix = 'token_indice'
+      elif key_prefix == 'pseudo':
+         suffix = 'beta'  
+      assert len(token_indice) <= 1, f"residue should have only one {key_prefix}-token, Got {len(token_indice)}"
+      pad_feats[f'{key_prefix}_{suffix}'] = token_indice if len(token_indice) == 1 else np.array([0], dtype=np.int32)
+      pad_feats[f'{key_prefix}_{suffix}_mask'] = np.array([1] if len(token_indice) == 1 else [0], dtype=np.int32)
+
+  def _drop_leaving_atoms(chain_type: str,
+                          atom_ids_list: list, 
+                          is_polymer_terminus: bool) -> List[str]:
+    """Drop the leaving atoms when modified ccd gets linked in polymer."""
+    _LEAVING_ATOMS_CONFIG = {
+        'dna': ['OP3'],
+        'rna': ['OP3'], 
+        'protein': ['OXT', 'HXT']
+    }
+    _atom_ids_list = copy.deepcopy(atom_ids_list)
+    if is_polymer_terminus or chain_type == 'ligand':
+        return _atom_ids_list
     
-    return ccd_preprocessed_dict
+    atoms_to_remove = _LEAVING_ATOMS_CONFIG.get(chain_type, [])
+    return [atom for atom in _atom_ids_list if atom not in atoms_to_remove]
 
-
-def crop_msa(feat, max_msa_depth=16384):
-    """ pad msa and generate msa_mask. """
-    msa = feat['msa']
-    msa_mask = np.ones_like(feat['msa']).astype('float32') # [msa_depth, n_token]
-    delection_mat = feat['deletion_matrix']
-    msa_depth, num_token = msa_mask.shape
-    if msa_depth > max_msa_depth:
-        msa_mask = msa_mask[: max_msa_depth, :]
-        msa = msa[: max_msa_depth, :]
-        delection_mat = delection_mat[: max_msa_depth, :]
-    return msa.astype('int32'), msa_mask, delection_mat
-
-
-def get_padding_restype(ccd_id, ccd_preprocessed_dict, extra_feats=None, is_poly_point=False):
-  if ccd_id in ccd_preprocessed_dict:
-    refs = ccd_preprocessed_dict[ccd_id]  # O(1)
-    if ccd_id in residue_constants.STANDARD_LIST:
-      _residue_is_standard = True
-      if not is_poly_point:
-        pdb_atom_ids_list = POLYMER_STANDARD_RESI_ATOMS[ccd_id] # NOTE: now is only support standard residue.
-      else:
-        pdb_atom_ids_list = refs['atom_ids']
+  def _get_ref_info():
+    """Get residue information and determine if it's standard."""
+    refs = ccd_preprocessed_dict.get(ccd_id, None)
+    if refs is None: 
+        raise ValueError(f'Not found ccd_id: {ccd_id} in ccd_preprocessed_dict')
+    
+    residue_is_standard = (ccd_id in residue_constants.STANDARD_LIST)
+    if residue_is_standard:
+        if is_polymer_terminus:
+          standard_atom_ids_list = refs['atom_ids']
+        else:
+          standard_atom_ids_list = POLYMER_STANDARD_RESI_ATOMS[ccd_id]
     else:
-      # for ligand/ion. ccd_id.
-      _residue_is_standard = False
-      pdb_atom_ids_list = refs['atom_ids']
-  else:
-    # for ligand/ion. smiles.
-    assert not extra_feats is None and ccd_id in extra_feats
-    _residue_is_standard = False
-    refs = extra_feats[ccd_id]
-    pdb_atom_ids_list = refs['atom_ids']
+        # for ligand/ion/modified_residues. ccd_id is not in STANDARD_LIST.
+        standard_atom_ids_list = _drop_leaving_atoms(
+          chain_type=chain_type, 
+          atom_ids_list=refs['atom_ids'], 
+          is_polymer_terminus=is_polymer_terminus
+        )
 
-  _atom_positions_list = refs['position']
-  ## NOTE: map atom_ids to original atom_ids order from ccd; STANDARD_LIST
-  if ccd_id in residue_constants.STANDARD_LIST:
+    atom_positions_list = refs['position']
+    return refs, residue_is_standard, standard_atom_ids_list, atom_positions_list
+
+  def _filter_atom_positions(refs: Mapping[str, any], 
+                             standard_atom_ids_list: List[str], 
+                             atom_positions_list: List[np.ndarray]
+                             ) -> Tuple[List[str], List[np.ndarray]]:
+    """Filter atom positions for non-ligand types."""
+    if chain_type == 'ligand':
+        return standard_atom_ids_list, atom_positions_list
+    
     ccd_ori_atom_ids_order = refs['atom_ids']
-    _new_atom_ids_list = []
-    _new_atom_positions_list = []
+    new_atom_ids_list = []
+    new_atom_positions_list = []
     for idx, key in enumerate(ccd_ori_atom_ids_order):
-      if key in pdb_atom_ids_list:
-        _new_atom_ids_list.append(key)
-        _new_atom_positions_list.append(_atom_positions_list[idx])
-    assert len(_new_atom_ids_list) == len(pdb_atom_ids_list) == len(_new_atom_positions_list)
-    pdb_atom_ids_list = _new_atom_ids_list
-    _atom_positions_list = _new_atom_positions_list
+      if key in standard_atom_ids_list:
+        new_atom_ids_list.append(key)
+        new_atom_positions_list.append(atom_positions_list[idx])
+    assert len(new_atom_ids_list) == len(standard_atom_ids_list) == len(new_atom_positions_list)
+    return new_atom_ids_list, new_atom_positions_list
 
-  ref_atom_ids_index = { 
-    name: i for i, name in enumerate(refs['atom_ids'])
-  }
+  def _process_atom_tokens(atom_ids_list: List[str], 
+                           ref_atom_ids_index: Mapping[str, int], 
+                           residue_is_standard: bool,
+                           total_nums: int
+                           ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Process atom tokens and set masks and indices."""
+    padding_atom_pos = np.zeros([total_nums, 3], dtype=np.float32)  # Dummy Atom pos
+    padding_atom_mask = np.zeros([total_nums], dtype=np.int32)
+    centra_token_indice = np.zeros([total_nums], dtype=np.int32) 
+    pseudo_token_indice = np.zeros([total_nums], dtype=np.int32)
+
+    for at_id in atom_ids_list:
+        if at_id in ref_atom_ids_index: 
+            adjust_idx = ref_atom_ids_index[at_id]
+            padding_atom_mask[adjust_idx] = 1
+            if residue_is_standard:
+                if at_id in residue_constants.CENTRA_TOKEN:
+                    centra_token_indice[adjust_idx] = 1
+                    if ccd_id.upper() == "GLY":
+                        pseudo_token_indice[adjust_idx] = 1
+                elif at_id in residue_constants.PSEUDO_TOKEN:
+                    if at_id == 'CB': 
+                        pseudo_token_indice[adjust_idx] = 1
+                    elif at_id == 'P' and ccd_id.upper() in residue_constants.DNA_RNA_LIST: 
+                        pseudo_token_indice[adjust_idx] = 1
+            else:
+                centra_token_indice[adjust_idx] = 1
+                pseudo_token_indice[adjust_idx] = 1
+    
+    return padding_atom_pos, padding_atom_mask, centra_token_indice, pseudo_token_indice
+
+
+  refs, residue_is_standard, atom_ids_layout, atom_positions_layout = _get_ref_info()
+  
+  atom_ids_layout, atom_positions_layout = _filter_atom_positions(
+      refs, 
+      atom_ids_layout, 
+      atom_positions_layout
+  )
+  
+  ref_atom_ids_index = {name: i for i, name in enumerate(refs['atom_ids'])}
   total_nums = len(ref_atom_ids_index)
   assert total_nums > 0, f'TODO filter - Got CCD <{ccd_id}>: 0 atom nums.'
-  padding_atom_pos = np.zeros([total_nums, 3], dtype=np.float32) ## Dummy Atom pos
-  padding_atom_mask = np.zeros([total_nums], dtype=np.int32)
-  centra_token_indice = np.zeros([total_nums], dtype=np.int32) 
-  pseudo_token_indice = np.zeros([total_nums], dtype=np.int32)
+  
+  padding_atom_pos, padding_atom_mask, centra_token_indice, pseudo_token_indice = \
+    _process_atom_tokens(
+      atom_ids_layout, 
+      ref_atom_ids_index, 
+      residue_is_standard, 
+      total_nums
+  )
 
-  for at_id in pdb_atom_ids_list:
-    if at_id in ref_atom_ids_index: 
-      adjust_idx = ref_atom_ids_index[at_id]
-      padding_atom_mask[adjust_idx] = 1
-      if _residue_is_standard:
-        if at_id in residue_constants.CENTRA_TOKEN:
-          centra_token_indice[adjust_idx] = 1
-          if ccd_id.upper() == "GLY":
-            pseudo_token_indice[adjust_idx] = 1
-        elif at_id in residue_constants.PSEUDO_TOKEN:
-          if at_id == 'CB': 
-            pseudo_token_indice[adjust_idx] = 1
-          elif at_id == 'P' and ccd_id.upper() in residue_constants.DNA_RNA_LIST: 
-            pseudo_token_indice[adjust_idx] = 1
-      else:
-        centra_token_indice[adjust_idx] = 1
-        pseudo_token_indice[adjust_idx] = 1
-
-  frame_indice = label_utils.get_pae_frame_mask(atom_ids_list=pdb_atom_ids_list, 
-                  atom_positions_list=_atom_positions_list,
-                  residue_name_3=ccd_id,
-                  residue_is_standard=_residue_is_standard,
-                  residue_is_missing=False,
-                  ref_atom_ids_index=ref_atom_ids_index)
+  frame_indice = utils.get_pae_frame_mask(
+    atom_ids_list=atom_ids_layout, 
+    atom_positions_list=atom_positions_layout,
+    residue_name_3=ccd_id,
+    residue_is_standard=residue_is_standard,
+    residue_is_missing=False,
+    ref_atom_ids_index=ref_atom_ids_index
+  )
 
   pad_feats = {
     **frame_indice, 
-    'ccd_ids': np.array([ccd_id] * total_nums , dtype=object),  # N_atom
+    'ccd_ids': np.array([ccd_id] * total_nums, dtype=object),  # N_atom
     'atom_ids': refs['atom_ids'], # [N_atom]
     'atom_pos': padding_atom_pos,  # [N_atom]
-    'atom_mask': padding_atom_mask,  # [N_atom]
+    'atom_pos_mask': padding_atom_mask,  # [N_atom]
     'token_to_atom_nums': np.array([total_nums], dtype=np.int32) \
-                     if _residue_is_standard else np.ones([total_nums], dtype=np.int32)
+                      if residue_is_standard else np.ones([total_nums], dtype=np.int32)
   }
 
-  if _residue_is_standard:
-    centra_token_indice = np.where(centra_token_indice == 1)[0]
-    assert len(centra_token_indice) <= 1, f"residue should be has only one centra-token, Got {len(centra_token_indice)}"
-    if len(centra_token_indice) == 1:
-      pad_feats['centra_token_indice'] = centra_token_indice #[N_token]
-      pad_feats['centra_token_indice_mask'] = np.array([1], dtype=np.int32)
-    else:
-      pad_feats['centra_token_indice'] = np.array([0], dtype=np.int32) #[N_token]
-      pad_feats['centra_token_indice_mask'] = np.array([0], dtype=np.int32)
-    
-    pseudo_token_indice = np.where(pseudo_token_indice == 1)[0]
-    assert len(pseudo_token_indice) <= 1, f"residue should be has only one pesudo-token. Got {len(pseudo_token_indice)}"
-    if len(pseudo_token_indice) == 1:
-      pad_feats['pseudo_token_indice'] = pseudo_token_indice
-      pad_feats['pseudo_token_indice_mask'] = np.array([1], dtype=np.int32)
-    else:
-      pad_feats['pseudo_token_indice'] = np.array([0], dtype=np.int32)
-      pad_feats['pseudo_token_indice_mask'] = np.array([0], dtype=np.int32)
+  if residue_is_standard:
+    _set_std_token_indices(pad_feats, centra_token_indice, 'centra')
+    _set_std_token_indices(pad_feats, pseudo_token_indice, 'pseudo')
   else:
     # if is non-standard, token_nums == atom_nums
     pad_feats['centra_token_indice'] = np.zeros_like(centra_token_indice, dtype=np.int32)
     pad_feats['centra_token_indice_mask'] = centra_token_indice
-
-    pad_feats['pseudo_token_indice'] = np.zeros_like(pseudo_token_indice, dtype=np.int32)
-    pad_feats['pseudo_token_indice_mask'] = pseudo_token_indice
+    pad_feats['pseudo_beta'] = np.zeros_like(pseudo_token_indice, dtype=np.int32)
+    pad_feats['pseudo_beta_mask'] = pseudo_token_indice
 
   return pad_feats
 
-def get_inference_restype_mask(all_chain_features, ccd_preprocessed_dict, extra_feats=None):
-  """
-    all_chain_features: <type>_<chain_id>: chain_features, chain_features should has the ccd_seqs
-    ccd_preprocessed_dict: preprocessed CCD dict
-  """
 
-  all_ccd_ids = np.empty((0,), dtype=object)
-  all_atom_ids = np.empty((0,), dtype=object)
-  all_atom_pos = np.empty((0, 3), dtype=np.float32)
-  all_atom_mask = np.empty((0,), dtype=np.int32)
-  all_centra_token_indice = np.empty((0,), dtype=np.int32)
-  all_centra_token_indice_mask = np.empty((0,), dtype=np.int32)
-  all_token_to_atom_nums = np.empty((0,), dtype=np.int32)
-  all_pseudo_token_indice = np.empty((0,), dtype=np.int32)
-  all_pseudo_token_indice_mask = np.empty((0,), dtype=np.int32)
-  frame_ai_indice = np.empty((0,), dtype=np.int32) # Ntoken
-  frame_bi_indice = np.empty((0,), dtype=np.int32) # Ntoken
-  frame_ci_indice = np.empty((0,), dtype=np.int32) # Ntoken
-  frame_mask = np.empty((0,), dtype=np.int32) # Ntoken
-
-  frame_indice_offset = 0
-  for type_chain_id, ccd_list in all_chain_features.items():
-    dtype, chain_id = type_chain_id.rsplit('_', 1) 
-    for idx, ccd_id in enumerate(ccd_list):
-      is_poly_point = False
-      if idx == len(ccd_list) - 1 and dtype == 'protein':
-        is_poly_point = True
-      elif idx == 0 and dtype in ['rna', 'dna']:
-        is_poly_point = True
-      pad_feats = get_padding_restype(ccd_id, ccd_preprocessed_dict, extra_feats=extra_feats, 
-                                        is_poly_point=is_poly_point)
-      pad_feats['ai_indice'] = pad_feats['ai_indice'] + frame_indice_offset
-      pad_feats['bi_indice'] = pad_feats['bi_indice'] + frame_indice_offset
-      pad_feats['ci_indice'] = pad_feats['ci_indice'] + frame_indice_offset
-      frame_indice_offset += pad_feats['frame_atom_offset']	
-
-      all_atom_ids = np.concatenate((all_atom_ids, pad_feats['atom_ids']))
-      all_ccd_ids = np.concatenate((all_ccd_ids, pad_feats['ccd_ids']))
-      all_atom_pos = np.concatenate((all_atom_pos, pad_feats['atom_pos']))
-      all_atom_mask = np.concatenate((all_atom_mask, pad_feats['atom_mask']))
-      all_centra_token_indice = np.concatenate((all_centra_token_indice, 
-                            pad_feats['centra_token_indice']))
-      all_centra_token_indice_mask = np.concatenate((all_centra_token_indice_mask, 
-                            pad_feats['centra_token_indice_mask']))
-      all_token_to_atom_nums = np.concatenate((all_token_to_atom_nums,
-                            pad_feats['token_to_atom_nums']))
-      all_pseudo_token_indice = np.concatenate((all_pseudo_token_indice, 
-                            pad_feats['pseudo_token_indice']))
-      all_pseudo_token_indice_mask = np.concatenate((all_pseudo_token_indice_mask, 
-                            pad_feats['pseudo_token_indice_mask']))
-      frame_ai_indice = np.concatenate((frame_ai_indice, pad_feats['ai_indice']))
-      frame_bi_indice = np.concatenate((frame_bi_indice, pad_feats['bi_indice']))
-      frame_ci_indice = np.concatenate((frame_ci_indice, pad_feats['ci_indice']))
-      frame_mask = np.concatenate((frame_mask, pad_feats['frame_indice_mask']))
-
-  cumsum_array = np.cumsum(all_token_to_atom_nums)
-  assert all_atom_pos.shape[0] == all_atom_mask.shape[0] == all_atom_ids.shape[0]
-  all_centra_token_indice = all_centra_token_indice + np.insert(cumsum_array[:-1], 0, 0)
-  all_pseudo_token_indice = all_pseudo_token_indice + np.insert(cumsum_array[:-1], 0, 0)
-  assert all_atom_pos.shape[0] == all_atom_mask.shape[0] == all_atom_ids.shape[0]
-  assert all_centra_token_indice.shape[0] == all_centra_token_indice_mask.shape[0]
-  assert all_pseudo_token_indice.shape[0] == all_pseudo_token_indice_mask.shape[0]
-  assert frame_ai_indice.shape[0] == frame_bi_indice.shape[0] == frame_ci_indice.shape[0] == frame_mask.shape[0] # Ntoken
-  assert np.max(frame_ai_indice) < all_atom_pos.shape[0] and \
-      np.max(frame_bi_indice) < all_atom_pos.shape[0] and \
-      np.max(frame_ci_indice) < all_atom_pos.shape[0]
-
-  return {
-    "label_ccd_ids": all_ccd_ids, # [N_atom, ]
-    "label_atom_ids": all_atom_ids,	# [N_atom,]
-    "all_atom_pos": all_atom_pos, # [N_atom, 3]
-    "all_atom_pos_mask": all_atom_mask,  # [N_atom]
-    "all_centra_token_indice": all_centra_token_indice, # [N_token, ]
-    "all_centra_token_indice_mask": all_centra_token_indice_mask, # [N_token,]
-    "all_token_to_atom_nums": all_token_to_atom_nums, # [N_token,]
-    "pseudo_beta": all_atom_pos[all_pseudo_token_indice], # [N_token,]
-    "pseudo_beta_mask": all_pseudo_token_indice_mask, # [N_token, ]
-
-    ## for pae loss computation.
-    "frame_ai_indice": frame_ai_indice, # [N_token, ]
-    "frame_bi_indice": frame_bi_indice, # [N_token, ]
-    "frame_ci_indice": frame_ci_indice, # [N_token, ]
-    "frame_mask": frame_mask, # [N_token, ]
-  }
-
-
-def add_assembly_features(all_chain_features, ccd_preprocessed_dict, no_msa_templ_feats=True):
-  '''
-    ## NOTE: keep the type and chainID orders.
-    all_chain_features: {
-        <type>_<chain_id>: {
-          'msa_templ_feats': [msa_templ_feats],
-          'ccd_seqs': [ccd_list], 
-          'extra_feats': [extra_mol_info],
-          }
-        }
-    }
-    1. include msa pair_and_merge, hf2 raw processing.
-        pipeline_multimer.process_with_all_chain_features
-        pipeline_rna_multimer.process_with_all_chain_features
-    2. all type msa/template dense joint
-        pipeline_hybrid
-    3. include basic feature assembly, 
-        such as token_index, entity_id, asym_id, sym_id, ref_space_uid, token_bonds, 
-        perm_atom_index, ref_token2atom_idx, ref_atom_count, perm_entity_id, perm_asym_id
-  '''
-  ## first, Group the chains by ccd_seqs, and record all the chain type.
-  dtype_grouped_chains = collections.defaultdict(dict)
-  dtype_hf2_feats = collections.defaultdict(dict)
-  for type_chain_id, chain_features in all_chain_features.items():
-    dtype, chain_id = type_chain_id.rsplit('_', 1) 
-    dtype_hf2_feats[dtype][chain_id] = chain_features.pop('msa_templ_feats')
-    dtype_grouped_chains[dtype][chain_id] = chain_features # has keys: ccd_seqs, extra_feats
-    # [dtype][chain_id]: chain_features.
-  
-  ## for ccd squence, token_seqs_features/ref_features/bond_features
-  new_order_chain_infos = {}
-  extra_feats_infos = {}
-  for dtype, _ in dtype_hf2_feats.items():
-    for _chaid, v in dtype_grouped_chains[dtype].items(): 
-      new_order_chain_infos[dtype + '_' + _chaid] = v['ccd_seqs']
-      extra_feats_infos.update(v['extra_feats'])
-
-  total_feats = {}
-  ## 1. msa pair_and_merge for protein/rna, use hf2 raw processing.
-  for dtype, chain_group_feats in dtype_hf2_feats.items():
-    hf2_msa_feats = {}
-
-    if dtype == 'protein': 
-      if not no_msa_templ_feats:
-        hf2_msa_feats = pipeline_multimer.process_with_all_chain_features(chain_group_feats)
-    elif dtype == 'rna':
-      if not no_msa_templ_feats:
-        # mapping RNA token ids to new ids
-        for chain_id, features in chain_group_feats.items():
-          chain_group_feats[chain_id] = pipeline_rna_multimer.process_feat_to_mapping_to_new_token_list(features)
-
-        # pairing and merge RNA features
-        hf2_msa_feats = pipeline_multimer.process_with_all_chain_features(chain_group_feats)
-    else:
-      pass
-      
-    total_feats[dtype] = hf2_msa_feats
-    total_feats[dtype]["ccd_seqs"] = np.concatenate([np.array(v['ccd_seqs'], dtype=object) \
-                                                          for k, v in dtype_grouped_chains[dtype].items()])
+def get_structure_layout(all_chain_features: Mapping[str, any], 
+                          ccd_preprocessed_dict: Mapping[str, any]
+                          ) -> Mapping[str, any]:
+    """Generate structure layout from chain features.
     
-    total_feats[dtype]["extra_feats"] = {}
-    for k, v in dtype_grouped_chains[dtype].items():
-      total_feats[dtype]["extra_feats"].update(v['extra_feats'])
-
-
-  ## 2. make token_seq_feats and conf_bond_feats.
-  token_features = pipeline_token_feature.make_sequence_features(all_chain_info=new_order_chain_infos,
-                                          ccd_preprocessed_dict=ccd_preprocessed_dict,
-                                          extra_feats=extra_feats_infos)
-  
-  ## 3. Get reference features and bond features
-  ref_features = pipeline_conf_bonds.make_ccd_conf_features(all_chain_info=new_order_chain_infos,
-                                                      ccd_preprocessed_dict=ccd_preprocessed_dict,
-                                                      extra_feats=extra_feats_infos)
-  bond_features = pipeline_conf_bonds.make_bond_features(covalent_bond=[], 
-                                                      all_chain_info=new_order_chain_infos, 
-                                                      ccd_preprocessed_dict=ccd_preprocessed_dict,
-                                                      extra_feats=extra_feats_infos)
-  ## 4. post convert features
-  total_feats['seq_token'] = token_features
-  total_feats['conf_bond'] = {**ref_features, **bond_features}
-  np_example = pipeline_hybrid._post_convert(ccd_preprocessed_dict=ccd_preprocessed_dict,
-                                                  all_chain_feats_dict=total_feats)
-  np_example = pipeline_hybrid.make_pseudo_beta(np_example, prefix='template_')
-  np_example = pipeline_hybrid.make_template_further_feature(np_example)
-
-  np_example["seq_mask"] = np.ones_like(
-      np_example['restype']).astype('float32')
-  np_example["msa"], np_example['msa_mask'], np_example['deletion_matrix'] = crop_msa(np_example)
-  
-  ## 5. get inference pos mask:
-  label = get_inference_restype_mask(new_order_chain_infos, ccd_preprocessed_dict, extra_feats_infos)
-
-  return {"feats": np_example,
-          "label": label,}
-
-
-def process_chain_msa(args):
-    """
-    处理链，如果缓存了特征文件，则直接使用缓存的特征文件，否则生成新的特征文件。
+    This function processes chain features to create comprehensive feature arrays
+    for inference, including atom positions, token indices, and frame information.
     
     Args:
-        args (tuple): 包含以下元素：
-            - data_pipeline (DataPipeline): DataPipeline对象，用于处理单个链。
-            - chain_id (str): 链ID。
-            - seq (Optional[str]): 链序列（可选）。
-            - desc (Optional[str]): 链描述（可选）。## NOTE： 这里默认是type_chain_id.
-            - msa_output_dir (PathLike): MSA输出目录。
-            - features_pkl (PathLike): 特征文件路径。
-    
+        all_chain_features: Dictionary mapping chain_id to chain_features.
+            Each chain_features should contain 'ccd_seqs' and 'chain_type'.
+        ccd_preprocessed_dict: Preprocessed CCD dictionary containing residue information.
+        extra_feats: Optional extra features for non-standard residues.
+        
     Returns:
-        tuple: 返回一个元组，包含以下元素：
-            - chain_id (str): 链ID。
-            - raw_features (dict): 处理后的特征字典，包含预处理后的特征和其他相关信息。
-            - desc (str): 链描述。
-            - seq (str): 链序列。
-    
-    Raises:
-        None.
+        dict: Dictionary containing all processed features for inference.
     """
-    data_pipeline, chain_id, seq, desc, \
-    msa_output_dir, features_pkl = args
-    if features_pkl.exists():
-        logger.info('Use cached features.pkl')
-        with open(features_pkl, 'rb') as f:
+  
+    def _is_polymer_terminus(idx: int, ccd_list: list, chain_type: str) -> bool:
+        """Determine whether the residue is the terminus of the polymer.
+            For protein, the terminus is the last residue. (c-terminal)
+            For rna/dna, the terminus is the first residue. (5'-terminal)
+        Args:
+            idx: Current residue index in the chain.
+            ccd_list: List of CCD IDs in the chain.
+            chain_type: Chain type (protein, rna, dna).
+            
+        Returns:
+            bool: True if the residue is a polymer terminus.
+        """
+        return (idx == len(ccd_list) - 1 and chain_type == 'protein') or (idx == 0 and chain_type in ['rna', 'dna'])
+
+    def _update_frame_indices(pad_feats: dict, frame_indice_offset: int) -> int:
+        """Update frame indices with the current offset and return new offset.
+        
+        Args:
+            pad_feats: Padding features dictionary.
+            frame_indice_offset: Current frame index offset.
+            
+        Returns:
+            int: Updated frame index offset.
+        """
+        for key in ['ai_indice', 'bi_indice', 'ci_indice']:
+            pad_feats[key] += frame_indice_offset
+        return frame_indice_offset + pad_feats['frame_atom_offset']
+
+    def _adjust_token_indices(feature_arrays: dict) -> dict:
+        """Adjust token indices using cumulative sums.
+        
+        Args:
+            feature_arrays: Dictionary containing feature arrays.
+            
+        Returns:
+            dict: Updated feature arrays with adjusted token indices.
+        """
+        cumsum_array = np.cumsum(feature_arrays['all_token_to_atom_nums'])
+        offset_array = np.insert(cumsum_array[:-1], 0, 0)
+        
+        feature_arrays['all_centra_token_indice'] += offset_array
+        feature_arrays['pseudo_beta'] += offset_array
+
+        ## pseudo_beta is the atom_pos of the pseudo_token_indice
+        # so we need to adjust the pseudo_beta to the atom_pos of the pseudo_token_indice
+        _all_atom_pos = feature_arrays['all_atom_pos']
+        _all_pseudo_token_indice = feature_arrays['pseudo_beta']
+        feature_arrays['pseudo_beta'] = _all_atom_pos[_all_pseudo_token_indice]
+        
+        return feature_arrays
+
+    def _validate_feature_integrity(feature_arrays: dict) -> None:
+        """Validate the integrity of feature arrays.
+        
+        Args:
+            feature_arrays: Dictionary containing feature arrays.
+            
+        Raises:
+            AssertionError: If feature integrity checks fail.
+        """
+        # Check atom-level feature consistency
+        assert (feature_arrays['all_atom_pos'].shape[0] == 
+                feature_arrays['all_atom_pos_mask'].shape[0] == 
+                feature_arrays['label_atom_ids'].shape[0]), "Atom-level features have inconsistent shapes"
+        
+        # Check token-level feature consistency
+        assert (feature_arrays['all_centra_token_indice'].shape[0] == 
+                feature_arrays['all_centra_token_indice_mask'].shape[0]), "Centra token features have inconsistent shapes"
+        
+        assert (feature_arrays['pseudo_beta'].shape[0] == 
+                feature_arrays['pseudo_beta_mask'].shape[0]), "Pseudo token features have inconsistent shapes"
+        
+        # Check frame-level feature consistency
+        max_atom_idx = feature_arrays['all_atom_pos'].shape[0]
+        frame_features = ['frame_ai_indice', 'frame_bi_indice', 'frame_ci_indice', 'frame_mask']
+        assert all(feature_arrays[frame_features[0]].shape[0] == feature_arrays[key].shape[0] 
+                  for key in frame_features), "Frame-level features have inconsistent shapes"
+        assert all(np.max(feature_arrays[key]) < max_atom_idx for key in frame_features), \
+                "Frame indices exceed atom array bounds"
+
+    # Initialize feature arrays
+    final_features = {
+      "label_ccd_ids": [],
+      "label_atom_ids": [],
+      "all_atom_pos": [],
+      "all_atom_pos_mask": [],
+      "all_centra_token_indice": [],
+      "all_centra_token_indice_mask": [],
+      "all_token_to_atom_nums": [],
+      "pseudo_beta": [],
+      "pseudo_beta_mask": [],
+      "frame_ai_indice": [],
+      "frame_bi_indice": [],
+      "frame_ci_indice": [],
+      "frame_mask": []
+    }
+
+    _ignore_keys = ['frame_atom_offset']
+    
+    frame_indice_offset = 0
+    for chain_id, chain_features in all_chain_features.items():
+        chain_type = chain_features['chain_type']
+        ccd_list = chain_features['ccd_seq']
+        
+        for idx, ccd_id in enumerate(ccd_list):
+            is_polymer_terminus = _is_polymer_terminus(idx, ccd_list, chain_type)
+            
+            each_ccd_feats = get_padding_restype(
+              ccd_id, 
+              ccd_preprocessed_dict, 
+              chain_type, 
+              is_polymer_terminus=is_polymer_terminus
+            )
+            frame_indice_offset = _update_frame_indices(each_ccd_feats, frame_indice_offset)
+            
+            ## update final_features
+            for key, value in each_ccd_feats.items():
+                if key in _ignore_keys:
+                  continue
+                elif key in ['ai_indice', 'bi_indice', 'ci_indice']:
+                  final_features[f'frame_{key}'].append(value)
+                elif key in ['frame_indice_mask']:
+                  final_features['frame_mask'].append(value)
+                elif key in ['pseudo_beta', 'pseudo_beta_mask']:
+                  final_features[key].append(value)
+                elif key in ['ccd_ids', 'atom_ids']:
+                  final_features[f'label_{key}'].append(value)
+                else:
+                  final_features[f'all_{key}'].append(value)
+    
+    for key in final_features.keys():
+        final_features[key] = np.concatenate(final_features[key])
+    
+    final_features = _adjust_token_indices(final_features)  
+    _validate_feature_integrity(final_features)
+    
+    return final_features
+
+
+def get_complete_assembly_features(all_chain_features: Mapping[str, any], 
+                          ccd_preprocessed_dict: Mapping[str, any], 
+                          use_msa_templ_feats: bool = True) -> Mapping[str, any]:
+  """Get complete assembly features for inference.
+  
+  Args:
+    all_chain_features: Mapping[str, any], with keys: <chain_id>: <chain_features>
+        all_chain_features: {
+          <chain_id>: {
+              'chain_type': str,
+              'msa_seq': str,
+              'ccd_seq': list of ccd,
+              'extra_feats': list of extra_feats,
+              'raw_info': raw_info,
+              'msa_templ_feats': msa_templ_feats,
+          }
+    ccd_preprocessed_dict: The chemical components dictionary. 
+      Mapping[str, any], with keys: <ccd_id>: <ccd_info>
+    use_msa_templ_feats: bool, default: True
+  Returns:
+    Mapping[str, any]: Mapping of features for inference.
+  """
+  extra_ccd_infos = {}
+  chain_msa_features = {}
+  for chain_id, chain_features in all_chain_features.items():
+    if (chain_features['chain_type'] not in ['protein', 'rna']) \
+                  or (not use_msa_templ_feats):
+      msa_features = None
+    else:
+      msa_features = chain_features.pop('msa_templ_feats')
+    chain_msa_features[chain_id] = msa_features
+    extra_ccd_infos.update(chain_features['extra_feats'])
+  
+  ## update ccd_preprocessed_dict with extra_ccd_infos
+  if any(_ccd_id in ccd_preprocessed_dict for _ccd_id in extra_ccd_infos.keys()):
+    raise ValueError(
+        f'conflicting ligand ids {list(extra_ccd_infos.keys())} are in CCD '
+        '- it is not supported to give '
+        'ligands/modified residues created from SMILES the same name as CCD components.'
+    )
+  ccd_dict = {**ccd_preprocessed_dict, **extra_ccd_infos}
+
+  ## 1. get msa features
+  msa_features, chain_order = pipeline_aa.process_with_all_msa_chain_features(
+    chain_msa_features, 
+    all_chain_features, 
+    ccd_dict
+  )
+
+  ## 2. get sequence features
+  seq_features = pipeline_aa.get_assembly_sequence_features(
+    chain_order, 
+    all_chain_features, 
+    coval_bonds_info=[],
+    ccd_preprocessed_dict=ccd_dict
+  )
+        
+  ## 3. combine sequence and msa features
+  np_example = pipeline_aa.combine_assembly_seq_and_msa_features(
+    seq_features, 
+    msa_features
+  )
+  
+  ## 4. get template further features
+  np_example = pipeline_aa.add_further_assembly_template_feat(np_example)
+
+  np_example["seq_mask"] = np.ones_like(np_example['restype']).astype('float32')
+  np_example = crop_msa(np_example, max_msa_depth=MAX_MSA_DEPTH)
+  
+  ## 5. get inference pos mask
+  all_chain_features_ordered = {
+    chain_id: all_chain_features[chain_id] for chain_id in chain_order
+  }
+  label = get_structure_layout(
+    all_chain_features_ordered, 
+    ccd_dict
+  )
+  
+  return {"feat": np_example, "label": label}
+
+
+def process_chain_msa(msa_task: MSATaskMeta) -> MSATaskMeta:
+    """Process a single chain MSA/Template search task.
+    
+    Args:
+        msa_task: MSATaskMeta
+    Returns:
+        msa_task: MSATaskMeta with processed features.
+    """
+    if msa_task.task_type == 'protein':
+        msa_task.data_pipeline.set_max_template_hits(max_hits=MAX_PROTEIN_TEMPLATE_HITS)
+        logger.info(f'Set max template hits for protein to {MAX_PROTEIN_TEMPLATE_HITS}')
+    
+    if msa_task.features_pkl.exists():
+        logger.info('MSA/Template features.pkl found, use offline features.pkl.')
+        with open(msa_task.features_pkl, 'rb') as f:
             raw_features = pickle.load(f)
     else:
         t0 = time.time()
-        raw_features = data_pipeline._process_single_chain(
-            chain_id, sequence=seq, description=desc,
-            msa_output_dir=msa_output_dir,
-            is_homomer_or_monomer=False)
-        print(f'[MSA/Template] {desc}; seq length: {len(seq)}; use: {time.time() - t0}')
+        raw_features = msa_task.data_pipeline.process(
+            chain_id=msa_task.chain_id,
+            sequence=msa_task.seq,
+            description=msa_task.desc,
+            msa_output_dir=msa_task.msa_output_dir
+        )
+        logger.info(f"[MSA/Template] {msa_task.desc};" \
+                    f"seq length: {len(msa_task.seq)};" \
+                    f"use: {time.time() - t0}")
 
-        with open(features_pkl, 'wb') as f:
+        with open(msa_task.features_pkl, 'wb') as f:
             pickle.dump(raw_features, f, protocol=4)
-
-    if 'template_all_atom_mask' in raw_features:                                                                                       
-        raw_features['template_all_atom_masks'] = raw_features.pop('template_all_atom_mask')                                               
-                                                                                                                                                
-    return chain_id, raw_features, desc, seq
+                                                                                                                                                                                             
+    return dataclasses.replace(msa_task, processed_features=raw_features)
 
 
-def process_input_json(all_entitys, ccd_preprocessed_path, 
-                          msa_templ_data_pipeline_dict, msa_output_dir,
-                          no_msa_templ_feats=False):
+def featurize_entities(all_entities: List[EntityBean], 
+                       ccd_preprocessed_path: str, 
+                       msa_templ_data_pipeline_dict: Mapping[str, any], 
+                       msa_output_dir: Union[str, pathlib.Path],
+                       use_msa_templ_feats: bool = True) -> Mapping[str, any]:
 
-    ## load ccd dict.
-    ccd_preprocessed_dict = load_ccd_dict(ccd_preprocessed_path)
+    """Featurize entities.
+
+    Args:
+        all_entities: List[EntityBean]
+        ccd_preprocessed_path: str
+        msa_templ_data_pipeline_dict: Mapping[str, any]
+        msa_output_dir: str | pathlib.Path
+        use_msa_templ_feats: bool, default: True
+
+    Returns:
+        Mapping[str, any]: Mapping of features for inference.
+    """
+    if isinstance(msa_output_dir, str):
+        msa_output_dir = pathlib.Path(msa_output_dir)
+    msa_output_dir.mkdir(parents=True, exist_ok=True)
+
     all_chain_features = {}
-    sequence_features = {} 
-    num_chains = 0
-    for entity_items in all_entitys:
-      # dtype(protein, dna, rna, ligand): no_chains,  msa_seqs, seqs
-      dtype = list(entity_items.keys())[0]
-      items = list(entity_items.values())[0]
-      entity_count = items['count']
-      ccd_seqs = items['seqs']
-      msa_seqs = items['msa_seqs']
-      extra_mol_infos = items.get('extra_mol_infos', {}) ## dict, 「extra-add, ccd_id」: ccd_features.
+    for entity_items in all_entities:    
+      chain_id = entity_items.raw_info['asym_chain_id']
+      chain_features = {'msa_templ_feats': {},
+                        'ccd_seq': parsers.parse_ccd_fasta(entity_items.seqs), 
+                        'msa_seq': entity_items.msa_seqs,
+                        'chain_type': entity_items.dtype,
+                        'extra_feats': entity_items.extra_mol_infos,
+                        'raw_info': entity_items.raw_info}
+      all_chain_features[chain_id] = chain_features
 
-      for i in range(entity_count):
-        chain_num_ids = num_chains + i
-        chain_id = digit2alphabet(chain_num_ids) # increase ++
-        type_chain_id = dtype + '_' + chain_id
-        if ccd_seqs in sequence_features:
-          all_chain_features[type_chain_id] = copy.deepcopy(sequence_features[ccd_seqs])
-          continue
-        
-        ccd_list = parsers.parse_ccd_fasta(ccd_seqs)
-        chain_features = {'msa_templ_feats': {},
-                          'ccd_seqs': ccd_list, 
-                          'msa_seqs': msa_seqs,
-                          'extra_feats': extra_mol_infos}
-        all_chain_features[type_chain_id] = chain_features
-        sequence_features[ccd_seqs] = chain_features
-      num_chains += entity_count
-
-    if not no_msa_templ_feats:
-      ## 1. get all msa_seqs for protein/rna MSA/Template search. Only for protein/rna.
-      tasks = [] ## data_pipeline, chain_id, seq, desc, msa_output_dir, features_pkl
+    ## 1. get all_msa_seqs for protein/rna MSA/Template search.
+    if use_msa_templ_feats:
+      msa_tasks = []
       fasta_seq_to_type_chain_id = {}
-      type_chain_id_to_features_pkl = {}
-      if isinstance(msa_output_dir, str):
-        msa_output_dir = Path(msa_output_dir)
-
-      for type_chain_id, chain_features in all_chain_features.items():
-        dtype, chain_id = type_chain_id.rsplit('_', 1) 
-        if dtype == 'protein':
-          _data_pipeline = msa_templ_data_pipeline_dict['protein']
-        elif dtype == 'rna':
-          _data_pipeline = msa_templ_data_pipeline_dict['rna']
-        else:
-          ## others type is not used.
+      for chain_id, chain_features in all_chain_features.items():
+        if chain_features['chain_type'] not in ['protein', 'rna']:
           continue
         
-        fasta_seq = chain_features['msa_seqs']
+        chain_type = chain_features['chain_type']
+        type_chain_id = chain_type + '_' + chain_id
+        fasta_seq = chain_features['msa_seq']
         if fasta_seq not in fasta_seq_to_type_chain_id:
-          fasta_seq_to_type_chain_id[fasta_seq] = []
-          fasta_seq_to_type_chain_id[fasta_seq].append(type_chain_id)
+            fasta_seq_to_type_chain_id[fasta_seq] = [chain_id]
         else:
-          ## NOTE: same fasta_seq, but different chain_id. will only search once.
-          fasta_seq_to_type_chain_id[fasta_seq].append(type_chain_id)
-          continue
+            fasta_seq_to_type_chain_id[fasta_seq].append(type_chain_id)
+            continue
         
         features_pkl_dir = msa_output_dir.joinpath(f'{type_chain_id}')
-        os.makedirs(features_pkl_dir,exist_ok=True)
+        features_pkl_dir.mkdir(parents=True, exist_ok=True)
         features_pkl = features_pkl_dir.joinpath('features.pkl')
-        tasks.append((_data_pipeline, chain_id, fasta_seq, 
-                        type_chain_id, features_pkl_dir, features_pkl))
-        type_chain_id_to_features_pkl[type_chain_id] = features_pkl
+
+        meta_task = MSATaskMeta(
+                    data_pipeline=msa_templ_data_pipeline_dict[chain_type], 
+                    chain_id=chain_id, 
+                    seq=fasta_seq, 
+                    desc=type_chain_id, 
+                    msa_output_dir=features_pkl_dir, 
+                    features_pkl=features_pkl,
+                    task_type=chain_type)
+        msa_tasks.append(meta_task)
 
       print('MSA fastas:', list(fasta_seq_to_type_chain_id.items()))
-      print('features_pkl:', type_chain_id_to_features_pkl)
 
       ## 2. multiprocessing for protein/rna MSA/Template search.
       seqs_to_msa_features = {}
       logger.info('[Multiprocess] starting MSA/Template search...')
       t0 = time.time()
-      with ProcessPoolExecutor() as executor:
-          futures = [executor.submit(process_chain_msa, task) for task in tasks]
+      with ProcessPoolExecutor(max_workers=MAX_MSA_WORKERS) as executor:
+          futures = [executor.submit(process_chain_msa, task) for task in msa_tasks]
 
           for future in as_completed(futures):
               try:
-                  _, raw_features, type_chain_id, seqs = future.result()
-                  seqs_to_msa_features[seqs] = raw_features
-              except Exception as exc:
+                  processed_msa = future.result()
+                  seqs_to_msa_features[processed_msa.seq] = processed_msa.features
+              except RuntimeError as exc:
                   import traceback; traceback.print_exc()
                   logger.error(f'Task generated an exception : {exc}')
       logger.info(f'[Multiprocess] All msa/template use: {time.time() - t0}')
 
       ## 3. add msa_templ_feats to all_chain_features.
-      for type_chain_id in all_chain_features.keys():
-        chain_features = all_chain_features[type_chain_id]
-        fasta_seq = chain_features['msa_seqs']
+      for chain_id in all_chain_features.keys():
+        chain_features = all_chain_features[chain_id]
+        if chain_features['chain_type'] not in ['protein', 'rna']:
+          continue
+        fasta_seq = chain_features['msa_seq']
         if fasta_seq in seqs_to_msa_features:
-          for _type_chain_id in fasta_seq_to_type_chain_id[fasta_seq]:
-            chain_features['msa_templ_feats'] = copy.deepcopy(seqs_to_msa_features[fasta_seq])
+          chain_features['msa_templ_feats'] = copy.deepcopy(
+             seqs_to_msa_features[fasta_seq]
+          )
 
-    assert num_chains == len(all_chain_features.keys())
-    all_feats = add_assembly_features(all_chain_features, ccd_preprocessed_dict, no_msa_templ_feats)
-    np_example, label = all_feats['feats'], all_feats['label']
-    assert num_chains == len(np.unique(np_example['all_chain_ids']))
+    ## 4. get complete features and check.
+    assert len(all_entities) == len(all_chain_features.keys())
+    ccd_preprocessed_dict = load_ccd_dict(ccd_preprocessed_path)
+    all_feats = get_complete_assembly_features(all_chain_features, ccd_preprocessed_dict, 
+                                        use_msa_templ_feats=use_msa_templ_feats)
+    assert len(all_entities) == len(np.unique(all_feats['feat']['chain_ids']))
 
     sample = {
-      "feat": np_example,
-      "label": label, ## padding key
-      'label_cropped': {}, ## padding key
+       **all_feats,
+       'label_cropped': {}
     }
 
     for key in STRING_FEATURES:

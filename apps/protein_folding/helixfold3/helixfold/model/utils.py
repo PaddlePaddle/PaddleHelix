@@ -25,7 +25,15 @@ from collections import defaultdict
 from paddle.distributed.fleet.utils import recompute
 
 from helixfold.common import confidence
+from sklearn.metrics.pairwise import pairwise_distances
+import logging
 
+try:
+    from paddle.framework import in_dynamic_mode
+    from paddle.base.layer_helper import LayerHelper
+except:
+    in_dynamic_mode = None
+    LayerHelper = None
 
 def jax_params_to_paddle(params):
     """
@@ -293,6 +301,15 @@ def get_all_atom_confidence_metrics(
     metrics['atom_plddts'] = confidence.compute_plddt(
             prediction_result['logits_plddt'])
     metrics['mean_plddt'] = metrics['atom_plddts'].mean()
+    metrics['chain_plddt_asym_id'], metrics['chain_plddt'] = confidence.compute_chain_plddt(
+            metrics['atom_plddts'], prediction_result['perm_asym_id'])
+
+    metrics['chain_inter_pde_asym_id'], metrics['chain_inter_pde'] = \
+            confidence.compute_chain_inter_pde(
+                logits=prediction_result['logits_pde'],
+                breaks=prediction_result['breaks_pde'],
+                asym_id=prediction_result['asym_id'])
+
     metrics['pae'] = confidence.compute_predicted_aligned_error(
             logits=prediction_result['logits_pae'],
             breaks=prediction_result['breaks_pae'])['predicted_aligned_error']
@@ -315,6 +332,14 @@ def get_all_atom_confidence_metrics(
     metrics['ranking_confidence'] = (
             0.8 * metrics['iptm'] + 0.2 * metrics['ptm'] 
             - 1.0 * metrics['has_clash'])
+    ## get chain_pair_asym_ids, chain_pair_iptm and chain_pair_mask
+    metrics.update(confidence.predicted_chain_pair_iptm(
+        logits=prediction_result['logits_pae'],
+        breaks=prediction_result['breaks_pae'],
+        residue_weights=prediction_result['frame_mask'],
+        asym_id=prediction_result['asym_id'],
+    ))
+
     return metrics
 
 
@@ -337,13 +362,15 @@ def get_has_clash(atom_pos, atom_mask, asym_id, is_polymer_chain):
     n = len(uniq_asym_ids)
     if n == 1:
         return 0
-    for aid1 in uniq_asym_ids[:-1]:
-        for aid2 in uniq_asym_ids[1:]:
+    for idx, aid1 in enumerate(uniq_asym_ids[:-1]):
+        for aid2 in uniq_asym_ids[idx + 1:]:
             pos1 = atom_pos[asym_id == aid1]
             pos2 = atom_pos[asym_id == aid2]
             dist = np.sqrt(np.sum((pos1[None] - pos2[:, None]) ** 2, -1))
             n_clash = np.sum(dist < 1.1).astype('float32')
-            if n_clash > 100 or n_clash / min(len(pos1), len(pos2)) > 0.5:
+            min_len = min(len(pos1), len(pos2))
+            if n_clash > 100 or n_clash / min_len > 0.5:
+                print(f"[WARNING]: clashes: {n_clash} out of {min_len} atoms for asym id {aid1} and {aid2}")
                 return 1
     return 0
 
@@ -389,3 +416,128 @@ def tree_flatten(d):
         else:
             new_d[k] = d[k]
     return new_d
+
+
+def fused_act_bias_wrapper(
+    x,
+    bias=None,
+    dequant_scales=None,
+    shift=None,
+    smooth=None,
+    act_method="gelu",
+    compute_dtype="default",
+    quant_scale=-1,
+    quant_round_type=0,
+    quant_max_bound=0,
+    quant_min_bound=0,
+):
+    if in_dynamic_mode():
+        return paddle._C_ops.fused_bias_act(
+            x,
+            bias,
+            dequant_scales,
+            shift,
+            smooth,
+            act_method,
+            compute_dtype,
+            quant_scale,
+            quant_round_type,
+            quant_max_bound,
+            quant_min_bound,
+        )
+    helper = LayerHelper("fused_bias_act")
+    if x.dtype == "int32":
+        if compute_dtype == "bf16":
+            dtype = "uint16"
+        elif compute_dtype == "fp16":
+            dtype = "float16"
+        elif compute_dtype == "fp32":
+            dtype = "float32"
+        out = helper.create_variable_for_type_inference(dtype=dtype)
+    else:
+        out = helper.create_variable_for_type_inference(dtype=x.dtype)
+
+    inputs = {}
+    inputs["x"] = x
+    if bias is not None:
+        inputs["bias"] = bias
+    if dequant_scales is not None:
+        inputs["bias"] = dequant_scales
+
+    if shift is not None:
+        inputs["shift"] = shift
+
+    if smooth is not None:
+        inputs["smooth"] = smooth
+
+    attrs = {
+        "act_method": act_method,
+        "compute_dtype": compute_dtype,
+        "quant_scale": quant_scale,
+        "quant_round_type": quant_round_type,
+        "quant_max_bound": quant_max_bound,
+        "quant_min_bound": quant_min_bound,
+    }
+
+    helper.append_op(
+        type="fused_bias_act",
+        inputs=inputs,
+        outputs={"out": out},
+        attrs=attrs,
+    )
+    return out
+
+
+def get_batch_constrain_metrics(constrain_info, constrain_pairs,
+                                pd_atom_pos, gt_atom_pos, atom_mask, 
+                                atom_to_token_mapping,
+                                logging_marker="[batch_constrain_metrics]"):
+    """
+    constrain_info: [N, N, 20]
+    constrain_pairs: [n_pairs]
+    pd_atom_pos: # [M, 3]
+    gt_atom_pos: [M, 3]
+    atom_mask: [M]
+    """
+    pair_recall = []
+    pair_gt_dist = []
+    atom_mask = atom_mask.astype('bool')
+    pd_atom_pos = pd_atom_pos[atom_mask]  # [M, 3]
+    gt_atom_pos = gt_atom_pos[atom_mask] if not gt_atom_pos is None else None # [M, 3]
+    atom_to_token_mapping = atom_to_token_mapping[atom_mask] # [M]
+    for cons_id_pair in constrain_pairs: # constrain_id_pairs:
+        if not cons_id_pair.mean() == -1:  # skip paddings
+            logging.info(f'{logging_marker} cons_id_pair: {cons_id_pair.numpy()}')
+            # try:
+            if True:
+                src_pd_token_pos = pd_atom_pos[atom_to_token_mapping == \
+                                            cons_id_pair[0]].astype('float32') # [src_atom, 3]
+                tgt_pd_token_pos = pd_atom_pos[atom_to_token_mapping == \
+                                               cons_id_pair[1]].astype('float32') # [tgt_atom, 3]
+                src_gt_token_pos = gt_atom_pos[atom_to_token_mapping == cons_id_pair[0]].astype('float32')
+                tgt_gt_token_pos = gt_atom_pos[atom_to_token_mapping == cons_id_pair[1]].astype('float32')
+                logging.info(f'{logging_marker} src_gt_token_pos: {src_gt_token_pos.shape}" \
+                             + f" tgt_gt_token_pos: {tgt_gt_token_pos.shape}')
+                targeted_dist_vec = constrain_info[int(cons_id_pair[0])][int(cons_id_pair[1])].astype('float32')
+                logging.info(f"targeted_dist_vec: {targeted_dist_vec}")
+
+                pd_dist = pairwise_distances(src_pd_token_pos, tgt_pd_token_pos) # [src_atom, tgt_atom]
+                pd_min_dist = np.min(pd_dist)
+
+                gt_dist = pairwise_distances(src_gt_token_pos, tgt_gt_token_pos) # [src_atom, tgt_atom]
+                gt_min_dist = np.min(gt_dist)
+                logging.info(f'{logging_marker} gt_min_dist: {np.min(gt_min_dist)}')
+                logging.info(f'{logging_marker} pd_min_dist: {pd_min_dist}')
+
+                targeted_dist = (20 - targeted_dist_vec.astype('float32').sum() + 1)
+                logging.info(f'{logging_marker} targeted_dist: {targeted_dist.astype(paddle.int32).numpy()}')
+                # target_dist.append(min(pd_min_dist - targeted_dist, 0))
+                pair_recall.append(float(pd_min_dist <= targeted_dist))
+
+                pair_gt_dist.append(np.abs(float(pd_dist.min() - gt_dist.min())))
+                logging.info(f'{logging_marker} pair_gt_dist: {pair_gt_dist}')
+                logging.info(f'{logging_marker} pair_recall: {pair_recall}')
+            # except Exception as e:
+            else:
+                logging.info(f'{logging_marker} {e}')
+    return pair_recall, pair_gt_dist

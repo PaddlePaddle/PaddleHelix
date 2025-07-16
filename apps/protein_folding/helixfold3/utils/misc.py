@@ -11,13 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-misc utils
-"""
+
+"""misc utils"""
 
 import logging
 
-def set_logging_level(level):
+def set_logging_level(level: str):
+    """set logging level"""
     level_dict = {
         "NOTSET": logging.NOTSET,
         "DEBUG": logging.DEBUG,

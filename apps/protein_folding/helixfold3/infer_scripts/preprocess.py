@@ -12,173 +12,72 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-    NOTE: now is only support standard dna/rna/protein seqs
-    convert online server json to HF3 input/json;
-    keys:
-        'seqs': ccd_seqs,
-        'msa_seqs': msa_seqs,
-        'count': count,
-        'extra_mol_infos': {}， for which seqs has the modify residue type or smiles.
-"""
-import collections
+"""Convert json input to list of EntityBean."""
+
+import logging
 import copy
-import os
-import json
-import sys
-import subprocess
-import tempfile
 import itertools
-sys.path.append('../')
-import rdkit
-from rdkit import Chem
-from rdkit.Chem import AllChem
+from typing import Dict, List
+
 from helixfold.common import residue_constants
+from helixfold.data.utils import int_id_to_str_id
+from infer_scripts.rdkit_utils import SMILESParseError, ConformerGenerationError
+from infer_scripts.rdkit_utils import smiles_to_rdMol, make_basic_feature_fromMol
+from infer_scripts.entity_bean import EntityBean
+from infer_scripts.tools.utils import read_json
 
-
-## NOTE: this mapping is only useful for standard dna/rna/protein sequence input.
-# protein, rna, dna, ligand, non_polymer (ion and non_polymer is also the ligand.)
-ALLOWED_ENTITY_TYPE = list(residue_constants.CHAIN_type_order.keys()) 
+logger = logging.getLogger(__file__)
 PROTEIN_1to3_with_x = residue_constants.PROTEIN_1to3_with_x
 DNA_1to2_with_x = residue_constants.DNA_RNA_1to2_with_x_and_gap['dna']
 RNA_1to2_with_x = residue_constants.DNA_RNA_1to2_with_x_and_gap['rna']
-POLYMER_STANDARD_RESI_ATOMS = residue_constants.residue_atoms
-
-## FROM rdchem.BondType.values
-ALLOWED_LIGAND_BONDS_TYPE = {
-    rdkit.Chem.rdchem.BondType.SINGLE: ("SING", 1), 
-    rdkit.Chem.rdchem.BondType.DOUBLE: ("DOUB", 2), 
-    rdkit.Chem.rdchem.BondType.TRIPLE: ("TRIP", 3),
-    rdkit.Chem.rdchem.BondType.QUADRUPLE: ("QUAD", 4), 
-    rdkit.Chem.rdchem.BondType.AROMATIC: ("AROM", 12),
-}
-
-ALLOWED_LIGAND_BONDS_TYPE_MAP = {
-    k: v for k, v in ALLOWED_LIGAND_BONDS_TYPE.values()
-}
-
+EXCLUDE_CCD_LIST = set(residue_constants.crystallization_aids) | set(residue_constants.ligand_exclusion_list)
 USER_LIG_IDS = 'abcdefghijklmnopqrstuvwxyz0123456789'
 USER_LIG_IDS_3 = [''.join(pair) for pair in itertools.product(USER_LIG_IDS, repeat=3)]
 
-ERROR_CODES = {
-    1: 'Invalid ligand generate.',
-    2: 'Invalid entity convert.',
-    3: 'Unknown error.'
-}
 
-OBABEL_BIN = os.getenv('OBABEL_BIN')
-if not os.path.exists(OBABEL_BIN):
-    raise FileNotFoundError(f'Cannot find obabel binary at {OBABEL_BIN}.')
+def polymer_convert(items: Dict) -> EntityBean:
+    """Convert polymer from raw json_dict to EntityBean.
 
+    Args:
+        items (dict): The polymer entity dict.
 
-def read_json(path):
-    if path.endswith('.json.gz'):
-        with gzip.open(path, 'rt', encoding='utf-8') as f:
-            return json.load(f)
-    else:
-        with open(path, 'r') as f:
-            return json.load(f)
-
-
-def alphabet2digit(alphabet):
-    return sum((ord(a) - 65) * (26 ** e) for e, a in enumerate(reversed(alphabet)))
-
-
-def digit2alphabet(digit):
-    mod, remainder = divmod(digit, 26)
-    alphabet = chr(65 + remainder)
-    while mod:
-        mod, remainder = divmod(mod, 26)
-        alphabet = chr(65 + remainder) + alphabet
-    return alphabet
-
-
-def make_basic_info_fromMol(mol: Chem.Mol):
-    ## make basic atom_name to Mol
-    _atom_nums_map = collections.defaultdict(int)  # atom_symbol to appear count.
-    idx_to_name = {}
-    for atom in mol.GetAtoms():
-        idx = atom.GetIdx()
-        symbol = atom.GetSymbol()
-        symbol = symbol.upper()
-        _atom_nums_map[symbol] += 1
-        atom_name = f"{symbol}{_atom_nums_map[symbol]}"
-        atom.SetProp("_TriposAtomName", atom_name)
-        idx_to_name[idx] = atom_name
-
-    atom_symbol = [atom.GetSymbol() for atom in mol.GetAtoms()]
-    charges = [atom.GetFormalCharge() for atom in mol.GetAtoms()]
-    atom_ids = [atom.GetProp("_TriposAtomName") if atom.HasProp("_TriposAtomName") else '' for atom in mol.GetAtoms()]
-    position = mol.GetConformers()[0].GetPositions().astype('float32')
-    bonds = []
-    for bond in mol.GetBonds():
-        _atom_id1 = bond.GetBeginAtomIdx() 
-        _atom_id2 = bond.GetEndAtomIdx()
-        ## Rdkit has some bond types that are not supported by mmcif, so we need to convert them to the supported ones.
-        _bond_type, _ = ALLOWED_LIGAND_BONDS_TYPE.get(bond.GetBondType(), ("SING", 1))
-        bonds.append((idx_to_name[_atom_id1], idx_to_name[_atom_id2], _bond_type))
-
-    assert len(atom_symbol) == len(charges) == len(atom_ids) == len(position), \
-                    f'Got different atom basic info from Chem.Mol, {len(atom_symbol)}, {len(charges)}, {len(atom_ids)}, {len(position)}'
-    return {
-        "atom_symbol": atom_symbol,
-        "charge": charges,
-        "atom_ids": atom_ids,
-        "coval_bonds": bonds,
-        "position": position,
-    }
-
-
-def generate_ETKDGv3_conformer(mol: Chem.Mol) -> Chem.Mol:
-    """use ETKDGv3 for ccd conformer generation"""
-    mol = copy.deepcopy(mol)
-    try:
-        ps = AllChem.ETKDGv3()
-        id = AllChem.EmbedMolecule(mol, ps)
-        if id == -1:
-            raise RuntimeError('rdkit coords could not be generated')
-        ETKDG_atom_pos = mol.GetConformers()[0].GetPositions().astype('float32')
-        return mol
-    except Exception as e:
-        print(f'Failed to generate ETKDG_conformer: {e}')
-    return None
-
-
-def smiles_to_ETKDGMol(smiles):
-    mol = Chem.MolFromSmiles(smiles)
-    if mol is None:
-        raise ValueError(f"Invalid SMILES string: {smiles}")
-    
-    mol = Chem.AddHs(mol)
-    optimal_mol = generate_ETKDGv3_conformer(mol)
-    optimal_mol_wo_H = Chem.RemoveAllHs(optimal_mol, sanitize=False)
-    return optimal_mol_wo_H
-
-
-def smiles_toMol_obabel(smiles):
+    Returns:
+        entity (EntityBean): The entity bean of polymer.
     """
-        generate mol from smiles using obabel;
-    """    
-    with tempfile.NamedTemporaryFile(suffix=".mol2") as temp_file:
-        print(f"[OBABEL] Temporary file created: {temp_file.name}")
-        obabel_cmd = f"{OBABEL_BIN} -:'{smiles}' -omol2 -O{temp_file.name} --gen3d"
-        ret = subprocess.run(obabel_cmd, shell=True, capture_output=True, text=True)
-        mol = Chem.MolFromMol2File(temp_file.name, sanitize=False)
-        if '3D coordinate generation failed' in ret.stderr:
-            mol = generate_ETKDGv3_conformer(mol)
-        optimal_mol_wo_H = Chem.RemoveAllHs(mol, sanitize=False)
-    return optimal_mol_wo_H
+    def _modified_residue_convert(modifications: List[Dict], 
+                                    ccd_seqs: List[str]) -> List[str]:
+        """Handling the modification of residue.
+        
+        Args:
+            modifications (list): The modification list 
+            ccd_seqs (list): The ccd sequence list
 
+        Returns:
+            ccd_seqs (list): The updated ccd sequence list with modification.
+        """
+        modi_index_to_ccd = {}
+        modified_indices = []
+        
+        for modify in modifications:
+            index = modify['index']
+            modified_indices.append(index)
+            
+            if modify['type'] == 'residue_replace':
+                ccd = modify['ccd']
+                modi_index_to_ccd[index] = ccd
+            else:
+                raise ValueError(f'Unknown modification type: {modify["type"]}')
 
-def polymer_convert(items):
-    """
-        "type": "protein",                          
-        "sequence": "GPDSMEEVVVPEEPPKLVSALATYVQQERLCTMFLSIANKLLPLKP",  
-        "count": 1
-    """
+        for index, ccd in modi_index_to_ccd.items():
+            ccd_seqs[index - 1] = f"({ccd})"
+
+        return ccd_seqs
+
     dtype = items['type']
     one_letter_seqs = items['sequence']
     count = items['count']
+    modifications = items.get('modification', [])
+    smiles_replace = {}
 
     msa_seqs = one_letter_seqs
     ccd_seqs = []
@@ -189,120 +88,148 @@ def polymer_convert(items):
             ccd_seqs.append(f"({DNA_1to2_with_x[resi_name_1]})")
         elif dtype == 'rna':
             ccd_seqs.append(f"({RNA_1to2_with_x[resi_name_1]})")
-        else:
-            raise ValueError(f'not support for the {dtype} in polymer_convert')
+    
+    if len(modifications) > 0:
+        try:
+            ccd_seqs = _modified_residue_convert(modifications, ccd_seqs)
+        except Exception as e:
+            logger.error(f'[modified_polymer_convert] {e}')
+            return EntityBean.create_with_kwargs(error_code=16, message=str(e))
+
     ccd_seqs = ''.join(ccd_seqs) ## (GLY)(ALA).....
-
-    # repeat_ccds, repeat_fasta = [ccd_seqs], [msa_seqs]
-    return {
-        dtype: {
-            'seqs': ccd_seqs,
-            'msa_seqs': msa_seqs,
-            'count': count,
-            'extra_mol_infos': {}
-        }
+    raw_info = {
+        'sequence': one_letter_seqs
     }
+    entity = EntityBean(
+        dtype=dtype,
+        seqs=ccd_seqs,
+        msa_seqs=msa_seqs,
+        count=count,
+        extra_mol_infos=smiles_replace,
+        raw_info=raw_info,
+        error_code=0
+    )
+    return entity
 
 
-def ligand_convert(items):
-    """
-        "type": "ligand",
-        "ccd": "ATP", or "smiles": "CCccc(O)ccc",
-        "count": 1
+def ligand_convert(items: Dict) -> EntityBean:
+    """Convert ligand from raw json_dict to EntityBean.
+        
+    Args:
+        items (dict): The polymer entity dict. For example:
+            {
+                "type": "ligand" or "ion",
+                "ccd": "ATP", or "smiles": "CCccc(O)ccc",
+                "count": 1
+            }
+    Returns:
+        entity (EntityBean): The entity bean of polymer.
     """
     dtype = items['type']
     count = items['count']
-    
+
     msa_seqs = ""
     _ccd_seqs = []
     ccd_to_extra_mol_infos = {}
-    if 'ccd' in items:
+    if 'ccd' in items and len(items['ccd']) > 0:
         _ccd_seqs.append(f"({items['ccd']})")
-    elif 'smiles' in items:
+    elif 'smiles' in items and len(items['smiles']) > 0:
         _ccd_seqs.append(f"(UNK-)")
-        # mol_wo_h = smiles_to_ETKDGMol(items['smiles'])
-        mol_wo_h = smiles_toMol_obabel(items['smiles'])
-        _extra_mol_infos = make_basic_info_fromMol(mol_wo_h)
-        ccd_to_extra_mol_infos = {
-            "UNK-": _extra_mol_infos
-        }
+        try:
+            mol_wo_h = smiles_to_rdMol(items['smiles'])
+            ccd_to_extra_mol_infos = {
+                "UNK-": make_basic_feature_fromMol(mol_wo_h)
+            }
+        except SMILESParseError as e:
+            logger.error(f"[ligand_convert] {e}")
+            return EntityBean.create_with_kwargs(error_code=1, smiles=items['smiles'])
+        except ConformerGenerationError as e:
+            logger.error(f"[ligand_convert] {e}")
+            return EntityBean.create_with_kwargs(error_code=1, smiles=items['smiles'])
+        except Exception as e:
+            logger.error(f"[ligand_convert] Failed when converting SMILES to MOL: {e}")
+            return EntityBean.create_with_kwargs(error_code=1, smiles=items['smiles'])
     else:
-        raise ValueError(f'not support for the {dtype} in ligand_convert')
+        logger.error(f"[ligand_convert] Neither CCD nor SMILES provided for {items}")
+        return EntityBean(error_code=2)
+
     ccd_seqs = ''.join(_ccd_seqs) ## (GLY)(ALA).....
-
-    # repeat_ccds, repeat_fasta = [ccd_seqs], [msa_seqs]
-    return {
-        'ligand': {
-            'seqs': ccd_seqs,
-            'msa_seqs': msa_seqs,
-            'count': count,
-            'extra_mol_infos': ccd_to_extra_mol_infos,
-        }
+    raw_info = {
+        'ccd': items['ccd'] if 'ccd' in items else '',
+        'smiles': items['smiles'] if 'smiles' in items else '',
     }
 
+    entity = EntityBean(
+        dtype="ligand",
+        seqs=ccd_seqs,
+        msa_seqs=msa_seqs,
+        count=count,
+        extra_mol_infos=ccd_to_extra_mol_infos,
+        raw_info=raw_info,
+        error_code=0
+    )
+    return entity
 
-def entities_rename_and_filter(items):
-    ligand_mapping = {
-        'ion': 'ligand'
-    }
-    items['type'] = ligand_mapping.get(items['type'], items['type'])
-    if items['type'] not in ALLOWED_ENTITY_TYPE:
-        raise ValueError(f'{items["type"]} is not allowed, will be ignored.')
-    return items
 
-
-def modify_name_convert(entities: list):
+def extra_ccd_rename(entities: List[EntityBean]) -> List[EntityBean]:
+    """Rename the extra ccd to user-defined ccd.
+        such as: (UNK-1) -> (aaa), (UNK-2) -> (aab), ...
+    """
     cur_idx = 0
     for entity_items in entities:
-        # dtype(protein, dna, rna, ligand): no_chains,  msa_seqs, seqs
-        dtype = list(entity_items.keys())[0]
-        items = list(entity_items.values())[0]
-        entity_count = items['count']
-        msa_seqs = items['msa_seqs']
-        extra_mol_infos = items.get('extra_mol_infos', {}) ## dict, 「extra-add, ccd_id」: ccd_features.
-
+        ## dict, 「extra-add, ccd_id」: ccd_features.
+        extra_mol_infos = entity_items.extra_mol_infos 
         extra_ccd_ids = list(extra_mol_infos.keys())
-        ## rename UNK- to UNK-1, 2, 3, 4...
+        ## rename UNK-* to aaa, aab, aac, ...
         for k in extra_ccd_ids:
             user_name_3 = USER_LIG_IDS_3[cur_idx]
-            items['seqs'] = items['seqs'].replace('UNK-', user_name_3)
-            extra_mol_infos[user_name_3] = extra_mol_infos.pop('UNK-')
+            entity_items.seqs = entity_items.seqs.replace(f"({k})", f"({user_name_3})")
+            entity_items.extra_mol_infos[user_name_3] = extra_mol_infos.pop(k)
             cur_idx += 1
 
     return entities
 
 
-def online_json_to_entity(json_path, out_dir):
-    obj = read_json(json_path)
-    entities = copy.deepcopy(obj['entities'])
-
-    os.makedirs(out_dir, exist_ok=True)
-    error_ids = []
-    success_entity = []
-    for idx, items in enumerate(entities):
-        try: 
-            items = entities_rename_and_filter(items)
-        except Exception as e:
-            print(f'Failed to convert entity {idx}: {items}, {e}')
-            error_ids.append((idx, ERROR_CODES[2]))
-            continue
-        
-        try:
-            if items['type'] == 'ligand':
-                json_obj = ligand_convert(items)
-            else:
-                json_obj = polymer_convert(items)
-            success_entity.append(json_obj)
-        except Exception as e:
-            if items['type'] == 'ligand':
-                print(f'Failed to convert ligand entity {idx}: {items}, {e}')
-                error_ids.append((idx, ERROR_CODES[1]))
-            else:
-                print(f'Failed to convert polymer entity {idx}: {items}, {e}')
-                error_ids.append((idx, ERROR_CODES[3]))
-
-    if len(error_ids) > 0:
-        raise RuntimeError(f'[Error] Failed to convert {len(error_ids)}/{len(entities)} entities')    
+def postprocess_entity(entities: List[EntityBean]) -> List[EntityBean]:
+    """Postprocess the entity list. Include the following steps:
+    - Rename the extra ccd to user-defined ccd.
+    - Expand the entity by the count and add asym_chain_id.
+        asym_chain_id follows the format: first number is the `entity_id`, the second number is the `sym_chain_id`.
+        For example, A-1, A-2, A-3, B-1, B-2...
+    """
+    ## NOTE: entities is the list of EntityBean, follows the order of the input JSON file.
+    entities = extra_ccd_rename(entities)
     
-    success_entity = modify_name_convert(success_entity)
-    return success_entity
+    final_entities = []
+    for entity_id, entity in enumerate(entities, start=1):
+        sym_chain_id = 1
+        entity_id_letters = int_id_to_str_id(entity_id)
+        for _ in range(entity.count):
+            entity_copy = copy.deepcopy(entity)
+            entity_copy.raw_info['asym_chain_id'] = f"{entity_id_letters}-{sym_chain_id}"
+            entity_copy.count = 1
+            final_entities.append(entity_copy)
+            sym_chain_id += 1
+    
+    return final_entities
+
+
+def online_json_parser(json_path: str, out_dir: str = None) -> List[EntityBean]:
+    """Convert raw input json to simple HF3 input entity list."""
+
+    logger.info(f'Start to convert entities from JSON file: {json_path}')
+    
+    data = read_json(json_path)
+    entity_dicts = data['entities']
+    
+    converted_entities = []
+    for entity in entity_dicts:
+        if entity['type'] in ['ligand', 'ion']:
+            entity_bean = ligand_convert(entity)
+        elif entity['type'] in ['protein', 'dna', 'rna']:
+            entity_bean = polymer_convert(entity)
+        converted_entities.append(entity_bean)
+    
+    logger.info(f'Successfully converted {len(converted_entities)} entities')
+    return postprocess_entity(converted_entities)
+
