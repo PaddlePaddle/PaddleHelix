@@ -611,7 +611,7 @@ def featurize_entities(all_entities: List[EntityBean],
         if fasta_seq not in fasta_seq_to_type_chain_id:
             fasta_seq_to_type_chain_id[fasta_seq] = [chain_id]
         else:
-            fasta_seq_to_type_chain_id[fasta_seq].append(type_chain_id)
+            fasta_seq_to_type_chain_id[fasta_seq].append(chain_id)
             continue
         
         features_pkl_dir = msa_output_dir.joinpath(f'{type_chain_id}')
@@ -628,7 +628,7 @@ def featurize_entities(all_entities: List[EntityBean],
                     task_type=chain_type)
         msa_tasks.append(meta_task)
 
-      print('MSA fastas:', list(fasta_seq_to_type_chain_id.items()))
+      print('MSA tasks:', list(fasta_seq_to_type_chain_id.items()))
 
       ## 2. multiprocessing for protein/rna MSA/Template search.
       seqs_to_msa_features = {}
