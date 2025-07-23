@@ -27,21 +27,35 @@ The **free version** of the HelixFold3 server is restricted to **non-commercial 
 <br>
 
 
-
 ## HelixFold3 Inference
 
-### Environment
+### 📣 Updates
+
+- 2025-07-23: **HelixFold3.2** brings significant advancements in protein-related tasks on FoldBench, along with a marked reduction in atomic clashes.
+<table>
+  <tr>
+    <td align="center" width="48%">
+      <img src="images/HelixFold3.2_foldbench.png" width="100%"/><br/>
+    </td>
+    <td align="center" width="48%">
+      <img src="images/HelixFold3.2_atom_clash.png" width="100%"/><br/>
+    </td>
+  </tr>
+</table>
+
+
+### 🛠 Environment
 Specific environment settings are required to reproduce the results reported in this repo,
 
-* Python: 3.9
+* Python: 3.10
 * CUDA: 12.0
 * CuDNN: 8.4.0
 * NCCL: 2.14.3
-* Paddle: 2.6.1
+* Paddle: 3.1.0
 
 Those settings are recommended as they are the same as we used in our A100 machines for all inference experiments. 
 
-### Installation
+### 📦 Installation
 
 HelixFold3 depends on [PaddlePaddle](https://github.com/paddlepaddle/paddle). Python dependencies available through `pip` 
 is provided in `requirements.txt`. `kalign`, the [`HH-suite`](https://github.com/soedinglab/hh-suite) and `jackhmmer` are 
@@ -50,25 +64,22 @@ also needed to produce multiple sequence alignments. The download scripts requir
 Locate to the directory of `helixfold` then run:
 
 ```bash
-# Install py env
-conda create -n helixfold -c conda-forge python=3.9
-conda install -y -c bioconda aria2 hmmer==3.3.2 kalign2==2.04 hhsuite==3.3.0 -n helixfold
-conda install -y -c conda-forge openbabel -n helixfold
+# install msa env
+conda create -n msa_env -c conda-forge python=3.9
+conda install -c bioconda aria2 hmmer==3.3.2 kalign2==2.04 hhsuite==3.3.0 -n msa_env -y
 
-# activate the conda environment
+# install paddlepaddle and other requirements
+conda create -n helixfold -c conda-forge python=3.10
 conda activate helixfold
 
-# install paddlepaddle
-python3 -m pip install paddlepaddle-gpu==2.6.1.post120 -f https://www.paddlepaddle.org.cn/whl/linux/mkl/avx/stable.html
-# or lower version: https://paddle-wheel.bj.bcebos.com/2.5.1/linux/linux-gpu-cuda11.7-cudnn8.4.1-mkl-gcc8.2-avx/paddlepaddle_gpu-2.5.1.post117-cp39-cp39-linux_x86_64.whl
-
+python3 -m pip install paddlepaddle-gpu==3.1.0 -i https://www.paddlepaddle.org.cn/packages/stable/cu126/
 python3 -m pip install -r requirements.txt
 ```
 
 Note: If you have a different version of python3 and cuda, please refer to [here](https://www.paddlepaddle.org.cn/whl/linux/gpu/develop.html) for the compatible PaddlePaddle `dev` package.
 
 
-### Usage
+### 🎯 Usage
 
 In order to run HelixFold3, the genetic databases and model parameters are required.
 
@@ -95,10 +106,10 @@ The script `scripts/download_all_data.sh` can be used to download and set up all
     will download a reduced version of the databases to be used with the `reduced_dbs` preset. The total download 
     size for the reduced databases is around 190 GB, and the total unzipped size is around 530 GB.
 
-#### Understanding Model Input
+#### 🤔 Understanding Model Input
 
-There are some demo input under `./data/` for your test and reference. Data input is in the form of JSON containing
-several entities such as `protein`, `ligand`, `dna`, `rna` and `ion`. Proteins and nucleic acids inputs are their sequence.
+There are some demo input under `./data/` for your test and reference. Data input is in the form of JSON containing several entities such as `protein`, `ligand`, `dna`, `rna` and `ion`. Proteins and nucleic acids inputs are their sequence.
+
 HelixFold3 supports input ligand as SMILES or CCD id, please refer to `/data/demo_6zcy_smiles.json` and `demo_output/demo_6zcy_smiles/` 
 for more details about SMILES input. More flexible input will come in soon.
 
@@ -149,7 +160,7 @@ Here is an example modification input:
 }
 ```
 
-#### Running HelixFold for Inference
+#### 🚀 Running HelixFold for Inference
 To run inference on a sequence or multiple sequences using HelixFold3's pretrained parameters, run e.g.:
 * Inference on single GPU (change the settings in script BEFORE you run it)
 ```
@@ -195,6 +206,7 @@ CUDA_VISIBLE_DEVICES=0 "$PYTHON_BIN" inference.py \
 The descriptions of the above script are as follows:
 * Replace `DATA_DIR` with your downloaded data path.
 * Replace `ENV_BIN` with your conda virtual environment or any environment where `hhblits`, `hmmsearch` and other dependencies have been installed.
+* Replace `PYTHON_BIN` with your python binary where `paddlepaddle-gpu` have been installed.
 * `--preset` - Set `'reduced_dbs'` to use small bfd or `'full_dbs'` to use full bfd.
 * `--*_database_path` - Path to datasets you have downloaded.
 * `--input_json` - Input data in the form of JSON. Input pattern in `./data/demo_*.json` for your reference.
@@ -203,7 +215,7 @@ The descriptions of the above script are as follows:
 * `--infer_time` - The number of inferences executed by model for single input. In each inference, the model will infer `5` times (`diff_batch_size`) for the same input by default. This hyperparameter can be changed by `model.head.diffusion_module.test_diff_batch_size` within `./helixfold/model/config.py`
 * `--precision` - Either `bf16` or `fp32`. Please check if your machine can support `bf16` or not beforing changing it. For example, `bf16` is supported by A100 and H100 or higher version while V100 only supports `fp32`.
 
-### Understanding Model Output
+### 🤔 Understanding Model Output
 
 The outputs will be in a subfolder of `output_dir`, including the computed MSAs, predicted structures, 
 ranked structures, and evaluation metrics. For a task of inferring twice with diffusion batch size 3, 
@@ -233,11 +245,11 @@ assume your input JSON is named `demo_data.json`, the `output_dir` directory wil
 The contents of each output file are as follows:
 * `msas/` - A directory containing the files describing the various genetic
  tool hits that were used to construct the input MSA.
-* `demo_data-pred-X-Y` - Prediction results of `demo_data.json` in X-th inference and Y-thdiffusion batch, 
+* `demo_data-pred-X-Y` - Prediction results of `demo_data.json` in X-th inference and Y-th diffusion batch, 
 including predicted structures in `cif` and a JSON file containing all metrics' results.
 * `demo_data-rank*` - Ranked results of a series of predictions according to metrics.
 
-### Resource Usage
+### 📌 Resource Usage
 
 We suggest a single GPU for inference has at least 32G available memory. The maximum number of tokens is around 
 1200 for inference on a single A100-40G GPU with precision `bf16`. The length of inference input tokens on a 
@@ -251,11 +263,11 @@ reduce the number of additional recycles by changing `model.num_recycle` in the 
 We are keen on support longer token inference, it will come in soon.
 
 
-## Copyright
+## 📌 Copyright
 
 HelixFold3's code and model parameters are available under the [LICENSE](./LICENSE) for non-commercial use by individuals or non-commercial organizations only. Please check the usage restrictions before using HelixFold3.
 
-## Reference
+## 🌟 Reference
 
 [1]  Abramson, J et al. (2024). Accurate structure prediction of biomolecular interactions with AlphaFold 3. Nature 630, 493–500. 10.1038/s41586-024-07487-w
 
@@ -278,7 +290,7 @@ Elevating protein complex structure prediction to new heights. arXiv preprint ar
 Wang, Jingzhou He, et al. Pre-training on large-scale generated docking conformations with helixdock to unlock
 the potential of protein-ligand structure prediction models. arXiv preprint arXiv:2310.13913, 2023.
 
-## Citation
+## 📖 Citation
 
 If you use the code, data, or checkpoints in this repo, please cite the following:
 

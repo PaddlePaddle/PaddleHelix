@@ -12,7 +12,9 @@ English | [简体中文](README_cn.md)
 
 
 ## Latest News
-`2024.11.08` **To streamline HelixFold3 integration and support high-throughput use, we introduce a convenient paid API ([usage guide link](https://paddlehelix.baidu.com/app/tut/guide/all/helixfold3sdk)) for academic and commercial applications, enabling efficient access to HelixFold3’s structural prediction capabilities.**
+`2025.07.23` **HelixFold3.2 released!** Compared to HelixFold3, **HelixFold3.2** demonstrates significant improvements in protein-related tasks and structural quality. For implementation details, please see [the code here](./apps/protein_folding/helixfold3).
+
+`2024.11.08` To streamline HelixFold3 integration and support high-throughput use, we introduce a convenient paid API ([usage guide link](https://paddlehelix.baidu.com/app/tut/guide/all/helixfold3sdk)) for academic and commercial applications, enabling efficient access to HelixFold3’s structural prediction capabilities.
 
 `2024.08.30` We are excited to announce great news! The initial version of the HelixFold3 server, designed for biomolecular structure prediction, is now available on the PaddleHelix website (https://paddlehelix.baidu.com/app/all/helixfold3/forecast). We encourage everyone to explore its capabilities and leverage it for impactful and innovative research.
 

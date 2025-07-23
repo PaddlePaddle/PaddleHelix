@@ -238,6 +238,7 @@ class DiffusionModule(nn.Layer):
             gamma0 = self.gamma0
 
         single_act = representations['single']  # (B, N, d1)
+        gamma0 = self.gamma0 if single_act.shape[1] <= 1400 else 0.0 # TODO: 
         atom_mask = batch['all_atom_pos_mask']
         B, N_atom = atom_mask.shape[:2]
         c_list = self._noise_schedule(step_num)

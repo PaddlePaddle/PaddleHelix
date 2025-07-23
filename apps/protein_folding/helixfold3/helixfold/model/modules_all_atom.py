@@ -129,14 +129,15 @@ class HelixFold3(nn.Layer):
         tracer = _dygraph_tracer()
         if tracer._amp_dtype == "bfloat16":
             with paddle.amp.auto_cast(enable=False):
-                bf16 = paddle.base.core.VarDesc.VarType.BF16 if FLUID_DEPRECATED else paddle.fluid.core.VarDesc.VarType.BF16
+                bf16_vartype = paddle.base.core.VarDesc.VarType.BF16 if FLUID_DEPRECATED else paddle.fluid.core.VarDesc.VarType.BF16
+                bf16_list = [bf16_vartype, paddle.bfloat16]
                 for key, value in representations.items():
-                    if isinstance(value, paddle.Tensor) and value.dtype in [bf16]:
+                    if isinstance(value, paddle.Tensor) and value.dtype in bf16_list:
                         temp_value = value.cast('float32')
                         temp_value.stop_gradient = value.stop_gradient
                         representations[key] = temp_value
                 for key, value in batch.items():
-                    if isinstance(value, paddle.Tensor) and value.dtype in [bf16]:
+                    if isinstance(value, paddle.Tensor) and value.dtype in bf16_list:
                         temp_value = value.cast('float32')
                         temp_value.stop_gradient = value.stop_gradient
                         batch[key] = temp_value
