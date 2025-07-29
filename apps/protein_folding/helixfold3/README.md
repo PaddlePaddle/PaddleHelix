@@ -1,5 +1,21 @@
 # Biomolecular Structure Prediction with HelixFold3: Replicating the Capabilities of AlphaFold3
 
+## 📣 Updates
+
+- 2025-07-23: **HelixFold3.2** brings significant advancements in protein-related tasks on FoldBench, along with a marked reduction in atomic clashes.
+<table>
+  <tr>
+    <td align="center" width="48%">
+      <img src="images/HelixFold3.2_foldbench.png" width="100%"/><br/>
+    </td>
+    <td align="center" width="48%">
+      <img src="images/HelixFold3.2_atom_clash.png" width="100%"/><br/>
+    </td>
+  </tr>
+</table>
+
+---
+
 The AlphaFold series has transformed protein structure prediction with remarkable accuracy, often matching experimental methods. While AlphaFold2 and AlphaFold-Multimer are open-sourced, facilitating rapid and reliable predictions, [AlphaFold3](https://doi.org/10.1038/s41586-024-07487-w) remains partially accessible, restricting further development.
 
 The PaddleHelix team is working on [HelixFold3](./helixfold3_report.pdf) to replicate the advanced capabilities of AlphaFold3. Insights from the AlphaFold3 paper inform our approach and build on our prior work with [HelixFold](https://arxiv.org/abs/2207.05477), [HelixFold-Single](https://doi.org/10.1038/s42256-023-00721-6), [HelixFold-Multimer](https://arxiv.org/abs/2404.10260), and [HelixDock](https://arxiv.org/abs/2310.13913). Currently, HelixFold3's accuracy in predicting the structures of small molecule ligands, nucleic acids (including DNA and RNA), and proteins is comparable to that of AlphaFold3. We are committed to continuously enhancing the model's performance and rigorously evaluating it across a broader range of biological molecules. Please refer to our [HelixFold3 technical report](https://arxiv.org/pdf/2408.16975) for more details. 
@@ -28,21 +44,6 @@ The **free version** of the HelixFold3 server is restricted to **non-commercial 
 
 
 ## HelixFold3 Inference
-
-### 📣 Updates
-
-- 2025-07-23: **HelixFold3.2** brings significant advancements in protein-related tasks on FoldBench, along with a marked reduction in atomic clashes.
-<table>
-  <tr>
-    <td align="center" width="48%">
-      <img src="images/HelixFold3.2_foldbench.png" width="100%"/><br/>
-    </td>
-    <td align="center" width="48%">
-      <img src="images/HelixFold3.2_atom_clash.png" width="100%"/><br/>
-    </td>
-  </tr>
-</table>
-
 
 ### 🛠 Environment
 Specific environment settings are required to reproduce the results reported in this repo,
