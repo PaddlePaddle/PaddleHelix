@@ -133,8 +133,7 @@ def get_msa_templates_pipeline(args: argparse.Namespace) -> Dict:
     if use_reduced_bfd:
         assert args.reduced_bfd_database_path is not None
     else:
-        assert args.bfd_database_path is not None
-        assert args.uniclust30_database_path is not None
+        raise NotImplementedError("Full dbs is not supported yet.")
 
     template_searcher = hmmsearch.Hmmsearch(
         binary_path=args.hmmsearch_binary_path,
@@ -154,8 +153,8 @@ def get_msa_templates_pipeline(args: argparse.Namespace) -> Dict:
         hhblits_binary_path=args.hhblits_binary_path,
         uniref90_database_path=args.uniref90_database_path,
         mgnify_database_path=args.mgnify_database_path,
-        bfd_database_path=args.bfd_database_path,
-        uniclust30_database_path=args.uniclust30_database_path,
+        bfd_database_path=None,
+        uniclust30_database_path=None,
         reduced_bfd_database_path=args.reduced_bfd_database_path,
         uniprot_database_path=args.uniprot_database_path,
         template_searcher=template_searcher,
@@ -607,14 +606,9 @@ if __name__ == '__main__':
                         default=None, required=True,
                         help='Path to the MGnify database for use by '
                         'JackHMMER.')
-    parser.add_argument('--bfd_database_path', type=str, default=None,
-                        help='Path to the BFD database for use by HHblits.')
     parser.add_argument('--reduced_bfd_database_path', type=str, default=None,
                         help='Path to the reduced version of BFD used '
                         'with the "reduced_dbs" preset.')
-    parser.add_argument('--uniclust30_database_path', type=str, default=None,
-                        help='Path to the Uniclust30 database for use '
-                        'by HHblits.')
     # RNA MSA searching databases
     parser.add_argument('--rfam_database_path', type=str,
                         default=None, required=True,

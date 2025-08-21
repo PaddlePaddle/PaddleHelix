@@ -62,7 +62,7 @@ HelixFold3 depends on [PaddlePaddle](https://github.com/paddlepaddle/paddle). Py
 is provided in `requirements.txt`. `kalign`, the [`HH-suite`](https://github.com/soedinglab/hh-suite) and `jackhmmer` are 
 also needed to produce multiple sequence alignments. The download scripts require `aria2c`. 
 
-Locate to the directory of `helixfold` then run:
+Locate to the directory of `helixfold3` then run:
 
 ```bash
 # install msa env
@@ -89,15 +89,6 @@ please place the downloaded checkpoint in ```./init_models/ ```directory.
 
 The script `scripts/download_all_data.sh` can be used to download and set up all genetic databases with the following configs:
 
-*   By default:
-
-    ```bash
-    scripts/download_all_data.sh ./data
-    ```
-
-   will download the complete databases. The total download size for the complete databases is around 415 GB, 
-   and the total size when unzipped is 2.2 TB.  
-
 *   With `reduced_dbs`:
 
     ```bash
@@ -106,6 +97,10 @@ The script `scripts/download_all_data.sh` can be used to download and set up all
 
     will download a reduced version of the databases to be used with the `reduced_dbs` preset. The total download 
     size for the reduced databases is around 190 GB, and the total unzipped size is around 530 GB.
+
+*   With `full_dbs`:
+
+    NOTE: ***Support for full_dbs is not available yet and will be introduced in a future update.***
 
 #### 🤔 Understanding Model Input
 
@@ -185,9 +180,7 @@ CUDA_VISIBLE_DEVICES=0 "$PYTHON_BIN" inference.py \
 	--hmmbuild_binary_path "$ENV_BIN/hmmbuild" \
     --nhmmer_binary_path "$ENV_BIN/nhmmer" \
     --preset='reduced_dbs' \
-    --bfd_database_path "$DATA_DIR/bfd/bfd_metaclust_clu_complete_id30_c90_final_seq.sorted_opt" \
     --reduced_bfd_database_path "$DATA_DIR/small_bfd/bfd-first_non_consensus_sequences.fasta" \
-    --uniclust30_database_path "$DATA_DIR/uniclust30/uniclust30_2018_08/uniclust30_2018_08" \
     --uniprot_database_path "$DATA_DIR/uniprot/uniprot.fasta" \
     --pdb_seqres_database_path "$DATA_DIR/pdb_seqres/pdb_seqres.txt" \
     --uniref90_database_path "$DATA_DIR/uniref90/uniref90.fasta" \
