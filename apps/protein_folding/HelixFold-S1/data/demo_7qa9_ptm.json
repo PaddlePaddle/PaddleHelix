@@ -1,0 +1,21 @@
+{
+  "job_name": "7qa9_ptm",
+  "recycle": 10,
+  "ensemble": 30,
+  "entities": [
+    {
+      "type": "dna",
+      "sequence": "CCATTATAGC",
+      "count": 1,
+      "modification": [
+        {"type": "residue_replace", "ccd": "5CM", "index": 2}
+      ]
+    },
+    {
+      "type": "dna",
+      "sequence": "GCTATAATGG",
+      "count": 1
+    }
+  ],
+  "model_type": "HelixFold-S1"
+}

@@ -1,0 +1,10 @@
+absl-py==0.13.0
+dm-tree==0.1.6
+biopython==1.79
+immutabledict==2.0.0
+ml-collections==0.1.0
+scipy==1.9.0
+jsonschema==4.24.0
+posebusters
+scikit-learn==1.7.2
+matplotlib==3.10.8

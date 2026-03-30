@@ -1,0 +1,13 @@
+{
+  "job_name": "8ecx",
+  "recycle": 10,
+  "ensemble": 30,
+  "entities": [
+    {
+      "type": "protein",
+      "sequence": "SGGGMTYHVLVQFDVPSDKREAFAAAGLFDANGSLQNEPGTLRFEVIRDENNRAANRFYLDEVYEDEAAFLQHCRNETIARFYELIDSYAFGPLFLFKGYRVEG",
+      "count": 6
+    }
+  ],
+  "model_type": "HelixFold-S1"
+}

@@ -1,0 +1,18 @@
+{
+  "job_name": "7qa9",
+  "recycle": 10,
+  "ensemble": 30,
+  "entities": [
+    {
+      "type": "dna",
+      "sequence": "CCATTATAGC",
+      "count": 1
+    },
+    {
+      "type": "dna",
+      "sequence": "GCTATAATGG",
+      "count": 1
+    }
+  ],
+  "model_type": "HelixFold-S1"
+}
