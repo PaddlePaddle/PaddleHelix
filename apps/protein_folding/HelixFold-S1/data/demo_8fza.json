@@ -1,0 +1,23 @@
+{
+  "job_name": "8fza",
+  "recycle": 10,
+  "ensemble": 30,
+  "entities": [
+    {
+      "type": "rna",
+      "sequence": "UUGGGUUCCCUCACCCCAAUCAUAAAAAGG",
+      "count": 1
+    },
+    {
+      "type": "ligand",
+      "ccd": "PRF",
+      "count": 1
+    },
+    {
+      "type": "ligand",
+      "ccd": "MN",
+      "count": 2
+    }
+  ],
+  "model_type": "HelixFold-S1"
+}

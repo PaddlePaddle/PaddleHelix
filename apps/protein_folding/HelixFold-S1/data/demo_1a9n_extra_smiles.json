@@ -1,0 +1,33 @@
+{
+  "job_name": "1a9n_extra_smiles",
+  "recycle": 10,
+  "ensemble": 30,
+  "entities": [
+    {
+      "type": "protein",
+      "sequence": "MVKLTAELIEQAAQYTNAVRDRELDLRGYKIPVIENLGATLDQFDAIDFSDNEIRKLDGFPLLRRLKTLLVNNNRICRIGEGLDQALPDLTELILTNNSLVELGDLDPLASLKSLTYLCILRNPVTNKKHYRLYVIYKVPQVRVLDFQKVKLKERQEAEKMFKGKRGAQLAKDIAR",
+      "count": 1
+    },
+    {
+      "type": "protein",
+      "sequence": "MDIRPNHTIYINNMNDKIKKEELKRSLYALFSQFGHVVDIVALKTMKMRGQAFVIFKELGSSTNALRQLQGFPFYGKPMRIQYAKTDSDIISKMRG",
+      "count": 1
+    },
+    {
+      "type": "rna",
+      "sequence": "CCUGGUAUUGCAGUACCUCCAGGU",
+      "count": 1
+    },
+    {
+      "type": "ligand",
+      "smiles": "CNC(=O)c1nn(C)c2ccc(Nc3nccc(n3)n4cc(N[C@@H]5CCNC5)c(C)n4)cc12",
+      "count": 1
+    },
+    {
+      "type": "ligand",
+      "smiles": "Cc1ccc2nc(NC(=O)c3ccc(C)c([N+](=O)[O-])c3)sc2c1",
+      "count": 1
+    }
+  ],
+  "model_type": "HelixFold-S1"
+}

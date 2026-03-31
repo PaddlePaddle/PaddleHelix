@@ -1,0 +1,220 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "HelixFold 3.x Input Schema",
+    "description": "Schema for validating HelixFold 3.x input JSON",
+    "type": "object",
+    "required": ["job_name", "entities", "model_type"],
+    "properties": {
+      "model_type": {
+        "type": "string",
+        "description": "Model type",
+        "enum": ["HelixFold3", "HelixFold-S1"],
+        "default": "HelixFold3"
+      },
+      "job_name": {
+        "type": "string",
+        "description": "Task name, should be unique and valid as filename",
+        "maxLength": 200,
+        "pattern": "^[a-zA-Z0-9-_.]+$"
+      },
+      "recycle": {
+        "type": "integer",
+        "description": "Number of recycles for model inference",
+        "minimum": 1,
+        "maximum": 100,
+        "default": 10
+      },
+      "ensemble": {
+        "type": "integer", 
+        "description": "Number of ensemble predictions",
+        "minimum": 1,
+        "maximum": 100,
+        "default": 5
+      },
+      "ref_structures": {
+        "type": "array",
+        "description": "Reference structures for prediction",
+        "maxItems": 4,
+        "items": {
+          "type": "object",
+          "required": ["ref_file", "refer_target_pairs"],
+          "properties": {
+            "ref_file": {
+              "type": "string",
+              "description": "Path to reference structure file",
+              "minLength": 1
+            },
+            "refer_target_pairs": {
+              "type": "array",
+              "description": "Chain correspondence between reference and target",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": ["refer", "target"],
+                "properties": {
+                  "refer": {
+                    "type": "string",
+                    "description": "Chain ID in reference structure"
+                  },
+                  "target": {
+                    "type": "string",
+                    "description": "Target chain specification",
+                    "pattern": "^[0-9]+-[0-9]+$"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "constraint": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["type", "level", "left_entity", "right_entity", "distance"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["distance"]
+            },
+            "level": {
+              "type": "string",
+              "enum": ["residue", "chain"]
+            },
+            "left_entity": {
+              "type": "string",
+              "pattern": "^[0-9-]+$"
+            },
+            "right_entity": {
+              "type": "string",
+              "pattern": "^[0-9-]+$"
+            },
+            "distance": {
+              "type": "number",
+              "minimum": 2,
+              "maximum": 20
+            }
+          }
+        }
+      },
+      "s1_sample_constraint": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["left_entity", "right_entity"],
+          "additionalProperties": false,
+          "properties": {
+            "left_entity": {
+              "type": "string",
+              "pattern": "^[0-9-]+$"
+            },
+            "right_entity": {
+              "type": "string",
+              "pattern": "^[0-9-]+$"
+            }
+          }
+        }
+      },
+      "entities": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "required": ["type", "count"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["protein", "dna", "rna", "ion", "ligand"]
+            },
+            "sequence": {
+              "type": "string"
+            },
+            "smiles": {
+              "type": "string"
+            },
+            "ccd": {
+              "type": "string"
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            },
+            "modification": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "oneOf": [
+                  {
+                    "required": ["type", "index", "ccd"],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": ["residue_replace"]
+                      },
+                      "index": {
+                        "type": "integer",
+                        "minimum": 1
+                      },
+                      "ccd": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  {
+                    "required": ["type", "index", "R_smiles", "R_connect_idx"],
+                    "properties": {
+                      "type": {
+                        "type": "string", 
+                        "enum": ["sidechain_replace"]
+                      },
+                      "index": {
+                        "type": "integer",
+                        "minimum": 1
+                      },
+                      "R_smiles": {
+                        "type": "string"
+                      },
+                      "R_connect_idx": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": { "type": { "enum": ["protein", "dna", "rna"] } }
+              },
+              "then": {
+                "required": ["sequence"]
+              }
+            },
+            {
+              "if": {
+                "properties": { "type": { "const": "ion" } }
+              },
+              "then": {
+                "required": ["ccd"]
+              }
+            },
+            {
+              "if": {
+                "properties": { "type": { "const": "ligand" } }
+              },
+              "then": {
+                "anyOf": [
+                  { "required": ["smiles"] },
+                  { "required": ["ccd"] }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  }

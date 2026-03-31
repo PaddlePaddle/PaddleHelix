@@ -1,0 +1,32 @@
+{
+  "job_name": "7qg2",
+  "recycle": 10,
+  "ensemble": 30,
+  "entities": [
+    {
+      "type": "protein",
+      "sequence": "GENKSLEVSDTRFHSFSFYELKNVTNNFDERPISVGGNKMGEGGFGVVYKGYVNNTTVAVKKLAAMVDITTEELKQQFDQEIKVMAKCQHENLVELLGFSSDGDDLCLVYVYMPNGSLLDRLSCLDGTPPLSWHMRCKIAQGAANGINFLHENHHIHRDIKSANILLDEAFTAKISDFGLARASEKFAQTVMTSRIVGTTAYMAPEALRGEITPKSDIYSFGVVLLEIITGLPAVDEHREPQLLLDIKEEIEDEEKTIEDYIDKKMNDADSTSVEAMYSVASQCLHEKKNKRPDIKKVQQLLQEMTAS",
+      "count": 1,
+      "modification": [
+        {
+          "type": "sidechain_replace",
+          "index": 193,
+          "R_smiles": "CCOP(=O)(O)O",
+          "R_connect_idx": 1
+        },
+        {
+          "type": "sidechain_replace",
+          "index": 194,
+          "R_smiles": "COP(=O)(O)O",
+          "R_connect_idx": 0
+        }
+      ]
+    },
+    {
+      "type": "protein",
+      "sequence": "GENKSLEVSDTRFHSFSF",
+      "count": 1
+    }
+  ],
+  "model_type": "HelixFold-S1"
+}
