@@ -95,6 +95,16 @@ To reproduce the result from the ogb leaderboard, just run the inference command
 
     sh scripts/inference.sh
 
+## Run inference
+To reproduce the result from the ogb leaderboard, you can download the checkponit from [here](https://baidu-nlp.bj.bcebos.com/PaddleHelix/models/molecular_modeling/gem2_l12_c256.pdparams).
+Then put it under the local `./model` folder and run the inference command:
+
+    sh scripts/inference.sh
+We also provide a checkpoint with smaller embedding size(128), you can download it from [here](https://baidu-nlp.bj.bcebos.com/PaddleHelix/models/molecular_modeling/gem2_l12_c128.pdparams) .
+
+Then change the `encoder_config` to `opt3d_l12_c128.json`, `init_model` to `gem2_l12_c128.pdparams` in `inference.sh`.
+
+Now  you can run the inference command with the new checkpoint.
 
 ## Citing this work
 
