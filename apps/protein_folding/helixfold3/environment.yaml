@@ -1,0 +1,35 @@
+name: helixfold
+channels:
+  - conda-forge
+  - bioconda
+  - nvidia
+  - biocore
+
+dependencies:
+  - python=3.9
+  - cuda-toolkit=12.0
+  - cudnn=8.4.0
+  - nccl=2.14
+  - libgcc=14.2.0
+  - libgomp=14.2.0
+  - pip=25.0.1
+  - aria2=1.37.0
+  - hmmer=3.4
+  - kalign2=2.04
+  - hhsuite=3.3.0
+  - openbabel=3.1.1
+  - pip:
+      - paddlepaddle-gpu==2.6.1 -f https://www.paddlepaddle.org.cn/whl/linux/mkl/avx/stable.html
+      - absl-py==0.13.0
+      - biopython==1.79
+      - chex==0.0.7
+      - dm-haiku==0.0.4
+      - dm-tree==0.1.6
+      - docker==5.0.0
+      - immutabledict==2.0.0
+      - jax==0.2.14
+      - ml-collections==0.1.0
+      - pandas==1.3.4
+      - scipy==1.9.0
+      - rdkit-pypi==2022.9.5
+      - posebusters==0.3.6
