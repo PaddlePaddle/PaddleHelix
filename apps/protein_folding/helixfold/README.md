@@ -1,4 +1,4 @@
-# [HelixFold](https://arxiv.org/abs/2207.05477): An Efficient and Improved Implementation of [AlphaFold 2](https://doi.org/10.1038/s41586-021-03819-2) using [PaddlePaddle](https://github.com/paddlepaddle/paddle)
+# [HelixFold](https://arxiv.org/abs/2207.05477): An Efficient and Improved Implementation of [AlphaFold 2](https://doi.org/10.1038/s41586-021-03819-2) · [Read online](https://webeditions.page/works/highly-accurate-protein-structure-prediction-with-alphafold/?via=placement:b9f2cfa27d225b332151) using [PaddlePaddle](https://github.com/paddlepaddle/paddle)
 
 AlphaFold2 is an accurate protein structure prediction pipeline. [HelixFold](https://arxiv.org/abs/2207.05477) provides an efficient and improved implementation of the complete training and inference pipelines of AlphaFold2 in GPU and DCU. Compared with the computational performance of AlphaFold2 reported in the paper, OpenFold and Uni-Fold implemented through PyTorch, HelixFold reduces the training time from about 11 days originally to 5.12 days, and only 2.89 days when using hybrid parallelism. Training HelixFold from scratch can achieve competitive accuracy with AlphaFold2.
 
